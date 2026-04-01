@@ -1,136 +1,107 @@
-# Smash Studio Website
+# claude.md
 
-## What this is
-The public website for Smash Studio (www.smash.studio). A creative studio in Sweden specializing in 3D, Animation, Projection Mapping, Unreal Engine, and Game Experiences. Three equal partners: Ash (Creative Director), Veronica (Producer), Emile (Creative Technologist).
+## Context
 
-This is NOT Smash OS (the internal tool). This is the client-facing showcase — portfolio, identity, contact. It should feel like opening the door to a studio that knows exactly what it's doing.
+This repository is for the research, strategy, and early design direction of the new SMASH website.
 
-## The brief
-The website has one job: make people want to work with Smash Studio. Not through sales copy — through the work itself. Dense, confident, zero fluff. Every pixel earns its space. The portfolio does the talking. The aesthetic says "we build things that matter."
+At this stage, the goal is not to prematurely define the final site, but to build a clear foundation for decision-making as references, ideas, structures, and directions are explored.
 
-## The aesthetic
-Dark, dense, professional. The same energy as the internal tools but tuned for a public audience. Not a tech startup landing page. Not a Squarespace template. A creative studio that builds immersive experiences — the website should feel like one.
+This file should be treated as the core strategic guide for all AI-assisted thinking in this repository.
 
-### Typography
-- **Headlines**: GT Walsheim Condensed Bold (custom font, `.woff2` file needed — licensed, copy from smash-os repo)
-- **Body**: DM Mono (Google Fonts, weights 300/400/500) — monospace gives it that technical-creative edge
-- **Accents**: Syne (Google Fonts, weights 700/800) — for special moments, not everywhere
+## About SMASH
 
-### Colors (dark mode primary)
-| Role | Hex | Notes |
-|------|-----|-------|
-| Primary accent | `#00E5FF` | Cyan. The brand color. CTAs, highlights, focus states |
-| Page background | `#0A0A0F` | Near black |
-| Surface | `#0D0D14` | Cards, sections |
-| Card fill | `#13131F` | Deeper card interiors |
-| Border | `#1A1A2E` | Subtle structure |
-| Text primary | `#E2E8F0` | Headlines, key content |
-| Text body | `#A0AEC0` | Body copy |
-| Text muted | `#636E7B` | Captions, metadata |
+SMASH is a creative studio working at the intersection of art, design, technology, and spatial experience.
 
-**Project type accent colors** (use on portfolio cards/filters):
-- 3D: `#00E5FF` (Cyan)
-- Animation: `#FF6B6B` (Red)
-- Unreal Engine: `#9B59B6` (Purple)
-- Projection Mapping: `#F39C12` (Orange)
-- Game Experience: `#2ECC71` (Green)
+The studio creates interactive installations, projection mapping, immersive environments, and digital experiences that transform spaces and invite participation.
 
-### Design principles
-- **Information density** — pack relevant content, no hero images with 3 words on them
-- **No dead UI** — every element earns its space
-- **Sharp, not rounded** — 8-10px border radius max. No bubbly SaaS energy
-- **Monospace for data** — DM Mono for numbers, dates, project codes, metadata
-- **Motion with purpose** — animate to communicate, not to decorate
+SMASH combines artistic vision with real-world execution.
 
-## Portfolio data
-The portfolio is powered by Smash OS's Codex system. There's a **public API endpoint** already built:
+## North star
 
-```
-GET https://smash-os.vercel.app/api/codex
-GET https://smash-os.vercel.app/api/codex?status=Published
-GET https://smash-os.vercel.app/api/codex?status=Published&section=Project&featured=true
-GET https://smash-os.vercel.app/api/codex?tag=3D
-```
+The website should make visitors feel that SMASH turns spaces into living experiences.
 
-Returns:
-```json
-{
-  "entries": [
-    {
-      "id": "rec...",
-      "Title": "Project Name",
-      "Headline": "One-liner for cards",
-      "Body": "Full case study narrative",
-      "Section": "Project",
-      "Client": "Client Name",
-      "Year": 2025,
-      "Hero Image": "https://...",
-      "Medium Tags": ["3D", "Animation"],
-      "Purpose Tags": ["Brand Experience", "Live Event"],
-      "Featured": true,
-      "Credits": "Team credits",
-      "Outcome": "Impact, awards, reach",
-      "Tech Stack": "Unreal 5, TouchDesigner",
-      "Media": "https://vimeo.com/..."
-    }
-  ],
-  "count": 12
-}
-```
+It should communicate that SMASH is not just producing visuals or technical systems, but creating memorable spatial experiences shaped by emotion, interaction, transformation, and storytelling.
 
-### Portfolio taxonomy
-**Medium Tags** (what we made): 3D, Animation, Projection Mapping, Unreal Engine, Game Experience, Motion Design, Film/Video
+## What the website must ultimately achieve
 
-**Purpose Tags** (why we made it): Brand Experience, Live Event, Digital Installation, Interactive, Consultation, Festival, Personal
+The future website should:
 
-**Sections**: Projects (portfolio case studies), Processes (how we work), Tools (what we use)
+- clearly express who SMASH is
+- showcase selected work with clarity and impact
+- position SMASH as a premium creative partner for ambitious experiential work
+- communicate both artistic ambition and delivery capability
+- attract the right commissions, collaborators, and cultural or commercial partners
+- feel distinctive to SMASH rather than interchangeable with other studios
 
-## Suggested site structure
+## Brand truths
 
-### Homepage
-- Hero statement — who Smash is, what they do, in 10 words or less
-- Featured projects — pull from Codex API (`?featured=true&section=Project`)
-- Reel or showreel embed
-- The team (brief)
-- Contact CTA
+These principles should guide all research, writing, concepting, and strategic decisions.
 
-### Work / Portfolio
-- Filterable grid by Medium and Purpose tags
-- Project cards: hero image, title, client, year, medium tags
-- Click through to full case study (Body field = the narrative)
-- Case study page: hero, narrative, credits, tech stack, outcome, media embeds
+### 1. Experience comes first
+Technology is a medium, not the message.
 
-### About
-- Studio story
-- Team bios (Ash, Veronica, Emile)
-- What Smash believes in
+### 2. Interaction should feel meaningful
+Avoid gimmicks. Favor intuitive, playful, emotionally rewarding participation.
 
-### Contact
-- hello@smash.studio
-- Simple form or just the email. No friction
+### 3. SMASH transforms how places feel
+The work is not only visual. It changes atmosphere, behavior, and emotional response within a space.
 
-## Stack suggestion
-Keep it simple. This is a portfolio site, not a web app:
-- **Astro** or **Next.js** (static generation + API routes if needed)
-- **Vercel** for hosting (same as Smash OS — familiar deploy flow)
-- Pull portfolio data at build time from the Codex API, or fetch client-side
-- CSS custom properties for theming (same pattern as Smash OS)
+### 4. Artistic quality and execution matter equally
+SMASH should feel visionary, but also credible, thoughtful, and capable of delivering complex real-world work.
 
-## The team
-**Ash** is the founder and creative director. Not a developer. Describe what you did simply. Build it, push it. Don't ask permission for small improvements — just make things better.
+### 5. The work should feel open and human
+Even when technically advanced, the audience experience should feel accessible and inviting.
 
-**Veronica** is the producer. She'll care about how clients perceive the site and whether the contact flow works.
+### 6. Project storytelling matters
+Do not reduce projects to tools, effects, or visuals. Explain the idea, the context, the audience experience, and the transformation created.
 
-**Emile** is the creative technologist. He'll care about the technical craft and whether it feels genuinely good.
+## Research guidance
 
-## What NOT to do
-- Don't make it look like every other studio website (full-screen video, white text, "we create experiences")
-- Don't use stock photography
-- Don't hide the work behind animations
-- Don't make it slow
-- Don't use a CMS unless you need to — the Codex API is the CMS
+When analyzing references, ideas, structures, or patterns, prioritize:
 
-## After every change
-```
-git add -A && git commit -m "what changed" && git push
-```
+- clarity
+- emotional resonance
+- distinctiveness
+- spatial thinking
+- meaningful interactivity
+- strong project storytelling
+- credibility
+- elegance without generic luxury language
+- inspiration grounded in purpose
+
+## Tone of voice
+
+Use language that is:
+
+- clear
+- confident
+- warm
+- intelligent
+- visually evocative without becoming vague
+- premium without sounding corporate
+- specific rather than inflated
+
+Avoid:
+
+- generic agency language
+- empty buzzwords
+- exaggerated claims
+- trend-driven phrasing
+- overly technical explanations unless context requires them
+- art language that becomes obscure or inaccessible
+
+## Anti-goals
+
+Do not let the website drift into any of the following:
+
+- a generic creative agency portfolio
+- a cold technology showcase
+- a motion-heavy site with little clarity
+- an over-written art manifesto
+- a collection of pretty images without project meaning
+- a trend-led design exercise disconnected from SMASH's actual strengths
+- a service list that flattens the emotional and spatial nature of the work
+
+## Decision tiebreaker
+
+When in doubt, choose the direction that best reflects SMASH as a studio that creates poetic, participatory transformations of space through art and technology. Prefer specificity over abstraction, and real project evidence over theoretical positioning.
