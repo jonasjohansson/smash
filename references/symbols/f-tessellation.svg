@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <!-- F. Tessellation Mark — angular facets filling a circle, crystalline shatter pattern -->
+  <rect width="400" height="400" fill="white"/>
+  <g transform="translate(200,200)" fill="none" stroke="black" stroke-width="2" stroke-linejoin="round">
+    <!-- Outer circle -->
+    <circle cx="0" cy="0" r="140" stroke-width="2.5"/>
+
+    <!-- Tessellated shatter pattern — angular cells like broken safety glass -->
+    <!-- Centre cluster -->
+    <polygon points="-8,-25 15,-28 22,-5 8,12 -12,8"/>
+    <polygon points="-8,-25 -35,-42 -18,-58 8,-52 15,-28"/>
+    <polygon points="15,-28 8,-52 35,-62 48,-38 22,-5"/>
+    <polygon points="22,-5 48,-38 62,-12 52,18 8,12"/>
+    <polygon points="8,12 52,18 42,48 12,42 -12,8"/>
+    <polygon points="-12,8 12,42 -8,55 -35,38 -28,12"/>
+    <polygon points="-12,8 -28,12 -48,-5 -35,-42 -8,-25"/>
+
+    <!-- Middle ring -->
+    <polygon points="-18,-58 -48,-82 -22,-98 12,-88 8,-52"/>
+    <polygon points="8,-52 12,-88 48,-92 62,-68 35,-62"/>
+    <polygon points="35,-62 62,-68 88,-42 72,-15 48,-38"/>
+    <polygon points="48,-38 72,-15 82,22 62,38 52,18"/>
+    <polygon points="52,18 62,38 52,72 32,68 42,48"/>
+    <polygon points="42,48 32,68 5,88 -18,72 -8,55"/>
+    <polygon points="-8,55 -18,72 -52,68 -52,42 -35,38"/>
+    <polygon points="-35,38 -52,42 -72,15 -58,-12 -48,-5"/>
+    <polygon points="-48,-5 -58,-12 -68,-48 -48,-82 -35,-42"/>
+
+    <!-- Outer ring -->
+    <polygon points="-48,-82 -72,-115 -42,-130 -22,-98"/>
+    <polygon points="-22,-98 -42,-130 -5,-138 25,-128 12,-88"/>
+    <polygon points="12,-88 25,-128 62,-118 72,-92 48,-92"/>
+    <polygon points="48,-92 72,-92 102,-62 88,-42 62,-68"/>
+    <polygon points="88,-42 102,-62 118,-22 105,8 82,22 72,-15"/>
+    <polygon points="82,22 105,8 112,48 95,72 62,38"/>
+    <polygon points="62,38 95,72 78,105 52,98 52,72 32,68"/>
+    <polygon points="32,68 52,98 28,118 2,112 5,88"/>
+    <polygon points="5,88 2,112 -35,115 -52,92 -52,68 -18,72"/>
+    <polygon points="-52,68 -52,92 -88,78 -88,48 -72,15 -52,42"/>
+    <polygon points="-72,15 -88,48 -115,22 -112,-15 -92,-38 -58,-12"/>
+    <polygon points="-58,-12 -92,-38 -98,-72 -72,-115 -68,-48 -48,-82"/>
+  </g>
+</svg>

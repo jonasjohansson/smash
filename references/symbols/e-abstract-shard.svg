@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <!-- E. Abstract Shard — single angular fragment, most reduced -->
+  <rect width="400" height="400" fill="white"/>
+  <g transform="translate(200,200)">
+    <!-- A single sharp, asymmetric shard shape -->
+    <polygon points="-15,-120 28,-85 42,-18 35,45 8,110 -22,65 -38,8 -28,-52"
+             fill="black" stroke="none"/>
+  </g>
+</svg>

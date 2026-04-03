@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <!-- C. Contained Fragment Cluster — shards within a circle -->
+  <rect width="400" height="400" fill="white"/>
+  <g transform="translate(200,200)" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round">
+    <!-- Outer circle container -->
+    <circle cx="0" cy="0" r="150" stroke-width="2.5"/>
+
+    <!-- Impact point slightly off-centre -->
+    <!-- Fracture lines from impact to circle edge -->
+
+    <!-- Primary radial fractures -->
+    <line x1="-12" y1="-8" x2="-62" y2="-137"/>
+    <line x1="-12" y1="-8" x2="42" y2="-143"/>
+    <line x1="-12" y1="-8" x2="118" y2="-92"/>
+    <line x1="-12" y1="-8" x2="145" y2="35"/>
+    <line x1="-12" y1="-8" x2="95" y2="115"/>
+    <line x1="-12" y1="-8" x2="18" y2="148"/>
+    <line x1="-12" y1="-8" x2="-68" y2="132"/>
+    <line x1="-12" y1="-8" x2="-128" y2="78"/>
+    <line x1="-12" y1="-8" x2="-148" y2="-22"/>
+    <line x1="-12" y1="-8" x2="-108" y2="-105"/>
+
+    <!-- Concentric ring fractures (circular cracks) -->
+    <!-- Inner ring -->
+    <path d="M -30,-48 L -8,-52 L 22,-42 L 38,-22 L 35,8 L 22,28 L -5,35 L -28,22 L -38,-2 L -35,-28 Z" stroke-width="2"/>
+
+    <!-- Middle ring -->
+    <path d="M -52,-95 L -15,-102 L 32,-88 L 72,-58 L 85,-18 L 78,28 L 55,65 L 18,82 L -25,78 L -62,52 L -78,12 L -75,-38 L -65,-72 Z" stroke-width="1.8"/>
+
+    <!-- Outer ring fragments -->
+    <path d="M -85,-128 L -42,-135 L 15,-138 L 65,-118 L 105,-82 L 132,-42 L 142,5 L 135,52 L 108,95 L 68,125 L 25,142 L -22,140 L -68,122 L -108,88 L -132,42 L -140,-8 L -128,-58 L -108,-98 Z" stroke-width="1.5"/>
+  </g>
+</svg>

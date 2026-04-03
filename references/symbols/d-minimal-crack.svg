@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <!-- D. Minimal Crack — a square with a single elegant fracture -->
+  <rect width="400" height="400" fill="white"/>
+  <g transform="translate(200,200)" fill="none" stroke="black" stroke-linecap="round">
+    <!-- Clean square -->
+    <rect x="-130" y="-130" width="260" height="260" stroke-width="3" fill="none"/>
+
+    <!-- Single fracture line running through the square -->
+    <!-- Enters top edge, exits bottom-right, with angular direction changes -->
+    <polyline points="-35,-130 -28,-95 -18,-62 -8,-38 2,-18 -5,5 8,28 18,52 12,78 22,105 35,130"
+              stroke-width="2.8" fill="none"/>
+
+    <!-- Subtle secondary crack branching off -->
+    <polyline points="2,-18 25,-32 48,-28 78,-35 115,-42 130,-45"
+              stroke-width="1.8" fill="none"/>
+
+    <!-- Small tertiary crack -->
+    <polyline points="8,28 -15,42 -38,55 -62,52 -95,58 -130,62"
+              stroke-width="1.5" fill="none"/>
+  </g>
+</svg>

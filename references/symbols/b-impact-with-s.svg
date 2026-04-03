@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <!-- B. Radial Impact with S in Negative Space -->
+  <rect width="400" height="400" fill="white"/>
+  <g transform="translate(200,200)" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round">
+    <!-- Central S-shaped void formed by fracture boundaries -->
+    <path d="M 12,-22 C 18,-20 22,-14 20,-8 C 18,-2 8,0 2,2 C -6,5 -14,8 -16,14 C -18,20 -12,26 -4,26"
+          fill="none" stroke="black" stroke-width="3"/>
+    <path d="M -12,-26 C -18,-24 -22,-18 -20,-12 C -18,-6 -8,-2 -2,0 C 6,3 14,6 16,12 C 18,18 14,24 6,26"
+          fill="none" stroke="black" stroke-width="3"/>
+
+    <!-- Primary fracture lines radiating from S curve endpoints -->
+    <line x1="12" y1="-22" x2="55" y2="-78"/>
+    <line x1="55" y1="-78" x2="85" y2="-148"/>
+
+    <line x1="-12" y1="-26" x2="-35" y2="-82"/>
+    <line x1="-35" y1="-82" x2="-52" y2="-155"/>
+
+    <line x1="6" y1="26" x2="48" y2="72"/>
+    <line x1="48" y1="72" x2="82" y2="142"/>
+
+    <line x1="-4" y1="26" x2="-42" y2="78"/>
+    <line x1="-42" y1="78" x2="-72" y2="148"/>
+
+    <!-- Side radiating fractures from S curves -->
+    <line x1="20" y1="-8" x2="85" y2="-25"/>
+    <line x1="85" y1="-25" x2="158" y2="-38"/>
+
+    <line x1="-20" y1="-12" x2="-82" y2="-32"/>
+    <line x1="-82" y1="-32" x2="-155" y2="-48"/>
+
+    <line x1="16" y1="12" x2="78" y2="30"/>
+    <line x1="78" y1="30" x2="152" y2="48"/>
+
+    <line x1="-16" y1="14" x2="-75" y2="35"/>
+    <line x1="-75" y1="35" x2="-148" y2="55"/>
+
+    <!-- Additional radiating lines -->
+    <line x1="12" y1="-22" x2="8" y2="-85"/>
+    <line x1="8" y1="-85" x2="5" y2="-155"/>
+
+    <line x1="-12" y1="-26" x2="-65" y2="-62"/>
+    <line x1="-65" y1="-62" x2="-125" y2="-108"/>
+
+    <line x1="6" y1="26" x2="58" y2="45"/>
+    <line x1="58" y1="45" x2="135" y2="78"/>
+
+    <line x1="-4" y1="26" x2="-8" y2="88"/>
+    <line x1="-8" y1="88" x2="-12" y2="155"/>
+
+    <!-- Secondary branches -->
+    <line x1="55" y1="-78" x2="95" y2="-92" stroke-width="1.8"/>
+    <line x1="-35" y1="-82" x2="-72" y2="-108" stroke-width="1.8"/>
+    <line x1="85" y1="-25" x2="108" y2="-72" stroke-width="1.8"/>
+    <line x1="-82" y1="-32" x2="-105" y2="-75" stroke-width="1.8"/>
+    <line x1="78" y1="30" x2="102" y2="75" stroke-width="1.8"/>
+    <line x1="-75" y1="35" x2="-98" y2="78" stroke-width="1.8"/>
+    <line x1="48" y1="72" x2="88" y2="98" stroke-width="1.8"/>
+    <line x1="-42" y1="78" x2="-82" y2="108" stroke-width="1.8"/>
+  </g>
+</svg>
