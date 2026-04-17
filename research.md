@@ -194,6 +194,43 @@ How do spatial/physical practices present their work on a flat screen?
 
 ---
 
+### 11. Domestic Data Streamers
+**domesticstreamers.com** | ~30 people, Barcelona, founded 2013 | Reviewed 2026-04-05
+
+**5-second test:** Dark, editorial, purposeful. Animated hero with atmospheric imagery. You feel immediately that this studio cares about *meaning*, not just visuals. Reads as a cultural institution-meets-design studio.
+
+**30-second test:** "Research and design studio that fights indifference towards data through art, community, and experiences." Extremely clear. You know exactly what they do and why within seconds — and it's specific enough that no one else could claim it.
+
+**Positioning:** "Fighting indifference towards data." This is the sharpest positioning line across all 11 references. It's a point of view, not a description. It's specific, memorable, and it couldn't be pasted onto any competitor. Their founding idea — "the world couldn't be understood without numbers, but it wouldn't be understood with numbers alone" — is equally strong.
+
+**Tone:** Confident, intellectually ambitious, but emotionally grounded. Accessible without dumbing down. Playful where appropriate — an exhibition "turns toxic polarization into a gym session for your brain." No jargon, no agency-speak.
+
+**Project storytelling:** Large image cards with category tags and 1-2 sentence descriptions. The descriptions lead with what the project *does to people* or *why it matters*, not what was built. Projects tackle real subjects: surveillance, digital rights, polarisation, child marriage. The work has a social purpose beyond aesthetics.
+
+**Site structure:** Three-way split — Art & Research / Agency Work / Education. This is a more nuanced version of the Swamp/SMASH Originals taxonomy. It separates the practice into distinct modes without creating hierarchy.
+
+**Trust signals:** Institutional partners (UNICEF, World Bank, TED, Barbican, MoMA, UN). 19+ awards including Ars Electronica Grand Prize. Work in 100+ cities. Press: NPR, MIT Tech Review, The Guardian. Upcoming exhibitions prominently displayed — signals active relevance, not just archive.
+
+**Team:** 30 people, 5 founding partners named, interdisciplinary (designers, engineers, journalists, psychologists, architects). Team page exists but isn't the lead — the work and mission come first.
+
+**Visual design:** Dark backgrounds, clean sans-serif type, spacious layout. Minimal accent colour. Mouse-tracking parallax on hero. Subtle scroll-triggered animations. Non-aggressive — no popups, no hard CTAs. Contact info accessible but not pushy.
+
+**What works:**
+- The positioning line is a masterclass. "Fighting indifference towards data" does more work than any paragraph of description.
+- The three-way split (Art / Agency / Education) is clean and honest about different modes of practice.
+- Subject matter makes them distinctive — they're not just making pretty things, they're tackling real issues.
+- Upcoming exhibitions on the homepage signals "we're active and relevant right now."
+- The tone balances intellectual ambition with warmth — no art-world distance.
+
+**What doesn't work:**
+- No team visibility on the homepage — you don't know who these people are until you dig.
+- Project descriptions on the homepage are very brief — you need to click through for substance.
+- The "data" framing is so specific it might limit perception of range (though that specificity is also the strength).
+
+**For SMASH:** The biggest lesson here is **positioning through a point of view, not a capability description.** "Fighting indifference towards data" is not "we create data visualisations." It's a stance. SMASH needs the equivalent — a line that expresses *why* the studio exists, not just *what* it does. "The collision between real and imagination" is the territory, but it's not yet a stance the way DDS has one. Also: the three-way split model (Art & Research / Agency / Education) is a more nuanced version of the SMASH category approach — worth studying how they make it work without hierarchy.
+
+---
+
 ## Competitive landscape
 
 ### Where SMASH sits
@@ -341,25 +378,235 @@ Sites identified by the team as relevant to SMASH's direction.
 
 ---
 
-## Emerging conclusions (after 10 references)
+## References — Local Competitors
+
+Studios competing directly with SMASH in the Swedish/Nordic market.
+
+---
+
+### 12. Clay Studio
+**claystudio.se** | ~2 people (John & Emmy), Stockholm | Reviewed 2026-04-08 (live site fetch)
+
+**Note:** Site was published on 2026-04-07. Still incomplete — social links are placeholder URLs, phone number is placeholder, several referenced projects don't have live pages yet. Built on a Webflow template (Aerio — 404 page still shows template name).
+
+**5-second test:** Premium-minimal. Full-viewport video hero, monochrome with purple accent. Clean serif/sans pairing (Poltawski Nowy + Instrument Sans). GSAP scroll animations, text blur-in reveals, mouse trail effects. Polished but not distinctive — could be any design studio.
+
+**30-second test:** "Small Stockholm studio that creates immersive physical and digital experiences for museums and brands. Interactive installations, exhibitions, showrooms." Clear enough, but the scale and ambition feel modest.
+
+**Positioning:** "Crafting a-ha moments through exploration, play, and invention." Expanded: "We help brands, museums and businesses turn stories into engaging, physical and digital experiences. Through interaction, technology and design, we create worlds people can step into — not just look at." "A-ha moments" is their signature concept, repeated 4+ times. Catchy but risks thinning with overuse.
+
+**Tone:** Warm, conversational, second-person direct address ("What do you want people to feel, learn or remember?"). Accessible without being dumbed down. Closer to the "practitioner voice" territory than most Batch 1-3 references. No art-world pretension, no corporate gloss.
+
+**Project storytelling:** Four projects live. Structure: hero image/video → title → metadata sidebar (client, year, scope) → description → image gallery → collaborators → services list → related projects. Metadata-first approach (the Snøhetta pattern). Descriptions focus on audience experience rather than technical specs. Decent but not editorially ambitious — no provocation-first framing, no sensory language, no impact metrics.
+
+**Projects:**
+1. **The Time Travel Dinner** (2024) — Spritmuseum. Immersive dining, 300 years of Swedish food/beverage history. With Transpond, Marsapril.
+2. **WOOD/S** (2024) — Wisdome Stockholm. Full-dome immersive film about forests. Credits: Ash Reed, Emile Pascao, Daniel Bladini, Magnus Larsson, Emelie Bjerner.
+3. **Sweden — Land of Beverages** (2026) — Spritmuseum. Exhibition, physical/digital interaction. With Transpond.
+4. **Experience Alfa Laval** (2025) — Interactive showroom, Innovation Center Flemingsberg. With Wingardhs, Transpond.
+
+Several more referenced but not yet live (The Letter Room, World of Energy, These Things Changed the World, Energy in Balance).
+
+**Services:** Four pillars — Strategy & Concept / Experience Design / Production & Implementation / Technology & Development. Capability tags: Strategy, Art Direction, Digital Design, UX, Creative Development, Motion Design, Copywriting, 3D. Practical and clear, no mystification.
+
+**Trust signals:** None. No awards, no press, no testimonials, no client logo grid, no metrics. The work alone is doing the lifting — which is risky with only four projects.
+
+**Team:** Only two first names: John and Emmy. No surnames, no titles, no bios, no photos. Either a very small operation or the team section is still being built out.
+
+**Key dependency:** Transpond appears as collaborator on 3 of 4 projects, suggesting Clay may work through or alongside this partner rather than independently delivering end-to-end.
+
+**Visual design:** Monochrome + purple (#c08eff) accent. Webflow template base (Aerio). Generous whitespace, large typography, video-forward. GSAP + ScrollTrigger animations. Dark/light mode toggle. Professional but template-derived — lacks the bespoke feel a premium studio needs.
+
+**Clients:** Spritmuseum (×2), Wisdome Stockholm, Alfa Laval. Museum/corporate only — no entertainment, no festivals, no broadcast.
+
+**What works:**
+- Warm, direct tone — the "accessible confidence" register that most references lack
+- Practical service framing with no art-world mystification
+- Metadata-first project pages
+- "Worlds people can step into — not just look at" is a decent line
+- Video-forward homepage
+- Clear contact pathway ("Let's start a conversation")
+
+**What doesn't work:**
+- Template-based site undermines premium positioning
+- "A-ha moments" repeated to the point of thinning
+- No trust signals at all — no awards, no press, no social proof
+- Only 4 projects with several still unfinished
+- Transpond dependency on 75% of projects raises questions about independent capability
+- No visible team — two first names, no context on who they are or why they're qualified
+- No origin story, no point of view beyond the tagline
+- Client base is narrow (museum + one corporate showroom)
+- Generic visual identity — monochrome + purple could be any studio
+- Social links are placeholder URLs (site is incomplete)
+
+**For SMASH — this is the closest geographic competitor:**
+Clay occupies almost identical positioning territory (immersive, interactive, physical/digital experiences) in the same city. But the comparison heavily favors SMASH:
+
+- **Portfolio depth:** SMASH has 13+ projects vs. Clay's 4 (with several incomplete)
+- **Client caliber:** Netflix, HBO, Eurovision, major festivals vs. Spritmuseum and Alfa Laval
+- **Team identity:** Three named partners with clear complementary roles vs. two unnamed first names
+- **Range:** Culture + commercial + entertainment + broadcast vs. museum/corporate only
+- **Independence:** End-to-end delivery vs. Transpond dependency on 75% of projects
+- **Brand investment:** Professional identity redesign in progress (Jens) vs. Webflow template
+
+Where Clay has made a smart choice is the tone — warm, direct, no pretension. They've found the register. SMASH should note this and ensure its own voice is at least as warm and accessible, while being backed by the depth, range, and credibility that Clay currently lacks.
+
+**The Ash/Emile connection:** Both are credited on Clay's WOOD/S project. This is a collaborative relationship, not a hostile competitor. But it means potential clients may see both studios and compare. SMASH needs a website that makes the difference in capability, range, and depth immediately obvious.
+
+---
+
+## References — Additional Aspirational Peers
+
+---
+
+### 13. ToyFight
+**toyfight.co** | Independent digital studio, Manchester UK, founded 2015 | Reviewed 2026-04-11 (live site fetch)
+
+**Discipline note:** ToyFight is **digital-only**. No installations, no projection mapping, no spatial work. "Experience" in their vocabulary means *digital product experience*. This is a reference for **voice, craft, and positioning discipline** — not discipline overlap.
+
+**5-second test:** Pure voice. "LOADING PLS WAIT" mono CLI preloader. Dark, bold, deliberately weird. You feel the personality before you understand the services. Closer to a designer's in-joke than a client-facing brochure — and that's the point.
+
+**30-second test:** "Manchester brand and digital design studio for ambitious brands. Strategy, design, development, content. Strong voice, strong awards profile, strong maker-culture energy." Clear once you scan the services page, deliberately murky on the homepage.
+
+**Positioning:** **"The Unmistakably Original® Design Studio"** — trademarked, literally. They've taken a compliment ("that's original") and turned it into a registered mark. Services page headline: **"Where Originality Clashes With Authenticity."** This is a stance, not a description.
+
+**Tone:** Voice-first, self-aware, meme-literate. "Say Hi / 인사해 / hello@toyfight.co" on the homepage. "ToyFight Joins SoDA. Presumably on Purpose." as a news post headline. Careers page calls them "Keyframe Kings and Queens" and talks about "the glorious messiness of life at an agency." Warmer than &Walsh, weirder than Pentagram, more confident than anything in Batch 1.
+
+**Services:** Four numbered pillars — (01) Strategy, (02) Design, (03) Development, (04) Content. Each has a video, a paragraph, and two paired case study thumbnails. Clean structural model.
+
+**Case study presentation:** Extremely short. Single screen per project. Pattern: title → one-line strapline → 2-3 paragraphs → "Visit Live Site" CTA → tags. They bet on **one clever sentence over deep storytelling.** Example for INK Games: *"We designed and developed a high-impact, animation-rich experience using a shared 3D canvas system powered by React Three Fiber and GSAP."*
+
+**Trust signals:** Awwwards Site of the Day ×3, Webby ×2, Lovie Award (all for their GSAP work), SoDA membership (Society of Digital Agencies). Client logo wall rendered as **looping video reels, not static logos** — Adidas, Apple Beats, Google, Facebook, Instagram, YouTube, Twitch, Chrome, KFC, Taco Bell, Royal Caribbean, Under Armour.
+
+**The killer moves:**
+
+1. **No About page. At all.** Deliberately. Personality lives in the **Store** (a joke merch page — "40GB Worth of Unused PSDs", "Rub One Out Eraser", "ToyFight Wrestling Action Figure", "ToyFight Agency — Under Offer"), the **Careers** pages, the **News** posts (functioning as a pseudo-blog for awards and hire announcements), and the **footer mad libs** — an animated word-shuffle cycling through: *"The / A / An — Unmistakably / Creative / Opinionated / Ultimate — Original® — Design Studio / Agency / Restaurant / Bastards."*
+
+2. **Command terminal navigation.** Hit `/` or `?` and a CLI overlay opens. Type `home`, `services`, `work`, `connect`, `store`, or effect commands like `bw`, `negative`, `reset`. You can literally type `bw` and the whole site goes black and white. Pure maker-culture signal.
+
+3. **Trademark everything.** `ToyFight®`, `TOY®SHOP`, `Unmistakably Original®`, `WOCWA®`. Half branding device, half typographic flex.
+
+**Design & craft:**
+
+- **Typography — three-voice system:** FKRasterGrotesk (display, distinctive pixel-raster-grotesk look), SpeziaCondensed (secondary display), SpeziaMono (UI labels, numerals, terminal). Gets massive typographic character without a custom face.
+- **Colour palette — no single brand colour.** Near-blacks (#0D0D0E, #1C1C1E), creams (#FAF6EF, #FDEDD4), **signature hazard yellow #FFE500**, candy pink #FFD8F5, pale lavender #E9E3F3. Per-project backgrounds layered on top of a consistent type system. They don't commit — they layer.
+- **Media:** Almost every "logo" and thumbnail is a looping video reel, not a static image. Full-bleed video hero. No team photos, no studio shots.
+- **Stack:** Next.js + Prismic CMS, React Three Fiber + GSAP for case study builds. Shared 3D canvas system with cursor-responsive WebGL.
+
+**What works:**
+- Voice-first positioning that can't be pasted onto a competitor
+- Three-typeface system as a structural pattern
+- Per-project backgrounds on a consistent type system (a model for category colours)
+- News posts as proof of life — pseudo-blog without editorial commitment
+- Awards and hire posts double as trust signals and personality proof
+- The command terminal is a maker-culture flex that delights the right audience
+- Four-pillar service structure is clean and scannable
+
+**What doesn't transfer to SMASH:**
+- **No About page.** ToyFight gets away with this because they're digital and sell personality. SMASH can't. The three-partner structure is a genuine differentiator, and spatial work needs process/scale evidence to build trust. SMASH needs *more* About, not less.
+- **Single-screen case studies.** Way too thin for experiential work. Stills of a website tell the story; stills of an installation don't. SMASH's case studies need to be longer, richer, video-heavy, more editorially developed.
+- **Joke store.** Delightful for ToyFight's meme-culture register. Reads wrong for a studio presenting premium work to museums, broadcast, and cultural clients.
+- **Digital-only positioning.** Don't let the "experience" overlap fool you — zero spatial work. Different lane entirely.
+
+**Useful colour data point:** ToyFight's signature yellow is `#FFE500` — more acidic, more hazard-sign than SMASH's current `#F4B940` which is warmer and more golden. Worth showing Jens as a comparison when discussing yellow direction.
+
+**For SMASH:** The biggest lesson is **voice as a primary positioning asset.** ToyFight's "Unmistakably Original®" is a stance, not a description, and it's earned by how the rest of the site behaves. SMASH's positioning territory ("the collision between physical space and creative imagination") needs to become something equally ownable — and every surface of the site needs to behave in a way that earns it. Also: the three-typeface system (display / condensed / mono) is a strong model for getting character without a custom face, worth flagging to Jens.
+
+---
+
+## Emerging conclusions (after 13 references)
 
 These feel repeated and meaningful enough to flag:
 
-1. **The open territory for SMASH is "accessible confidence."** Most studios are either corporate-impersonal or art-world-inaccessible. Gentilhomme and Swamp come closest to the right register — playful, confident, craft-proud — but neither shows the humans behind the work. SMASH can.
+1. **The open territory for SMASH is "accessible confidence."** Most studios are either corporate-impersonal or art-world-inaccessible. Gentilhomme, Swamp, and Clay come closest to the right register — playful, confident, craft-proud — but none combine it with visible humans and real depth. SMASH can.
 
-2. **The three-partner structure is a genuine differentiator.** Every reference is either anonymous collective (teamLab), auteur-led (Roosegaarde), institutional (Pentagram, Snøhetta), or deliberately faceless network (Gentilhomme). Three named humans with complementary roles is unusual and trust-building. No one does this.
+2. **The three-partner structure is a genuine differentiator.** Every reference is either anonymous collective (teamLab), auteur-led (Roosegaarde), institutional (Pentagram, Snøhetta), deliberately faceless network (Gentilhomme), or unnamed (Clay — two first names only). Three named humans with complementary roles is unusual and trust-building. No one does this.
 
 3. **Process visibility is unoccupied territory.** Every reference treats process as a black box. For SMASH, showing the craft (Unreal viewport, TouchDesigner pipeline, projection testing) would be both differentiating and trust-building.
 
-4. **Video is non-negotiable.** Confirmed further by Gentilhomme's video-forward approach. Immersive work loses its essence in stills. Short, ambient, embedded video — not showreels — should be in every case study.
+4. **Video is non-negotiable.** Confirmed further by Gentilhomme and Clay's video-forward approaches. Immersive work loses its essence in stills. Short, ambient, embedded video — not showreels — should be in every case study.
 
 5. **Case studies should be provocation-first, metadata-rich, editorially sequenced.** The best elements from Roosegaarde (provocation), Snøhetta (metadata), &Walsh (editorial rhythm), Pentagram (credits), and Gentilhomme (video overlay, bold categories) can be synthesized into a SMASH-specific format.
 
-6. **The positioning statement needs to be sharper than anything seen in the landscape.** Gentilhomme's "boutique studio that goes big" is the best positioning line seen so far — it owns a specific tension. SMASH needs something equally sharp and specific.
+6. **The positioning statement needs to be a point of view, not a description.** Domestic Data Streamers' "Fighting indifference towards data" is the gold standard — it's a stance, not a capability list. Gentilhomme's "boutique studio that goes big" owns a tension. Clay's "a-ha moments" is catchy but thin — it's a concept, not a conviction. SMASH's positioning should express *why* the studio exists, not just what it does.
 
 7. **Named work categories beat generic tags.** Swamp's "Swamp Originals" and Gentilhomme's "Airport Mode" / "Immersive Architecture" / "Plug & Play Creations" are memorable and distinctive. SMASH's taxonomy should follow suit — "SMASH Originals" plus categories with personality, not just "Brand Experience" or "Installation."
 
 8. **Punchy copy rhythm works for this space.** Gentilhomme's "Every. Tiny. Detail." and "Consistently. Deliver. Ambitious. Work." demonstrate that rhythmic, declarative copy cuts through better than either corporate smooth or art-world contemplative. This aligns with the practitioner voice hypothesis (H3).
+
+9. **The closest local competitor is beatable on depth.** Clay occupies the same territory in the same city, but with 4 projects (vs. 13+), no trust signals, template-based site, Transpond dependency, and no visible team. SMASH's website needs to make this gap immediately obvious — not through claims, but through the sheer quality, range, and specificity of what's shown.
+
+10. **Voice is an earned positioning asset.** ToyFight's "Unmistakably Original®" works because *every surface of the site behaves in a way that earns it* — the store, the careers page, the command terminal, the mad libs footer, the multilingual greeting. It's not just a tagline; it's a coherent personality system. SMASH's positioning line needs the same quality: a stance that every page, every interaction, every piece of copy actively backs up. Clay's "a-ha moments" fails this test; ToyFight's "Unmistakably Original®" passes it.
+
+---
+
+## Design & Craft References
+
+Sites studied not for positioning or content strategy, but for visual design, interaction design, and craft quality.
+
+---
+
+### 9to5 Studio
+**9to5studio.it** | Small architecture studio, Brescia, Italy | Reviewed 2026-04-08 (live site fetch)
+
+Not industry-related — Italian architecture studio specializing in BIM. Studied purely for design craft. Built by ET Studio on Nuxt 3 + Strapi CMS, heavy GSAP animation.
+
+**Design patterns worth noting:**
+
+- **Single brand accent color with total discipline.** The entire palette is black, white, and one vivid yellow (#ffff02). It appears on the page loader, scroll progress bar, footer, cursor dot, and "next project" cards. Nothing else. Maximum recognition through maximum restraint.
+- **Sidebar navigation freeing the content area.** No top nav. Two thin black pill-shaped columns fixed to left ("Menu") and right ("Contacts") edges — text rotated vertically. They morph into full-screen overlays via GSAP Flip when clicked. The entire content area is unobstructed.
+- **Custom SVG number glyphs.** Instead of standard numerals, each project/section gets an abstract geometric symbol made of rectangles and circles that *suggests* a number. Decorative and functional — becomes a visual identity element.
+- **Consistent micro-interaction language.** Every link uses the same hover animation: text slides up and out, a duplicate slides in from below. Applied everywhere. One animation language, not twelve. Gives the whole site a cohesive physical feel.
+- **Extreme typographic scale.** Single font (PP Neue Montreal) pushed to 120px for interactive list items. Responsive root font scaling means the whole site proportionally zooms with viewport width. Confident and editorial.
+- **Team section on desktop:** Large text list of names with a sticky portrait photo that swaps on hover. Elegant way to show the humans without a grid of headshots.
+- **"Next project" loop.** Every project page ends with a branded card linking to the next project, creating a continuous cycle through all work. Keeps visitors moving.
+- **Homepage = portfolio.** No separate /work page. You land on the work. Only 3 pages total (home, about, services). Extreme simplicity.
+- **Page transitions via GSAP Flip.** Yellow loader overlay morphs between pages instead of hard cuts. Creates spatial continuity.
+
+**For SMASH:** The key lesson is **one visual system applied with total consistency beats many effects applied loosely.** One accent color. One hover animation. One numbering system. One typographic voice. The discipline creates the premium feel, not the complexity. Also: the team-as-interactive-list pattern is a strong alternative to headshot grids — worth considering for showing the three partners.
+
+---
+
+### BASEBORN
+**baseborn.studio** | 2-person studio (Tore S. Bentsen + Simon H. Larsen), Copenhagen, Denmark | Reviewed 2026-04-15 (live site fetch)
+
+Also on the brand designer shortlist (#10). Founded 2022. Built on Webflow with Lenis + GSAP + Barba.js + Splitting.js + Lottie. 4× Awwwards SOTD, 5× FWA SOTD, Webby nominee. Studied for what makes a site feel "smooth" and "chunky."
+
+**What creates the "smooth" feel:**
+
+- **One signature easing curve for the entire site:** `cubic-bezier(.23, 1, .32, 1)` — fast start, very slow finish. Applied to every single animation. Creates a feeling of deceleration and precision, like things are gliding into place. This is the single biggest contributor.
+- **Lenis smooth scroll.** Overrides native scroll with momentum-based easing. The page keeps drifting slightly after you stop scrolling. Feels like weight.
+- **Clip-path reveals instead of opacity fades.** Everything wipes in from bottom-to-top. More physical, more directional than a fade.
+- **Long animation durations (1.5–2s).** Slow by web standards, but creates an unhurried, deliberate feeling.
+- **Barba.js page transitions.** No page reloads. Content slides vertically (y: -600 / +600), creating a continuous spatial experience.
+- **Trailing cursor.** Custom cursor follows the mouse with a `/9` division lag — creates a viscous, physical-feeling drag. Expands into a "View Work" circle on project hover.
+- **Hidden scrollbar.** Removes visual friction entirely.
+- **Sticky hero with scroll-over.** Homepage logo stays pinned while project tiles scroll up over it, creating depth without complexity.
+
+**What creates the "chunky" feel:**
+
+- **Custom proprietary display font (Baseborn Sans)** at massive viewport-based sizes — headlines range from 7.8vw to 23vw. The homepage logo renders at 19.45vw (nearly a fifth of screen width per character).
+- **Aggressive negative letter-spacing** on display type: `-.25vw` to `-.82vw`. Characters almost touch. Density, not just size.
+- **Uppercase everywhere** on display text + **low line-height** (0.75–0.9). Packed both horizontally and vertically.
+- **High contrast between display and body.** Body text is tiny in comparison (1.3vw, Twklausanne grotesque, normal case). The gap makes headlines feel even more massive.
+- **Thin 1px dividers** (`#242424`) against massive type. Precision against weight.
+
+**Palette:** Almost monochromatic dark. `#101010` background, white text, `#818181` muted text, `#242424` dividers. One single accent: acid green `#d5fb70` on CTA pill buttons — used extremely sparingly. Footer inverts to light grey (`#dbdbdb`) with near-black text.
+
+**Type system (5 fonts layered):**
+- **Baseborn Sans** — proprietary chunky display (the identity)
+- **Baseborn Logo** — proprietary, even larger, for the homepage hero wordmark
+- **Twklausanne** — clean grotesque for body text (the quiet voice)
+- **Universal Sans Display (BB)** — custom variant for preloader
+- **Neue World Extended** — extended serif for one contrast word in the hero ("Independent")
+
+**For SMASH:** Several directly transferable patterns:
+- **One easing curve for the whole site** — same principle as 9to5's "one animation language." Total consistency creates the premium feel.
+- **Clip-path reveals instead of opacity fades** — more physical, works especially well with immersive/spatial content.
+- **Custom or semi-custom display font as primary identity asset** — the font IS the identity. Worth flagging to Jens (or whoever does the brand) as a direction.
+- **Dark-first with one accent colour** — `#101010` + white + one pop. Close to what SMASH wants (dark backgrounds, the `#F4B940` yellow).
+- **Sticky hero → scroll-over pattern** — projects reveal by scrolling up over a fixed background. Could work beautifully with a video hero for SMASH's showreel content.
+- **The "smooth" recipe is replicable:** Lenis + one signature easing + clip-path reveals + long durations + Barba page transitions. Not magic — a specific technical stack applied with discipline.
 
 ---
 

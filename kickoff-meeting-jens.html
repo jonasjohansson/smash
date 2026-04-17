@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMASH × Jens — Brand Kick-off</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf7f2;
+    --ink: #14110f;
+    --ink-soft: #3a342e;
+    --ink-mute: #7a7169;
+    --rule: #e8e1d6;
+    --accent: #c8932a;
+    --accent-soft: #f4e8c9;
+    --card: #ffffff;
+  }
+
+  @page {
+    size: A4;
+    margin: 22mm 20mm 22mm 20mm;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 60px 50px 80px;
+  }
+
+  /* Typography */
+  h1, h2, h3, h4 {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    page-break-after: avoid;
+  }
+
+  h1 {
+    font-size: 54pt;
+    line-height: 0.95;
+    margin: 0 0 8px 0;
+    letter-spacing: -0.02em;
+  }
+
+  h2 {
+    font-size: 26pt;
+    line-height: 1.05;
+    margin: 44px 0 14px 0;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+  }
+
+  h3 {
+    font-size: 16pt;
+    line-height: 1.2;
+    margin: 28px 0 8px 0;
+    color: var(--ink);
+  }
+
+  h4 {
+    font-family: 'Inter', sans-serif;
+    font-size: 9pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin: 22px 0 8px 0;
+  }
+
+  p {
+    margin: 0 0 12px 0;
+    color: var(--ink-soft);
+  }
+
+  strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  em {
+    font-style: italic;
+    color: var(--ink-mute);
+  }
+
+  a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-underline-offset: 2px;
+  }
+
+  ul, ol {
+    margin: 0 0 14px 0;
+    padding-left: 20px;
+    color: var(--ink-soft);
+  }
+
+  li {
+    margin: 4px 0;
+  }
+
+  /* Header */
+  .header {
+    padding-bottom: 30px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .eyebrow {
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 18px;
+  }
+
+  .meta {
+    display: flex;
+    gap: 24px;
+    margin-top: 24px;
+    font-size: 9pt;
+    color: var(--ink-mute);
+    letter-spacing: 0.02em;
+  }
+
+  .meta span {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .meta span::before {
+    content: "";
+    width: 4px;
+    height: 4px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 8px;
+  }
+
+  /* Purpose card */
+  .purpose {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    padding: 22px 26px;
+    margin: 24px 0 0 0;
+  }
+
+  .purpose p { margin: 0 0 8px 0; }
+  .purpose p:last-child { margin-bottom: 0; }
+
+  /* Agenda table */
+  .agenda {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 8px 0;
+    font-size: 10pt;
+  }
+
+  .agenda td {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--rule);
+    color: var(--ink-soft);
+  }
+
+  .agenda td:first-child {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 14pt;
+    color: var(--accent);
+    width: 36px;
+    vertical-align: middle;
+  }
+
+  .agenda td:nth-child(2) {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .agenda td:last-child {
+    text-align: right;
+    color: var(--ink-mute);
+    font-variant-numeric: tabular-nums;
+    font-size: 9pt;
+  }
+
+  /* Pull quote */
+  blockquote {
+    margin: 18px 0;
+    padding: 18px 24px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 14pt;
+    line-height: 1.35;
+    color: var(--ink);
+    font-style: italic;
+  }
+
+  blockquote strong {
+    font-style: normal;
+  }
+
+  /* Key-value rows (partners) */
+  .partners {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin: 16px 0;
+  }
+
+  .partner {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    padding: 16px 18px;
+  }
+
+  .partner .name {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 18pt;
+    line-height: 1;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+
+  .partner .role {
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-mute);
+  }
+
+  /* Client strip */
+  .clients {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 15pt;
+    line-height: 1.4;
+    color: var(--ink);
+    padding: 14px 0;
+    margin: 8px 0 14px 0;
+  }
+
+  .clients span {
+    color: var(--ink-mute);
+    margin: 0 6px;
+  }
+
+  /* Two-column compare */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 14px 0;
+  }
+
+  .compare .col {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    padding: 18px 20px;
+  }
+
+  .compare h4 {
+    margin-top: 0;
+    color: var(--ink-mute);
+  }
+
+  .compare .studio {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 16pt;
+    color: var(--ink);
+    margin: 4px 0 6px 0;
+  }
+
+  .compare .desc {
+    font-size: 9pt;
+    color: var(--ink-mute);
+    margin: 0;
+  }
+
+  /* Colour swatch */
+  .swatch-block {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin: 16px 0 22px 0;
+    border: 1px solid var(--rule);
+    page-break-inside: avoid;
+    overflow: hidden;
+  }
+
+  .swatch-block .swatch {
+    width: 180px;
+    flex-shrink: 0;
+    background: #F4B940;
+    display: flex;
+    align-items: flex-end;
+    padding: 18px 20px;
+  }
+
+  .swatch-block .swatch .hex {
+    font-family: 'Inter', sans-serif;
+    font-size: 12pt;
+    font-weight: 600;
+    color: #14110f;
+    letter-spacing: 0.04em;
+  }
+
+  .swatch-block .swatch-text {
+    flex: 1;
+    padding: 20px 26px;
+    background: var(--card);
+  }
+
+  .swatch-block .swatch-text .label {
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .swatch-block .swatch-text p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 10pt;
+    line-height: 1.5;
+  }
+
+  /* Applications block */
+  .applications {
+    margin: 8px 0 22px 0;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    padding: 20px 20px 16px;
+    page-break-inside: avoid;
+  }
+
+  .applications img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .applications .caption {
+    margin-top: 12px;
+    font-size: 8.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+  }
+
+  .applications .caption strong {
+    color: var(--accent);
+    margin-right: 8px;
+  }
+
+  /* Current wordmark block */
+  .wordmark {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    padding: 24px 28px;
+    margin: 16px 0 22px 0;
+    page-break-inside: avoid;
+  }
+
+  .wordmark img {
+    width: 120px;
+    height: auto;
+    flex-shrink: 0;
+  }
+
+  .wordmark .text {
+    flex: 1;
+  }
+
+  .wordmark .label {
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .wordmark p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 10pt;
+    line-height: 1.5;
+  }
+
+  /* Reference figure */
+  .figure {
+    margin: 18px 0 22px 0;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    padding: 24px 24px 18px;
+    text-align: center;
+    page-break-inside: avoid;
+  }
+
+  .figure img {
+    max-width: 78%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+  }
+
+  .figure .caption {
+    margin-top: 14px;
+    font-size: 8.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+  }
+
+  .figure .caption strong {
+    color: var(--accent);
+    margin-right: 8px;
+  }
+
+  /* Symbol table */
+  .symbols {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 10pt;
+  }
+
+  .symbols td {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+
+  .symbols td:first-child {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 18pt;
+    color: var(--accent);
+    width: 40px;
+    line-height: 1;
+    padding-top: 12px;
+  }
+
+  .symbols td:nth-child(2) {
+    font-weight: 600;
+    color: var(--ink);
+    width: 200px;
+    padding-top: 14px;
+  }
+
+  .symbols td:last-child {
+    color: var(--ink-soft);
+    padding-top: 14px;
+  }
+
+  /* Checkbox list */
+  .checklist {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+  }
+
+  .checklist li {
+    padding: 8px 0 8px 30px;
+    position: relative;
+    border-bottom: 1px dotted var(--rule);
+    color: var(--ink);
+  }
+
+  .checklist li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 11px;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--ink-mute);
+    border-radius: 2px;
+  }
+
+  /* References */
+  .refs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 12px 0;
+  }
+
+  .refs .col {
+    padding: 16px 20px;
+    border: 1px solid var(--rule);
+    background: var(--card);
+  }
+
+  .refs .col.avoid { border-left: 3px solid #b4352b; }
+  .refs .col.study { border-left: 3px solid var(--accent); }
+
+  .refs h4 { margin-top: 0; }
+  .refs .avoid h4 { color: #b4352b; }
+
+  .refs ul {
+    margin: 0;
+    padding-left: 16px;
+    font-size: 9.5pt;
+  }
+
+  .refs li { margin: 6px 0; }
+
+  /* Questions */
+  .questions {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    padding: 22px 26px;
+    margin: 14px 0;
+  }
+
+  .questions ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  .questions li {
+    margin: 10px 0;
+    color: var(--ink-soft);
+  }
+
+  .questions li strong {
+    color: var(--ink);
+  }
+
+  /* Footer quote */
+  .footer-quote {
+    margin-top: 60px;
+    padding-top: 30px;
+    border-top: 1px solid var(--rule);
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 16pt;
+    line-height: 1.35;
+    color: var(--ink);
+    font-style: italic;
+    text-align: left;
+  }
+
+  /* Tags row */
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 5px 12px;
+    border: 1px solid var(--rule);
+    background: var(--card);
+    font-size: 9pt;
+    color: var(--ink-soft);
+    border-radius: 2px;
+  }
+
+  .tag strong {
+    color: var(--ink);
+  }
+
+  /* Page break control */
+  h2 { page-break-before: auto; }
+  .keep-together { page-break-inside: avoid; }
+  .purpose, .partners, .compare, .symbols, .refs, .questions { page-break-inside: avoid; }
+
+  /* Print adjustments */
+  @media print {
+    body { background: var(--bg); }
+    .page { padding: 0; max-width: 100%; }
+    h2 { page-break-after: avoid; }
+    h3, h4 { page-break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="header">
+    <div class="eyebrow">Brand identity kick-off</div>
+    <h1>SMASH × Jens</h1>
+    <div class="meta">
+      <span>Friday 10 April 2026</span>
+      <span>Stockholm</span>
+      <span>45&ndash;60 min</span>
+    </div>
+  </header>
+
+  <section class="keep-together">
+    <h4>Purpose of today</h4>
+    <div class="purpose">
+      <p><strong>Two things.</strong></p>
+      <p><strong>1.</strong> Give you a real picture of SMASH &mdash; who we are, what we make, where we want to go.</p>
+      <p><strong>2.</strong> Agree on scope and deliverables &mdash; what you'll make for us, and how we'll work together.</p>
+      <p style="margin-top: 12px; color: var(--ink-mute); font-size: 9.5pt;">Everything else (concepts, explorations, decisions) comes later.</p>
+    </div>
+  </section>
+
+  <section class="keep-together">
+    <h4>Agenda</h4>
+    <table class="agenda">
+      <tr><td>1</td><td>Who SMASH is</td><td>10 min</td></tr>
+      <tr><td>2</td><td>The work</td><td>10 min</td></tr>
+      <tr><td>3</td><td>What we need from you</td><td>10 min</td></tr>
+      <tr><td>4</td><td>The symbol concept</td><td>10 min</td></tr>
+      <tr><td>5</td><td>Scope &amp; next steps</td><td>15 min</td></tr>
+    </table>
+  </section>
+
+  <h2>1 &nbsp; Who SMASH is</h2>
+
+  <p>A three-person experience design studio in Stockholm. Interactive installations, projection mapping, immersive environments, stage design, animated film. We transform physical spaces through art, technology, and storytelling.</p>
+
+  <div class="partners">
+    <div class="partner">
+      <div class="name">Ash</div>
+      <div class="role">Creative Director &amp; Founder</div>
+    </div>
+    <div class="partner">
+      <div class="name">Veronica</div>
+      <div class="role">Producer &amp; Designer</div>
+    </div>
+    <div class="partner">
+      <div class="name">Emile</div>
+      <div class="role">Creative Technologist</div>
+    </div>
+  </div>
+
+  <p>Started as two, grew to three. <strong>Small team, big rooms.</strong></p>
+
+  <blockquote>
+    The short version: we make places feel different. The tools change &mdash; projection, sensors, scenography, sound &mdash; but the goal is always the same: people walk in and something shifts.
+  </blockquote>
+
+  <h2>2 &nbsp; The work</h2>
+
+  <h4>Clients</h4>
+  <div class="clients">
+    Netflix <span>·</span> HBO Max <span>·</span> Eurovision / SVT <span>·</span> TV4 <span>·</span> Spotify <span>·</span> IKEA <span>·</span> Nobel Prize <span>·</span> Givenchy <span>·</span> H&amp;M
+  </div>
+
+  <h4>Where it lives</h4>
+  <p>Sweden, San Francisco, Barcelona. Dark rooms. Building facades. Festival stages. Museum halls.</p>
+
+  <h4>Portfolio categories <em style="text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--ink-mute);">(working names)</em></h4>
+  <div class="tags">
+    <span class="tag"><strong>SMASH Originals</strong> &mdash; self-initiated art, festival commissions</span>
+    <span class="tag"><strong>Brand Experiences</strong> &mdash; commercial work</span>
+    <span class="tag"><strong>Museums &amp; Cultural</strong> &mdash; exhibitions, institutions</span>
+    <span class="tag"><strong>Installations &amp; Events</strong> &mdash; live, public, experiential</span>
+  </div>
+
+  <h4>What makes the work distinctive</h4>
+  <p>The work is always in a <strong>physical space</strong>. It's not a screen you sit in front of &mdash; it's a room you walk into. That's the throughline across every category, and it's what the brand needs to carry.</p>
+
+  <h2>3 &nbsp; What we need from you</h2>
+
+  <p>The current identity is about five years old and was built internally. It served its purpose. Now the website is being rebuilt, and we need a brand that can carry SMASH into the next phase.</p>
+
+  <div class="wordmark">
+    <img src="references/smash-current-wordmark.png" alt="Current SMASH wordmark">
+    <div class="text">
+      <div class="label">Current wordmark</div>
+      <p>Built internally ~5 years ago. Tall, condensed, distinctive &mdash; we feel the equity is real. Open to evolution, not a full rebuild. Whatever comes next should feel like a clear step forward from this.</p>
+    </div>
+  </div>
+
+  <figure class="applications">
+    <img src="references/smash-current-applications.png" alt="Current SMASH identity applied to business cards and a notebook, showing the wordmark tiled into patterns">
+    <figcaption class="caption"><strong>In use</strong> Business cards and notebook &mdash; the wordmark tiled into patterns, red and yellow applications</figcaption>
+  </figure>
+
+  <h4>Deliverables wish list</h4>
+  <ul>
+    <li><strong>Logo refresh</strong> &mdash; current wordmark has equity, open to evolution (not a total rebuild)</li>
+    <li><strong>Symbol design</strong> &mdash; see §4 below</li>
+    <li><strong>Typography</strong> &mdash; pairings and hierarchy recommendations</li>
+    <li><strong>Colour direction</strong> &mdash; accent system that works on dark backgrounds</li>
+    <li><strong>Usage guidelines</strong> &mdash; enough to keep the system consistent across touchpoints</li>
+  </ul>
+
+  <h4>Where it lives</h4>
+  <p>Website (new build in 2026), pitch decks, social, event branding, case study films.</p>
+
+  <h4>How SMASH should feel</h4>
+  <p>The market clusters around two poles. Neither is us.</p>
+
+  <div class="compare">
+    <div class="col">
+      <h4>Corporate-impersonal</h4>
+      <div class="studio">Moment Factory</div>
+      <p class="desc">Smooth, professional, forgettable.</p>
+    </div>
+    <div class="col">
+      <h4>Art-world-inaccessible</h4>
+      <div class="studio">teamLab</div>
+      <p class="desc">Prestigious, cold, gatekept.</p>
+    </div>
+  </div>
+
+  <p><strong>SMASH sits in the gap:</strong></p>
+  <ul>
+    <li>Accessible confidence &mdash; serious craft, open door</li>
+    <li>Warm, not cold &mdash; you'd want to work with us, not just admire us</li>
+    <li>Technical and creative &mdash; not choosing between art and engineering</li>
+    <li>Premium without being precious</li>
+    <li>Punchy, not smooth</li>
+    <li>Three visible humans, not an anonymous studio</li>
+  </ul>
+
+  <p style="margin-top: 14px;"><strong>SMASH is not</strong> &nbsp;a tech company &nbsp;·&nbsp; a generic agency &nbsp;·&nbsp; an art collective too elevated to take a brief &nbsp;·&nbsp; corporate.</p>
+
+  <h4>Positioning territory</h4>
+  <p><em>Not a tagline yet &mdash; the territory the brand should support.</em></p>
+  <blockquote>
+    The collision between physical space and creative imagination.
+  </blockquote>
+  <p>Previous line: <em>"A spectacular collision between the real and the imagination."</em> Captures the spirit, needs more punch.</p>
+
+  <h2>4 &nbsp; The symbol concept</h2>
+
+  <h3>Shattered glass</h3>
+
+  <p>A shattered or splintered glass mark. Dual meaning:</p>
+  <ol>
+    <li><strong>The impact</strong> &mdash; the name SMASH, the energy of collision</li>
+    <li><strong>The beauty</strong> &mdash; light refracting through broken surfaces, connecting to projection and light work</li>
+  </ol>
+
+  <blockquote>
+    The break <strong>is</strong> the beauty.
+  </blockquote>
+
+  <figure class="figure">
+    <img src="references/shattered-glass-reference.png" alt="Shattered glass reference — four variations of cracked glass, ranging from outline-only fractures to impact holes">
+    <figcaption class="caption"><strong>Ref</strong> Shattered glass &mdash; reference for the feeling, not the final form</figcaption>
+  </figure>
+
+  <h4>The ambition</h4>
+  <p>The symbol should stand <strong>completely on its own</strong>. Wordmark and symbol are both synonymous with SMASH &mdash; you see the abstract glass thing and you think <em>that's SMASH</em>. Nike-swoosh energy. The mark alone carries the identity.</p>
+
+  <h4>How literal?</h4>
+  <p>Open across the spectrum &mdash; from an obvious radial impact to a subtle angular geometry where you discover the glass reference. Six rough explorations attached (<code>references/symbols/</code>) to show the range &mdash; conversation starters, not options to pick.</p>
+
+  <table class="symbols">
+    <tr><td>A</td><td>Full radial impact</td><td>Most literal, closest to original sketch</td></tr>
+    <tr><td>B</td><td>Radial with S in negative space</td><td>Hidden initial &mdash; one idea</td></tr>
+    <tr><td>C</td><td>Contained cluster</td><td>Shards within a circle, icon-friendly</td></tr>
+    <tr><td>D</td><td>Minimal crack</td><td>Clean square, single fracture, most subtle</td></tr>
+    <tr><td>E</td><td>Abstract shard</td><td>Single fragment, most reduced</td></tr>
+    <tr><td>F</td><td>Tessellation</td><td>Angular facets filling a shape, crystalline</td></tr>
+  </table>
+
+  <h4>Constraints</h4>
+  <ul>
+    <li>Must work at <strong>favicon scale (32px)</strong> through to large format</li>
+    <li>Must work on <strong>dark backgrounds</strong> (where the work lives)</li>
+    <li>Should leave room for <strong>colour or light effects</strong> in later treatments (refraction, gradients, category colours in individual fragments)</li>
+  </ul>
+
+  <h2>5 &nbsp; Visual instincts</h2>
+
+  <p><em>Starting points, not decisions. Push back where your eye tells you to.</em></p>
+
+  <ul>
+    <li><strong>Dark</strong> &mdash; the work lives in dark rooms, projected onto buildings. Dark backgrounds make it glow.</li>
+    <li><strong>Bold accent colours</strong> &mdash; energetic, not muted. We're partial to the yellow we already use (see below).</li>
+    <li><strong>Dense, not airy</strong> &mdash; more mission control than white cube.</li>
+    <li><strong>Video-forward</strong> &mdash; the system needs to work with moving image, not just stills.</li>
+  </ul>
+
+  <h4>The yellow</h4>
+  <div class="swatch-block">
+    <div class="swatch">
+      <div class="hex">#F4B940</div>
+    </div>
+    <div class="swatch-text">
+      <div class="label">Current accent</div>
+      <p>We like this yellow. It's warm, confident, and it pops against dark backgrounds without feeling corporate or childish. It's been on our decks and it feels like SMASH. We'd love to see it carry forward &mdash; evolved, refined, or paired differently &mdash; rather than replaced. Open to being wrong if your eye says otherwise.</p>
+    </div>
+  </div>
+
+  <h4>Tone of voice <em style="text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--ink-mute);">(for reference, not for you to write)</em></h4>
+  <p>Clear · confident · warm · practitioner voice. No <em>"we create experiences that inspire."</em> Punchy and declarative.</p>
+
+  <h2>6 &nbsp; References</h2>
+
+  <div class="refs">
+    <div class="col study">
+      <h4>Study</h4>
+      <ul>
+        <li><strong>Gentilhomme</strong> &mdash; closest competitor, bold accents, motion-rich</li>
+        <li><strong>Swamp Experience</strong> &mdash; playful confidence</li>
+        <li><strong>&amp;Walsh</strong> &mdash; editorial discipline</li>
+      </ul>
+    </div>
+    <div class="col avoid">
+      <h4>Avoid the energy of</h4>
+      <ul>
+        <li><strong>Moment Factory</strong> &mdash; corporate, generic</li>
+        <li><strong>teamLab</strong> &mdash; too distant, institutional</li>
+        <li><strong>Random International</strong> &mdash; gallery-coded, cold</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>7 &nbsp; Scope to agree today</h2>
+
+  <h4>What we're commissioning</h4>
+  <ul class="checklist">
+    <li>Logo refresh</li>
+    <li>Symbol design</li>
+    <li>Typography recommendations</li>
+    <li>Colour direction</li>
+    <li>Usage guidelines</li>
+  </ul>
+
+  <h4>How we'll work</h4>
+  <ul>
+    <li><strong>Review rhythm</strong> &mdash; how often do we sync? <em>(proposal: weekly check-ins)</em></li>
+    <li><strong>Presentation format</strong> &mdash; how do you like to present concepts?</li>
+    <li><strong>Collaboration tools</strong> &mdash; Figma? Notion? Something else?</li>
+    <li><strong>Feedback loop</strong> &mdash; Ash final, Veronica and Emile consulted</li>
+  </ul>
+
+  <h4>Timeline</h4>
+  <ul>
+    <li><strong>Kick-off:</strong> today</li>
+    <li><strong>First concepts:</strong> &mdash;</li>
+    <li><strong>Refinement:</strong> &mdash;</li>
+    <li><strong>Final delivery:</strong> &mdash;</li>
+    <li><strong>Website launch target:</strong> 2026 (needs the new identity ready)</li>
+  </ul>
+
+  <h4>Commercials</h4>
+  <ul>
+    <li>Fee structure</li>
+    <li>Payment terms</li>
+    <li>What's in scope / what's out of scope</li>
+  </ul>
+
+  <h2>8 &nbsp; Questions for Jens</h2>
+
+  <div class="questions">
+    <ul>
+      <li><strong>First impressions</strong> &mdash; what jumps out from the brief? What's missing?</li>
+      <li><strong>Symbol direction</strong> &mdash; do any of the A&ndash;F explorations resonate, or is this a full rebuild from your end?</li>
+      <li><strong>Working style</strong> &mdash; how do you like to collaborate with clients like us?</li>
+      <li><strong>What do you need from us</strong> &mdash; assets, time, access, examples?</li>
+      <li><strong>What would make this project great for you?</strong></li>
+    </ul>
+  </div>
+
+  <h2>9 &nbsp; Next steps</h2>
+
+  <p><em>To fill in by end of meeting.</em></p>
+
+  <ul class="checklist">
+    <li>Agreed scope</li>
+    <li>Agreed timeline</li>
+    <li>Agreed working rhythm</li>
+    <li>Jens sends proposal / contract</li>
+    <li>Date of next meeting</li>
+    <li>Shared workspace set up</li>
+  </ul>
+
+  <div class="footer-quote">
+    We've done the strategic thinking. We need someone who can make it look like it should feel. We trust your eye &mdash; show us what SMASH looks like when a real designer gets their hands on it.
+  </div>
+
+</div>
+</body>
+</html>

@@ -87,6 +87,8 @@ A shattered/splintered glass mark. Dual meaning:
 
 The break IS the beauty.
 
+**The goal:** The symbol should be able to stand completely on its own. Wordmark and symbol are both synonymous with SMASH — you see this abstract glass thing and you're like, "that's SMASH." Think Nike swoosh energy: the mark alone should carry the identity.
+
 **How literal?** Open across the spectrum — from obvious radial impact to subtle angular geometry where you discover the glass reference. Rough SVG explorations attached (A–F) showing the range:
 
 - **A.** Full radial impact — most literal, closest to original sketch
