@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+/**
+ * WIREFRAME STYLESHEET.
+ *
+ * Strict greyscale, neutral system fonts, real typographic scale. Everything
+ * here is structure — hierarchy, rhythm, spacing, responsive behaviour — and
+ * none of it is design. The brand direction (type, colour, motion character)
+ * arrives separately; when it does, this file is where it lands, and the page
+ * components should need very few changes.
+ */
+
+@theme inline {
+  --font-sans: var(--wire-font-sans);
+  --font-mono: var(--wire-font-mono);
+
+  --color-ink: var(--wire-ink);
+  --color-ink-soft: var(--wire-ink-soft);
+  --color-muted: var(--wire-muted);
+  --color-line: var(--wire-line);
+  --color-dash: var(--wire-dash);
+  --color-paper: var(--wire-paper);
+  --color-paper-alt: var(--wire-paper-alt);
+}
+
+:root {
+  /* Deliberately generic stacks: no brand typeface decision is being made here. */
+  --wire-font-sans: ui-sans-serif, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --wire-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --wire-paper: #f2f2f2;
+  --wire-paper-alt: #e8e8e8;
+  --wire-ink: #101010;
+  --wire-ink-soft: #3a3a3a;
+  --wire-muted: #767676;
+  --wire-line: #d2d2d2;
+  --wire-dash: #a9a9a9;
+}
+
+html {
+  /* Lenis drives scrolling; native smooth scrolling would fight it. */
+  scroll-behavior: auto;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--wire-paper);
+  color: var(--wire-ink);
+  font-family: var(--wire-font-sans);
+  overscroll-behavior-y: none;
+}
+
+/* Lenis' recommended baseline (v1.3). */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* SplitText line masking needs the wrapper to clip and the line to promote. */
+.wire-line {
+  will-change: transform;
+}
+
+/* Focus visibility is a baseline, not a design decision. */
+:focus-visible {
+  outline: 2px solid var(--wire-ink);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
