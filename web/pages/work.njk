@@ -2,19 +2,25 @@
 layout: base.njk
 title: Work
 section: work
+bodyClass: work-page
+fullscreen: true
 permalink: /work/
 ---
-<section class="page-head grid">
-  <h1 class="page-title">Work</h1>
-  <p class="page-meta">{{ projects.length }} projects</p>
+{# A ring of posters, like a slide-projector carousel. Scroll or drag to turn
+   it; drag up or choose Above to look down on it, where the posters lie flat
+   and the ring becomes a sun; pinch or ⌘-scroll to go closer. #}
+<section class="carousel" data-carousel aria-label="Projects">
+  <div class="ring" data-ring style="--count: {{ projects.length }}">
+    {% for p in projects %}
+    <a class="card" href="/work/{{ p.slug }}/" style="--i: {{ loop.index0 }}" data-card>
+      <img src="{% imageSrc p.cover.src, 640, 'webp' %}" alt="" draggable="false" decoding="async">
+      <span class="card-title">{{ p.title }}</span>
+    </a>
+    {% endfor %}
+  </div>
 </section>
-<section class="index grid">
-  {% for p in projects %}
-  <a class="tile" href="/work/{{ p.slug }}/" style="--start: {{ p.tile.start }}; --span: {{ p.tile.span }}; --ar: {{ p.tile.ar }}">
-    <div class="tile-media">
-      {% image p.cover.src, p.cover.alt, "(max-width: 720px) 100vw, " + ((p.tile.span / 12 * 100) | round) + "vw" %}
-    </div>
-    <p class="tile-caption"><span>{{ p.title }}</span><span>{{ p.year }}</span></p>
-  </a>
-  {% endfor %}
-</section>
+<div class="carousel-views" role="group" aria-label="View">
+  <button type="button" data-view="0" aria-pressed="true">Side</button>
+  <button type="button" data-view="1" aria-pressed="false">Above</button>
+</div>
+<script src="/js/carousel.js" defer></script>

@@ -23,7 +23,7 @@
   <main>
 {{ content | safe }}
   </main>
-  {% if bodyClass != 'home' %}
+  {% if not fullscreen %}
   <footer class="site-footer grid">
     <span class="f-copy">© SMASH 2026</span>
     <a class="f-mail" href="mailto:hello@smash.studio">hello@smash.studio</a>

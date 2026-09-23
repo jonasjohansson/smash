@@ -79,20 +79,19 @@ b, strong { font-weight: inherit; }
 
 
 /* ---- home: one screen, no scroll ---------------------------------------
-   The work is seen through the mark: the SMASH logo masks a fast, shuffled
-   cut through every project image (as on svartljus.se). */
+   The work is seen through the mark: the SMASH logo, stretched edge to edge,
+   masks a fast shuffled cut through every project image (as on svartljus.se). */
 
 .home { height: 100svh; overflow: hidden; background: #000; color: #fff; }
-.home .site-header { position: absolute; inset: 0 0 auto; background: none; color: #fff; }
-.home .logo { visibility: hidden; }
-.home .nav a, .home .contact { opacity: 0.7; }
+.home .site-header { display: none; }
 
 .stage { position: fixed; inset: 0; display: block; }
 .slide {
   position: absolute;
-  inset: var(--header) var(--margin);
-  -webkit-mask: url("/brand/smash-mask.svg") center / contain no-repeat;
-  mask: url("/brand/smash-mask.svg") center / contain no-repeat;
+  inset: 0;
+  /* Edge to edge: the mark stretches to the viewport, as on svartljus.se. */
+  -webkit-mask: url("/brand/smash-mask.svg") center / 100% 100% no-repeat;
+  mask: url("/brand/smash-mask.svg") center / 100% 100% no-repeat;
 }
 .slide img { width: 100%; height: 100%; object-fit: cover; }
 
@@ -213,3 +212,80 @@ b, strong { font-weight: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; }
 }
+
+/* ---- work: the carousel ------------------------------------------------ */
+
+.work-page { height: 100svh; overflow: hidden; background: #000; color: #fff; }
+.work-page main { height: 100%; }
+.work-page .site-header { position: absolute; inset: 0 0 auto; z-index: 10; background: none; color: #fff; }
+.work-page .logo svg { height: 44px; }
+
+.carousel {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  perspective: 1400px;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+.carousel.is-dragging { cursor: grabbing; }
+.ring {
+  --w: clamp(150px, 15vw, 250px);
+  --h: calc(var(--w) * 1.25);
+  --step: calc(360deg / var(--count));
+  --r: calc(var(--count) * var(--w) * 1.12 / 6.2832);
+  --lay: 0deg;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-style: preserve-3d;
+}
+.card {
+  position: absolute;
+  left: calc(var(--w) / -2);
+  top: calc(var(--h) / -2);
+  width: var(--w);
+  height: var(--h);
+  /* Hinged at the top edge: standing, the poster faces out of the ring;
+     laid down, it points outward like a ray. */
+  transform-origin: 50% 0;
+  transform: rotateY(calc(var(--i) * var(--step))) translateZ(var(--r)) rotateX(var(--lay));
+  backface-visibility: hidden;
+  display: block;
+}
+.card img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+.card-title {
+  position: absolute;
+  inset: calc(100% + 10px) 0 auto;
+  font-size: var(--t-small);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.card:hover .card-title, .card:focus-visible .card-title { opacity: 1; }
+.card:focus-visible { outline: 1px solid #fff; outline-offset: 6px; }
+
+.carousel-views {
+  position: fixed;
+  inset: auto 0 24px;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  gap: 2em;
+}
+.carousel-views button {
+  appearance: none;
+  border: 0;
+  background: none;
+  color: #fff;
+  font: inherit;
+  font-size: var(--t-small);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.45;
+  cursor: pointer;
+  padding: 8px 4px;
+}
+.carousel-views button[aria-pressed="true"], .carousel-views button:hover { opacity: 1; }
