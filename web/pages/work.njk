@@ -6,21 +6,28 @@ bodyClass: work-page
 fullscreen: true
 permalink: /work/
 ---
-{# A ring of posters, like a slide-projector carousel. Scroll or drag to turn
-   it; drag up or choose Above to look down on it, where the posters lie flat
-   and the ring becomes a sun; pinch or ⌘-scroll to go closer. #}
-<section class="carousel" data-carousel aria-label="Projects">
-  <div class="ring" data-ring style="--count: {{ projects.length }}">
-    {% for p in projects %}
-    <a class="card" href="/work/{{ p.slug }}/" style="--i: {{ loop.index0 }}" data-card>
-      <img src="{% imageSrc p.cover.src, 640, 'webp' %}" alt="" draggable="false" decoding="async">
-      <span class="card-title">{{ p.title }}</span>
-    </a>
-    {% endfor %}
-  </div>
-</section>
-<div class="carousel-views" role="group" aria-label="View">
-  <button type="button" data-view="0" aria-pressed="true">Side</button>
-  <button type="button" data-view="1" aria-pressed="false">Above</button>
+{# A slide projector in a dark room: the projects sit in its round tray, and
+   the current one is thrown onto the page background. Scroll, arrows or a
+   click on the projector advance it; drag to walk around it; Above looks
+   down on the tray. A click on the picture opens the project. #}
+<canvas class="projector" data-projector aria-hidden="true"></canvas>
+<p class="projector-title" data-title aria-live="polite"></p>
+<div class="projector-views" role="group" aria-label="View">
+  <button type="button" data-view="behind" aria-pressed="true">Room</button>
+  <button type="button" data-view="above" aria-pressed="false">Above</button>
 </div>
-<script src="/js/carousel.js" defer></script>
+<nav class="projector-list" aria-label="Projects">
+  {% for p in projects %}<a href="/work/{{ p.slug }}/">{{ p.title }}</a>{% endfor %}
+</nav>
+<script type="application/json" id="slides">[
+  {%- for p in projects %}
+  {"slug": "{{ p.slug }}", "title": {{ p.title | dump | safe }}, "s": "{% imageSrc p.cover.src, 640, 'webp' %}", "l": "{% imageSrc p.cover.src, 2000, 'webp' %}", "ar": {{ p.cover.ar }}}{% if not loop.last %},{% endif %}
+  {%- endfor %}
+]</script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.0/examples/jsm/"
+} }
+</script>
+<script type="module" src="/js/projector.js"></script>
