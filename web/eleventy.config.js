@@ -23,8 +23,20 @@ async function image(src, alt = '', sizes = '100vw', loading = 'lazy', className
   });
 }
 
+/** Just the URL of one JPEG width, for code that loads images itself (the WebGL gate). */
+async function imageSrc(src, width = 640) {
+  const meta = await Image(src, {
+    widths: [width],
+    formats: ['jpeg'],
+    outputDir: 'dist/img/',
+    urlPath: '/img/',
+    sharpJpegOptions: { quality: 78, progressive: true },
+  });
+  return meta.jpeg[0].url;
+}
+
 export default function (config) {
-  config.addPassthroughCopy({ 'src/css': 'css', 'src/js': 'js', 'src/CNAME': 'CNAME', 'src/brand': 'brand' });
+  config.addPassthroughCopy({ 'src/css': 'css', 'src/js': 'js', 'src/CNAME': 'CNAME', 'src/brand': 'brand', 'src/gate': 'gate' });
   config.addPassthroughCopy('projects/**/*.{mp4,webm}');
   config.addWatchTarget('src/');
   config.addWatchTarget('scripts/');
@@ -35,6 +47,7 @@ export default function (config) {
   config.addFilter('year', (date) => new Date(date).getFullYear());
   config.addFilter('pad', (n) => String(n).padStart(2, '0'));
   config.addAsyncShortcode('image', image);
+  config.addAsyncShortcode('imageSrc', imageSrc);
 
   config.addGlobalData('projects', async () => {
     const projects = (await readProjects('projects')).map((p) => ({ ...p, rows: compose(p) }));
