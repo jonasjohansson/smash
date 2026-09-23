@@ -2,17 +2,21 @@
 // mark. Frames are decoded off the main thread a couple of dozen ahead and
 // drawn to a canvas on the display's own clock, so a cut never waits on a
 // decode; if the next frame is not ready the current one simply holds.
-// A click opens the project on screen. (No hover pause: the mark fills the
-// viewport, so hovering anywhere would stop it.) A inverts the mask,
-// S swaps the black ground for white.
-// Anywhere: press G to show the grid.
+// A click opens the project on screen.
+//
+// Keys on the landing page: H opens the tweak panel (the mark is drawn from
+// parameters, see mark.js), A inverts the mask, S swaps black for white.
+// Anywhere: G shows the grid.
 
-const FRAME_MS = 75;
+import { DEFAULTS, buildMark, toDataUrl } from './mark.js';
+
 const AHEAD = 24;
 const PARALLEL = 6;
+const STORE = 'smash-mark';
 
 const stage = document.querySelector('[data-stage]');
 const framesEl = document.getElementById('frames');
+const typing = (e) => e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement;
 
 if (stage && framesEl) {
   const slide = stage.querySelector('.slide');
@@ -20,6 +24,22 @@ if (stage && framesEl) {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   slide.append(canvas);
+
+  // Settings are a per-viewer convenience; the page works without them.
+  const params = { ...DEFAULTS };
+  try { Object.assign(params, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch {}
+  const save = () => { try { localStorage.setItem(STORE, JSON.stringify(params)); } catch {} };
+
+  // ---- the mark ---------------------------------------------------------
+
+  function drawMark() {
+    const url = toDataUrl(buildMark(params, slide.clientWidth, slide.clientHeight));
+    slide.style.webkitMaskImage = url;
+    slide.style.maskImage = url;
+    document.body.classList.toggle('light', params.light);
+  }
+
+  // ---- the slideshow ----------------------------------------------------
 
   const size = matchMedia('(max-width: 720px)').matches ? 's' : 'l';
   const frames = JSON.parse(framesEl.textContent).filter(Boolean);
@@ -55,13 +75,6 @@ if (stage && framesEl) {
     }
   };
 
-  const fit = () => {
-    const dpr = Math.min(devicePixelRatio, 2);
-    canvas.width = Math.round(slide.clientWidth * dpr);
-    canvas.height = Math.round(slide.clientHeight * dpr);
-    if (current) draw(current);
-  };
-
   // object-fit: cover, by hand.
   function draw(bitmap) {
     const cw = canvas.width, ch = canvas.height;
@@ -69,6 +82,14 @@ if (stage && framesEl) {
     const w = bitmap.width * scale, h = bitmap.height * scale;
     ctx.drawImage(bitmap, (cw - w) / 2, (ch - h) / 2, w, h);
   }
+
+  const fit = () => {
+    const dpr = Math.min(devicePixelRatio, 2);
+    canvas.width = Math.round(slide.clientWidth * dpr);
+    canvas.height = Math.round(slide.clientHeight * dpr);
+    if (current) draw(current);
+    drawMark();
+  };
 
   const slow = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -81,8 +102,8 @@ if (stage && framesEl) {
   function tick(now) {
     if (prev) refresh += (Math.min(now - prev, 50) - refresh) * 0.05;
     prev = now;
-    const every = Math.max(1, Math.round((slow ? 2500 : FRAME_MS) / refresh));
-    if (!document.hidden && ++ticks >= every) {
+    const every = Math.max(1, Math.round((slow ? 2500 : params.speed) / refresh));
+    if (!document.hidden && !params.paused && ++ticks >= every) {
       if (broken.has(next)) next = (next + 1) % frames.length;
       const bitmap = decoded.get(next);
       if (bitmap) {
@@ -105,15 +126,69 @@ if (stage && framesEl) {
   load();
   requestAnimationFrame(tick);
 
-  document.addEventListener('keydown', (e) => {
-    if (e.metaKey || e.ctrlKey || e.altKey) return;
-    if (e.key.toLowerCase() === 'a') document.body.classList.toggle('invert');
-    if (e.key.toLowerCase() === 's') document.body.classList.toggle('light');
+  // ---- the tweak panel (H) -------------------------------------------------
+
+  let pane = null;
+
+  async function openPane() {
+    const { Pane } = await import('https://cdn.jsdelivr.net/npm/tweakpane@4.0.5/dist/tweakpane.min.js');
+    pane = new Pane({ title: 'SMASH' });
+    pane.element.parentElement.classList.add('tweak');
+    const change = () => { drawMark(); save(); };
+
+    const mark = pane.addFolder({ title: 'Mark' });
+    mark.addBinding(params, 'stroke', { label: 'thickness', min: 2, max: 48, step: 0.5 });
+    mark.addBinding(params, 'corner', { label: 'corners', min: 0, max: 40, step: 0.5 });
+    mark.addBinding(params, 'caps', { label: 'ends', options: { round: 'round', square: 'square', flat: 'butt' } });
+    mark.addBinding(params, 'inset', { label: 'end margin', min: 0, max: 200, step: 1 });
+    mark.addBinding(params, 'crossbar', { label: 'crossbar', min: 60, max: 411, step: 0.5 });
+    mark.addBinding(params, 'gap', { label: 'crossbar gap', min: 20, max: 200, step: 0.5 });
+    mark.addBinding(params, 'columns', { label: 'spread', min: 0.5, max: 1.12, step: 0.005 });
+
+    const layout = pane.addFolder({ title: 'Layout' });
+    layout.addBinding(params, 'fit', { options: { 'edge to edge': 'stretch', proportional: 'contain' } });
+    layout.addBinding(params, 'padding', { min: 0, max: 200, step: 1 });
+    layout.addBinding(params, 'invert', { label: 'invert (A)' });
+    layout.addBinding(params, 'light', { label: 'white (S)' });
+
+    const show = pane.addFolder({ title: 'Slideshow' });
+    show.addBinding(params, 'speed', { label: 'ms per image', min: 17, max: 1000, step: 1 });
+    show.addBinding(params, 'paused');
+
+    pane.addButton({ title: 'Export SVG' }).on('click', () => {
+      const svg = buildMark({ ...params, fit: 'contain', padding: 0, invert: false }, 1100, 942);
+      const a = Object.assign(document.createElement('a'), {
+        href: URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })),
+        download: 'smash-mark.svg',
+      });
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+    pane.addButton({ title: 'Copy settings' }).on('click', () => navigator.clipboard?.writeText(JSON.stringify(params, null, 2)));
+    pane.addButton({ title: 'Reset' }).on('click', () => { Object.assign(params, DEFAULTS); pane.refresh(); change(); });
+
+    pane.on('change', change);
+  }
+
+  document.addEventListener('keydown', async (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey || typing(e)) return;
+    const key = e.key.toLowerCase();
+    if (key === 'h') {
+      if (!pane) await openPane();
+      else pane.hidden = !pane.hidden;
+    }
+    if (key === 'a' || key === 's') {
+      if (key === 'a') params.invert = !params.invert;
+      if (key === 's') params.light = !params.light;
+      pane?.refresh();
+      drawMark();
+      save();
+    }
   });
 }
 
 document.addEventListener('keydown', (e) => {
-  if (e.key.toLowerCase() === 'g' && !e.metaKey && !e.ctrlKey && !(e.target instanceof HTMLInputElement)) {
+  if (e.key.toLowerCase() === 'g' && !e.metaKey && !e.ctrlKey && !typing(e)) {
     document.body.classList.toggle('show-grid');
   }
 });
