@@ -16,10 +16,14 @@ const TEXTURES = {
   coast_sand_01: '1k', // S: sand
   terrazzo_tiles: '1k', // H: polished stone
   concrete_layers_02: '1k', // the walls
-  sparse_grass: '1k', // outside the block
+  sparse_grass: '1k', // outside the block (day)
+  asphalt_02: '1k', // rain: wet asphalt
+  metal_grate_rusty: '1k', // rain: grating
+  dirty_tiles: '1k', // rain: grimy tiles
+  road_damaged: '1k', // rain: outside the block
 };
 const MAPS = { Diffuse: 'diff', nor_gl: 'nor', arm: 'arm' }; // arm: ambient occlusion, roughness, metalness
-const HDRIS = ['kloofendal_48d_partly_cloudy_puresky', 'belfast_sunset_puresky', 'overcast_soil_puresky'];
+const HDRIS = { kloofendal_48d_partly_cloudy_puresky: '1k', belfast_sunset_puresky: '1k', overcast_soil_puresky: '1k', moonlit_golf: '1k', rogland_clear_night: '2k' };
 
 async function get(url, file) {
   if (fs.existsSync(file)) return;
@@ -36,8 +40,8 @@ for (const [id, res] of Object.entries(TEXTURES)) {
     await get(files[key][res].jpg.url, path.join(OUT, 'tex', `${id}_${short}.jpg`));
   }
 }
-for (const id of HDRIS) {
+for (const [id, res] of Object.entries(HDRIS)) {
   const files = await (await fetch(`https://api.polyhaven.com/files/${id}`)).json();
-  await get(files.hdri['1k'].hdr.url, path.join(OUT, 'sky', `${id}.hdr`));
+  await get(files.hdri[res].hdr.url, path.join(OUT, 'sky', `${id}.hdr`));
 }
 console.log('done');
