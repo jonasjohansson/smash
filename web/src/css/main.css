@@ -78,30 +78,27 @@ b, strong { font-weight: inherit; }
 .nav a:hover, .nav a[aria-current], .contact:hover { opacity: 1; }
 
 
-/* ---- home: one screen, no scroll -------------------------------------- */
+/* ---- home: one screen, no scroll ---------------------------------------
+   The work is seen through the mark: each slide is masked by the SMASH logo
+   (as on svartljus.se) and the slides crossfade on black. */
 
-.home { height: 100svh; overflow: hidden; }
+.home { height: 100svh; overflow: hidden; background: #000; color: #fff; }
 .home .site-header { position: absolute; inset: 0 0 auto; background: none; color: #fff; }
-.home .nav a, .home .contact { opacity: 0.8; }
+.home .logo { visibility: hidden; }
+.home .nav a, .home .contact { opacity: 0.7; }
 
 .stage {
   position: relative;
   height: calc(100svh - 56px);
   overflow: hidden;
-  background: #0b0b0b;
-}
-.stage::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(to bottom, rgb(0 0 0 / 0.35), transparent 22%, transparent 70%, rgb(0 0 0 / 0.45));
 }
 .slide {
   position: absolute;
-  inset: 0;
+  inset: var(--header) var(--margin) 72px;
   opacity: 0;
   transition: opacity 1.6s var(--ease);
+  -webkit-mask: url("/brand/smash-mask.svg") center / contain no-repeat;
+  mask: url("/brand/smash-mask.svg") center / contain no-repeat;
 }
 .slide img { width: 100%; height: 100%; object-fit: cover; }
 .slide.is-active { opacity: 1; z-index: 1; }
@@ -110,7 +107,7 @@ b, strong { font-weight: inherit; }
   position: absolute;
   inset: auto 0 0;
   z-index: 2;
-  padding-block: 28px;
+  padding-block: 20px;
   color: #fff;
   align-items: end;
   font-size: var(--t-small);
@@ -124,14 +121,12 @@ b, strong { font-weight: inherit; }
   align-items: baseline;
   gap: 1.5em;
   opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 0.8s var(--ease), transform 0.8s var(--ease);
+  transition: opacity 0.8s var(--ease);
   pointer-events: none;
 }
-.caption.is-active { opacity: 1; transform: none; pointer-events: auto; }
-.c-title { font-size: var(--t-lead); letter-spacing: -0.01em; text-transform: none; }
-.c-year { opacity: 0.7; }
-.c-progress { grid-column: 7 / span 4; grid-row: 1; height: 1px; background: rgb(255 255 255 / 0.3); align-self: center; }
+.caption.is-active { opacity: 1; pointer-events: auto; }
+.c-year { opacity: 0.6; }
+.c-progress { grid-column: 7 / span 4; grid-row: 1; height: 1px; background: rgb(255 255 255 / 0.2); align-self: center; }
 .c-progress span { display: block; height: 100%; width: 0; background: #fff; }
 .c-count { grid-column: 12; grid-row: 1; justify-self: end; font-variant-numeric: tabular-nums; }
 
@@ -141,7 +136,8 @@ b, strong { font-weight: inherit; }
   letter-spacing: 0.04em;
   color: var(--muted);
 }
-.home-footer { height: 56px; }
+.home-footer { height: 56px; color: rgb(255 255 255 / 0.5); }
+.home .f-mail:hover { color: #fff; }
 .f-copy { grid-column: 1 / span 3; }
 .f-line { grid-column: 4 / span 6; }
 .f-mail { grid-column: 10 / span 3; justify-self: end; }
