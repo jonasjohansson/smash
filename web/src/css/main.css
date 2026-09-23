@@ -79,67 +79,30 @@ b, strong { font-weight: inherit; }
 
 
 /* ---- home: one screen, no scroll ---------------------------------------
-   The work is seen through the mark: each slide is masked by the SMASH logo
-   (as on svartljus.se) and the slides crossfade on black. */
+   The work is seen through the mark: the SMASH logo masks a fast, shuffled
+   cut through every project image (as on svartljus.se). */
 
 .home { height: 100svh; overflow: hidden; background: #000; color: #fff; }
 .home .site-header { position: absolute; inset: 0 0 auto; background: none; color: #fff; }
 .home .logo { visibility: hidden; }
 .home .nav a, .home .contact { opacity: 0.7; }
 
-.stage {
-  position: relative;
-  height: calc(100svh - 56px);
-  overflow: hidden;
-}
+.stage { position: fixed; inset: 0; display: block; }
 .slide {
   position: absolute;
-  inset: var(--header) var(--margin) 72px;
-  opacity: 0;
-  transition: opacity 1.6s var(--ease);
+  inset: var(--header) var(--margin);
   -webkit-mask: url("/brand/smash-mask.svg") center / contain no-repeat;
   mask: url("/brand/smash-mask.svg") center / contain no-repeat;
 }
 .slide img { width: 100%; height: 100%; object-fit: cover; }
-.slide.is-active { opacity: 1; z-index: 1; }
 
-.stage-caption {
-  position: absolute;
-  inset: auto 0 0;
-  z-index: 2;
-  padding-block: 20px;
-  color: #fff;
-  align-items: end;
-  font-size: var(--t-small);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.caption {
-  grid-column: 1 / span 6;
-  grid-row: 1;
-  display: flex;
-  align-items: baseline;
-  gap: 1.5em;
-  opacity: 0;
-  transition: opacity 0.8s var(--ease);
-  pointer-events: none;
-}
-.caption.is-active { opacity: 1; pointer-events: auto; }
-.c-year { opacity: 0.6; }
-.c-progress { grid-column: 7 / span 4; grid-row: 1; height: 1px; background: rgb(255 255 255 / 0.2); align-self: center; }
-.c-progress span { display: block; height: 100%; width: 0; background: #fff; }
-.c-count { grid-column: 12; grid-row: 1; justify-self: end; font-variant-numeric: tabular-nums; }
-
-.home-footer, .site-footer {
+.site-footer {
   align-items: center;
   font-size: var(--t-small);
   letter-spacing: 0.04em;
   color: var(--muted);
 }
-.home-footer { height: 56px; color: rgb(255 255 255 / 0.5); }
-.home .f-mail:hover { color: #fff; }
 .f-copy { grid-column: 1 / span 3; }
-.f-line { grid-column: 4 / span 6; }
 .f-mail { grid-column: 10 / span 3; justify-self: end; }
 .f-top { grid-column: 10 / span 3; justify-self: end; }
 .site-footer { margin-top: var(--row-gap); padding-block: 24px; border-top: 1px solid var(--line); }
@@ -236,10 +199,6 @@ b, strong { font-weight: inherit; }
   .row-media .cell + .cell, .row-caption .cell + .cell { margin-top: var(--gutter); }
   .row-caption .cell-text { margin-top: 16px; }
   .tile-media { aspect-ratio: 4 / 3; }
-  .caption { grid-column: 1 / span 9; }
-  .c-progress { display: none; }
-  .c-count { grid-column: 10 / span 3; }
-  .f-line { display: none; }
   .f-copy { grid-column: 1 / span 6; }
   .f-mail, .site-footer .f-mail { grid-column: 7 / span 6; justify-self: end; }
   .f-top { display: none; }

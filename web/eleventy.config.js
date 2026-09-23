@@ -6,16 +6,18 @@ import { compose, indexLayout } from './scripts/compose.js';
 const md = markdownIt({ html: true, linkify: true });
 const external = (html) => html.replace(/<a href="(https?:[^"]*)">/g, '<a href="$1" target="_blank" rel="noopener">');
 
+const IMAGE_OPTIONS = {
+  widths: [640, 1280, 2000],
+  formats: ['webp', 'jpeg'],
+  outputDir: 'dist/img/',
+  urlPath: '/img/',
+  sharpJpegOptions: { quality: 78, progressive: true },
+  sharpWebpOptions: { quality: 76 },
+};
+
 /** `<picture>` at the widths the grid actually uses; `sizes` comes from the column span. */
 async function image(src, alt = '', sizes = '100vw', loading = 'lazy', className = '') {
-  const meta = await Image(src, {
-    widths: [640, 1280, 2000],
-    formats: ['webp', 'jpeg'],
-    outputDir: 'dist/img/',
-    urlPath: '/img/',
-    sharpJpegOptions: { quality: 78, progressive: true },
-    sharpWebpOptions: { quality: 76 },
-  });
+  const meta = await Image(src, IMAGE_OPTIONS);
   return Image.generateHTML(meta, {
     alt, sizes, loading, decoding: 'async',
     ...(className && { class: className }),
@@ -23,16 +25,13 @@ async function image(src, alt = '', sizes = '100vw', loading = 'lazy', className
   });
 }
 
-/** Just the URL of one JPEG width, for code that loads images itself (the WebGL gate). */
-async function imageSrc(src, width = 640) {
-  const meta = await Image(src, {
-    widths: [width],
-    formats: ['jpeg'],
-    outputDir: 'dist/img/',
-    urlPath: '/img/',
-    sharpJpegOptions: { quality: 78, progressive: true },
-  });
-  return meta.jpeg[0].url;
+/**
+ * Just a URL, for code that loads images itself (the slideshow, the gate).
+ * Same options as `image`, so it reuses those files rather than making more.
+ */
+async function imageSrc(src, width = 640, format = 'jpeg') {
+  const sizes = (await Image(src, IMAGE_OPTIONS))[format];
+  return (sizes.filter((s) => s.width <= width).at(-1) ?? sizes[0]).url;
 }
 
 export default function (config) {

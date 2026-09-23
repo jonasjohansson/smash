@@ -3,25 +3,15 @@ layout: base.njk
 bodyClass: home
 permalink: /
 ---
-<section class="stage" data-stage aria-label="Selected work">
-  {% for p in featured %}
-  <a class="slide{% if loop.first %} is-active{% endif %}" href="/work/{{ p.slug }}/" data-slide>
-    {% image p.cover.src, p.cover.alt, "100vw", ("eager" if loop.first else "lazy") %}
-  </a>
-  {% endfor %}
-  <div class="stage-caption grid">
-    {% for p in featured %}
-    <a class="caption{% if loop.first %} is-active{% endif %}" href="/work/{{ p.slug }}/" data-caption>
-      <span class="c-title">{{ p.title }}</span>
-      <span class="c-year">{{ p.year }}</span>
-    </a>
-    {% endfor %}
-    <span class="c-count"><span data-count>01</span> / {{ featured.length | pad }}</span>
-    <span class="c-progress"><span data-progress></span></span>
+{# Every image of every project, shuffled and cut fast behind the mark. #}
+{% set first = featured[0] %}
+<a class="stage" href="/work/{{ first.slug }}/" data-stage aria-label="SMASH — see the work">
+  <div class="slide">
+    <img src="{% imageSrc first.cover.src, 1280, 'webp' %}" alt="" fetchpriority="high" data-frame>
   </div>
-</section>
-<footer class="home-footer grid">
-  <span class="f-copy">© SMASH 2026</span>
-  <span class="f-line">Interactive installations, projection mapping, immersive environments</span>
-  <a class="f-mail" href="mailto:hello@smash.studio">hello@smash.studio</a>
-</footer>
+</a>
+<script type="application/json" id="frames">[
+{%- for p in projects %}{% set outer = loop %}{% for b in p.blocks %}{% if b.type == 'image' %}
+{"slug": "{{ p.slug }}", "s": "{% imageSrc b.src, 640, 'webp' %}", "l": "{% imageSrc b.src, 1280, 'webp' %}"},
+{%- endif %}{% endfor %}{% endfor %}
+null]</script>
