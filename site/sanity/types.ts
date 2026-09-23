@@ -44,6 +44,8 @@ export interface Media {
   aspect: MediaAspect;
   caption: string | null;
   image: SanityImageRef | null;
+  /** A local file under `public/`, for seed content that has real images before Sanity does. */
+  src?: string | null;
 }
 
 export interface SegmentSummary {

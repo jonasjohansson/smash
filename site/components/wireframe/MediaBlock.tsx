@@ -23,7 +23,7 @@ export function MediaBlock({
   className?: string;
   width?: number;
 }) {
-  const url = imageUrl(media.image, width);
+  const url = imageUrl(media.image, width) ?? media.src ?? null;
 
   return (
     <figure className={className}>

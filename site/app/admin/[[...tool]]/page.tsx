@@ -10,6 +10,11 @@ import { isSanityConfigured, projectId } from '@/sanity/env';
  */
 export const dynamic = 'force-static';
 
+/** Static export needs at least the bare `/admin` path listed. */
+export function generateStaticParams() {
+  return [{ tool: [] }];
+}
+
 export { metadata, viewport } from 'next-sanity/studio';
 
 export default function StudioPage() {
