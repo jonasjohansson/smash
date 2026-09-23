@@ -2,7 +2,8 @@
 // mark. Frames are decoded off the main thread a couple of dozen ahead and
 // drawn to a canvas on the display's own clock, so a cut never waits on a
 // decode; if the next frame is not ready the current one simply holds.
-// Hover holds a frame; a click opens its project. A inverts the mask,
+// A click opens the project on screen. (No hover pause: the mark fills the
+// viewport, so hovering anywhere would stop it.) A inverts the mask,
 // S swaps the black ground for white.
 // Anywhere: press G to show the grid.
 
@@ -69,7 +70,6 @@ if (stage && framesEl) {
     ctx.drawImage(bitmap, (cw - w) / 2, (ch - h) / 2, w, h);
   }
 
-  let held = false;
   const slow = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Cut on a whole number of display refreshes, so the rhythm is even:
@@ -82,7 +82,7 @@ if (stage && framesEl) {
     if (prev) refresh += (Math.min(now - prev, 50) - refresh) * 0.05;
     prev = now;
     const every = Math.max(1, Math.round((slow ? 2500 : FRAME_MS) / refresh));
-    if (!held && !document.hidden && ++ticks >= every) {
+    if (!document.hidden && ++ticks >= every) {
       if (broken.has(next)) next = (next + 1) % frames.length;
       const bitmap = decoded.get(next);
       if (bitmap) {
@@ -104,9 +104,6 @@ if (stage && framesEl) {
   addEventListener('resize', fit);
   load();
   requestAnimationFrame(tick);
-
-  stage.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') held = true; });
-  stage.addEventListener('pointerleave', () => { held = false; });
 
   document.addEventListener('keydown', (e) => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
