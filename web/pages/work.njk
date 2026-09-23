@@ -1,0 +1,20 @@
+---
+layout: base.njk
+title: Work
+section: work
+permalink: /work/
+---
+<section class="page-head grid">
+  <h1 class="page-title">Work</h1>
+  <p class="page-meta">{{ projects.length }} projects</p>
+</section>
+<section class="index grid">
+  {% for p in projects %}
+  <a class="tile" href="/work/{{ p.slug }}/" style="--start: {{ p.tile.start }}; --span: {{ p.tile.span }}; --ar: {{ p.tile.ar }}">
+    <div class="tile-media">
+      {% image p.cover.src, p.cover.alt, "(max-width: 720px) 100vw, " + ((p.tile.span / 12 * 100) | round) + "vw" %}
+    </div>
+    <p class="tile-caption"><span>{{ p.title }}</span><span>{{ p.year }}</span></p>
+  </a>
+  {% endfor %}
+</section>

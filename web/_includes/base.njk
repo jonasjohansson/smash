@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% if title %}{{ title }} — {% endif %}SMASH</title>
+  <meta name="description" content="{{ description or 'SMASH is a creative studio making interactive installations, projection mapping, immersive environments and digital experiences.' }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300&display=swap">
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="/js/main.js" defer></script>
+</head>
+<body class="{{ bodyClass }}">
+  <header class="site-header grid">
+    <a class="logo" href="/">{% include "logo.svg" %}</a>
+    <nav class="nav">
+      <a href="/work/"{% if section == 'work' %} aria-current="page"{% endif %}>Work</a>
+      <a href="/studio/"{% if section == 'studio' %} aria-current="page"{% endif %}>Studio</a>
+    </nav>
+    <a class="contact" href="mailto:hello@smash.studio">Contact</a>
+  </header>
+  <main>
+{{ content | safe }}
+  </main>
+  {% if bodyClass != 'home' %}
+  <footer class="site-footer grid">
+    <span class="f-copy">© SMASH 2026</span>
+    <a class="f-mail" href="mailto:hello@smash.studio">hello@smash.studio</a>
+    <a class="f-top" href="#top" data-top>Back to top</a>
+  </footer>
+  {% endif %}
+  <div class="grid-overlay grid" aria-hidden="true">{% for i in range(0, 12) %}<span></span>{% endfor %}</div>
+</body>
+</html>

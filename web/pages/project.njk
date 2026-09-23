@@ -1,0 +1,60 @@
+---
+layout: base.njk
+section: work
+pagination:
+  data: projects
+  size: 1
+  alias: p
+permalink: "/work/{{ p.slug }}/"
+eleventyComputed:
+  title: "{{ p.title }}"
+---
+<article class="project">
+  <header class="project-head grid">
+    <h1 class="project-title">{{ p.title }}</h1>
+    <p class="project-year">{{ p.year }}</p>
+    <p class="project-tags">{{ p.tags | join(", ") }}</p>
+  </header>
+
+  {% if p.rows.hero %}
+  <figure class="project-hero">
+    {% if p.rows.hero.type == 'video' %}
+    <video src="{{ p.rows.hero.src }}"{% if p.rows.hero.poster %} poster="/{{ p.rows.hero.poster }}"{% endif %} autoplay muted loop playsinline aria-label="{{ p.rows.hero.alt }}"></video>
+    {% else %}
+    {% image p.rows.hero.src, p.rows.hero.alt, "100vw", "eager" %}
+    {% endif %}
+  </figure>
+  {% endif %}
+
+  {% if p.rows.lead %}
+  <div class="grid project-lead">
+    <div class="lead">{{ p.rows.lead.content | md | safe }}</div>
+  </div>
+  {% endif %}
+
+  {% for row in p.rows.rows %}
+  <div class="row row-{{ row.kind }} grid">
+    {% for c in row.cells %}
+    <div class="cell cell-{{ c.block.type }}" style="--start: {{ c.start }}; --span: {{ c.span }}">
+      {% if c.block.type == 'text' %}
+      <div class="prose">{{ c.block.content | md | safe }}</div>
+      {% elif c.block.type == 'credits' %}
+      <ul class="credits">{% for line in c.block.credits %}<li>{{ line | mdInline | safe }}</li>{% endfor %}</ul>
+      {% else %}
+      {# Inline, not an include: async shortcodes render nothing inside includes. #}
+      {% if c.block.type == 'video' %}
+      <video src="{{ c.block.src }}"{% if c.block.poster %} poster="/{{ c.block.poster }}"{% endif %} autoplay muted loop playsinline preload="metadata" aria-label="{{ c.block.alt }}" style="aspect-ratio: {{ c.block.ar }}"></video>
+      {% else %}
+      {% image c.block.src, c.block.alt, "(max-width: 720px) 100vw, " + ((c.span / 12 * 100) | round) + "vw" %}
+      {% endif %}
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+
+  <a class="next grid" href="/work/{{ p.next.slug }}/">
+    <span class="next-label">Next project</span>
+    <span class="next-title">{{ p.next.title }}</span>
+  </a>
+</article>
