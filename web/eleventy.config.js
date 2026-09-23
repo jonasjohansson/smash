@@ -64,6 +64,11 @@ export default function (config) {
     }
     return frames;
   });
+  // Project covers for the WebGL pages (the labyrinth).
+  config.addGlobalData('slides', async () => {
+    const projects = await readProjects('projects');
+    return Promise.all(projects.map(async (p) => ({ slug: p.slug, title: p.title, s: await imageSrc(p.cover.src, 640, 'webp') })));
+  });
   config.addGlobalData('poster', async () => {
     const first = (await readProjects('projects')).filter((p) => p.featured).sort((a, b) => a.featured - b.featured)[0];
     return { slug: first.slug, src: await imageSrc(first.cover.src, 1280, 'webp') };

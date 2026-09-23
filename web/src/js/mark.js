@@ -28,14 +28,14 @@ export const DEFAULTS = {
 };
 
 const PITCH = 51.78;
-const FIRST = 41.5;
+const FIRST = 42; // pixel 32..51 spans 32.0 to 52.0: its centre is 42
 
 /**
  * The slot centre lines, in mark units, with what happens at each end:
  * 'end' is a closed slot end (drawn with the chosen caps), 'bar' is flat
  * against a crossbar (the breaks in the A and the H), 'open' runs off the block.
  */
-function slots(p) {
+export function slots(p) {
   const out = UNITS.h * 0.5;
   const mid = FIRST + PITCH * 4.5;
   const c = (i) => mid + (FIRST + PITCH * i - mid) * p.columns;
