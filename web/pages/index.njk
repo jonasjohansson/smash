@@ -1,18 +1,6 @@
 ---
-layout: base.njk
+layout: landing.njk
 bodyClass: home
 fullscreen: true
 permalink: /
 ---
-{# Every image of every project, shuffled and cut fast behind the mark. #}
-{% set first = featured[0] %}
-<a class="stage" href="/work/{{ first.slug }}/" data-stage aria-label="SMASH — see the work">
-  <div class="slide">
-    <img src="{% imageSrc first.cover.src, 1280, 'webp' %}" alt="" fetchpriority="high" data-frame>
-  </div>
-</a>
-<script type="application/json" id="frames">[
-{%- for p in projects %}{% set outer = loop %}{% for b in p.blocks %}{% if b.type == 'image' %}
-{"slug": "{{ p.slug }}", "s": "{% imageSrc b.src, 640, 'webp' %}", "l": "{% imageSrc b.src, 1280, 'webp' %}"},
-{%- endif %}{% endfor %}{% endfor %}
-null]</script>

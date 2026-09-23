@@ -9,10 +9,10 @@
 // Anywhere: G shows the grid.
 
 import { DEFAULTS, buildMark, toDataUrl } from './mark.js';
+import { GLASS_DEFAULTS, createGlass } from './glass.js';
 
 const AHEAD = 24;
 const PARALLEL = 6;
-const STORE = 'smash-mark';
 
 const stage = document.querySelector('[data-stage]');
 const framesEl = document.getElementById('frames');
@@ -22,21 +22,37 @@ if (stage && framesEl) {
   const slide = stage.querySelector('.slide');
   const poster = slide.querySelector('img');
   const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
   slide.append(canvas);
 
+  // v2 draws the mark as liquid glass in WebGL; v1 (and v2 without WebGL 2)
+  // masks a 2D canvas with CSS.
+  const glass = stage.dataset.renderer === 'glass' ? createGlass(canvas) : null;
+  const ctx = glass ? null : canvas.getContext('2d');
+  if (glass) {
+    slide.classList.add('is-glass');
+    poster.decode().then(() => { if (!current) glass.setImage(poster); }).catch(() => {});
+  }
+  const STORE = glass ? 'smash-mark-v2' : 'smash-mark';
+  const BASE = glass ? { ...DEFAULTS, ...GLASS_DEFAULTS } : { ...DEFAULTS };
+
   // Settings are a per-viewer convenience; the page works without them.
-  const params = { ...DEFAULTS };
+  const params = { ...BASE };
   try { Object.assign(params, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch {}
   const save = () => { try { localStorage.setItem(STORE, JSON.stringify(params)); } catch {} };
 
   // ---- the mark ---------------------------------------------------------
 
   function drawMark() {
-    const url = toDataUrl(buildMark(params, slide.clientWidth, slide.clientHeight));
+    const W = slide.clientWidth, H = slide.clientHeight;
+    document.body.classList.toggle('light', params.light);
+    if (glass) {
+      glass.set({ refract: params.refract, aberr: params.aberr, shine: params.shine, bg: params.light ? [1, 1, 1] : [0, 0, 0] });
+      glass.setMask(buildMark(params, W, H), W, H, params.rim);
+      return;
+    }
+    const url = toDataUrl(buildMark(params, W, H));
     slide.style.webkitMaskImage = url;
     slide.style.maskImage = url;
-    document.body.classList.toggle('light', params.light);
   }
 
   // ---- the slideshow ----------------------------------------------------
@@ -77,6 +93,7 @@ if (stage && framesEl) {
 
   // object-fit: cover, by hand.
   function draw(bitmap) {
+    if (glass) return glass.setImage(bitmap);
     const cw = canvas.width, ch = canvas.height;
     const scale = Math.max(cw / bitmap.width, ch / bitmap.height);
     const w = bitmap.width * scale, h = bitmap.height * scale;
@@ -132,7 +149,7 @@ if (stage && framesEl) {
 
   async function openPane() {
     const { Pane } = await import('https://cdn.jsdelivr.net/npm/tweakpane@4.0.5/dist/tweakpane.min.js');
-    pane = new Pane({ title: 'SMASH' });
+    pane = new Pane({ title: glass ? 'SMASH v2' : 'SMASH' });
     pane.element.parentElement.classList.add('tweak');
     const change = () => { drawMark(); save(); };
 
@@ -151,6 +168,14 @@ if (stage && framesEl) {
     layout.addBinding(params, 'invert', { label: 'invert (A)' });
     layout.addBinding(params, 'light', { label: 'white (S)' });
 
+    if (glass) {
+      const g = pane.addFolder({ title: 'Glass' });
+      g.addBinding(params, 'refract', { label: 'refraction', min: 0, max: 6, step: 0.05 });
+      g.addBinding(params, 'rim', { label: 'rim width', min: 4, max: 120, step: 1 });
+      g.addBinding(params, 'aberr', { label: 'colour split', min: 0, max: 0.4, step: 0.005 });
+      g.addBinding(params, 'shine', { min: 0, max: 1.5, step: 0.01 });
+    }
+
     const show = pane.addFolder({ title: 'Slideshow' });
     show.addBinding(params, 'speed', { label: 'ms per image', min: 17, max: 1000, step: 1 });
     show.addBinding(params, 'paused');
@@ -165,7 +190,7 @@ if (stage && framesEl) {
       URL.revokeObjectURL(a.href);
     });
     pane.addButton({ title: 'Copy settings' }).on('click', () => navigator.clipboard?.writeText(JSON.stringify(params, null, 2)));
-    pane.addButton({ title: 'Reset' }).on('click', () => { Object.assign(params, DEFAULTS); pane.refresh(); change(); });
+    pane.addButton({ title: 'Reset' }).on('click', () => { Object.assign(params, BASE); pane.refresh(); change(); });
 
     pane.on('change', change);
   }
