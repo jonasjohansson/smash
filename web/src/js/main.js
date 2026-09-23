@@ -42,12 +42,16 @@ if (stage && framesEl) {
 
   // ---- the mark ---------------------------------------------------------
 
+  let lastShape = '';
   function drawMark() {
     const W = slide.clientWidth, H = slide.clientHeight;
     document.body.classList.toggle('light', params.light);
     if (glass) {
-      glass.set({ refract: params.refract, aberr: params.aberr, shine: params.shine, bg: params.light ? [1, 1, 1] : [0, 0, 0] });
-      glass.setMask(buildMark(params, W, H), W, H, params.rim);
+      const g = Object.fromEntries(Object.keys(GLASS_DEFAULTS).map((k) => [k, params[k]]));
+      glass.set({ ...g, light: params.light, bg: params.light ? [1, 1, 1] : [0, 0, 0] });
+      const shape = JSON.stringify([params, W, H].map((x, i) => (i ? x : { ...x, ...Object.fromEntries(Object.keys(GLASS_DEFAULTS).map((k) => [k, 0])), speed: 0, paused: 0, light: 0 })));
+      // The distance field only needs rebuilding when the shape changes.
+      if (shape !== lastShape) { lastShape = shape; glass.setMask(buildMark(params, W, H), W, H); }
       return;
     }
     const url = toDataUrl(buildMark(params, W, H));
@@ -170,10 +174,15 @@ if (stage && framesEl) {
 
     if (glass) {
       const g = pane.addFolder({ title: 'Glass' });
-      g.addBinding(params, 'refract', { label: 'refraction', min: 0, max: 6, step: 0.05 });
-      g.addBinding(params, 'rim', { label: 'rim width', min: 4, max: 120, step: 1 });
-      g.addBinding(params, 'aberr', { label: 'colour split', min: 0, max: 0.4, step: 0.005 });
-      g.addBinding(params, 'shine', { min: 0, max: 1.5, step: 0.01 });
+      g.addBinding(params, 'bevel', { label: 'bevel (px)', min: 2, max: 120, step: 1 });
+      g.addBinding(params, 'depth', { label: 'thickness (px)', min: 0, max: 240, step: 1 });
+      g.addBinding(params, 'ior', { label: 'refraction index', min: 1, max: 2.2, step: 0.01 });
+      g.addBinding(params, 'dispersion', { min: 0, max: 0.08, step: 0.001 });
+      g.addBinding(params, 'frost', { min: 0, max: 4, step: 0.05 });
+      g.addBinding(params, 'reflect', { label: 'reflections', min: 0, max: 2, step: 0.01 });
+      g.addBinding(params, 'shine', { label: 'light sweep', min: 0, max: 2, step: 0.01 });
+      g.addBinding(params, 'sweep', { label: 'sweep every (s)', min: 2, max: 20, step: 0.5 });
+      g.addBinding(params, 'flow', { label: 'liquid', min: 0, max: 2, step: 0.01 });
     }
 
     const show = pane.addFolder({ title: 'Slideshow' });
