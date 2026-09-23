@@ -93,7 +93,15 @@ b, strong { font-weight: inherit; }
   -webkit-mask: url("/brand/smash-mask.svg") center / 100% 100% no-repeat;
   mask: url("/brand/smash-mask.svg") center / 100% 100% no-repeat;
 }
-.slide img { width: 100%; height: 100%; object-fit: cover; }
+.slide img, .slide canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+/* A: the work everywhere but the letters. */
+.home.invert .slide {
+  -webkit-mask: url("/brand/smash-mask.svg") center / 100% 100% no-repeat, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: url("/brand/smash-mask.svg") center / 100% 100% no-repeat exclude, linear-gradient(#000 0 0);
+}
+/* S: white ground instead of black. */
+.home.light { background: #fff; }
 
 .site-footer {
   align-items: center;
