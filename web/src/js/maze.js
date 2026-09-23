@@ -1,25 +1,32 @@
 // v3: the mark as a labyrinth.
 //
-// Seen from straight above it is the landing: the letters, with the work
-// cutting fast across their tops. Scroll or click and the camera dives into
-// a slot and lands on the floor. The letters are now walls 40 m high,
-// tiled with the projects as glowing panels that rise into a height fog;
-// distance fog closes off the edges. Walk the corridors; click a panel to
-// open its project; Up flies back out.
+// From far above, through a long lens, it reads flat: the mark. Scroll, click
+// or Enter and the camera descends, the lens widening as it drops, until you
+// stand in a slot. The letters are walls hung with the work in large prints,
+// rising into a height fog; each letter's corridors are their own place:
 //
-// Geometry: the solid walls are the traced mark, extruded. The panels follow
-// the slot centre lines from mark.js, offset to each corridor wall, so they
-// sit exactly on the faces you walk past. Collision reads a raster of the
-// same mark. Light: a low warm sun with soft shadows, sky and ground fill,
-// the panels' own glow, GTAO ambient occlusion and a light bloom.
+//   S  cobblestones, warm fireflies
+//   M  forest floor, pollen rising, low mist
+//   A  a shallow water channel over river pebbles, cool motes above it
+//   S  sand, dust drifting along the corridor
+//   H  polished terrazzo, ash falling slowly
+//
+// Light comes from an HDRI sky: the sun's direction and colour, and the fog's
+// colours, are read from the image itself. Post: GTAO ambient occlusion,
+// bloom, ACES, vignette and grain, SMAA. H opens the settings.
+//
+// Geometry follows mark.js: walls are the traced mark extruded; floors, prints
+// and particles follow the slot centre lines; collision reads its raster.
 
 import * as THREE from 'three';
 import { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { DEFAULTS, UNITS, buildMark, slots } from './mark.js';
 
@@ -28,15 +35,58 @@ const hintEl = document.querySelector('[data-hint]');
 const titleEl = document.querySelector('[data-title]');
 const upEl = document.querySelector('[data-up]');
 const slides = JSON.parse(document.getElementById('slides').textContent);
+const ASSETS = '/assets/v3';
+const mobile = matchMedia('(max-width: 720px)').matches;
 
-// ---- scale: mark units to metres -------------------------------------------------
+// ---- settings (H) --------------------------------------------------------------------
 
-const S = 0.15; // a 20-unit slot is a 3 m corridor
-const WALL = 40; // m
-const EYE = 1.7;
+const SKIES = {
+  'partly cloudy': 'kloofendal_48d_partly_cloudy_puresky',
+  sunset: 'belfast_sunset_puresky',
+  overcast: 'overcast_soil_puresky',
+};
+const SETTINGS = {
+  sky: 'partly cloudy',
+  exposure: 1.0,
+  skyBrightness: 1.0,
+  environment: 0.6,
+  sunIntensity: 3.2,
+  sunAzimuth: 0, // read from the sky
+  sunElevation: 0,
+  fogDensity: 0.016,
+  fogHeight: 42,
+  printHeight: 7.5,
+  printRows: 3,
+  printGlow: 0.35,
+  particles: 1,
+  particleSize: 1,
+  particleSpeed: 1,
+  mist: 0.5,
+  water: true,
+  ao: true,
+  aoRadius: 1.4,
+  bloom: 0.28,
+  vignette: 0.35,
+  grain: 0.035,
+  fov: 68,
+  eye: 1.7,
+  speed: 4.2,
+  bob: 1,
+  sensitivity: 1,
+  resolution: mobile ? 1 : 1.5,
+  shadows: true,
+};
+const STORE = 'smash-v3';
+const settings = { ...SETTINGS };
+try { Object.assign(settings, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch {}
+const save = () => { try { localStorage.setItem(STORE, JSON.stringify(settings)); } catch {} };
+
+// ---- scale ------------------------------------------------------------------------------
+
+const S = 0.15; // metres per mark unit: a 20-unit slot is a 3 m corridor
+const WALL = 40;
 const toWorld = (x, y) => new THREE.Vector2((x - UNITS.w / 2) * S, (y - UNITS.h / 2) * S);
-const SKY_LOW = new THREE.Color(0x474c58);
-const SKY_HIGH = new THREE.Color(0xe2d3c1);
+const BLOCK = { w: UNITS.w * S, h: UNITS.h * S };
 
 // ---- renderer --------------------------------------------------------------------------
 
@@ -47,131 +97,266 @@ try {
   document.body.classList.add('no-webgl');
   throw new Error('WebGL unavailable');
 }
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
-renderer.shadowMap.enabled = true;
+renderer.setPixelRatio(Math.min(devicePixelRatio, settings.resolution));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = settings.exposure;
+renderer.shadowMap.enabled = settings.shadows;
 renderer.shadowMap.type = THREE.PCFShadowMap;
+const maxAniso = renderer.capabilities.getMaxAnisotropy();
 
 // Fog that knows up from down: it takes the sky's colour in the direction you
-// look, and thickens with height, so the walls dissolve upward into the sky.
+// look and thickens with height, so the walls dissolve upward into the sky.
+// Seen from high above it clears, so the mark reads.
+const fogShared = { fogSkyColor: { value: new THREE.Color() }, fogTop: { value: settings.fogHeight } };
 THREE.ShaderChunk.fog_pars_vertex = '#ifdef USE_FOG\n varying float vFogDepth;\n varying vec3 vFogWorld;\n#endif';
 THREE.ShaderChunk.fog_vertex = '#ifdef USE_FOG\n vFogDepth = - mvPosition.z;\n vFogWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;\n#endif';
 THREE.ShaderChunk.fog_pars_fragment = `#ifdef USE_FOG
- uniform vec3 fogColor;
+ uniform vec3 fogColor, fogSkyColor;
+ uniform float fogDensity, fogTop;
  varying float vFogDepth;
  varying vec3 vFogWorld;
- uniform float fogDensity;
 #endif`;
 THREE.ShaderChunk.fog_fragment = `#ifdef USE_FOG
- // Seen from high above, the air is clear enough to read the mark.
- float fogLow = 1.0 - smoothstep(20.0, 90.0, cameraPosition.y);
+ float fogLow = 1.0 - smoothstep(40.0, 200.0, cameraPosition.y);
  vec3 fogDir = normalize(vFogWorld - cameraPosition);
- vec3 fogSky = mix(fogColor, vec3(${SKY_HIGH.r.toFixed(3)}, ${SKY_HIGH.g.toFixed(3)}, ${SKY_HIGH.b.toFixed(3)}), smoothstep(-0.05, 0.7, fogDir.y));
- float fogD = fogDensity * mix(0.15, 1.0, fogLow);
+ vec3 fogSky = mix(fogColor, fogSkyColor, smoothstep(-0.05, 0.55, fogDir.y));
+ float fogD = fogDensity * fogLow;
  float fogFactor = 1.0 - exp(- fogD * fogD * vFogDepth * vFogDepth);
- fogFactor = max(fogFactor, smoothstep(10.0, ${WALL.toFixed(1)} + 4.0, vFogWorld.y) * fogLow);
+ fogFactor = max(fogFactor, smoothstep(fogTop * 0.25, fogTop, vFogWorld.y) * fogLow);
  gl_FragColor.rgb = mix(gl_FragColor.rgb, fogSky, fogFactor);
 #endif`;
+/** Every lit material shares the fog's extra uniforms. */
+function fogged(material) {
+  material.onBeforeCompile = (shader) => Object.assign(shader.uniforms, fogShared);
+  return material;
+}
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(SKY_LOW, 0.017);
-const pmrem = new THREE.PMREMGenerator(renderer);
-scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-scene.environmentIntensity = 0.25;
+scene.fog = new THREE.FogExp2(0x777777, settings.fogDensity);
+scene.backgroundBlurriness = 0.18;
 
-const camera = new THREE.PerspectiveCamera(26, 1, 0.1, 900);
-camera.rotation.order = 'YXZ';
+const camera = new THREE.PerspectiveCamera(settings.fov, 1, 0.1, 5000);
 
-// Sky: a dome from the horizon's grey up to a warm, bright haze.
-const sky = new THREE.Mesh(
-  new THREE.SphereGeometry(600, 48, 24),
-  new THREE.ShaderMaterial({
-    side: THREE.BackSide,
-    depthWrite: false,
-    fog: false,
-    uniforms: { low: { value: SKY_LOW }, high: { value: SKY_HIGH } },
-    vertexShader: 'varying vec3 vDir; void main() { vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-    fragmentShader: 'uniform vec3 low, high; varying vec3 vDir; void main() { gl_FragColor = vec4(mix(low, high, smoothstep(-0.05, 0.7, vDir.y)), 1.0); }',
-  }),
-);
-scene.add(sky);
-
-// Light.
-scene.add(new THREE.HemisphereLight(0xcfd6e2, 0x1b1714, 0.55));
-const sun = new THREE.DirectionalLight(0xffd8ae, 2.6);
-sun.position.set(-40, 70, 25);
+const hemi = new THREE.HemisphereLight(0xffffff, 0x2a241e, 0.25);
+const sun = new THREE.DirectionalLight(0xffffff, settings.sunIntensity);
 sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
-Object.assign(sun.shadow.camera, { left: -60, right: 60, top: 60, bottom: -60, near: 1, far: 220 });
-sun.shadow.bias = -0.0004;
-sun.shadow.normalBias = 0.04;
-scene.add(sun, sun.target);
+sun.shadow.mapSize.set(mobile ? 1024 : 4096, mobile ? 1024 : 4096);
+Object.assign(sun.shadow.camera, { left: -58, right: 58, top: 58, bottom: -58, near: 1, far: 400 });
+sun.shadow.bias = -0.0003;
+sun.shadow.normalBias = 0.05;
+scene.add(hemi, sun, sun.target);
+const sunOffset = new THREE.Vector3(0, 180, 0);
 
-// Floor: dark, a little polished, running out into the fog.
-const floor = new THREE.Mesh(
-  new THREE.PlaneGeometry(900, 900),
-  new THREE.MeshStandardMaterial({ color: 0x24221f, roughness: 0.42, metalness: 0 }),
-);
-floor.rotation.x = -Math.PI / 2;
-floor.receiveShadow = true;
-scene.add(floor);
-
-// ---- the work: an atlas of covers, and the landing's cut on the wall tops ---------------
-
-const COLS = 6;
-const CELL = { w: 512, h: 384 };
-const atlasCanvas = document.createElement('canvas');
-const rows = Math.ceil(slides.length / COLS);
-atlasCanvas.width = COLS * CELL.w;
-atlasCanvas.height = rows * CELL.h;
-const atlas = new THREE.CanvasTexture(atlasCanvas);
-atlas.colorSpace = THREE.SRGBColorSpace;
-atlas.anisotropy = 8;
-
-const covers = [];
-function cover(ctx, img, x, y, w, h) {
-  const s = Math.max(w / img.width, h / img.height);
-  ctx.drawImage(img, x + (w - img.width * s) / 2, y + (h - img.height * s) / 2, img.width * s, img.height * s);
+function placeSun() {
+  const az = THREE.MathUtils.degToRad(settings.sunAzimuth);
+  const el = THREE.MathUtils.degToRad(Math.max(8, settings.sunElevation));
+  sunOffset.set(Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az)).multiplyScalar(180);
+  sun.intensity = settings.sunIntensity;
 }
-const loaded = Promise.all(slides.map((s, i) => new Promise((resolve) => {
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.onload = () => {
-    covers[i] = img;
-    const g = atlasCanvas.getContext('2d');
-    g.save();
-    g.beginPath();
-    g.rect((i % COLS) * CELL.w, Math.floor(i / COLS) * CELL.h, CELL.w, CELL.h);
-    g.clip();
-    cover(g, img, (i % COLS) * CELL.w, Math.floor(i / COLS) * CELL.h, CELL.w, CELL.h);
-    g.restore();
-    atlas.needsUpdate = true;
-    resolve();
+
+// ---- the sky ---------------------------------------------------------------------------
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+const hdrLoader = new HDRLoader().setDataType(THREE.FloatType);
+let envMap = null;
+let skyColors = { horizon: new THREE.Color(0.5, 0.5, 0.5), high: new THREE.Color(0.7, 0.7, 0.75) };
+
+/** Mean colour of a band of rows, as fractions of the height from the top. */
+function band(img, from, to) {
+  const { data, width, height } = img;
+  const c = new THREE.Color(0, 0, 0);
+  let n = 0;
+  for (let y = Math.floor(from * height); y < Math.floor(to * height); y++) {
+    for (let x = 0; x < width; x += 2) {
+      const i = (y * width + x) * 4;
+      c.r += Math.min(data[i], 4); c.g += Math.min(data[i + 1], 4); c.b += Math.min(data[i + 2], 4);
+      n++;
+    }
+  }
+  return c.multiplyScalar(1 / n);
+}
+
+async function loadSky(name, setSun) {
+  const tex = await hdrLoader.loadAsync(`${ASSETS}/sky/${SKIES[name]}.hdr`);
+  tex.mapping = THREE.EquirectangularReflectionMapping;
+  const img = tex.image;
+
+  // The sun: the brightest texel in the upper half.
+  let best = -1, bx = 0, by = 0;
+  for (let y = 0; y < img.height / 2; y++) {
+    for (let x = 0; x < img.width; x++) {
+      const i = (y * img.width + x) * 4;
+      const l = img.data[i] * 0.2126 + img.data[i + 1] * 0.7152 + img.data[i + 2] * 0.0722;
+      if (l > best) { best = l; bx = x; by = y; }
+    }
+  }
+  const i = (by * img.width + bx) * 4;
+  sun.color.setRGB(img.data[i], img.data[i + 1], img.data[i + 2]);
+  sun.color.multiplyScalar(1 / Math.max(sun.color.r, sun.color.g, sun.color.b, 1e-4)).lerp(new THREE.Color(1, 1, 1), 0.35);
+  if (setSun) {
+    // Equirectangular: u = atan(z, x) / 2π + ½, v = asin(y) / π + ½, row 0 at the top.
+    settings.sunAzimuth = Math.round(THREE.MathUtils.radToDeg((bx / img.width - 0.5) * Math.PI * 2));
+    settings.sunElevation = Math.round(THREE.MathUtils.radToDeg((0.5 - by / img.height) * Math.PI));
+  }
+
+  // Fog: the horizon's colour low down, the sky's higher up.
+  skyColors = { horizon: band(img, 0.45, 0.5), high: band(img, 0.12, 0.3) };
+  hemi.color.copy(skyColors.high).multiplyScalar(1 / Math.max(skyColors.high.r, skyColors.high.g, skyColors.high.b, 1e-4));
+
+  envMap?.dispose();
+  envMap = pmrem.fromEquirectangular(tex).texture;
+  scene.environment = envMap;
+  scene.background = tex;
+  applyLook();
+  placeSun();
+}
+
+function applyLook() {
+  renderer.toneMappingExposure = settings.exposure;
+  scene.backgroundIntensity = settings.skyBrightness;
+  scene.environmentIntensity = settings.environment;
+  scene.fog.density = settings.fogDensity;
+  scene.fog.color.copy(skyColors.horizon).multiplyScalar(settings.skyBrightness);
+  fogShared.fogSkyColor.value.copy(skyColors.high).multiplyScalar(settings.skyBrightness);
+  fogShared.fogTop.value = settings.fogHeight;
+}
+
+// ---- materials ---------------------------------------------------------------------------
+
+const texLoader = new THREE.TextureLoader();
+function pbr(id, { repeat = 4, tint = 0xffffff, rough = 1 } = {}) {
+  const load = (map, srgb) => {
+    const t = texLoader.load(`${ASSETS}/tex/${id}_${map}.jpg`);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.anisotropy = maxAniso;
+    if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+    return t;
   };
-  img.onerror = resolve;
-  img.src = s.s;
-})));
-
-// The wall tops, seen from above, show the landing's fast cut.
-const capCanvas = document.createElement('canvas');
-capCanvas.width = 1100;
-capCanvas.height = 942;
-const capTex = new THREE.CanvasTexture(capCanvas);
-capTex.colorSpace = THREE.SRGBColorSpace;
-// Extruded caps carry the SVG's own coordinates (2200 × 1888) as UVs.
-capTex.repeat.set(1 / 2200, -1 / 1888);
-capTex.offset.set(0, 1);
-let capIndex = 0;
-function cutCap() {
-  const ready = covers.filter(Boolean);
-  if (!ready.length) return;
-  capIndex = (capIndex + 1 + Math.floor(Math.random() * 3)) % ready.length;
-  cover(capCanvas.getContext('2d'), ready[capIndex], 0, 0, capCanvas.width, capCanvas.height);
-  capTex.needsUpdate = true;
+  const arm = load('arm'); // ambient occlusion, roughness, metalness in r, g, b
+  const m = new THREE.MeshStandardMaterial({
+    map: load('diff', true), normalMap: load('nor'), aoMap: arm, roughnessMap: arm, metalnessMap: arm,
+    color: tint, roughness: rough, metalness: 1,
+  });
+  m.userData.repeat = repeat; // metres per tile, for the world-space UVs
+  return fogged(m);
 }
 
-// ---- the walls ----------------------------------------------------------------------------
+const ZONES = [
+  { floor: pbr('cobblestone_floor_04', { repeat: 3.2 }), particle: { mode: 0, color: 0xffc27a, count: 360, size: 0.9 } },
+  { floor: pbr('forest_ground_04', { repeat: 3.6 }), particle: { mode: 1, color: 0xf3f0d8, count: 900, size: 0.55 } },
+  { floor: pbr('ganges_river_pebbles', { repeat: 2.4 }), particle: { mode: 2, color: 0xbfe3ff, count: 500, size: 0.6 } },
+  { floor: pbr('coast_sand_01', { repeat: 4 }), particle: { mode: 3, color: 0xffe2b8, count: 1100, size: 0.4 } },
+  { floor: pbr('terrazzo_tiles', { repeat: 2.5, rough: 0.55 }), particle: { mode: 4, color: 0xeae7e2, count: 700, size: 0.55 } },
+];
+// Which letter each slot of mark.js belongs to, in its order.
+const SLOT_ZONE = [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4];
 
-/** Swap two corners of every triangle, after a mirroring transform. */
+// ---- ground and floors ------------------------------------------------------------------------
+
+/** World-space UVs on a flat XZ mesh, in tiles of `repeat` metres. */
+function planarUV(geo, repeat) {
+  const pos = geo.getAttribute('position');
+  const uv = new Float32Array(pos.count * 2);
+  for (let i = 0; i < pos.count; i++) {
+    uv[i * 2] = pos.getX(i) / repeat;
+    uv[i * 2 + 1] = pos.getZ(i) / repeat;
+  }
+  geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+}
+function flatUp(geo) {
+  const n = new Float32Array(geo.getAttribute('position').count * 3);
+  for (let i = 1; i < n.length; i += 3) n[i] = 1;
+  geo.setAttribute('normal', new THREE.BufferAttribute(n, 3));
+}
+
+const grass = pbr('sparse_grass', { repeat: 5, tint: 0xb9b3a4 });
+const groundGeo = new THREE.PlaneGeometry(1600, 1600).rotateX(-Math.PI / 2);
+planarUV(groundGeo, 5);
+const ground = new THREE.Mesh(groundGeo, grass);
+ground.position.y = -0.03;
+ground.receiveShadow = true;
+scene.add(ground);
+
+const params = { ...DEFAULTS };
+const HALF = (params.stroke / 2) * S;
+const inBlock = ([x, y]) => [Math.min(UNITS.w, Math.max(0, x)), Math.min(UNITS.h, Math.max(0, y))];
+
+/** Each slot's straight runs, clipped to the block, in world metres. */
+const RUNS = [];
+slots(params).forEach(({ pts }, slot) => {
+  for (let k = 0; k < pts.length - 1; k++) {
+    const a = toWorld(...inBlock(pts[k])), b = toWorld(...inBlock(pts[k + 1]));
+    if (a.distanceTo(b) >= 0.5) RUNS.push({ a, b, zone: SLOT_ZONE[slot] });
+  }
+});
+
+function strip(a, b, halfWidth, y, extend) {
+  const dir = b.clone().sub(a).normalize();
+  const n = new THREE.Vector2(-dir.y, dir.x).multiplyScalar(halfWidth);
+  const a2 = a.clone().sub(dir.clone().multiplyScalar(extend)), b2 = b.clone().add(dir.clone().multiplyScalar(extend));
+  const c = [a2.clone().add(n), b2.clone().add(n), b2.clone().sub(n), a2.clone().sub(n)];
+  return [c[0], c[1], c[2], c[0], c[2], c[3]].flatMap((p) => [p.x, y, p.y]);
+}
+
+function buildFloors() {
+  ZONES.forEach((zone, z) => {
+    const pos = RUNS.filter((r) => r.zone === z).flatMap((r) => strip(r.a, r.b, HALF + 0.25, 0.002 * (z + 1), HALF + 0.25));
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    flatUp(geo);
+    planarUV(geo, zone.floor.userData.repeat);
+    zone.floor.side = THREE.DoubleSide;
+    const mesh = new THREE.Mesh(geo, zone.floor);
+    mesh.receiveShadow = true;
+    scene.add(mesh);
+  });
+}
+
+// The water channel in the A: dark, glassy, its surface slowly moving.
+function waterNormal() {
+  const size = 256;
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const g = c.getContext('2d');
+  const img = g.createImageData(size, size);
+  const h = (x, y) => {
+    const u = (x / size) * Math.PI * 2, v = (y / size) * Math.PI * 2;
+    return Math.sin(u * 3 + Math.sin(v * 2) * 1.3) * 0.5 + Math.sin(v * 5 + u * 2) * 0.3 + Math.sin((u + v) * 7) * 0.15;
+  };
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const n = new THREE.Vector3(-(h(x + 1, y) - h(x - 1, y)) * 2, -(h(x, y + 1) - h(x, y - 1)) * 2, 1).normalize();
+      const i = (y * size + x) * 4;
+      img.data[i] = (n.x * 0.5 + 0.5) * 255; img.data[i + 1] = (n.y * 0.5 + 0.5) * 255; img.data[i + 2] = (n.z * 0.5 + 0.5) * 255; img.data[i + 3] = 255;
+    }
+  }
+  g.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+const waterNormals = waterNormal();
+const waterMat = fogged(new THREE.MeshPhysicalMaterial({
+  color: 0x0c1717, roughness: 0.03, metalness: 0, transparent: true, opacity: 0.78, side: THREE.DoubleSide,
+  normalMap: waterNormals, normalScale: new THREE.Vector2(0.18, 0.18), envMapIntensity: 1.4, clearcoat: 1,
+}));
+let water = null;
+function buildWater() {
+  const pos = RUNS.filter((r) => r.zone === 2).flatMap((r) => strip(r.a, r.b, HALF - 0.05, 0.1, HALF - 0.05));
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  flatUp(geo);
+  planarUV(geo, 6);
+  water = new THREE.Mesh(geo, waterMat);
+  water.visible = settings.water;
+  scene.add(water);
+}
+
+// ---- walls -------------------------------------------------------------------------------------
+
+const concrete = pbr('concrete_layers_02', { repeat: 6, tint: 0x9d9a95 });
+const cap = pbr('concrete_layers_02', { repeat: 6, tint: 0x3b3936 });
+
 function flipWinding(geo) {
   for (const name of ['position', 'normal', 'uv']) {
     const a = geo.getAttribute(name);
@@ -189,10 +374,8 @@ function flipWinding(geo) {
 
 async function buildWalls() {
   const svg = new SVGLoader().parse(await (await fetch('/brand/smash-logo.svg')).text());
-  const shapes = svg.paths.flatMap((p) => SVGLoader.createShapes(p));
+  const shapes = svg.paths.flatMap((p) => p.toShapes(true));
   const geo = new THREE.ExtrudeGeometry(shapes, { depth: WALL, bevelEnabled: false, curveSegments: 6 });
-  // SVG (x, y down) and extrusion depth → world (x, height, z). The mapping
-  // mirrors, so the triangles are turned back afterwards.
   const pos = geo.getAttribute('position');
   for (let i = 0; i < pos.count; i++) {
     const w = toWorld(pos.getX(i) / 4, pos.getY(i) / 4);
@@ -200,84 +383,218 @@ async function buildWalls() {
   }
   flipWinding(geo);
   geo.computeVertexNormals();
-  const walls = new THREE.Mesh(geo, [
-    new THREE.MeshStandardMaterial({ map: capTex, roughness: 0.9, emissive: 0xffffff, emissiveMap: capTex, emissiveIntensity: 0.9 }),
-    new THREE.MeshStandardMaterial({ color: 0x1b1a1a, roughness: 0.85 }),
-  ]);
+  // UVs by face direction: tops in plan, sides along the wall and up it.
+  const nrm = geo.getAttribute('normal');
+  const uv = geo.getAttribute('uv');
+  const r = concrete.userData.repeat;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    if (Math.abs(nrm.getY(i)) > 0.5) uv.setXY(i, x / r, z / r);
+    else if (Math.abs(nrm.getX(i)) > Math.abs(nrm.getZ(i))) uv.setXY(i, z / r, y / r);
+    else uv.setXY(i, x / r, y / r);
+  }
+  const walls = new THREE.Mesh(geo, [cap, concrete]);
   walls.castShadow = walls.receiveShadow = true;
   scene.add(walls);
 }
 
-// ---- the panels on the corridor walls ------------------------------------------------------
+// ---- the work: large prints on the corridor walls -------------------------------------------
 
-const PANEL = { w: 2.4, h: 1.8, gap: 0.14 };
-const ROWS = 16;
-const panelProject = [];
+const printMats = slides.map(() => null);
+function printMaterial(i) {
+  if (!printMats[i]) {
+    const t = texLoader.load(mobile ? slides[i].s : slides[i].l);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.anisotropy = maxAniso;
+    printMats[i] = fogged(new THREE.MeshStandardMaterial({
+      map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: settings.printGlow, roughness: 0.62,
+    }));
+  }
+  return printMats[i];
+}
 
-function buildPanels() {
-  const params = { ...DEFAULTS };
-  const half = (params.stroke / 2) * S;
-  const positions = [], uvs = [], normals = [];
-  const clip = (x, y) => x >= 0 && x <= UNITS.w && y >= 0 && y <= UNITS.h;
+let prints = new THREE.Group();
+scene.add(prints);
+function buildPrints() {
+  scene.remove(prints);
+  prints.traverse((o) => o.geometry?.dispose());
+  prints = new THREE.Group();
+  const perProject = slides.map(() => ({ pos: [], uv: [] }));
+  const order = [...slides.keys()].sort(() => Math.random() - 0.5);
+  let next = 0;
+  const GAP = 0.7;
+  const H = settings.printHeight;
 
-  for (const { pts } of slots(params)) {
-    for (let k = 0; k < pts.length - 1; k++) {
-      // Keep the part of each centre-line segment inside the block.
-      let [ax, ay] = pts[k];
-      let [bx, by] = pts[k + 1];
-      const clampPt = (x, y) => [Math.min(UNITS.w, Math.max(0, x)), Math.min(UNITS.h, Math.max(0, y))];
-      if (!clip(ax, ay)) [ax, ay] = clampPt(ax, ay);
-      if (!clip(bx, by)) [bx, by] = clampPt(bx, by);
-      const a = toWorld(ax, ay), b = toWorld(bx, by);
-      const dir = b.clone().sub(a);
-      const len = dir.length();
-      if (len < PANEL.w) continue;
-      dir.normalize();
-      const nrm = new THREE.Vector2(-dir.y, dir.x);
-      // Stop short of bends and slot ends, where walls turn.
-      const inset = half + 0.2;
-      const usable = len - 2 * inset;
-      const count = Math.floor((usable + PANEL.gap) / (PANEL.w + PANEL.gap));
-      if (count < 1) continue;
-      const start = inset + (usable - (count * (PANEL.w + PANEL.gap) - PANEL.gap)) / 2;
-      for (const side of [1, -1]) {
-        // The wall face, and the way it faces: back into the corridor.
-        const off = nrm.clone().multiplyScalar(side * (half - 0.08));
-        const face = nrm.clone().multiplyScalar(-side);
-        for (let i = 0; i < count; i++) {
-          const s0 = start + i * (PANEL.w + PANEL.gap);
-          let p0 = a.clone().add(dir.clone().multiplyScalar(s0)).add(off);
-          let p1 = a.clone().add(dir.clone().multiplyScalar(s0 + PANEL.w)).add(off);
-          // Wind so the front faces the corridor.
-          if ((p1.x - p0.x) * face.y - (p1.y - p0.y) * face.x < 0) [p0, p1] = [p1, p0];
-          for (let r = 0; r < ROWS; r++) {
-            const y0 = 0.35 + r * (PANEL.h + PANEL.gap), y1 = y0 + PANEL.h;
-            const project = Math.floor(Math.random() * slides.length);
-            panelProject.push(project);
-            const u0 = (project % COLS) / COLS, u1 = u0 + 1 / COLS;
-            const v1 = 1 - Math.floor(project / COLS) / rows, v0 = v1 - 1 / rows;
-            positions.push(p0.x, y0, p0.y, p1.x, y0, p1.y, p1.x, y1, p1.y, p0.x, y0, p0.y, p1.x, y1, p1.y, p0.x, y1, p0.y);
-            uvs.push(u0, v0, u1, v0, u1, v1, u0, v0, u1, v1, u0, v1);
-            for (let n = 0; n < 6; n++) normals.push(face.x, 0, face.y);
-          }
+  for (const { a, b } of RUNS) {
+    const dir = b.clone().sub(a);
+    const len = dir.length();
+    dir.normalize();
+    const nrm = new THREE.Vector2(-dir.y, dir.x);
+    const inset = HALF + 0.35;
+    const usable = len - 2 * inset;
+    if (usable < 3) continue;
+    const count = Math.max(1, Math.round(usable / 11));
+    const w = (usable - (count - 1) * GAP) / count;
+    for (const side of [1, -1]) {
+      const off = nrm.clone().multiplyScalar(side * (HALF - 0.07));
+      const face = nrm.clone().multiplyScalar(-side);
+      for (let i = 0; i < count; i++) {
+        const s0 = inset + i * (w + GAP);
+        let p0 = a.clone().add(dir.clone().multiplyScalar(s0)).add(off);
+        let p1 = a.clone().add(dir.clone().multiplyScalar(s0 + w)).add(off);
+        if ((p1.x - p0.x) * face.y - (p1.y - p0.y) * face.x < 0) [p0, p1] = [p1, p0];
+        for (let r = 0; r < settings.printRows; r++) {
+          const y0 = 0.9 + r * (H + GAP), y1 = y0 + H;
+          const k = order[next++ % order.length];
+          // Cover-fit the image into the print.
+          const pa = w / H, ia = slides[k].ar || 1.5;
+          const [u0, u1, v0, v1] = ia > pa
+            ? [0.5 - pa / ia / 2, 0.5 + pa / ia / 2, 0, 1]
+            : [0, 1, 0.5 - ia / pa / 2, 0.5 + ia / pa / 2];
+          perProject[k].pos.push(p0.x, y0, p0.y, p1.x, y0, p1.y, p1.x, y1, p1.y, p0.x, y0, p0.y, p1.x, y1, p1.y, p0.x, y1, p0.y);
+          perProject[k].uv.push(u0, v0, u1, v0, u1, v1, u0, v0, u1, v1, u0, v1);
         }
       }
     }
   }
-
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  geo.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
-  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-  const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
-    map: atlas, emissiveMap: atlas, emissive: 0xffffff, emissiveIntensity: 0.55, roughness: 0.4,
-  }));
-  mesh.receiveShadow = true;
-  scene.add(mesh);
-  return mesh;
+  perProject.forEach(({ pos, uv }, k) => {
+    if (!pos.length) return;
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    geo.computeVertexNormals();
+    const mesh = new THREE.Mesh(geo, printMaterial(k));
+    mesh.receiveShadow = true;
+    mesh.userData.project = k;
+    prints.add(mesh);
+  });
+  scene.add(prints);
 }
 
-// ---- collision: a raster of the same mark ------------------------------------------------
+// ---- particles: one quiet system per zone -------------------------------------------------------
+
+const particleUniforms = {
+  uTime: { value: 0 }, uSpeed: { value: settings.particleSpeed }, uSize: { value: settings.particleSize },
+  uPixel: { value: 1 }, uCamY: { value: 0 },
+};
+let particles = new THREE.Group();
+scene.add(particles);
+
+function buildParticles() {
+  scene.remove(particles);
+  particles.traverse((o) => o.geometry?.dispose());
+  particles = new THREE.Group();
+  ZONES.forEach((zone, z) => {
+    const zr = RUNS.filter((r) => r.zone === z);
+    const total = zr.reduce((s, r) => s + r.a.distanceTo(r.b), 0);
+    const count = Math.round(zone.particle.count * settings.particles * (mobile ? 0.5 : 1));
+    if (!count) return;
+    const pos = new Float32Array(count * 3), seed = new Float32Array(count * 4), flow = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      let pick = Math.random() * total, r = zr[0];
+      for (const run of zr) { const l = run.a.distanceTo(run.b); if (pick <= l) { r = run; break; } pick -= l; }
+      const dir = r.b.clone().sub(r.a).normalize();
+      const p = r.a.clone().lerp(r.b, Math.random()).add(new THREE.Vector2(-dir.y, dir.x).multiplyScalar((Math.random() - 0.5) * 2 * (HALF - 0.4)));
+      pos.set([p.x, 0, p.y], i * 3);
+      seed.set([Math.random(), Math.random(), Math.random(), Math.random()], i * 4);
+      flow.set([dir.x, 0, dir.y], i * 3);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('seed', new THREE.BufferAttribute(seed, 4));
+    geo.setAttribute('flow', new THREE.BufferAttribute(flow, 3));
+    const mat = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      uniforms: { ...particleUniforms, uColor: { value: new THREE.Color(zone.particle.color) }, uMode: { value: zone.particle.mode }, uBase: { value: zone.particle.size } },
+      vertexShader: `
+        uniform float uTime, uSpeed, uSize, uPixel, uBase, uCamY;
+        uniform int uMode;
+        attribute vec4 seed;
+        attribute vec3 flow;
+        varying float vAlpha;
+        void main() {
+          float t = uTime * uSpeed;
+          vec3 p = position;
+          float a = 1.0;
+          float ph = seed.x * 6.2832;
+          if (uMode == 0) {        // fireflies: wander low, and blink
+            p.y = 0.4 + seed.y * 2.6;
+            p += vec3(sin(t * 0.31 + ph) * 1.1, sin(t * 0.43 + seed.z * 6.3) * 0.35, cos(t * 0.27 + seed.w * 6.3) * 1.1);
+            a = pow(0.5 + 0.5 * sin(t * 1.7 + seed.w * 40.0), 6.0);
+          } else if (uMode == 1) { // pollen: rising slowly, swaying
+            p.y = mod(seed.y * 14.0 + t * (0.12 + 0.1 * seed.z), 14.0);
+            p.xz += vec2(sin(t * 0.4 + ph), cos(t * 0.33 + ph)) * 0.5;
+            a = smoothstep(0.0, 1.0, p.y) * (1.0 - smoothstep(9.0, 14.0, p.y)) * 0.55;
+          } else if (uMode == 2) { // motes: hovering over the water
+            p.y = 0.25 + seed.y * 1.4 + sin(t * 0.5 + ph) * 0.12;
+            p.xz += vec2(sin(t * 0.18 + ph), cos(t * 0.21 + ph)) * 0.8;
+            a = 0.45 + 0.55 * pow(0.5 + 0.5 * sin(t * 0.9 + seed.w * 20.0), 3.0);
+          } else if (uMode == 3) { // dust: drifting along the corridor
+            float d = mod(seed.y * 30.0 + t * (0.25 + 0.2 * seed.z), 30.0) - 15.0;
+            p += flow * d;
+            p.y = 0.3 + seed.w * 7.0 + sin(t * 0.3 + ph) * 0.4;
+            a = 0.35 * (1.0 - smoothstep(10.0, 15.0, abs(d)));
+          } else {                 // ash: falling slowly
+            float top = 22.0;
+            p.y = top - mod(seed.y * top + t * (0.22 + 0.15 * seed.z), top);
+            p.xz += vec2(sin(t * 0.35 + ph + p.y * 0.3), cos(t * 0.29 + ph + p.y * 0.25)) * 0.9;
+            a = 0.6 * smoothstep(0.0, 1.5, p.y);
+          }
+          vec4 mv = modelViewMatrix * vec4(p, 1.0);
+          gl_Position = projectionMatrix * mv;
+          float dist = -mv.z;
+          gl_PointSize = uBase * uSize * uPixel * (0.6 + 0.8 * seed.z) * 38.0 / max(dist, 0.5);
+          // Only near the ground: gone when seen from the air, and in the distance.
+          vAlpha = a * (1.0 - smoothstep(18.0, 60.0, dist)) * (1.0 - smoothstep(20.0, 60.0, uCamY));
+        }`,
+      fragmentShader: `
+        uniform vec3 uColor;
+        varying float vAlpha;
+        void main() {
+          float r = length(gl_PointCoord - 0.5);
+          float soft = smoothstep(0.5, 0.0, r);
+          gl_FragColor = vec4(uColor * soft * soft * vAlpha * 1.6, 1.0);
+        }`,
+    });
+    const pts = new THREE.Points(geo, mat);
+    pts.frustumCulled = false;
+    particles.add(pts);
+  });
+  scene.add(particles);
+}
+
+// ---- mist: two thin sheets of moving haze near the ground -----------------------------------------
+
+const mistUniforms = { uTime: { value: 0 }, uAmount: { value: settings.mist }, uColor: { value: new THREE.Color() }, uCamY: { value: 0 } };
+for (const [y, scale] of [[0.35, 1], [1.2, 0.6]]) {
+  const m = new THREE.Mesh(
+    new THREE.PlaneGeometry(BLOCK.w + 40, BLOCK.h + 40).rotateX(-Math.PI / 2),
+    new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false,
+      uniforms: { ...mistUniforms, uScale: { value: scale } },
+      vertexShader: 'varying vec3 vW; void main() { vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }',
+      fragmentShader: `
+        uniform float uTime, uAmount, uScale, uCamY;
+        uniform vec3 uColor;
+        varying vec3 vW;
+        float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        float n(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+          return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
+        float fbm(vec2 p) { float s = 0.0, a = 0.5; for (int i = 0; i < 5; i++) { s += a * n(p); p *= 2.03; a *= 0.5; } return s; }
+        void main() {
+          vec2 p = vW.xz * 0.06;
+          float f = fbm(p + vec2(uTime * 0.012, uTime * 0.007)) * fbm(p * 1.7 - vec2(uTime * 0.009, 0.0));
+          float a = smoothstep(0.12, 0.55, f) * uAmount * 0.55 * uScale;
+          a *= 1.0 - smoothstep(10.0, 40.0, uCamY);
+          gl_FragColor = vec4(uColor, a);
+        }`,
+    }),
+  );
+  m.position.y = y;
+  scene.add(m);
+}
+
+// ---- collision ---------------------------------------------------------------------------------------
 
 let solid = null;
 async function buildCollision() {
@@ -293,52 +610,80 @@ async function buildCollision() {
   solid = g.getImageData(0, 0, UNITS.w, UNITS.h).data;
 }
 function blocked(x, z) {
+  if (Math.hypot(x, z) > 160) return true;
   if (!solid) return false;
   const u = Math.round(x / S + UNITS.w / 2), v = Math.round(z / S + UNITS.h / 2);
   if (u < 0 || v < 0 || u >= UNITS.w || v >= UNITS.h) return false;
   return solid[(v * UNITS.w + u) * 4 + 3] > 127;
 }
-const RADIUS = 0.4;
+const RADIUS = 0.45;
 const free = (x, z) => [0, 1, 2, 3, 4, 5, 6, 7].every((k) => !blocked(x + Math.cos(k * 0.785) * RADIUS, z + Math.sin(k * 0.785) * RADIUS));
 
-// ---- post ------------------------------------------------------------------------------------
+// ---- post ---------------------------------------------------------------------------------------------
 
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 const gtao = new GTAOPass(scene, camera, 1, 1);
-gtao.updateGtaoMaterial({ radius: 1.2, distanceExponent: 1.4, thickness: 1.5, scale: 1.1 });
 composer.addPass(gtao);
-const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.32, 0.55, 0.82);
+const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), settings.bloom, 0.6, 0.85);
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.0;
+const finish = new ShaderPass({
+  uniforms: { tDiffuse: { value: null }, uVignette: { value: settings.vignette }, uGrain: { value: settings.grain }, uTime: { value: 0 } },
+  vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: `
+    uniform sampler2D tDiffuse; uniform float uVignette, uGrain, uTime; varying vec2 vUv;
+    float h(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233)) + uTime) * 43758.5453); }
+    void main() {
+      vec3 c = texture2D(tDiffuse, vUv).rgb;
+      vec2 d = vUv - 0.5;
+      c *= 1.0 - uVignette * smoothstep(0.25, 0.85, dot(d, d) * 2.2);
+      c += (h(vUv * 1000.0) - 0.5) * uGrain;
+      gl_FragColor = vec4(c, 1.0);
+    }`,
+});
+composer.addPass(finish);
+composer.addPass(new SMAAPass());
 
-// ---- views and the dive -----------------------------------------------------------------------
-
-// Start inside the M's third slot, halfway down, facing the top of the mark.
-const ENTRY = toWorld(249.1, 330);
-const ABOVE_HEIGHT = 175;
-const player = { x: ENTRY.x, z: ENTRY.y, yaw: 0, pitch: 0 };
-let mode = 'above'; // above | diving | walk | rising
-let t0 = 0;
-const DIVE_MS = 3800;
-
-const qAbove = new THREE.Quaternion();
-const qWalk = new THREE.Quaternion();
-const eAbove = new THREE.Euler(-Math.PI / 2, 0, 0, 'YXZ');
-qAbove.setFromEuler(eAbove);
-
-function aboveFov() {
-  // Frame the whole mark from overhead, with a little room.
-  const need = Math.max((UNITS.h * S) / 2 * 1.12, ((UNITS.w * S) / 2 * 1.12) / camera.aspect);
-  return THREE.MathUtils.radToDeg(2 * Math.atan(need / ABOVE_HEIGHT));
+function applyPost() {
+  gtao.enabled = settings.ao;
+  gtao.updateGtaoMaterial({ radius: settings.aoRadius, distanceExponent: 1.5, thickness: 1.4, scale: 1.15 });
+  bloom.strength = settings.bloom;
+  finish.uniforms.uVignette.value = settings.vignette;
+  finish.uniforms.uGrain.value = settings.grain;
+  renderer.shadowMap.enabled = settings.shadows;
+  sun.castShadow = settings.shadows;
+  printMats.forEach((m) => { if (m) m.emissiveIntensity = settings.printGlow; });
+  particleUniforms.uSpeed.value = settings.particleSpeed;
+  particleUniforms.uSize.value = settings.particleSize;
+  mistUniforms.uAmount.value = settings.mist;
+  if (water) water.visible = settings.water;
 }
 
-function placeAbove() {
-  camera.position.set(0, ABOVE_HEIGHT, 0);
-  camera.quaternion.copy(qAbove);
-  camera.fov = aboveFov();
+// ---- camera: from the long lens above down to eye height --------------------------------------------
+
+const ABOVE = 1500;
+const ENTRY = toWorld(249.1, 330);
+const player = { x: ENTRY.x, z: ENTRY.y, yaw: 0, pitch: 0 };
+let mode = 'loading'; // loading | above | diving | walk | rising
+let t0 = 0;
+const DIVE_MS = 4400;
+const qAbove = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0, 'YXZ'));
+const qWalk = new THREE.Quaternion();
+
+/** The field of view that frames the whole mark from height h. */
+function fitFov(h) {
+  const need = Math.max((BLOCK.h / 2) * 1.06, ((BLOCK.w / 2) * 1.06) / camera.aspect);
+  return THREE.MathUtils.radToDeg(2 * Math.atan(need / h));
+}
+
+function setCamera(x, y, z, q, fov) {
+  camera.position.set(x, y, z);
+  camera.quaternion.copy(q);
+  camera.fov = fov;
+  // Near and far follow the height, so a far view keeps its depth precision.
+  camera.near = THREE.MathUtils.clamp(y * 0.05, 0.08, 60);
+  camera.far = Math.max(1200, y + 600);
   camera.updateProjectionMatrix();
 }
 
@@ -362,27 +707,39 @@ function animateDive(now) {
   let t = Math.min(1, (now - t0) / DIVE_MS);
   if (mode === 'rising') t = 1 - t;
   const e = ease(t);
-  // Over the entry slot first, then straight down into it.
-  const across = ease(Math.min(1, t * 1.6));
-  const y = THREE.MathUtils.lerp(ABOVE_HEIGHT, EYE, e);
-  camera.position.set(player.x * across, y, player.z * across);
+  // Height falls on a log scale, so every stretch of the descent takes as long.
+  const h = Math.exp(THREE.MathUtils.lerp(Math.log(ABOVE), Math.log(settings.eye), e));
+  // The lens stays long, framing the mark, until it would pass the walking lens.
+  const fov = Math.min(settings.fov, fitFov(h));
+  const across = ease(THREE.MathUtils.clamp((t - 0.15) / 0.55, 0, 1));
   qWalk.setFromEuler(new THREE.Euler(player.pitch, player.yaw, 0, 'YXZ'));
-  // Keep looking down until close to the walls, then level out.
-  camera.quaternion.slerpQuaternions(qAbove, qWalk, ease(Math.max(0, (t - 0.45) / 0.55)));
-  camera.fov = THREE.MathUtils.lerp(aboveFov(), 70, ease(Math.max(0, (t - 0.25) / 0.75)));
-  camera.updateProjectionMatrix();
-  const done = (now - t0) / DIVE_MS >= 1;
-  if (done && mode === 'diving') { mode = 'walk'; upEl.hidden = false; hintEl.textContent = 'Drag to look · scroll or WASD to walk'; hintEl.classList.remove('is-gone'); setTimeout(() => hintEl.classList.add('is-gone'), 4000); }
-  if (done && mode === 'rising') { mode = 'above'; hintEl.textContent = 'Scroll to enter'; hintEl.classList.remove('is-gone'); placeAbove(); }
+  const q = qAbove.clone().slerp(qWalk, ease(THREE.MathUtils.clamp((t - 0.62) / 0.38, 0, 1)));
+  setCamera(player.x * across, h, player.z * across, q, fov);
+  if ((now - t0) / DIVE_MS < 1) return;
+  if (mode === 'diving') {
+    mode = 'walk';
+    upEl.hidden = false;
+    hintEl.textContent = 'Drag to look · scroll or WASD to walk · H for settings';
+    hintEl.classList.remove('is-gone');
+    setTimeout(() => hintEl.classList.add('is-gone'), 5000);
+  } else {
+    mode = 'above';
+    hintEl.textContent = 'Scroll to enter';
+    hintEl.classList.remove('is-gone');
+    setCamera(0, ABOVE, 0, qAbove, fitFov(ABOVE));
+  }
 }
 
-// ---- walking -------------------------------------------------------------------------------
+// ---- walking ------------------------------------------------------------------------------------------
 
 const keys = new Set();
+const typing = (e) => e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement;
 addEventListener('keydown', (e) => {
+  if (typing(e)) return;
   keys.add(e.code);
   if (mode === 'above' && (e.code === 'Enter' || e.code === 'Space' || e.code === 'ArrowDown')) dive();
   if (mode === 'walk' && e.code === 'Escape') rise();
+  if (e.code === 'KeyH' && !e.metaKey && !e.ctrlKey) togglePane();
 });
 addEventListener('keyup', (e) => keys.delete(e.code));
 upEl.addEventListener('click', rise);
@@ -391,42 +748,42 @@ let walkImpulse = 0;
 canvas.addEventListener('wheel', (e) => {
   e.preventDefault();
   if (mode === 'above' && e.deltaY > 0) return dive();
-  if (mode === 'walk') walkImpulse -= e.deltaY * 0.02;
+  if (mode === 'walk') walkImpulse = THREE.MathUtils.clamp(walkImpulse - e.deltaY * 0.015, -1.5, 1.5);
 }, { passive: false });
 
 const velocity = new THREE.Vector2();
+let stride = 0;
 function walk(dt) {
-  const fwd = (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0) + walkImpulse;
+  const fwd = THREE.MathUtils.clamp((keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0) + walkImpulse, -1.5, 1.5);
   const strafe = (keys.has('KeyD') ? 1 : 0) - (keys.has('KeyA') ? 1 : 0);
-  if (keys.has('ArrowLeft')) player.yaw += 1.6 * dt;
-  if (keys.has('ArrowRight')) player.yaw -= 1.6 * dt;
-  walkImpulse *= Math.pow(0.02, dt);
-  const speed = 4.2;
+  if (keys.has('ArrowLeft')) player.yaw += 1.5 * dt;
+  if (keys.has('ArrowRight')) player.yaw -= 1.5 * dt;
+  walkImpulse *= Math.pow(0.05, dt);
   const sin = Math.sin(player.yaw), cos = Math.cos(player.yaw);
-  const want = new THREE.Vector2(-sin * fwd + cos * strafe, -cos * fwd - sin * strafe).multiplyScalar(speed);
-  velocity.lerp(want, 1 - Math.pow(0.001, dt));
-  // Move along each axis on its own, so walls are slid along, not stuck to.
+  const want = new THREE.Vector2(-sin * fwd + cos * strafe, -cos * fwd - sin * strafe).multiplyScalar(settings.speed);
+  velocity.lerp(want, 1 - Math.pow(0.002, dt));
   const nx = player.x + velocity.x * dt;
   if (free(nx, player.z)) player.x = nx; else velocity.x = 0;
   const nz = player.z + velocity.y * dt;
   if (free(player.x, nz)) player.z = nz; else velocity.y = 0;
-  const bob = Math.sin(performance.now() / 180) * Math.min(1, velocity.length() / speed) * 0.025;
-  camera.position.set(player.x, EYE + bob, player.z);
-  camera.quaternion.setFromEuler(new THREE.Euler(player.pitch, player.yaw, 0, 'YXZ'));
+  const moving = Math.min(1, velocity.length() / settings.speed);
+  stride += velocity.length() * dt * 1.9;
+  const bob = Math.sin(stride) * 0.035 * moving * settings.bob;
+  const sway = Math.cos(stride * 0.5) * 0.012 * moving * settings.bob;
+  qWalk.setFromEuler(new THREE.Euler(player.pitch, player.yaw, sway, 'YXZ'));
+  setCamera(player.x, settings.eye + bob, player.z, qWalk, settings.fov);
 }
 
-// Drag to look; a click (no drag) on a panel opens its project.
 let drag = null;
-let panels = null;
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
-function panelUnder(e) {
-  if (!panels || mode !== 'walk') return null;
+function printUnder(e) {
+  if (mode !== 'walk') return null;
   pointer.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
   raycaster.setFromCamera(pointer, camera);
-  const hit = raycaster.intersectObject(panels, false)[0];
-  if (!hit || hit.distance > 30) return null;
-  return slides[panelProject[Math.floor(hit.faceIndex / 2)]];
+  const hit = raycaster.intersectObject(prints, true)[0];
+  if (!hit || hit.distance > 35) return null;
+  return slides[hit.object.userData.project];
 }
 canvas.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, y: e.clientY, moved: 0 }; canvas.setPointerCapture(e.pointerId); });
 canvas.addEventListener('pointermove', (e) => {
@@ -435,13 +792,13 @@ canvas.addEventListener('pointermove', (e) => {
     drag.moved += Math.abs(dx) + Math.abs(dy);
     if (drag.moved > 5) canvas.classList.add('is-dragging');
     if (mode === 'walk') {
-      player.yaw -= dx * 0.0032;
-      player.pitch = THREE.MathUtils.clamp(player.pitch - dy * 0.0032, -1.2, 1.35);
+      player.yaw -= dx * 0.0032 * settings.sensitivity;
+      player.pitch = THREE.MathUtils.clamp(player.pitch - dy * 0.0032 * settings.sensitivity, -1.2, 1.4);
     }
     drag.x = e.clientX; drag.y = e.clientY;
     return;
   }
-  const p = panelUnder(e);
+  const p = printUnder(e);
   canvas.classList.toggle('is-pointing', !!p);
   titleEl.textContent = p ? p.title : '';
 });
@@ -451,43 +808,138 @@ canvas.addEventListener('pointerup', (e) => {
   canvas.classList.remove('is-dragging');
   if (!click) return;
   if (mode === 'above') return dive();
-  const p = panelUnder(e);
+  const p = printUnder(e);
   if (p) location.href = `/work/${p.slug}/`;
 });
 
-// ---- loop ------------------------------------------------------------------------------------
+/** Stand at the middle of a zone's longest run, looking along it. */
+function goToZone(z) {
+  const run = RUNS.filter((r) => r.zone === z).sort((a, b) => b.a.distanceTo(b.b) - a.a.distanceTo(a.b))[0];
+  const mid = run.a.clone().lerp(run.b, 0.35);
+  const dir = run.b.clone().sub(run.a).normalize();
+  Object.assign(player, { x: mid.x, z: mid.y, yaw: Math.atan2(-dir.x, -dir.y), pitch: 0.08 });
+  if (mode === 'above') { mode = 'diving'; t0 = performance.now() - DIVE_MS; hintEl.classList.add('is-gone'); }
+}
 
+// ---- settings panel (H) ----------------------------------------------------------------------------
+
+let pane = null;
+async function togglePane() {
+  if (pane) { pane.hidden = !pane.hidden; return; }
+  const { Pane } = await import('https://cdn.jsdelivr.net/npm/tweakpane@4.0.5/dist/tweakpane.min.js');
+  pane = new Pane({ title: 'SMASH v3' });
+  pane.element.parentElement.classList.add('tweak');
+  const look = () => { applyLook(); placeSun(); save(); };
+  const post = () => { applyPost(); save(); };
+  const rebuildPrints = () => { buildPrints(); applyPost(); save(); };
+
+  const sky = pane.addFolder({ title: 'Sky & light' });
+  sky.addBinding(settings, 'sky', { options: Object.fromEntries(Object.keys(SKIES).map((k) => [k, k])) })
+    .on('change', async () => { await loadSky(settings.sky, true); pane.refresh(); save(); });
+  sky.addBinding(settings, 'exposure', { min: 0.3, max: 2.5, step: 0.01 }).on('change', look);
+  sky.addBinding(settings, 'skyBrightness', { label: 'sky', min: 0.2, max: 3, step: 0.01 }).on('change', look);
+  sky.addBinding(settings, 'environment', { label: 'ambient', min: 0, max: 2, step: 0.01 }).on('change', look);
+  sky.addBinding(settings, 'sunIntensity', { label: 'sun', min: 0, max: 8, step: 0.05 }).on('change', look);
+  sky.addBinding(settings, 'sunAzimuth', { label: 'sun direction', min: -180, max: 180, step: 1 }).on('change', look);
+  sky.addBinding(settings, 'sunElevation', { label: 'sun height', min: 8, max: 85, step: 1 }).on('change', look);
+
+  const fog = pane.addFolder({ title: 'Fog & mist' });
+  fog.addBinding(settings, 'fogDensity', { label: 'distance fog', min: 0, max: 0.05, step: 0.0005 }).on('change', look);
+  fog.addBinding(settings, 'fogHeight', { label: 'walls fade by (m)', min: 12, max: 120, step: 1 }).on('change', look);
+  fog.addBinding(settings, 'mist', { label: 'ground mist', min: 0, max: 1.5, step: 0.01 }).on('change', post);
+
+  const work = pane.addFolder({ title: 'The work' });
+  work.addBinding(settings, 'printHeight', { label: 'print height (m)', min: 3, max: 14, step: 0.1 }).on('change', rebuildPrints);
+  work.addBinding(settings, 'printRows', { label: 'rows', min: 1, max: 5, step: 1 }).on('change', rebuildPrints);
+  work.addBinding(settings, 'printGlow', { label: 'glow', min: 0, max: 1.5, step: 0.01 }).on('change', post);
+
+  const air = pane.addFolder({ title: 'Particles & water' });
+  air.addBinding(settings, 'particles', { label: 'amount', min: 0, max: 3, step: 0.05 }).on('change', () => { buildParticles(); save(); });
+  air.addBinding(settings, 'particleSize', { label: 'size', min: 0.2, max: 3, step: 0.01 }).on('change', post);
+  air.addBinding(settings, 'particleSpeed', { label: 'speed', min: 0, max: 4, step: 0.01 }).on('change', post);
+  air.addBinding(settings, 'water').on('change', post);
+
+  const fx = pane.addFolder({ title: 'Post' });
+  fx.addBinding(settings, 'ao', { label: 'ambient occlusion' }).on('change', post);
+  fx.addBinding(settings, 'aoRadius', { label: 'AO radius', min: 0.2, max: 4, step: 0.05 }).on('change', post);
+  fx.addBinding(settings, 'bloom', { min: 0, max: 1.5, step: 0.01 }).on('change', post);
+  fx.addBinding(settings, 'vignette', { min: 0, max: 1, step: 0.01 }).on('change', post);
+  fx.addBinding(settings, 'grain', { min: 0, max: 0.15, step: 0.001 }).on('change', post);
+
+  const move = pane.addFolder({ title: 'Walking' });
+  move.addBinding(settings, 'fov', { label: 'field of view', min: 35, max: 100, step: 1 }).on('change', save);
+  move.addBinding(settings, 'eye', { label: 'eye height (m)', min: 0.4, max: 6, step: 0.05 }).on('change', save);
+  move.addBinding(settings, 'speed', { min: 1, max: 14, step: 0.1 }).on('change', save);
+  move.addBinding(settings, 'bob', { label: 'head bob', min: 0, max: 2, step: 0.01 }).on('change', save);
+  move.addBinding(settings, 'sensitivity', { label: 'look speed', min: 0.2, max: 3, step: 0.01 }).on('change', save);
+
+  const perf = pane.addFolder({ title: 'Performance', expanded: false });
+  perf.addBinding(settings, 'resolution', { min: 0.5, max: 2, step: 0.05 }).on('change', () => { resize(); save(); });
+  perf.addBinding(settings, 'shadows').on('change', post);
+
+  const go = pane.addFolder({ title: 'Go to' });
+  ['S · cobbles', 'M · forest', 'A · water', 'S · sand', 'H · terrazzo'].forEach((label, z) => go.addButton({ title: label }).on('click', () => goToZone(z)));
+
+  pane.addButton({ title: 'Fly out' }).on('click', rise);
+  pane.addButton({ title: 'Reset' }).on('click', async () => {
+    Object.assign(settings, SETTINGS);
+    await loadSky(settings.sky, true);
+    buildPrints(); buildParticles(); applyPost(); resize(); pane.refresh(); save();
+  });
+}
+
+// ---- loop --------------------------------------------------------------------------------------------
+
+const focus = new THREE.Vector3();
+const white = new THREE.Color(1, 1, 1);
 let last = performance.now();
-let lastCut = 0;
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
-  if (mode === 'above' || mode === 'diving' || mode === 'rising') {
-    if (now - lastCut > 90) { cutCap(); lastCut = now; }
-  }
+  const time = now / 1000;
   if (mode === 'diving' || mode === 'rising') animateDive(now);
   if (mode === 'walk') walk(dt);
-  sky.position.copy(camera.position);
-  composer.render();
+  particleUniforms.uTime.value = time;
+  particleUniforms.uCamY.value = camera.position.y;
+  particleUniforms.uPixel.value = renderer.getPixelRatio();
+  mistUniforms.uTime.value = time;
+  mistUniforms.uCamY.value = camera.position.y;
+  mistUniforms.uColor.value.copy(scene.fog.color).lerp(white, 0.25);
+  waterNormals.offset.set(time * 0.012, time * 0.007);
+  finish.uniforms.uTime.value = time % 10;
+  // The sun's shadow follows the walker, so it stays sharp where you are.
+  if (mode === 'walk') focus.set(player.x, 0, player.z); else focus.set(0, 0, 0);
+  sun.target.position.copy(focus);
+  sun.position.copy(focus).add(sunOffset);
+  composer.render(dt);
   requestAnimationFrame(frame);
 }
 
 function resize() {
   const w = innerWidth, h = innerHeight;
+  renderer.setPixelRatio(Math.min(devicePixelRatio, settings.resolution));
   renderer.setSize(w, h, false);
+  composer.setPixelRatio(renderer.getPixelRatio());
   composer.setSize(w, h);
-  gtao.setSize(w, h);
-  bloom.setSize(w, h);
   camera.aspect = w / h;
-  if (mode === 'above') camera.fov = aboveFov();
+  if (mode === 'above' || mode === 'loading') setCamera(0, ABOVE, 0, qAbove, fitFov(ABOVE));
   camera.updateProjectionMatrix();
 }
 addEventListener('resize', resize);
 
+// ---- go ----------------------------------------------------------------------------------------------
+
 resize();
-placeAbove();
-await Promise.all([buildWalls(), buildCollision()]);
-panels = buildPanels();
+hintEl.textContent = 'Loading';
+await Promise.all([loadSky(settings.sky, !settings.sunElevation), buildWalls(), buildCollision()]);
+buildFloors();
+buildWater();
+buildPrints();
+buildParticles();
+applyPost();
+mode = 'above';
+hintEl.textContent = 'Scroll to enter';
 requestAnimationFrame(frame);
-loaded.then(() => { atlas.needsUpdate = true; });
 if (location.hash === '#inside') { mode = 'diving'; t0 = performance.now() - DIVE_MS; }
+const zoneHash = location.hash.match(/zone=(\d)/);
+if (zoneHash) goToZone(Number(zoneHash[1]));

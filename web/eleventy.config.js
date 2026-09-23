@@ -35,7 +35,7 @@ async function imageSrc(src, width = 640, format = 'jpeg') {
 }
 
 export default function (config) {
-  config.addPassthroughCopy({ 'src/css': 'css', 'src/js': 'js', 'src/CNAME': 'CNAME', 'src/brand': 'brand', 'src/gate': 'gate' });
+  config.addPassthroughCopy({ 'src/css': 'css', 'src/js': 'js', 'src/CNAME': 'CNAME', 'src/brand': 'brand', 'src/gate': 'gate', 'src/v3': 'assets/v3' });
   config.addPassthroughCopy('projects/**/*.{mp4,webm}');
   config.addWatchTarget('src/');
   config.addWatchTarget('scripts/');
@@ -67,7 +67,10 @@ export default function (config) {
   // Project covers for the WebGL pages (the labyrinth).
   config.addGlobalData('slides', async () => {
     const projects = await readProjects('projects');
-    return Promise.all(projects.map(async (p) => ({ slug: p.slug, title: p.title, s: await imageSrc(p.cover.src, 640, 'webp') })));
+    return Promise.all(projects.map(async (p) => ({
+      slug: p.slug, title: p.title, ar: p.cover.ar,
+      s: await imageSrc(p.cover.src, 640, 'webp'), l: await imageSrc(p.cover.src, 1280, 'webp'),
+    })));
   });
   config.addGlobalData('poster', async () => {
     const first = (await readProjects('projects')).filter((p) => p.featured).sort((a, b) => a.featured - b.featured)[0];
