@@ -24,7 +24,7 @@ async function image(src, alt = '', sizes = '100vw', loading = 'lazy', className
 }
 
 export default function (config) {
-  config.addPassthroughCopy({ 'src/css': 'css', 'src/js': 'js', 'src/CNAME': 'CNAME' });
+  config.addPassthroughCopy({ 'src/css': 'css', 'src/js': 'js', 'src/CNAME': 'CNAME', 'src/brand': 'brand' });
   config.addPassthroughCopy('projects/**/*.{mp4,webm}');
   config.addWatchTarget('src/');
   config.addWatchTarget('scripts/');

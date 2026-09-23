@@ -103,9 +103,8 @@ b, strong { font-weight: inherit; }
   opacity: 0;
   transition: opacity 1.6s var(--ease);
 }
-.slide img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.06); transition: transform 9s linear; }
+.slide img { width: 100%; height: 100%; object-fit: cover; }
 .slide.is-active { opacity: 1; z-index: 1; }
-.slide.is-active img { transform: scale(1); }
 
 .stage-caption {
   position: absolute;
