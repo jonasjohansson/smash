@@ -3,8 +3,8 @@
 // Hover holds a frame; a click opens the project it belongs to.
 // Anywhere: press G to show the grid.
 
-const FRAME_MS = 150;
-const AHEAD = 12;
+const FRAME_MS = 75;
+const AHEAD = 24;
 
 const stage = document.querySelector('[data-stage]');
 const framesEl = document.getElementById('frames');
@@ -31,7 +31,7 @@ if (stage && framesEl) {
   let played = 0; // cuts so far; paces loading and never wraps
 
   const fill = () => {
-    while (inFlight < 4 && requested < frames.length && requested < played + AHEAD) {
+    while (inFlight < 6 && requested < frames.length && requested < played + AHEAD) {
       const frame = frames[requested++];
       const probe = new Image();
       probe.src = frame[size];
