@@ -491,7 +491,7 @@ function buildProjection() {
     // Reach into bends so neighbouring walls meet; stop short of slot ends.
     const ea = run.bendA ? HALF - 0.03 : -0.02, eb = run.bendB ? HALF - 0.03 : -0.02;
     for (const side of [1, -1]) {
-      const off = nrm.clone().multiplyScalar(side * (HALF - 0.025));
+      const off = nrm.clone().multiplyScalar(side * (HALF - 0.06));
       const face = nrm.clone().multiplyScalar(-side);
       let p0 = a.clone().sub(dir.clone().multiplyScalar(ea)).add(off);
       let p1 = b.clone().add(dir.clone().multiplyScalar(eb)).add(off);
@@ -513,6 +513,8 @@ function buildProjection() {
         },
         vertexShader: PROJ_VERT,
         fragmentShader: PROJ_FRAG,
+        // Always win over the concrete it covers, even at grazing angles.
+        polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4,
       });
       const mesh = new THREE.Mesh(geo, mat);
       mesh.userData.face = faces.length;
