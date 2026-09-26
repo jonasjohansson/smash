@@ -200,20 +200,20 @@ b, strong { font-weight: inherit; }
 
 /* The way in (cta.njk), at the foot of the studio and of each offering, as
    on gentilhomme.com: SMASH yellow, an invitation, the address large. */
-/* The page's ground runs into the yellow: a long fade, blended in oklab and
-   eased at both ends, so there is no edge where it starts or stops. */
-.cta { --fade: clamp(280px, 40vw, 640px); position: relative; z-index: 1; background: var(--accent); background: linear-gradient(in oklab, color-mix(in oklab, var(--accent) 0%, var(--ground)) calc(var(--fade) * 0), color-mix(in oklab, var(--accent) 2.8%, var(--ground)) calc(var(--fade) * 0.1), color-mix(in oklab, var(--accent) 10.4%, var(--ground)) calc(var(--fade) * 0.2), color-mix(in oklab, var(--accent) 21.6%, var(--ground)) calc(var(--fade) * 0.3), color-mix(in oklab, var(--accent) 35.2%, var(--ground)) calc(var(--fade) * 0.4), color-mix(in oklab, var(--accent) 50.0%, var(--ground)) calc(var(--fade) * 0.5), color-mix(in oklab, var(--accent) 64.8%, var(--ground)) calc(var(--fade) * 0.6), color-mix(in oklab, var(--accent) 78.4%, var(--ground)) calc(var(--fade) * 0.7), color-mix(in oklab, var(--accent) 89.6%, var(--ground)) calc(var(--fade) * 0.8), color-mix(in oklab, var(--accent) 97.2%, var(--ground)) calc(var(--fade) * 0.9), color-mix(in oklab, var(--accent) 100%, var(--ground)) calc(var(--fade) * 1)); color: #111; padding-block: calc(var(--fade) + clamp(24px, 3vw, 48px)) clamp(40px, 5vw, 80px); }
+/* The way in, on the page's own ground: the invitation, the address and the
+   links in SMASH yellow, the first two in the chunky face. */
+.cta { position: relative; z-index: 1; background: var(--ground); color: var(--accent); padding-block: var(--row-gap) clamp(40px, 5vw, 80px); }
 .home:not(.can-dive) .cta { display: none; }
 .cta-inner { position: relative; row-gap: clamp(24px, 3vw, 48px); align-items: start; }
-.cta-title { grid-column: 1 / span 8; margin: 0; font: 400 clamp(40px, 5.8vw, 96px) / 0.98 var(--font); text-transform: uppercase; }
+.cta-title { grid-column: 1 / span 8; margin: 0; font: 400 clamp(48px, 7.4vw, 124px) / 0.92 var(--display); text-transform: uppercase; }
 .cta-title > span { display: block; }
 /* Rounded as the cards are. Nothing on the site changes colour under the
    pointer. */
 .cta-button { display: inline-block; padding: 0.5em 0.7em 0.45em; border-radius: var(--radius); background: var(--accent); color: #111; font: 400 clamp(14px, 1.2vw, 18px) / 1 var(--font); text-transform: uppercase; }
 .about-contact { margin-top: 1.6em; }
-.cta ::selection, .pillar ::selection { color: #fff; }
+.pillar ::selection { color: #fff; }
 .cta-social { grid-column: 9 / span 4; display: flex; flex-direction: column; align-items: start; font-size: clamp(13px, 1.04vw, 16px); line-height: 1.6; text-transform: uppercase; }
-.cta-mail { grid-column: 1 / -1; font: 400 clamp(28px, 5.8vw, 96px) / 1 var(--font); text-transform: uppercase; white-space: nowrap; }
+.cta-mail { grid-column: 1 / -1; font: 400 clamp(32px, 7.4vw, 124px) / 1 var(--display); text-transform: uppercase; white-space: nowrap; }
 
 html:has(.home.can-dive) { scrollbar-width: none; }
 html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
