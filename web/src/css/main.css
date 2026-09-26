@@ -149,7 +149,6 @@ b, strong { font-weight: inherit; }
    headline can blend with the film behind it; the rest has the ground. */
 .about { position: relative; display: flow-root; color: var(--ink); }
 .about > .row { margin-top: 0; padding-top: var(--row-gap); background: var(--ground); }
-.about > :last-child { padding-bottom: var(--row-gap); }
 /* The headline cut out of the ground: black with white letters, multiplied
    over the film, then the ground with black letters, screened over that; the
    words themselves (for reading, selecting, and screen readers) lie on top. */
@@ -213,6 +212,7 @@ b, strong { font-weight: inherit; }
 .about-contact { margin-top: 1.6em; }
 .pillar ::selection { color: #fff; }
 .cta-social { grid-column: 9 / span 4; display: flex; flex-direction: column; align-items: start; font-size: clamp(13px, 1.04vw, 16px); line-height: 1.6; text-transform: uppercase; }
+.cta-address { grid-column: 1 / -1; margin: calc(-1 * clamp(16px, 2vw, 32px)) 0 0; font: 400 clamp(24px, 3.2vw, 54px) / 1 var(--display); text-transform: uppercase; }
 .cta-mail { grid-column: 1 / -1; font: 400 clamp(32px, 7.4vw, 124px) / 1 var(--display); text-transform: uppercase; white-space: nowrap; }
 
 html:has(.home.can-dive) { scrollbar-width: none; }

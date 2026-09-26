@@ -72,6 +72,10 @@ function paintGround(p) {
 }
 try { paintGround(JSON.parse(localStorage.getItem('smash-mark') || '{}')); } catch {}
 
+// The tweak panel stays open from page to page, once opened (for this tab).
+const paneWasOpen = () => { try { return sessionStorage.getItem('smash-pane') === '1'; } catch { return false; } };
+const remember = (open) => { try { open ? sessionStorage.setItem('smash-pane', '1') : sessionStorage.removeItem('smash-pane'); } catch {} };
+
 const stage = document.querySelector('[data-stage]');
 const framesEl = document.getElementById('frames');
 const typing = (e) => e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement;
@@ -111,7 +115,7 @@ if (stage && framesEl) {
   // The rows' words are in the page (for screen readers too); the email's link
   // lies over its painted letters.
   const infoRows = [...document.querySelectorAll('[data-info] [data-row]')].map((p) => p.textContent.trim());
-  const mail = document.querySelector('[data-mail]');
+  const mails = [...document.querySelectorAll('[data-mail]')]; // links over their painted words
   let infoReady = false; // the typeface has loaded
   const trackEl = document.querySelector('[data-track]');
 
@@ -134,7 +138,7 @@ if (stage && framesEl) {
       return;
     }
     shape = markShape(params, W, H);
-    if (mail && !params.info) mail.hidden = true;
+    if (!params.info) mails.forEach((m) => { m.hidden = true; });
     focus = diveFocus(params, shape);
     document.body.style.setProperty('--dive', params.length);
     track();
@@ -321,25 +325,27 @@ if (stage && framesEl) {
     ctx.globalCompositeOperation = 'source-over';
   }
 
-  // The email's link over its letters, where they lie with the mark at rest.
+  // The links (the email, Instagram) over their letters, where they lie with
+  // the mark at rest.
   function placeMail(laid) {
-    if (!mail) return;
-    const address = mail.textContent.trim().toUpperCase();
-    const row = laid.find((r) => r?.text.includes(address));
-    mail.hidden = !row;
-    if (!row) return;
-    mctx.save();
-    mctx.font = row.font;
-    const at = (n) => mctx.measureText(row.text.slice(0, n)).width * row.scale;
-    const from = row.text.indexOf(address);
-    const left = row.x + at(from);
-    Object.assign(mail.style, {
-      left: `${left}px`,
-      top: `${row.y}px`,
-      width: `${row.x + at(from + address.length) - left}px`,
-      height: `${row.h}px`,
-    });
-    mctx.restore();
+    for (const mail of mails) {
+      const address = mail.textContent.trim().toUpperCase();
+      const row = laid.find((r) => r?.text.includes(address));
+      mail.hidden = !row;
+      if (!row) continue;
+      mctx.save();
+      mctx.font = row.font;
+      const at = (n) => mctx.measureText(row.text.slice(0, n)).width * row.scale;
+      const from = row.text.lastIndexOf(address);
+      const left = row.x + at(from);
+      Object.assign(mail.style, {
+        left: `${left}px`,
+        top: `${row.y}px`,
+        width: `${row.x + at(from + address.length) - left}px`,
+        height: `${row.h}px`,
+      });
+      mctx.restore();
+    }
   }
 
   const fit = () => {
@@ -463,6 +469,7 @@ if (stage && framesEl) {
   // ---- the tweak panel (H) -------------------------------------------------
 
   let pane = null;
+  if (paneWasOpen()) openPane();
 
   async function openPane() {
     const { Pane } = await import('https://cdn.jsdelivr.net/npm/tweakpane@4.0.5/dist/tweakpane.min.js');
@@ -546,6 +553,7 @@ if (stage && framesEl) {
     if (key === 'h') {
       if (!pane) await openPane();
       else pane.hidden = !pane.hidden;
+      remember(!pane.hidden);
     }
     if (key === 'a' || key === 's') {
       if (key === 'a') params.invert = !params.invert;
@@ -581,18 +589,64 @@ if (own) {
   soon();
 }
 
-// An offering's page opens on its picture seen through the mark, drawn to the
-// picture's size and to the viewer's own settings, as on the landing.
-const marked = document.querySelector('[data-mark]');
-if (marked) {
-  const params = { ...DEFAULTS };
-  try { Object.assign(params, JSON.parse(localStorage.getItem('smash-mark') || '{}')); } catch {}
+// The other pages. An offering's opens on its picture seen through the mark,
+// drawn to the picture's size and to the viewer's own settings, as on the
+// landing; and the tweak panel (H) is here too, with what applies here: the
+// page's background, and the mark where there is one. Settings are shared
+// with the landing's ('smash-mark'), only what differs from the defaults kept.
+if (!stage) {
+  const STORE = 'smash-mark';
+  const BASE = { ...DEFAULTS, ...DIVE_DEFAULTS, ...GROUND_DEFAULTS };
+  const params = { ...BASE };
+  try { Object.assign(params, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch {}
+  const save = () => {
+    const changed = Object.fromEntries(Object.entries(params).filter(([k, v]) => v !== BASE[k]));
+    try { localStorage.setItem(STORE, JSON.stringify(changed)); } catch {}
+  };
+  const marked = document.querySelector('[data-mark]');
   const draw = () => {
+    if (!marked) return;
     marked.style.webkitMaskImage = marked.style.maskImage = toDataUrl(buildMark({ ...params, info: false }, marked.clientWidth, marked.clientHeight));
     marked.classList.add('is-set');
   };
   draw();
   addEventListener('resize', draw);
+
+  let pane = null;
+  const openPane = async () => {
+    const { Pane } = await import('https://cdn.jsdelivr.net/npm/tweakpane@4.0.5/dist/tweakpane.min.js');
+    pane = new Pane({ title: 'SMASH' });
+    pane.element.parentElement.classList.add('tweak');
+    pane.addButton({ title: 'Reset all settings' }).on('click', () => {
+      try { localStorage.removeItem(STORE); } catch {}
+      Object.assign(params, BASE);
+      pane.refresh();
+      paintGround(params);
+      draw();
+    });
+    const colour = pane.addFolder({ title: 'Colour' });
+    colour.addBinding(params, 'ownGround', { label: 'own background' });
+    colour.addBinding(params, 'ground', { label: 'background' });
+    if (marked) {
+      const mark = pane.addFolder({ title: 'Mark' });
+      mark.addBinding(params, 'stroke', { label: 'thickness', min: 2, max: 48, step: 0.5 });
+      mark.addBinding(params, 'corner', { label: 'corners', min: 0, max: 40, step: 0.5 });
+      mark.addBinding(params, 'caps', { label: 'ends', options: { round: 'round', square: 'square', flat: 'butt' } });
+      mark.addBinding(params, 'inset', { label: 'end margin', min: 0, max: 200, step: 1 });
+      mark.addBinding(params, 'crossbar', { label: 'crossbar', min: 60, max: 411, step: 0.5 });
+      mark.addBinding(params, 'gap', { label: 'crossbar gap', min: 20, max: 200, step: 0.5 });
+      mark.addBinding(params, 'columns', { label: 'spread', min: 0.5, max: 1.12, step: 0.005 });
+      mark.addBinding(params, 'invert', { label: 'invert' });
+    }
+    pane.on('change', () => { paintGround(params); draw(); save(); });
+  };
+  if (paneWasOpen()) openPane();
+  document.addEventListener('keydown', async (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey || typing(e) || e.key.toLowerCase() !== 'h') return;
+    if (!pane) await openPane();
+    else pane.hidden = !pane.hidden;
+    remember(!pane.hidden);
+  });
 }
 
 document.addEventListener('keydown', (e) => {
