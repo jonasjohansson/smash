@@ -72,6 +72,7 @@ export async function readProjects(root) {
         slug,
         title: data.title,
         caption: data.caption ?? null, // who it was for, or where: the small line over the introduction
+        category: data.category ?? null, // which of the studio's offerings (categories/)
         color: data.color ?? (cover ? await dominant(cover.src) : null),
         date: date.toISOString().slice(0, 10),
         year: date.getUTCFullYear(),

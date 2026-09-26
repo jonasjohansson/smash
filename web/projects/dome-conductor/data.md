@@ -2,6 +2,7 @@
 title: Dome Conductor
 date: 2025-09-07
 smash: true
+category: experience-design
 caption: "Wisdome Stockholm"
 tags:
   - av

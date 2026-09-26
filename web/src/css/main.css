@@ -138,14 +138,24 @@ b, strong { font-weight: inherit; }
 }
 .about-text { grid-column: 7 / span 6; font: 400 clamp(20px, 2.22vw, 34px) / 1.18 var(--serif); }
 .about-text p + p { margin-top: 0.8em; }
-/* The studio's three offerings, side by side, each name the mask of its
-   picture (below, with the projects' title masks). */
-.row.pillars { align-items: start; }
-.pillar { grid-column: span 4; }
-.pillar-media { position: relative; isolation: isolate; aspect-ratio: 4 / 5; overflow: hidden; }
-.pillar-media img { width: 100%; height: 100%; object-fit: cover; }
-.pillar-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-.pillar .label { margin: clamp(12px, 1.4vw, 20px) 0 0; }
+/* The studio's three offerings: tall pictures side by side, all but the
+   screen's height, each named at its foot, as on gentilhomme.com. One hovered
+   widens, and says what it covers (on a touch screen it always does). */
+.row.pillars { display: flex; align-items: stretch; gap: var(--gutter); padding-inline: var(--margin); }
+.pillar { position: relative; display: block; flex: 1 1 0; min-width: 0; height: calc(100svh - 2 * var(--margin)); overflow: hidden; color: #fff; transition: flex-grow 0.6s cubic-bezier(0.77, 0, 0.175, 1); }
+.pillar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.pillar::after { content: ""; position: absolute; inset: 50% 0 0; background: linear-gradient(rgb(0 0 0 / 0), rgb(0 0 0 / 0.55)); pointer-events: none; }
+.pillar-text { position: absolute; z-index: 1; inset: auto 0 0; display: flex; flex-direction: column-reverse; padding: clamp(14px, 1.3vw, 24px); }
+.pillar-name { font: 400 clamp(20px, 1.9vw, 34px) / 1.14 var(--font); text-transform: uppercase; }
+.pillar-name span { display: block; }
+.pillar-note { display: block; margin: 0 0 12px; font-size: var(--t-small); letter-spacing: 0.04em; text-transform: uppercase; opacity: 0; transform: translateY(6px); transition: opacity 0.4s, transform 0.6s var(--ease); }
+@media (hover: hover) {
+  .pillar:hover { flex-grow: 1.45; }
+  .pillar:hover .pillar-note { opacity: 1; transform: none; }
+}
+.pillar:focus-visible { flex-grow: 1.45; outline: 2px solid var(--ink); outline-offset: 4px; }
+.pillar:focus-visible .pillar-note { opacity: 1; transform: none; }
+@media (hover: none) { .pillar-note { opacity: 1; transform: none; } }
 .row.about-facts { align-items: start; font-size: var(--t-small); line-height: 1.8; }
 .about-facts dl { margin: 0; }
 .about-facts dt { color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
@@ -183,6 +193,22 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 .page-head { padding-block: clamp(48px, 8vw, 128px) clamp(32px, 4vw, 64px); align-items: baseline; }
 .page-title { grid-column: 1 / span 8; font-size: var(--t-title); line-height: 1; letter-spacing: -0.025em; }
 .page-meta { grid-column: 10 / span 3; justify-self: end; font-size: var(--t-small); color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* ---- an offering's page (category.njk), as on gentilhomme.com ------------ */
+
+.category-head { padding-block: clamp(24px, 4vw, 64px) 0; align-items: start; row-gap: 24px; }
+.category-title { grid-column: 1 / span 6; margin: 0; font: 400 clamp(40px, 5.8vw, 96px) / 0.9 var(--font); text-transform: uppercase; }
+.category-title span { display: block; }
+.category-nav { grid-column: 7 / span 6; display: flex; flex-direction: column; font: 400 clamp(20px, 2.22vw, 32px) / 1.18 var(--serif); }
+.category-nav a { color: var(--muted); transition: color 0.3s; }
+.category-nav a:hover, .category-nav [aria-current] { color: var(--ink); }
+.category-projects { padding-bottom: var(--row-gap); }
+.category-label { grid-column: 1 / -1; }
+.category-tiles { row-gap: clamp(40px, 5vw, 80px); align-items: start; }
+.category-projects .tile { grid-column: span 4; display: flex; flex-direction: column; }
+.category-projects .tile .label { margin-bottom: 8px; }
+.tile-title { margin-bottom: 14px; font: 400 clamp(18px, 1.5vw, 24px) / 1.2 var(--serif); }
+.category-projects .tile-media { aspect-ratio: 1; }
 
 /* ---- work index -------------------------------------------------------- */
 
@@ -222,7 +248,7 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
    picture shows only through the letters (as the work does through the mark
    on the landing). The words stay for screen readers. */
 .has-hero { isolation: isolate; }
-.title-mask, .pillar-mask { position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: multiply; pointer-events: none; }
+.title-mask { position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: multiply; pointer-events: none; }
 /* A second pass turns that black into the projects' ground, so the hero is
    one surface with its page: screen leaves the letters' picture as it is. */
 .title-ground { mix-blend-mode: screen; }
@@ -300,8 +326,9 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
   .f-top { display: none; }
   .page-title, .project-title, .lead, .about-head, .about-text { grid-column: 1 / -1; }
   .about-facts dl + dl { margin-top: 28px; }
-  .pillar { grid-column: 1 / -1; }
-  .pillar + .pillar { margin-top: 40px; }
+  .row.pillars { flex-direction: column; }
+  .category-title, .category-nav, .category-projects .tile { grid-column: 1 / -1; }
+  .pillar { flex: none; height: auto; aspect-ratio: 4 / 5; }
   .page-meta { grid-column: 1 / -1; justify-self: start; margin-top: 12px; }
   .next-label { grid-column: 1 / -1; }
   .next-title { grid-column: 1 / -1; margin-top: 12px; }

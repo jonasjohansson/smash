@@ -2,6 +2,7 @@
 title: Heroes
 date: 2022-01-01
 smash: true
+category: originals
 caption: "Great Synagogue, Stockholm"
 color: '#727171'
 tags:

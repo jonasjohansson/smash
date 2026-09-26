@@ -2,6 +2,7 @@
 title: Vi kommer i fred
 date: 2025-11-06
 smash: true
+category: digital-interactive
 caption: "Kungsträdgården, Stockholm"
 tags:
   - mixed reality

@@ -2,6 +2,7 @@
 title: Transcend
 date: 2017-01-01
 smash: true
+category: digital-interactive
 caption: "Urban Burn Stockholm"
 color: '#cc1c65'
 tags:

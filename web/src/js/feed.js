@@ -88,24 +88,6 @@ export async function fitTitle(svg) {
 }
 export const fitTitles = (root) => root.querySelectorAll('.title-mask').forEach(fitTitle);
 
-// A name in lines as the mask of a picture (the studio's offerings, on the
-// landing): in a 1000 × 1000 viewBox stretched over the picture, each line's
-// ink meets both sides, and the lines share the height, `data-gap` apart.
-export async function fitLines(svg) {
-  const lines = [...svg.querySelectorAll('text')];
-  const words = lines.map((t) => t.textContent).join(' ');
-  if (!words.trim()) return;
-  await typeface(words);
-  const gap = Number(svg.dataset.gap) || 0;
-  const h = (1000 - gap * (lines.length - 1)) / lines.length;
-  lines.forEach((t, i) => {
-    const m = ink(t.textContent);
-    if (!m) return;
-    const sx = 1000 / (m.left + m.right), sy = h / (m.up + m.down);
-    t.setAttribute('transform', `translate(${m.left * sx} ${i * (h + gap) + m.up * sy}) scale(${sx} ${sy})`);
-  });
-}
-
 // Videos play only while on screen: the feed only grows, and every copy left
 // playing above the reader would go on decoding.
 const inView = new IntersectionObserver((entries) => {

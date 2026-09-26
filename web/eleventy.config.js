@@ -2,6 +2,7 @@ import path from 'node:path';
 import Image from '@11ty/eleventy-img';
 import markdownIt from 'markdown-it';
 import { listed, readProjects } from './scripts/projects.js';
+import { readCategories } from './scripts/categories.js';
 import { compose, indexLayout } from './scripts/compose.js';
 
 const md = markdownIt({ html: true, linkify: true });
@@ -47,6 +48,7 @@ export default function (config) {
   config.addWatchTarget('src/');
   config.addWatchTarget('scripts/');
   config.addWatchTarget('projects/');
+  config.addWatchTarget('categories/');
 
   config.addFilter('md', (text) => external(md.render(text || '')));
   config.addFilter('mdInline', (text) => external(md.renderInline(text || '')));
@@ -91,30 +93,26 @@ export default function (config) {
       ?? projects.find((p) => p.cover?.ar > 1.2) ?? projects[0];
     return { slug: first.slug, src: await imageSrc(first.cover.src, 1280, 'webp') };
   });
-  // The studio's three offerings, under its introduction on the landing: each
-  // its name in lines (the mask of its picture), what it covers, and a picture
-  // from one of its projects.
-  const PILLARS = [
-    { name: 'Experience Design', note: 'Museum work', from: 'dome-conductor', src: 'dome-orchestra.jpg' },
-    { name: 'Digital Interactive', note: 'Digital installations', from: 'jagad', src: 'joystick-hero.jpg' },
-    { name: 'SMASH Originals', note: 'Projection pieces', from: 'resonance', src: '01.jpg' },
-  ];
-  const GAP = 40; // between a name's lines, of the picture's 1000
-  const sizes = (k) => `(max-width: 720px) ${Math.ceil(100 * k)}vw, ${Math.ceil(33 * k)}vw`;
-  config.addGlobalData('pillars', async () => {
+  // The studio's offerings (categories/): under its introduction on the
+  // landing, a tall picture each, leading to its own page with its projects.
+  config.addGlobalData('categories', async () => {
     const projects = await readProjects('projects');
-    return Promise.all(PILLARS.map(async (p) => {
-      const block = projects.find((q) => q.slug === p.from)?.blocks.find((b) => b.type === 'image' && path.basename(b.src) === p.src);
-      if (!block) throw new Error(`The ${p.name} picture, ${p.from}/${p.src}, is not an image of a project on the site`);
-      const words = p.name.split(' ');
-      const h = (1000 - GAP * (words.length - 1)) / words.length;
+    const categories = readCategories('categories');
+    for (const p of projects) {
+      if (!categories.some((c) => c.slug === p.category)) console.warn(`[smash] ${p.slug} is in no category ('${p.category ?? ''}'), so on no category page`);
+    }
+    return Promise.all(categories.map(async (c) => {
+      const [from, src] = String(c.picture).split('/');
+      const block = projects.find((q) => q.slug === from)?.blocks.find((b) => b.type === 'image' && path.basename(b.src) === src);
+      if (!block) throw new Error(`${c.name}'s picture, ${c.picture}, is not an image of a project on the site`);
+      // A tall panel crops the picture to its height: nearly the screen's on
+      // a desktop, 5:4 of the width on a phone.
+      const ar = Math.max(1, block.ar);
       return {
-        ...p,
-        gap: GAP,
-        // Until the typeface is in (feed.js fits each line to its ink), a guess from the length.
-        lines: words.map((w, i) => ({ text: w.toUpperCase(), transform: `translate(0 ${i * (h + GAP) + h}) scale(${1000 / (w.length * 41)} ${h / 88})` })),
-        // Cropped to the pillar's 4:5, a wider picture is drawn wider than its box.
-        picture: await image(block.src, block.alt ?? '', sizes(Math.max(1, (block.ar * 5) / 4))),
+        ...c,
+        words: c.name.split(' '),
+        picture: await image(block.src, block.alt ?? '', `(max-width: 720px) ${Math.ceil(125 * ar)}vw, ${Math.ceil(100 * ar)}vh`),
+        projects: projects.filter((p) => p.category === c.slug).map(({ slug, title, caption, year, cover }) => ({ slug, title, caption, year, cover })),
       };
     }));
   });

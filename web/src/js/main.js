@@ -26,10 +26,7 @@
 const build = new URL(import.meta.url).search;
 const { DEFAULTS, buildMark, markShape, paintMark, paintInfo, diveFocus, toDataUrl } = await import(`./mark.js${build}`);
 const { GLASS_DEFAULTS, createGlass } = await import(`./glass.js${build}`);
-const { createFeed, page, first, fitLines, typeface } = await import(`./feed.js${build}`);
-
-// The studio's offerings, under its introduction: each name the mask of its picture.
-document.querySelectorAll('.pillar-mask').forEach(fitLines);
+const { createFeed, page, first, typeface } = await import(`./feed.js${build}`);
 
 const AHEAD = 24;
 const PARALLEL = 6;

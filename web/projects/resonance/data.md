@@ -2,6 +2,7 @@
 title: Resonance
 date: 2024-01-01
 smash: true
+category: originals
 caption: "Uppsala Town Hall"
 color: '#4f0396'
 tags:

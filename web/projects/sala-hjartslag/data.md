@@ -2,6 +2,7 @@
 title: Sala Hjärtslag
 date: 2024-01-01
 smash: true
+category: originals
 caption: "City of Sala"
 color: '#962d00'
 tags:

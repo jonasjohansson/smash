@@ -2,6 +2,7 @@
 title: Jagad
 date: 2026-01-01
 smash: true
+category: originals
 caption: "Kanal 5, Stockholm"
 tags:
   - mapping
