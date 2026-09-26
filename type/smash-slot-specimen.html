@@ -1,0 +1,227 @@
+<title>SMASH Slot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --paper: #ffffff;
+    --ink: #111111;
+    --muted: #6d6a64;
+    --line: #e7e4dc;
+    --yellow: #f7b304;
+    --warm: #26231f;
+    --ground: var(--paper);
+    --type: var(--ink);
+    --ui: "Schibsted Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+  body { background: var(--paper); color: var(--ink); font: 400 15px/1.5 var(--ui); }
+  .wrap { max-width: 1240px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 96px; }
+  h1, h2, p { margin: 0; }
+  svg { display: block; }
+
+  .top { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 32px; align-items: end; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+  .top h1 { font: 600 clamp(26px, 3.4vw, 40px)/1.05 var(--ui); letter-spacing: -0.01em; text-wrap: balance; }
+  .top p { margin-top: 12px; max-width: 60ch; color: var(--muted); }
+  .proof { display: grid; grid-template-columns: auto auto; gap: 10px 20px; align-items: center; justify-content: start; }
+  .proof small { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .proof svg { height: 64px; width: auto; }
+
+  .controls { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; padding-block: 14px; background: var(--paper); border-bottom: 1px solid var(--line); }
+  .controls label, .grounds span { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .field { display: flex; align-items: center; gap: 10px; flex: 1 1 300px; }
+  .field input[type=text] { flex: 1; min-width: 0; padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px; font: 400 16px/1.2 var(--ui); color: var(--ink); background: var(--paper); }
+  .slider { display: flex; align-items: center; gap: 8px; }
+  .slider output { font-variant-numeric: tabular-nums; min-width: 2.2em; font-size: 13px; }
+  input:focus-visible, button:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+  .grounds { display: flex; align-items: center; gap: 8px; }
+  .grounds button { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); cursor: pointer; }
+  .grounds button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ink); }
+  .g-white { background: #fff; } .g-yellow { background: var(--yellow); } .g-warm { background: var(--warm); }
+  .toggle { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+
+  .stage[data-ground="yellow"] { --ground: var(--yellow); --type: #111; }
+  .stage[data-ground="warm"] { --ground: var(--warm); --type: #f3efe8; }
+
+  .section-label { padding-top: 44px; padding-bottom: 12px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+  .section-label span { font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--muted); margin-left: 12px; }
+
+  .setting { background: var(--ground); color: var(--type); border-radius: 6px; padding: clamp(16px, 3vw, 36px); overflow-x: auto; }
+  .stage[data-ground="white"] .setting, .stage[data-ground="white"] .cell { box-shadow: inset 0 0 0 1px var(--line); }
+  .setting svg { max-width: none; }
+  .lines { display: flex; flex-direction: column; gap: 0.5em; }
+
+  .glyphs { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
+  .cell { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 16px 8px 10px; background: var(--ground); color: var(--type); border-radius: 6px; }
+  .cell svg { height: 84px; width: auto; }
+  .cell b { font-size: 12px; font-weight: 600; }
+  .cell.from-mark::after { content: "from the logo"; margin-top: -6px; font-size: 10px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--yellow); }
+  .stage[data-ground="yellow"] .cell.from-mark::after { color: #111; }
+  .stage .cell.decide { box-shadow: inset 0 0 0 2px var(--yellow); }
+
+  .grid-lines { display: none; }
+  .show-grid .grid-lines { display: inline; }
+
+  .rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 8px; }
+  .rules div { padding: 14px 16px; border: 1px solid var(--line); border-radius: 6px; }
+  .rules strong { display: block; font-weight: 600; margin-bottom: 2px; }
+  .rules p { color: var(--muted); font-size: 14px; }
+
+  @media (max-width: 760px) { .top { grid-template-columns: 1fr; } }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="logo" viewBox="0 0 2200 1888"><g transform="translate(0.000000,1888.000000) scale(0.100000,-0.100000)" fill="currentColor"><path d="M0 13845 l0 -5035 653 0 c612 0 803 -7 831 -29 6 -5 26 -12 45 -16 18 -4 58 -20 90 -36 229 -118 365 -289 431 -539 19 -74 20 -125 20 -3332 0 -2161 -3 -3259 -10 -3263 -6 -3 -10 -14 -10 -24 0 -48 -103 -183 -165 -217 -11 -6 -29 -15 -40 -22 -11 -6 -55 -19 -98 -28 -75 -17 -82 -16 -155 1 -42 10 -88 26 -101 36 -13 11 -29 19 -35 19 -33 0 -136 127 -164 202 -16 40 -17 295 -20 3237 -2 2524 -5 3197 -15 3203 -6 4 -292 8 -634 8 l-623 0 0 -3990 0 -3990 1656 0 c1122 0 1662 3 1675 10 19 11 19 78 19 5013 0 3878 -3 5006 -12 5015 -9 9 -175 12 -683 12 -368 1 -688 5 -710 10 -130 29 -168 42 -235 82 -8 4 -29 15 -46 23 -45 21 -122 81 -172 134 -46 50 -132 174 -132 191 0 6 -7 22 -16 35 -9 14 -20 39 -24 57 -5 18 -17 53 -27 78 -17 43 -18 177 -18 3330 l0 3285 35 70 c33 67 138 185 164 185 6 0 29 10 51 21 65 35 220 32 300 -6 112 -52 185 -131 228 -245 16 -43 17 -254 17 -3236 0 -2468 3 -3193 12 -3202 17 -17 1239 -17 1256 0 9 9 12 912 12 4000 l0 3988 -1675 0 -1675 0 0 -5035z M4148 9474 c-3 -7730 -1 -9410 10 -9425 13 -18 39 -19 621 -19 500 0 611 2 620 14 8 10 11 2253 11 8593 0 7963 1 8586 17 8654 28 128 120 237 243 289 84 36 223 34 304 -3 74 -34 165 -127 204 -205 l27 -57 3 -8632 c2 -8540 2 -8632 22 -8643 13 -7 221 -9 632 -8 l613 3 5 8625 c5 8581 6 8625 25 8675 44 110 109 180 219 236 81 41 229 46 309 9 106 -48 156 -94 207 -195 l40 -76 0 -8628 c0 -6886 3 -8631 13 -8644 19 -26 1240 -31 1256 -5 8 13 11 2687 11 9433 l0 9415 -2705 0 -2705 0 -2 -9406z M10360 9465 c0 -6746 3 -9420 11 -9433 10 -16 51 -17 622 -14 423 2 615 6 624 14 11 9 13 779 13 4382 0 3387 3 4375 12 4384 13 13 740 18 772 6 15 -6 16 -401 16 -4378 1 -3672 3 -4374 14 -4389 20 -26 1209 -27 1238 0 17 15 18 369 18 9430 l0 9413 -1670 0 -1670 0 0 -9415z m1795 8120 c11 -6 36 -17 55 -24 40 -13 117 -83 159 -145 66 -95 61 203 61 -3742 0 -1967 -2 -3580 -6 -3585 -9 -16 -769 -12 -783 5 -8 10 -11 946 -9 3617 l3 3604 33 62 c61 119 175 207 287 223 64 10 174 2 200 -15z M14500 13857 c0 -3893 3 -5026 12 -5035 9 -9 169 -12 658 -12 766 -1 780 -2 945 -82 99 -49 113 -58 153 -94 20 -18 40 -34 44 -34 11 0 143 -167 158 -198 7 -15 18 -38 25 -52 7 -14 26 -61 41 -105 l29 -80 0 -3290 0 -3290 -28 -58 c-66 -137 -224 -237 -373 -237 -41 0 -164 37 -184 55 -9 8 -22 15 -28 15 -15 0 -88 75 -121 124 -59 90 -55 -156 -58 3315 -2 2330 -6 3188 -14 3198 -15 17 -1208 20 -1240 3 -29 -16 -30 -7937 -1 -7963 25 -22 3300 -27 3314 -5 4 7 7 2270 5 5028 l-2 5015 -705 6 c-625 4 -710 7 -745 22 -22 9 -47 16 -56 17 -15 0 -105 40 -173 77 -15 8 -37 24 -47 34 -10 10 -23 19 -27 19 -24 0 -202 204 -202 231 0 6 -8 23 -18 37 -28 42 -58 130 -76 222 -24 123 -19 6517 5 6590 30 93 114 190 202 236 94 49 250 51 351 4 52 -24 176 -141 176 -167 0 -8 10 -29 23 -46 l22 -32 2 -3210 c2 -1765 5 -3216 8 -3223 3 -10 135 -12 632 -10 l628 3 3 3998 2 3997 -1670 0 -1670 0 0 -5023z M18640 9469 c0 -6468 3 -9416 10 -9430 17 -30 1243 -30 1260 0 7 14 10 1396 10 4389 0 3976 1 4370 16 4376 32 12 759 7 772 -6 9 -9 12 -997 12 -4382 0 -2404 4 -4377 9 -4384 10 -17 1191 -18 1240 -1 l31 11 0 9419 0 9419 -640 0 -640 0 -2 -4397 -3 -4398 -395 0 -395 0 -3 4398 -2 4397 -640 0 -640 0 0 -9411z"/></g></symbol></svg>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>SMASH Slot, a typeface drawn from the mark</h1>
+      <p>Every letter is built the way the SMASH mark is: bars 31.8 units wide, slots 20 wide, three rails (top, middle, bottom), round ends where a counter closes against the top or bottom, flat against the middle, and the outer corner of every bend rounded. S, M, A and H are the logo’s own letters.</p>
+    </div>
+    <div class="proof">
+      <small>The logo</small><svg viewBox="0 0 2200 1888" aria-label="SMASH logo" fill="currentColor"><use href="#logo"/></svg>
+      <small>Set in the font</small><span id="proof"></span>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="field"><label for="words">Words</label><input id="words" type="text" value="SMASH Originals" autocomplete="off" spellcheck="false"></div>
+    <div class="slider"><label for="slot">Slot</label><input id="slot" type="range" min="12" max="28" step="0.5" value="20"><output id="slot-out" for="slot">20</output></div>
+    <label class="toggle"><input id="grid" type="checkbox"> Grid</label>
+    <div class="grounds"><span id="ground-label">Ground</span><div role="group" aria-labelledby="ground-label" style="display:flex;gap:6px">
+      <button type="button" class="g-white" data-ground="white" aria-pressed="true" aria-label="White"></button>
+      <button type="button" class="g-yellow" data-ground="yellow" aria-pressed="false" aria-label="SMASH yellow"></button>
+      <button type="button" class="g-warm" data-ground="warm" aria-pressed="false" aria-label="Warm dark grey"></button>
+    </div></div>
+  </div>
+
+  <div class="stage" data-ground="white">
+    <p class="section-label">Your words</p>
+    <div class="setting" id="typed"></div>
+
+    <p class="section-label">In use<span>the site’s own lines</span></p>
+    <div class="setting lines" id="samples"></div>
+
+    <p class="section-label">Alphabet<span>yellow outline: a letter with a choice still to make</span></p>
+    <div class="glyphs" id="glyphs"></div>
+  </div>
+
+  <p class="section-label">Choices to make</p>
+  <div class="rules">
+    <div><strong>R and K</strong><p>Two bars can’t give R its leg without it becoming the logo’s A, so R and K are three bars wide, the leg stepping out.</p></div>
+    <div><strong>V, X, Q</strong><p>No diagonals: V narrows in a step, X is two Ys (its joins sit in the thin 20-unit strips), Q’s tail runs out along the bottom rail.</p></div>
+    <div><strong>O, D, 0</strong><p>One tall counter; D has its right corners stepped in, 0 its opposite corners, as a hint of the slash.</p></div>
+    <div><strong>1, 7, G, J</strong><p>1 hangs a terminal from the top rail; 7 steps across the middle rail; G’s jaw rises to the middle; J hooks at the foot.</p></div>
+  </div>
+</div>
+
+<script>
+  // The mark's measures (mark.js): 550 × 471 units, slot columns 51.78 apart.
+  const PITCH = 51.78, H = 471, INSET = 42, UP = 209.5, LO = 261.5;
+  // Each letter as cells on the mark's grid: columns alternate bar and slot
+  // (1, 2 or 3 bars), rows are top rail, upper stem, upper strip, middle
+  // rail, lower strip, lower stem, bottom rail. # is ink.
+  const G = {
+    A: '###/#.#/#.#/###/#.#/#.#/#.#', B: '###/#.#/#.#/##./#.#/#.#/###', C: '###/#.#/#../#../#../#.#/###',
+    D: '##./#.#/#.#/#.#/#.#/#.#/##.', E: '###/#.#/#../###/#../#.#/###', F: '###/#.#/#../###/#../#../#..',
+    G: '###/#.#/#../#.#/#.#/#.#/###', H: '#.#/#.#/#.#/###/#.#/#.#/#.#', I: '#/#/#/#/#/#/#',
+    J: '..#/..#/..#/..#/#.#/#.#/###', K: '#.#../#.#../#.#../#####/#...#/#...#/#...#', L: '#../#../#../#../#../#../###',
+    M: '#####/#.#.#/#.#.#/#.#.#/#.#.#/#.#.#/#.#.#', N: '###/#.#/#.#/#.#/#.#/#.#/#.#', O: '###/#.#/#.#/#.#/#.#/#.#/###',
+    P: '###/#.#/#.#/###/#../#../#..', Q: '###../#.#../#.#../#.#../#.#../#.#../#####', R: '###../#.#../#.#../#####/#...#/#...#/#...#',
+    S: '###/#.#/#../###/..#/#.#/###', T: '#####/..#../..#../..#../..#../..#../..#..', U: '#.#/#.#/#.#/#.#/#.#/#.#/###',
+    V: '#...#/#...#/#...#/#...#/#...#/##.##/.###.', W: '#.#.#/#.#.#/#.#.#/#.#.#/#.#.#/#.#.#/#####',
+    X: '#...#/#...#/#####/..#../#####/#...#/#...#', Y: '#...#/#...#/#...#/#####/..#../..#../..#..', Z: '###/..#/..#/###/#../#../###',
+    0: '##./#.#/#.#/#.#/#.#/#.#/.##', 1: '###/#.#/..#/..#/..#/..#/..#', 2: '###/#.#/..#/###/#../#../###',
+    3: '###/#.#/..#/.##/..#/#.#/###', 4: '#.#/#.#/#.#/###/..#/..#/..#', 5: '###/#../#../###/..#/#.#/###',
+    6: '###/#../#../###/#.#/#.#/###', 7: '###/..#/..#/###/#../#../#..', 8: '###/#.#/#.#/###/#.#/#.#/###',
+    9: '###/#.#/#.#/###/..#/..#/###',
+    '.': '././././././#', '-': '.../.../.../###/.../.../...',
+    "'": '#/#/././././.', ':': './././#/././#', '!': '#/#/#/#/#/./#', '?': '###/#.#/..#/###/#../.../#..',
+  };
+  const FROM_LOGO = new Set(['S', 'M', 'A', 'H']);
+  const DECIDE = new Set(['R', 'K', 'V', 'X', 'Q', 'D', '0', '1', '7', 'G', 'J', 'B']);
+
+  let slot = 20;
+
+  function build(ch) {
+    const rows = (G[ch] ?? G['?']).split('/');
+    const n = rows[0].length;
+    const s = slot, bar = PITCH - s;
+    const xs = [0]; for (let c = 0; c < n; c++) xs.push(xs[c] + (c % 2 ? s : bar));
+    const ys = [0, INSET - s / 2, UP - s / 2, UP + s / 2, LO - s / 2, LO + s / 2, H - INSET + s / 2, H];
+    const ink = (r, c) => r >= 0 && r < 7 && c >= 0 && c < n && rows[r][c] === '#';
+    const f = (v) => +v.toFixed(2);
+    let d = '';
+    for (let r = 0; r < 7; r++) for (let c = 0; c < n; c++) {
+      if (ink(r, c)) d += `M${f(xs[c])} ${f(ys[r])}H${f(xs[c + 1])}V${f(ys[r + 1])}H${f(xs[c])}Z`;
+    }
+    // Round the inside: where a counter ends against ink on both sides, a half
+    // circle (flat against the middle rail, as in the logo's A and H); the
+    // outer corner of a bend, as wide as a slot.
+    for (let r = 0; r < 7; r++) for (let c = 0; c < n; c++) {
+      if (ink(r, c)) continue;
+      const w = xs[c + 1] - xs[c], h = ys[r + 1] - ys[r];
+      for (const [dy, dx] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) {
+        if (!(ink(r + dy, c) && ink(r, c + dx))) continue;
+        let rad;
+        if (ink(r, c - dx)) rad = (r + dy === 3) ? 0 : w / 2; // counter ends up or down
+        else if (ink(r - dy, c)) rad = h / 2; // counter ends sideways
+        else rad = Math.min(s, w, h); // a bend
+        if (rad <= 0) continue;
+        const px = dx < 0 ? xs[c] : xs[c + 1], py = dy < 0 ? ys[r] : ys[r + 1];
+        const ix = -dx, iy = -dy; // into the cell
+        const ax = px + rad * ix, by = py + rad * iy;
+        // From the corner along one side, round the arc (centred a radius in
+        // on both) to the other side, and back.
+        const turn = (0 - 0) * (by - by) - (py - by) * (px - ax); // (A − C) × (B − C), A = (ax, py), B = (px, by), C = (ax, by)
+        d += `M${f(px)} ${f(py)}L${f(ax)} ${f(py)}A${f(rad)} ${f(rad)} 0 0 ${turn > 0 ? 1 : 0} ${f(px)} ${f(by)}Z`;
+      }
+    }
+    return { d, w: xs[n], n, xs, ys };
+  }
+
+  function setLine(text, height) {
+    const s = slot;
+    let x = 0; const parts = [];
+    for (const raw of text.toUpperCase()) {
+      if (raw === ' ') { x += PITCH; continue; }
+      if (!G[raw]) continue;
+      const g = build(raw);
+      x += s / 2;
+      parts.push(`<path transform="translate(${x.toFixed(2)} 0)" d="${g.d}"/>`);
+      x += g.w + s / 2;
+    }
+    const w = Math.max(1, x);
+    return `<svg viewBox="0 0 ${w.toFixed(2)} ${H}" style="height:${height}px;width:${(w / H * height).toFixed(1)}px" fill="currentColor" role="img" aria-label="${text.replace(/"/g, '&quot;')}">${parts.join('')}</svg>`;
+  }
+
+  function glyphCell(ch) {
+    const g = build(ch);
+    const lines = [];
+    for (const x of g.xs.slice(1, -1)) lines.push(`<line x1="${x}" x2="${x}" y1="0" y2="${H}"/>`);
+    for (const y of g.ys.slice(1, -1)) lines.push(`<line x1="0" x2="${g.w}" y1="${y}" y2="${y}"/>`);
+    const pad = 8;
+    return `<div class="cell${FROM_LOGO.has(ch) ? ' from-mark' : ''}${DECIDE.has(ch) ? ' decide' : ''}">
+      <svg viewBox="${-pad} ${-pad} ${g.w + 2 * pad} ${H + 2 * pad}" fill="currentColor" aria-label="${ch}"><path d="${g.d}"/><g class="grid-lines" stroke="#e8401c" stroke-width="1.2" opacity="0.8">${lines.join('')}<rect x="0" y="0" width="${g.w}" height="${H}" fill="none"/></g></svg>
+      <b>${ch === "'" ? '’' : ch}</b></div>`;
+  }
+
+  const SAMPLES = ['Experience design', 'Digital interactive', 'Originals', "Let's work together", 'Jagad 2026', 'Resonance'];
+  const words = document.getElementById('words');
+  function render() {
+    document.getElementById('proof').innerHTML = setLine('SMASH', 64);
+    document.getElementById('typed').innerHTML = setLine(words.value.trim() || 'SMASH Originals', 150);
+    document.getElementById('samples').innerHTML = SAMPLES.map((t) => setLine(t, 76)).join('');
+    document.getElementById('glyphs').innerHTML = Object.keys(G).filter((k) => k !== '?').concat('?').map(glyphCell).join('');
+  }
+  words.addEventListener('input', () => { document.getElementById('typed').innerHTML = setLine(words.value.trim() || 'SMASH Originals', 150); });
+  const slotIn = document.getElementById('slot'), slotOut = document.getElementById('slot-out');
+  slotIn.addEventListener('input', () => { slot = +slotIn.value; slotOut.textContent = slotIn.value; render(); });
+  document.getElementById('grid').addEventListener('change', (e) => document.body.classList.toggle('show-grid', e.target.checked));
+  const stage = document.querySelector('.stage');
+  document.querySelectorAll('.grounds button').forEach((b) => b.addEventListener('click', () => {
+    stage.dataset.ground = b.dataset.ground;
+    document.querySelectorAll('.grounds button').forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
+  }));
+  render();
+</script>
