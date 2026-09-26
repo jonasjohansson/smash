@@ -233,6 +233,7 @@ b, strong { font-weight: inherit; }
 .typeface .typeface-set { margin: clamp(32px, 4vw, 64px) var(--margin) 0; }
 .typeface .typeface-set + .typeface-glyphs { margin-top: clamp(10px, 1vw, 16px); }
 .typeface-alts { font-feature-settings: "ss01"; }
+.js .typeface:not(.is-set) .typeface-samples { visibility: hidden; }
 @media (max-width: 720px) {
   .typeface-title, .typeface-files, .typeface-axis { grid-column: 1 / -1; }
 }

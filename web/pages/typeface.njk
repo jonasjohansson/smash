@@ -25,15 +25,19 @@ eleventyComputed:
     <label class="typeface-axis"><span>{{ a[1] }}</span><input type="range" data-axis="{{ a[0] }}" min="{{ a[2] }}" max="{{ a[3] }}" step="{{ a[5] }}" value="{{ a[4] }}"><output>{{ a[4] }}</output></label>
     {% endfor %}
   </div>
+  <div class="typeface-samples">
   <div class="typeface-sample typeface-tester" contenteditable="true" spellcheck="false" aria-label="Type to try the font">SMASH Originals</div>
   <div class="typeface-sample typeface-glyphs">{% for ch in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-':!?".split('') %}<span>{{ ch }}</span>{% endfor %}</div>
   <p class="label typeface-set">Stylistic set 1</p>
   <div class="typeface-sample typeface-glyphs typeface-alts">{% for ch in "RKVX".split('') %}<span>{{ ch }}</span>{% endfor %}</div>
+  </div>
 </section>
 {% include "cta.njk" %}
 <script type="module">
-  // The sliders set the samples' axes.
+  // The samples show once the font is in, so nothing moves when it comes;
+  // the sliders set their axes.
   const root = document.querySelector('[data-typeface]');
+  document.fonts.load('100px SMASH').finally(() => root.classList.add('is-set'));
   for (const input of root.querySelectorAll('[data-axis]')) {
     const out = input.nextElementSibling;
     input.addEventListener('input', () => {
