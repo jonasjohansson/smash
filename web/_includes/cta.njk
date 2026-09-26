@@ -1,10 +1,9 @@
 {# The way in, at the foot of the studio and of each offering, as on
-   gentilhomme.com: an invitation, the address, the offerings. #}
+   gentilhomme.com: an invitation, the address, the offerings. Nothing else. #}
 <footer class="cta">
   <div class="grid cta-inner">
     <p class="cta-title"><span>Let's work</span> <span>together <a class="cta-button" href="mailto:hello@smash.studio">Contact</a></span></p>
     <nav class="cta-links" aria-label="What we do">{% for c in categories %}<a href="/{{ c.slug }}/">{{ c.name }}</a>{% endfor %}</nav>
     <a class="cta-mail" href="mailto:hello@smash.studio">hello@smash.studio</a>
-    <p class="cta-foot"><span>Stockholm</span> <span>© 2026 SMASH</span></p>
   </div>
 </footer>

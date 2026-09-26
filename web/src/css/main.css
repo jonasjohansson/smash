@@ -163,7 +163,7 @@ b, strong { font-weight: inherit; }
 @media (hover: none) { .pillar-note { opacity: 1; transform: none; } }
 /* The way in (cta.njk), at the foot of the studio and of each offering, as
    on gentilhomme.com: black, an invitation, the address large. */
-.cta { position: relative; z-index: 1; background: #111; color: #fff; padding-block: clamp(80px, 12vw, 200px) clamp(20px, 2vw, 32px); }
+.cta { position: relative; z-index: 1; background: #111; color: #fff; padding-block: clamp(80px, 12vw, 200px) clamp(40px, 5vw, 80px); }
 .home:not(.can-dive) .cta { display: none; }
 .cta-inner { row-gap: clamp(24px, 3vw, 48px); align-items: start; }
 .cta-title { grid-column: 1 / span 8; margin: 0; font: 400 clamp(40px, 5.8vw, 96px) / 0.98 var(--font); text-transform: uppercase; }
@@ -173,7 +173,7 @@ b, strong { font-weight: inherit; }
 .cta-links { grid-column: 9 / span 4; display: flex; flex-direction: column; align-items: start; font-size: clamp(13px, 1.04vw, 16px); line-height: 1.6; text-transform: uppercase; }
 .cta-links a:hover, .cta-mail:hover { color: var(--accent); }
 .cta-mail { grid-column: 1 / -1; font: 400 clamp(28px, 5.8vw, 96px) / 1 var(--font); text-transform: uppercase; white-space: nowrap; transition: color 0.3s; }
-.cta-foot { grid-column: 1 / -1; display: flex; justify-content: space-between; margin: clamp(24px, 4vw, 64px) 0 0; font-size: var(--t-small); text-transform: uppercase; color: rgb(255 255 255 / 0.6); }
+
 html:has(.home.can-dive) { scrollbar-width: none; }
 html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 /* Who SMASH is: rows of the mask along the top and bottom (main.js paints
