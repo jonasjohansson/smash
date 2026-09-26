@@ -227,7 +227,8 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 /* S: white ground instead of black. (A, invert, is drawn into the mask.) */
 .home.light { background: var(--ground); }
 /* H: the tweak panel, above the full-screen link. */
-.tweak { z-index: 100; top: 12px !important; right: 12px !important; width: 280px !important; }
+/* The tweak panel (H) stays put while the page scrolls, and scrolls itself if taller than the screen. */
+.tweak { position: fixed !important; z-index: 100; top: 12px !important; right: 12px !important; width: 280px !important; max-height: calc(100svh - 24px); overflow-y: auto; }
 
 .site-footer {
   align-items: center;
