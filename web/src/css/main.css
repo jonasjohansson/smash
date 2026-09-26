@@ -33,6 +33,7 @@
 
   --font: "Neue Montreal", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --serif: "Season Mix", Georgia, serif;
+  --display: Anton, Impact, "Arial Narrow", sans-serif; /* the chunky face, until SMASH chooses its own */
   --t-small: 12px;
   --t-body: clamp(14px, 1vw, 16px);
   --t-lead: clamp(20px, 2vw, 32px);
@@ -127,8 +128,9 @@ b, strong { font-weight: inherit; }
 .slide img, .slide canvas, .slide video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 /* The reel is drawn to the canvas (main.js); the element itself stays unseen. */
 .slide .reel { opacity: 0; pointer-events: none; }
-/* Dived in, the logo stands top left over the picture. */
-.landed-logo { position: fixed; z-index: 2; top: var(--margin); left: var(--margin); display: none; color: #fff; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
+/* Dived in, the logo stands top left over the film; the studio, coming after
+   it in the page at the same level, scrolls up over both. */
+.landed-logo { position: fixed; z-index: 1; top: var(--margin); left: var(--margin); display: none; color: #fff; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
 .home.can-dive .landed-logo { display: block; }
 .landed-logo svg { display: block; height: clamp(24px, 2.4vw, 36px); width: auto; }
 .home.is-landed .landed-logo { opacity: 1; pointer-events: auto; }
@@ -140,9 +142,8 @@ b, strong { font-weight: inherit; }
 .js .stage:not([data-renderer]) .slide:not(.is-set), .js [data-mark]:not(.is-set) { visibility: hidden; }
 
 /* Scrolling dives into the mark (main.js): the page scrolls, the stage stays.
-   The track is the dive, --dive screens long; the project it lands on is set
-   below it, on the project pages' black, and the picture scrolls away above it;
-   every project after it follows, on the same white (see .project). */
+   The track is the dive, --dive screens long; past it the film stays put and
+   the studio scrolls up over it. */
 .home.can-dive { height: auto; overflow: visible; }
 .dive-track { display: none; }
 .home.can-dive .dive-track { display: block; height: calc(100svh * (1 + var(--dive, 2))); }
@@ -158,7 +159,7 @@ b, strong { font-weight: inherit; }
 .about-head {
   grid-column: 1 / span 6;
   margin: 0;
-  font: 400 clamp(44px, 6.4vw, 104px) / 0.92 Anton, var(--font);
+  font: 400 clamp(44px, 6.4vw, 104px) / 0.92 var(--display);
   text-transform: uppercase;
 }
 .about-text { grid-column: 7 / span 6; font: 400 clamp(20px, 2.22vw, 34px) / 1.18 var(--serif); }
@@ -171,7 +172,7 @@ b, strong { font-weight: inherit; }
 .pillar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .pillar::after { content: ""; position: absolute; inset: 50% 0 0; background: linear-gradient(rgb(0 0 0 / 0), rgb(0 0 0 / 0.55)); pointer-events: none; }
 .pillar-text { position: absolute; z-index: 1; inset: auto 0 0; padding: clamp(14px, 1.3vw, 24px); }
-.pillar-name { font: 400 clamp(20px, 1.9vw, 34px) / 1.14 var(--font); text-transform: uppercase; color: var(--accent); }
+.pillar-name { font: 400 clamp(32px, 3.4vw, 60px) / 0.92 var(--display); text-transform: uppercase; color: var(--accent); }
 .pillar-name span { display: block; }
 @media (hover: hover) {
   .pillar:hover { flex-grow: 1.45; }
@@ -194,7 +195,9 @@ b, strong { font-weight: inherit; }
 
 /* The way in (cta.njk), at the foot of the studio and of each offering, as
    on gentilhomme.com: SMASH yellow, an invitation, the address large. */
-.cta { position: relative; z-index: 1; background: var(--accent); color: #111; padding-block: clamp(80px, 12vw, 200px) clamp(40px, 5vw, 80px); }
+/* The page's ground runs into the yellow (blended in oklab, so the way
+   through stays clean rather than muddy). */
+.cta { position: relative; z-index: 1; background: var(--accent); background: linear-gradient(in oklab, var(--ground), var(--accent) clamp(160px, 22vw, 360px)); color: #111; padding-block: clamp(200px, 26vw, 420px) clamp(40px, 5vw, 80px); }
 .home:not(.can-dive) .cta { display: none; }
 .cta-inner { row-gap: clamp(24px, 3vw, 48px); align-items: start; }
 .cta-title { grid-column: 1 / span 8; margin: 0; font: 400 clamp(40px, 5.8vw, 96px) / 0.98 var(--font); text-transform: uppercase; }

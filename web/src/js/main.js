@@ -37,6 +37,7 @@ const REEL = 0.35; // how far into the dive the reel takes over from the cut
 
 const DIVE_DEFAULTS = {
   length: 2, // screens of scrolling from the mark to the pictures
+  overlap: 0.35, // screens the page is already scrolling before the dive is through
   parallax: 1.15, // how much the pictures have grown when the mark has passed
   land: false, // slow the cut to a stop as the dive goes in, or let it run on
   invert: true, // the pictures through the slots and round the mark, the block white (A)
@@ -133,23 +134,24 @@ if (stage && framesEl) {
   const logo = document.querySelector('[data-landed-logo]'); // shown once dived in
   const view = { t: 0, e: 0, s: 1, x: 0, y: 0, image: 1, fade: 0 };
 
+  // Where the dive is through: `overlap` screens past the end of the track,
+  // so the page below has begun to scroll up while the mark is still passing.
+  const diveEnd = () => trackEl.offsetHeight - innerHeight + params.overlap * innerHeight;
+
   function track() {
     if (!trackEl) return;
     const max = trackEl.offsetHeight - innerHeight;
-    // At fractional zoom innerHeight is rounded, and the real bottom can fall
-    // a pixel short of max: the last pixel counts as the bottom.
-    target = max > 0 ? (scrollY >= max - 1 ? 1 : Math.max(0, scrollY / max)) : 0;
-    // The landed picture is the project's hero: past the dive it scrolls away
-    // with the page, and the project follows right below.
+    const end = diveEnd();
+    // At fractional zoom innerHeight is rounded, and the real end can fall a
+    // pixel short: the last pixel counts as the end.
+    target = end > 0 ? (scrollY >= end - 1 ? 1 : Math.max(0, scrollY / end)) : 0;
+    // Past the track the film stays where it is, and the studio scrolls up
+    // over it (main.css), until it covers the screen.
     over = Math.max(0, scrollY - max);
-    under = over >= innerHeight; // scrolled out of sight
-    stage.style.transform = over ? `translate3d(0, ${-Math.min(over, innerHeight)}px, 0)` : '';
+    under = over >= innerHeight; // covered
     stage.style.visibility = under ? 'hidden' : '';
-    // Dived in, the logo stands top left, and scrolls away with the picture.
-    if (logo) {
-      logo.style.transform = stage.style.transform;
-      document.body.classList.toggle('is-landed', target >= 1 && !under);
-    }
+    // Dived in, the logo stands top left over the film, and is covered with it.
+    if (logo) document.body.classList.toggle('is-landed', target >= 1 && !under);
     if (reel && target > 0 && reel.preload !== 'auto') { reel.preload = 'auto'; reel.load(); }
     document.body.classList.toggle('is-reading', under);
     // Only the mark at rest is a link; once scrolling in, the pictures are not,
@@ -391,7 +393,7 @@ if (stage && framesEl) {
     stage.addEventListener('click', (e) => {
       if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || !trackEl) return;
       e.preventDefault();
-      glide(trackEl.offsetHeight - innerHeight);
+      glide(diveEnd());
     });
   }
 
@@ -477,6 +479,7 @@ if (stage && framesEl) {
     if (dives) {
       const d = pane.addFolder({ title: 'Dive' });
       d.addBinding(params, 'length', { label: 'scroll (screens)', min: 0.5, max: 6, step: 0.1 });
+      d.addBinding(params, 'overlap', { label: 'page moves before end', min: 0, max: 1, step: 0.05 }).on('change', track);
       d.addBinding(params, 'parallax', { label: 'pictures grow', min: 1, max: 1.6, step: 0.01 });
       d.addBinding(params, 'land', { label: 'land on a project' });
       const info = pane.addFolder({ title: 'Info' });
