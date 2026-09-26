@@ -9,6 +9,10 @@
 // buildMark() returns an SVG sized to the box it will mask, so strokes keep a
 // true width however far the mark is stretched. paintMark() draws the same
 // shape on a canvas, where it stays sharp at any zoom (the landing's dive).
+//
+// With `info`, a row of text runs along the top and one along the bottom, as
+// on svartljus.se: part of the mask, the pictures showing through the letters,
+// the block drawn between them. paintInfo() sets them.
 
 export const UNITS = { w: 550, h: 471 };
 
@@ -110,8 +114,11 @@ function filleted(points, r) {
  */
 export function markShape(p, W, H) {
   const pad = p.padding;
+  // The rows of text, if any, take a band off the top and the bottom.
+  const row = p.info ? Math.round(H * p.infoSize) : 0;
+  const gap = p.info ? Math.round(H * p.infoGap) : 0;
   let bw = Math.max(1, W - 2 * pad);
-  let bh = Math.max(1, H - 2 * pad);
+  let bh = Math.max(1, H - 2 * pad - 2 * (row + gap));
   if (p.fit === 'contain') {
     const s = Math.min(bw / UNITS.w, bh / UNITS.h);
     bw = UNITS.w * s;
@@ -121,6 +128,11 @@ export function markShape(p, W, H) {
   const by = (H - bh) / 2;
   const sx = bw / UNITS.w;
   const sy = bh / UNITS.h;
+  // As wide as the block, just above and below it: one piece with the mark.
+  const rows = p.info ? [
+    { x: bx, y: by - gap - row, w: bw, h: row },
+    { x: bx, y: by + bh + gap, w: bw, h: row },
+  ] : [];
 
   // Work in px so a stretched block keeps round caps round.
   const toPx = (pts) => pts.map(([x, y]) => [bx + x * sx, by + y * sy]);
@@ -136,7 +148,7 @@ export function markShape(p, W, H) {
     }
     return filleted(px, corner);
   }).join('');
-  return { W, H, bx, by, bw, bh, sx, sy, stroke, d, dots, join: p.corner > 0 ? 'round' : 'miter' };
+  return { W, H, bx, by, bw, bh, sx, sy, stroke, d, dots, join: p.corner > 0 ? 'round' : 'miter', rows };
 }
 
 /**
@@ -195,6 +207,54 @@ export function paintMark(ctx, shape, invert) {
   ctx.fill();
   ctx.restore();
   ctx.globalCompositeOperation = 'source-over';
+}
+
+export const INFO_FONT = 'Anton';
+
+/**
+ * The rows of text, in the mask: each set in capitals to fill its row from
+ * edge to edge, stretched or squeezed sideways (as the mark is), but never
+ * squeezed below `least` of its width; then it is set smaller instead,
+ * centred in the row. Like the block, the letters show the pictures; inverted,
+ * they are cut from them. Returns, per row, what it takes to find a word in
+ * it again: { x (its origin), y, h, scale, font, text }.
+ */
+export function paintInfo(ctx, shape, texts, invert, least = 0.8) {
+  const out = [];
+  shape.rows.forEach((box, i) => {
+    const text = (texts[i] || '').toUpperCase();
+    if (!text) return;
+    // Size the capitals to the row, then fit the line to its width.
+    ctx.font = `100px ${INFO_FONT}`;
+    const probe = ctx.measureText('H');
+    const cap = probe.actualBoundingBoxAscent / 100 || 0.72;
+    // The ink, not the advance, meets the edges.
+    const ink = (s) => {
+      ctx.font = `${s}px ${INFO_FONT}`;
+      const t = ctx.measureText(text);
+      return { left: t.actualBoundingBoxLeft, width: t.actualBoundingBoxLeft + t.actualBoundingBoxRight };
+    };
+    let size = box.h / cap;
+    let m = ink(size);
+    let scale = box.w / m.width;
+    if (scale < least) {
+      size *= scale / least;
+      m = ink(size);
+      scale = box.w / m.width;
+    }
+    const h = size * cap;
+    const y = box.y + (box.h + h) / 2; // the baseline, capitals centred in the row
+    ctx.save();
+    ctx.globalCompositeOperation = invert ? 'destination-out' : 'source-over';
+    ctx.fillStyle = '#fff';
+    ctx.textBaseline = 'alphabetic';
+    ctx.translate(box.x + m.left * scale, y);
+    ctx.scale(scale, 1);
+    ctx.fillText(text, 0, 0);
+    ctx.restore();
+    out[i] = { x: box.x + m.left * scale, y: y - h, h, scale, font: ctx.font, text };
+  });
+  return out;
 }
 
 /**

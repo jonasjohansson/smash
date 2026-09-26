@@ -13,17 +13,16 @@ layout: base.njk
   {% if not renderer %}<p class="hero-title" data-title aria-hidden="true"></p>{% endif %}
 </a>
 {% if not renderer %}
-{# At rest the landing says who SMASH is, in a row along the top and one
-   along the bottom (what was the studio page). Both go as the dive starts. #}
-<header class="landing-top grid">
-  <p class="lt-line">We turn spaces into experiences people remember</p>
-  <a class="lt-contact" href="mailto:hello@smash.studio">Contact</a>
-</header>
-<footer class="landing-foot grid">
-  <p class="lf-who">Experience design studio, Stockholm</p>
-  <p class="lf-names">Ashley Reed, Veronica Reed, Emile Pascoe</p>
-  <a class="lf-mail" href="mailto:hello@smash.studio">hello@smash.studio</a>
-</footer>
+{# Who SMASH is, in rows of the mask along the top and bottom, as on
+   svartljus.se: main.js paints these words there, the pictures showing
+   through them. Here they are for screen readers, and the email's link lies
+   over its painted letters. #}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=block" data-info-font>
+<div class="info" data-info>
+  <p data-row>Ashley Reed Veronica Reed Emile Pascoe</p>
+  <p data-row>Experience design studio Stockholm hello@smash.studio</p>
+</div>
+<a class="info-mail" href="mailto:hello@smash.studio" data-mail hidden>hello@smash.studio</a>
 <div class="dive-track" data-track></div>
 <div class="dive-project" data-project></div>
 {% include "titles.njk" %}

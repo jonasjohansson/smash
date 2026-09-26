@@ -113,34 +113,13 @@ b, strong { font-weight: inherit; }
 .dive-project:empty { display: none; }
 html:has(.home.can-dive) { scrollbar-width: none; }
 html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
-/* At rest, who SMASH is, in two slim rows over the mark: what the studio
-   does and how to reach it along the top, who it is along the bottom, each on
-   a soft shade so the words hold over an edge-to-edge mark. Both go as the
-   dive starts (main.js). */
-.landing-top, .landing-foot {
-  position: fixed;
-  left: 0;
-  right: 0;
-  z-index: 10;
-  align-items: center;
-  white-space: nowrap;
-  font-size: var(--t-small);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #fff;
-  text-shadow: 0 0 8px rgb(0 0 0 / 0.4);
-  transition: opacity 0.4s, visibility 0s;
-}
-.landing-top { top: 0; padding-block: 14px 32px; background: linear-gradient(rgb(0 0 0 / 0.6), transparent); }
-.landing-foot { bottom: 0; padding-block: 32px 14px; background: linear-gradient(transparent, rgb(0 0 0 / 0.6)); }
-.home:not(.can-dive) :is(.landing-top, .landing-foot) { display: none; }
-.lt-line { grid-column: 1 / span 9; }
-.lt-contact { grid-column: 10 / span 3; justify-self: end; }
-.lf-who { grid-column: 1 / span 3; }
-.lf-names { grid-column: 4 / span 6; }
-.lf-mail { grid-column: 10 / span 3; justify-self: end; }
-.home.is-diving :is(.landing-top, .landing-foot) { opacity: 0; visibility: hidden; transition: opacity 0.4s, visibility 0s 0.4s; }
-.home.light :is(.landing-top, .landing-foot) { color: #111; text-shadow: none; background: none; }
+/* Who SMASH is: rows of the mask along the top and bottom (main.js paints
+   them). The words are also here, for screen readers; the email's link lies
+   over its painted letters, and goes with them as the dive starts. */
+.info { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.info-mail { position: fixed; z-index: 10; color: transparent; overflow: hidden; }
+.info-mail:focus-visible { outline: 1px solid #fff; outline-offset: 4px; }
+.home.is-diving .info-mail { visibility: hidden; }
 /* S: white ground instead of black. (A, invert, is drawn into the mask.) */
 .home.light { background: #fff; }
 /* H: the tweak panel, above the full-screen link. */
@@ -278,11 +257,6 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
   .f-copy { grid-column: 1 / span 6; }
   .f-mail, .site-footer .f-mail { grid-column: 7 / span 6; justify-self: end; }
   .f-top { display: none; }
-  /* One row each still: the line and Contact, the names (the email is Contact). */
-  .lt-line { grid-column: 1 / span 9; white-space: normal; }
-  .lt-contact { grid-column: 10 / span 3; }
-  .lf-who, .lf-mail { display: none; }
-  .lf-names { grid-column: 1 / -1; }
   .page-title, .project-title, .lead { grid-column: 1 / -1; }
   .page-meta { grid-column: 1 / -1; justify-self: start; margin-top: 12px; }
   .next-label { grid-column: 1 / -1; }

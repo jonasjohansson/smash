@@ -23,7 +23,7 @@
 // The modules come from the same build as this script: its address carries
 // the build's stamp (base.njk), and so do theirs.
 const build = new URL(import.meta.url).search;
-const { DEFAULTS, buildMark, markShape, paintMark, diveFocus, toDataUrl } = await import(`./mark.js${build}`);
+const { DEFAULTS, buildMark, markShape, paintMark, paintInfo, diveFocus, toDataUrl, INFO_FONT } = await import(`./mark.js${build}`);
 const { GLASS_DEFAULTS, createGlass } = await import(`./glass.js${build}`);
 const { createFeed, page, titles } = await import(`./feed.js${build}`);
 
@@ -35,6 +35,9 @@ const DIVE_DEFAULTS = {
   length: 2, // screens of scrolling from the mark to the pictures
   parallax: 1.15, // how much the pictures have grown when the mark has passed
   land: true, // slow the cut to a stop as the dive goes in
+  info: true, // who SMASH is, in rows of the mask along the top and bottom
+  infoSize: 0.03, // each row's height, of the screen's
+  infoGap: 0.012, // between the rows and the mark
 };
 
 const stage = document.querySelector('[data-stage]');
@@ -69,6 +72,11 @@ if (stage && framesEl) {
 
   const slow = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const titleEl = document.querySelector('[data-title]');
+  // The rows' words are in the page (for screen readers too); the email's link
+  // lies over its painted letters.
+  const infoRows = [...document.querySelectorAll('[data-info] [data-row]')].map((p) => p.textContent.trim());
+  const mail = document.querySelector('[data-mail]');
+  let infoReady = false; // the typeface has loaded
   const trackEl = document.querySelector('[data-track]');
   const more = document.querySelector('[data-project]'); // the projects, below the dive
   const feed = dives && more ? createFeed(more) : null;
@@ -92,6 +100,7 @@ if (stage && framesEl) {
       return;
     }
     shape = markShape(params, W, H);
+    if (mail && !params.info) mail.hidden = true;
     focus = diveFocus(params, shape);
     document.body.style.setProperty('--dive', params.length);
     track();
@@ -266,6 +275,10 @@ if (stage && framesEl) {
       mctx.clearRect(0, 0, cw, ch);
       mctx.setTransform(dpr * view.s, 0, 0, dpr * view.s, dpr * view.x, dpr * view.y);
       paintMark(mctx, shape, params.invert);
+      if (params.info && infoReady) {
+        const laid = paintInfo(mctx, shape, infoRows, params.invert);
+        if (view.t === 0) placeMail(laid);
+      }
       if (view.fade > 0) {
         mctx.setTransform(1, 0, 0, 1, 0, 0);
         mctx.globalAlpha = view.fade;
@@ -277,6 +290,27 @@ if (stage && framesEl) {
     ctx.globalCompositeOperation = 'destination-in';
     ctx.drawImage(mask, 0, 0);
     ctx.globalCompositeOperation = 'source-over';
+  }
+
+  // The email's link over its letters, where they lie with the mark at rest.
+  function placeMail(laid) {
+    if (!mail) return;
+    const address = mail.textContent.trim().toUpperCase();
+    const row = laid.find((r) => r?.text.includes(address));
+    mail.hidden = !row;
+    if (!row) return;
+    mctx.save();
+    mctx.font = row.font;
+    const at = (n) => mctx.measureText(row.text.slice(0, n)).width * row.scale;
+    const from = row.text.indexOf(address);
+    const left = row.x + at(from);
+    Object.assign(mail.style, {
+      left: `${left}px`,
+      top: `${row.y}px`,
+      width: `${row.x + at(from + address.length) - left}px`,
+      height: `${row.h}px`,
+    });
+    mctx.restore();
   }
 
   const fit = () => {
@@ -353,6 +387,16 @@ if (stage && framesEl) {
     document.body.classList.add('can-dive');
     addEventListener('scroll', track, { passive: true });
     poster.decode().then(() => { if (!current) show(poster, -1, stage.pathname.split('/').at(-2)); }).catch(() => {});
+    // The rows wait for their typeface rather than flash another.
+    const face = document.querySelector('[data-info-font]');
+    new Promise((resolve) => {
+      if (!face || face.sheet) return resolve();
+      face.addEventListener('load', resolve, { once: true });
+      face.addEventListener('error', resolve, { once: true });
+    })
+      .then(() => document.fonts.load(`40px ${INFO_FONT}`, infoRows.join(' ')))
+      .catch(() => {})
+      .then(() => { infoReady = true; dirty = maskDirty = true; });
   }
   fit();
   addEventListener('resize', fit);
@@ -402,6 +446,10 @@ if (stage && framesEl) {
       d.addBinding(params, 'length', { label: 'scroll (screens)', min: 0.5, max: 6, step: 0.1 });
       d.addBinding(params, 'parallax', { label: 'pictures grow', min: 1, max: 1.6, step: 0.01 });
       d.addBinding(params, 'land', { label: 'land on a project' });
+      const info = pane.addFolder({ title: 'Info' });
+      info.addBinding(params, 'info', { label: 'rows of text' });
+      info.addBinding(params, 'infoSize', { label: 'row height', min: 0.01, max: 0.08, step: 0.001 });
+      info.addBinding(params, 'infoGap', { label: 'gap to the mark', min: 0, max: 0.05, step: 0.001 });
     }
 
     const slideshow = pane.addFolder({ title: 'Slideshow' });
@@ -409,7 +457,7 @@ if (stage && framesEl) {
     slideshow.addBinding(params, 'paused');
 
     pane.addButton({ title: 'Export SVG' }).on('click', () => {
-      const svg = buildMark({ ...params, fit: 'contain', padding: 0, invert: false }, 1100, 942);
+      const svg = buildMark({ ...params, fit: 'contain', padding: 0, invert: false, info: false }, 1100, 942);
       const a = Object.assign(document.createElement('a'), {
         href: URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })),
         download: 'smash-mark.svg',
