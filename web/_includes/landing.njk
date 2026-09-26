@@ -45,10 +45,7 @@ layout: base.njk
     </a>
     {% endfor %}
   </div>
-  <div class="row grid about-facts">
-    <dl style="--start: 1; --span: 3"><dt>Work</dt><dd>Interactive installations</dd><dd>Projection mapping</dd><dd>Immersive environments</dd><dd>Stage design</dd><dd>Animated film</dd></dl>
-    <dl style="--start: 4; --span: 3"><dt>Contact</dt><dd><a href="mailto:hello@smash.studio">hello@smash.studio</a></dd><dd>Stockholm</dd></dl>
-  </div>
 </section>
+{% include "cta.njk" %}
 {% endif %}
 <script type="application/json" id="frames">{{ frames | dump | safe }}</script>

@@ -2,7 +2,8 @@
 // mark. Frames are decoded off the main thread a couple of dozen ahead and
 // drawn to a canvas on the display's own clock, so a cut never waits on a
 // decode; if the next frame is not ready the current one simply holds.
-// At rest, a click opens the project on screen.
+// At rest, a click dives in by itself (with a modifier, it opens the project
+// on screen, as a link).
 //
 // Scrolling dives into the mark, like the Marvel intro run backwards: the mark
 // comes at you (on a log scale, so every stretch of the approach takes as long)
@@ -23,9 +24,11 @@
 // The modules come from the same build as this script: its address carries
 // the build's stamp (base.njk), and so do theirs.
 const build = new URL(import.meta.url).search;
-const { DEFAULTS, buildMark, markShape, paintMark, paintInfo, diveFocus, toDataUrl } = await import(`./mark.js${build}`);
-const { GLASS_DEFAULTS, createGlass } = await import(`./glass.js${build}`);
-const { createFeed, typeface, fitTitles } = await import(`./feed.js${build}`);
+const [
+  { DEFAULTS, buildMark, markShape, paintMark, paintInfo, diveFocus, toDataUrl },
+  { GLASS_DEFAULTS, createGlass },
+  { createFeed, typeface, fitTitles },
+] = await Promise.all([import(`./mark.js${build}`), import(`./glass.js${build}`), import(`./feed.js${build}`)]);
 
 const AHEAD = 24;
 const PARALLEL = 6;
@@ -115,6 +118,7 @@ if (stage && framesEl) {
       slide.style.webkitMaskImage = url;
       slide.style.maskImage = url;
     }
+    slide.classList.add('is-set'); // drawn with the viewer's settings
   }
 
   // ---- the dive ---------------------------------------------------------
@@ -357,6 +361,35 @@ if (stage && framesEl) {
     poster.decode().then(() => { if (!current) show(poster, -1, stage.pathname.split('/').at(-2)); }).catch(() => {});
     // The rows wait for their typeface rather than flash another.
     typeface(infoRows.join(' ')).then(() => { infoReady = true; dirty = maskDirty = true; });
+    // A click at rest dives in by itself, as a scroll through the track would;
+    // a scroll, touch or key of the viewer's own takes over.
+    stage.addEventListener('click', (e) => {
+      if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || !trackEl) return;
+      e.preventDefault();
+      glide(trackEl.offsetHeight - innerHeight);
+    });
+  }
+
+  let gliding = 0;
+  function glide(to) {
+    if (slow) return scrollTo(0, to);
+    const run = ++gliding, from = scrollY, start = performance.now(), length = 2600;
+    const root = document.documentElement.style;
+    const stop = () => { gliding++; end(); };
+    const end = () => {
+      root.scrollBehavior = ''; // main.css scrolls smoothly otherwise
+      for (const k of ['wheel', 'touchstart', 'keydown']) removeEventListener(k, stop);
+    };
+    root.scrollBehavior = 'auto';
+    for (const k of ['wheel', 'touchstart', 'keydown']) addEventListener(k, stop, { passive: true });
+    const step = (now) => {
+      if (run !== gliding) return;
+      const x = Math.min(1, (now - start) / length);
+      scrollTo(0, from + (to - from) * (0.5 - Math.cos(Math.PI * x) / 2));
+      if (x < 1) requestAnimationFrame(step);
+      else end();
+    };
+    requestAnimationFrame(step);
   }
   fit();
   addEventListener('resize', fit);
@@ -477,9 +510,19 @@ if (own) {
   soon();
 }
 
-// An offering's page opens on its picture, masked by its name (category.njk).
-const offering = document.querySelector('.category-page .project-head');
-if (offering) fitTitles(offering);
+// An offering's page opens on its picture seen through the mark, drawn to the
+// picture's size and to the viewer's own settings, as on the landing.
+const marked = document.querySelector('[data-mark]');
+if (marked) {
+  const params = { ...DEFAULTS };
+  try { Object.assign(params, JSON.parse(localStorage.getItem('smash-mark') || '{}')); } catch {}
+  const draw = () => {
+    marked.style.webkitMaskImage = marked.style.maskImage = toDataUrl(buildMark({ ...params, info: false }, marked.clientWidth, marked.clientHeight));
+    marked.classList.add('is-set');
+  };
+  draw();
+  addEventListener('resize', draw);
+}
 
 document.addEventListener('keydown', (e) => {
   if (e.key.toLowerCase() === 'g' && !e.metaKey && !e.ctrlKey && !typing(e)) {

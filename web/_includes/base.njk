@@ -3,14 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  {# Browsers that tint their bars with the page (Safari, Chrome on Android)
+     take on its white, so the page runs on into the window. #}
+  <meta name="theme-color" content="#ffffff">
+  <meta name="color-scheme" content="light">
   <title>{% if title %}{{ title }} — {% endif %}SMASH</title>
   <meta name="description" content="{{ description or 'SMASH is a creative studio making interactive installations, projection mapping, immersive environments and digital experiences.' }}">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  {# A viewer who has tuned the mark (H) sees it only once drawn their way,
+     never the default first. #}
+  <script>try { if ((localStorage.getItem('smash-mark') || '{}') !== '{}') document.documentElement.classList.add('tuned'); } catch {}</script>
+  <link rel="preload" href="/fonts/Anton-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/NeueMontreal-Regular.woff" as="font" type="font/woff" crossorigin>
   <link rel="preload" href="/fonts/SeasonMix-Regular.woff" as="font" type="font/woff" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=block" data-info-font>
-  <link rel="stylesheet" href="/css/main.css?v={{ build }}">
+  <link rel="stylesheet" href="/css/main.css?v={{ build }}" data-info-font>
+  <link rel="modulepreload" href="/js/mark.js?v={{ build }}">
+  <link rel="modulepreload" href="/js/glass.js?v={{ build }}">
+  <link rel="modulepreload" href="/js/feed.js?v={{ build }}">
   <script src="/js/main.js?v={{ build }}" type="module"></script>
 </head>
 <body class="{{ bodyClass }}">

@@ -34,7 +34,7 @@ export function page(slug) {
   return request;
 }
 
-// The masks' typeface. Its stylesheet (base.njk, data-info-font) has to be in
+// The masks' typeface. Its stylesheet (main.css, data-info-font) has to be in
 // before the typeface can be asked for, and WebKit runs this module before it
 // is: asked too soon, the answer is that there is no such typeface yet.
 const FONT = 'Anton';

@@ -111,7 +111,6 @@ export default function (config) {
       return {
         ...c,
         words: c.name.split(' '),
-        mask: c.mask ?? c.name,
         hero: { src: block.src, alt: block.alt ?? '' },
         picture: await image(block.src, block.alt ?? '', `(max-width: 720px) ${Math.ceil(125 * ar)}vw, ${Math.ceil(100 * ar)}vh`),
         projects: projects.filter((p) => p.category === c.slug).map(({ slug, title, caption, year, cover }) => ({ slug, title, caption, year, cover })),
