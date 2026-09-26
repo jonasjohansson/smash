@@ -38,7 +38,6 @@ const DIVE_DEFAULTS = {
   length: 2, // screens of scrolling from the mark to the pictures
   overlap: 0, // screens the page is already scrolling before the dive is through
   reel: 0.15, // how far into the dive (of its scroll) the reel takes over from the cut
-  contrast: 1.15, // on the pictures and the film
   vignette: 0.4, // how dark the corners fall
   parallax: 1.15, // how much the pictures have grown when the mark has passed
   land: false, // slow the cut to a stop as the dive goes in, or let it run on
@@ -301,10 +300,8 @@ if (stage && framesEl) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, cw, ch);
     if (!current) return;
-    // A little more contrast, and a soft vignette, on the pictures and the film.
-    if (params.contrast !== 1) ctx.filter = `contrast(${params.contrast})`;
+    // A soft vignette on the pictures and the film.
     cover(current, view.image);
-    ctx.filter = 'none';
     if (params.vignette > 0) {
       const v = ctx.createRadialGradient(cw / 2, ch / 2, Math.min(cw, ch) * 0.3, cw / 2, ch / 2, Math.hypot(cw, ch) / 2);
       v.addColorStop(0, 'rgba(0,0,0,0)');
@@ -543,10 +540,7 @@ if (stage && framesEl) {
     const slideshow = pane.addFolder({ title: 'Slideshow' });
     slideshow.addBinding(params, 'speed', { label: 'ms per image', min: 17, max: 1000, step: 1 });
     slideshow.addBinding(params, 'paused');
-    if (!glass) {
-      slideshow.addBinding(params, 'contrast', { min: 0.8, max: 1.6, step: 0.01 });
-      slideshow.addBinding(params, 'vignette', { min: 0, max: 1, step: 0.01 });
-    }
+    if (!glass) slideshow.addBinding(params, 'vignette', { min: 0, max: 1, step: 0.01 });
 
     pane.addButton({ title: 'Export SVG' }).on('click', () => {
       const svg = buildMark({ ...params, fit: 'contain', padding: 0, invert: false, info: false }, 1100, 942);
