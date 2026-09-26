@@ -1,6 +1,12 @@
 /* SMASH — one grid, one type scale, nothing else.
    Press G anywhere to show the 12 columns. */
 
+/* The pairing of gentilhomme.com: Neue Montreal throughout, Season Mix for
+   the large texts that tell a project. */
+@font-face { font-family: "Neue Montreal"; font-weight: 400; font-style: normal; font-display: swap; src: url(/fonts/NeueMontreal-Regular.woff) format("woff"); }
+@font-face { font-family: "Season Mix"; font-weight: 400; font-style: normal; font-display: swap; src: url(/fonts/SeasonMix-Regular.woff) format("woff"); }
+@font-face { font-family: "Season Mix"; font-weight: 400; font-style: italic; font-display: swap; src: url(/fonts/SeasonMix-RegularItalic.woff) format("woff"); }
+
 :root {
   --bg: #fff;
   --ink: #111;
@@ -14,9 +20,8 @@
   --row-gap: clamp(56px, 9vw, 168px);
   --header: 72px;
 
-  /* General Sans (Fontshare, free for commercial use) stands in for the
-     licensed PP Neue Montreal / Season Mix pairing on gentilhomme.com. */
-  --font: "General Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font: "Neue Montreal", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --serif: "Season Mix", Georgia, serif;
   --t-small: 12px;
   --t-body: clamp(14px, 1vw, 16px);
   --t-lead: clamp(20px, 2vw, 32px);
@@ -30,7 +35,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font: 300 var(--t-body)/1.5 var(--font);
+  font: 400 var(--t-body)/1.5 var(--font);
   -webkit-font-smoothing: antialiased;
 }
 img, video { display: block; width: 100%; height: auto; }
@@ -131,7 +136,7 @@ b, strong { font-weight: inherit; }
   font: 400 clamp(44px, 6.4vw, 104px) / 0.92 Anton, var(--font);
   text-transform: uppercase;
 }
-.about-text { grid-column: 7 / span 6; font-size: clamp(20px, 2.2vw, 34px); font-weight: 400; line-height: 1.22; letter-spacing: -0.01em; }
+.about-text { grid-column: 7 / span 6; font: 400 clamp(20px, 2.22vw, 34px) / 1.18 var(--serif); }
 .about-text p + p { margin-top: 0.8em; }
 .row.about-facts { align-items: start; font-size: var(--t-small); line-height: 1.8; }
 .about-facts dl { margin: 0; }
@@ -224,7 +229,7 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 /* After the hero, the project introduced in large words, centred; each further
    text a section of its own, as large, over the pictures that follow it. */
 .project-lead { margin-top: var(--row-gap); }
-.lead { grid-column: 2 / span 10; text-align: center; font-size: clamp(24px, 3.1vw, 46px); font-weight: 400; line-height: 1.14; letter-spacing: -0.015em; }
+.lead { grid-column: 2 / span 10; text-align: center; font: 400 clamp(24px, 3.12vw, 46px) / 1.15 var(--serif); }
 .lead p + p { margin-top: 0.8em; }
 
 .row { margin-top: var(--row-gap); align-items: end; }
@@ -239,7 +244,7 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 .prose p + p { margin-top: 1em; }
 .prose a, .credits a, .lead a { text-decoration: underline; text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
 .row-section .cell { text-align: center; }
-.row-section .prose { max-width: none; font-size: clamp(20px, 2.2vw, 32px); font-weight: 400; line-height: 1.22; letter-spacing: -0.01em; }
+.row-section .prose { max-width: none; font: 400 clamp(20px, 2.22vw, 32px) / 1.18 var(--serif); }
 
 .credits {
   list-style: none;
