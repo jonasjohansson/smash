@@ -43,18 +43,23 @@ G = {
     'A': '###/#.#/#.#/###/#.#/#.#/#.#', 'B': '###/#.#/#.#/##./#.#/#.#/###', 'C': '###/#.#/#../#../#../#.#/###',
     'D': '##./#.#/#.#/#.#/#.#/#.#/##.', 'E': '###/#.#/#../###/#../#.#/###', 'F': '###/#.#/#../###/#../#../#..',
     'G': '###/#.#/#../#.#/#.#/#.#/###', 'H': '#.#/#.#/#.#/###/#.#/#.#/#.#', 'I': '#/#/#/#/#/#/#',
-    'J': '..#/..#/..#/..#/#.#/#.#/###', 'K': '#.#../#.#../#.#../#####/#...#/#...#/#...#', 'L': '#../#../#../#../#../#../###',
+    'J': '..#/..#/..#/..#/#.#/#.#/###', 'K': '#.#/#.#/##./#../##./#.#/#.#', 'L': '#../#../#../#../#../#../###',
     'M': '#####/#.#.#/#.#.#/#.#.#/#.#.#/#.#.#/#.#.#', 'N': '###/#.#/#.#/#.#/#.#/#.#/#.#', 'O': '###/#.#/#.#/#.#/#.#/#.#/###',
-    'P': '###/#.#/#.#/###/#../#../#..', 'Q': '###/#.#/#.#/#.#/#.#/#.#/###/..#', 'R': '###../#.#../#.#../#####/#...#/#...#/#...#',
+    'P': '###/#.#/#.#/###/#../#../#..', 'Q': '###/#.#/#.#/#.#/#.#/#.#/###/..#', 'R': '###/#.#/#.#/##./#.#/#.#/#.#',
     'S': '###/#.#/#../###/..#/#.#/###', 'T': '#####/..#../..#../..#../..#../..#../..#..', 'U': '#.#/#.#/#.#/#.#/#.#/#.#/###',
-    'V': '#...#/#...#/#...#/#...#/#...#/##.##/.###.', 'W': '#.#.#/#.#.#/#.#.#/#.#.#/#.#.#/#.#.#/#####',
-    'X': '#...#/#...#/#####/..#../#####/#...#/#...#', 'Y': '#...#/#...#/#...#/#####/..#../..#../..#..', 'Z': '###/..#/..#/###/#../#../###',
+    'V': '#.#/#.#/#.#/#.#/#.#/#.#/.#.', 'W': '#.#.#/#.#.#/#.#.#/#.#.#/#.#.#/#.#.#/#####',
+    'X': '#.#/#.#/.#./.#./.#./#.#/#.#', 'Y': '#...#/#...#/#...#/#####/..#../..#../..#..', 'Z': '###/..#/..#/###/#../#../###',
     '0': '##./#.#/#.#/#.#/#.#/#.#/.##', '1': '###/#.#/..#/..#/..#/..#/..#', '2': '###/#.#/..#/###/#../#../###',
     '3': '###/#.#/..#/.##/..#/#.#/###', '4': '#.#/#.#/#.#/###/..#/..#/..#', '5': '###/#../#../###/..#/#.#/###',
     '6': '###/#../#../###/#.#/#.#/###', '7': '###/..#/..#/###/#../#../#..', '8': '###/#.#/#.#/###/#.#/#.#/###',
     '9': '###/#.#/#.#/###/..#/..#/###',
     '.': '././././././#', '-': '.../.../.../###/.../.../...', "'": '#/#/././././.', ':': './././#/././#',
     '!': '#/#/#/#/#/./#', '?': '###/#.#/..#/###/#../.../#..',
+}
+# The wide R, K, V and X that came first, as a stylistic set (ss01).
+ALTS = {
+    'R': '###../#.#../#.#../#####/#...#/#...#/#...#', 'K': '#.#../#.#../#.#../#####/#...#/#...#/#...#',
+    'V': '#...#/#...#/#...#/#...#/#...#/##.##/.###.', 'X': '#...#/#...#/#####/..#../#####/#...#/#...#',
 }
 # Letters whose dot sits a slot under the stroke: the lower stem row shrinks
 # to that gap, the stroke running down to it.
@@ -106,10 +111,13 @@ def trace(rows):
         loop, a, prev = [a0], a0, None
         while True:
             outs = starts[a]
-            if len(outs) > 1 and prev:  # where two loops touch, keep turning right
+            # Where ink meets ink only at a corner, turn left: the two become one
+            # outline, and both corners there are rounded as inside corners
+            # (as in the specimen), joining them.
+            if len(outs) > 1 and prev:
                 d = (a[0] - prev[0], a[1] - prev[1])
-                right = (d[1], -d[0])
-                outs.sort(key=lambda b: (b[0] - a[0], b[1] - a[1]) != right)
+                left = (-d[1], d[0])
+                outs.sort(key=lambda b: (b[0] - a[0], b[1] - a[1]) != left)
             b = outs.pop(0)
             if not outs:
                 del starts[a]
@@ -199,11 +207,14 @@ def write_master(path, slot, pitch, crossbar, style):
     ufo.info.descender = -200
     ufo.info.copyright = 'SMASH'
     side = slot / 2 * K
-    for ch, table in G.items():
+    glyphs = [(ch, NAMES.get(ch, ch), table) for ch, table in G.items()]
+    glyphs += [(ch, f'{ch}.ss01', table) for ch, table in ALTS.items()]
+    for ch, name, table in glyphs:
         rows = table.split('/')
-        name = NAMES.get(ch, ch)
         g = ufo.newGlyph(name)
-        if ch.isalpha():
+        if name.endswith('.ss01'):
+            pass  # reached through ss01 only
+        elif ch.isalpha():
             g.unicodes = [ord(ch), ord(ch.lower())]
         else:
             g.unicodes = [ord(ch)]
@@ -220,7 +231,9 @@ def write_master(path, slot, pitch, crossbar, style):
     space.width = round(pitch * K, 2)
     nd = ufo.newGlyph('.notdef')
     nd.width = round(2 * pitch * K, 2)
-    ufo.glyphOrder = ['.notdef', 'space'] + [NAMES.get(c, c) for c in G]
+    ufo.glyphOrder = ['.notdef', 'space'] + [name for _, name, _ in glyphs]
+    subs = ' '.join(f'sub {ch} by {ch}.ss01;' for ch in ALTS)
+    ufo.features.text = f'feature ss01 {{ {subs} }} ss01;\n'
     ufo.save(path, overwrite=True)
 
 
