@@ -16,8 +16,6 @@ eleventyComputed:
 <article class="project" data-slug="{{ p.slug }}"{% if p.color %} style="--tint: {{ p.color }}"{% endif %}>
   <header class="project-head grid">
     <h1 class="project-title">{{ p.title }}</h1>
-    <p class="project-year">{{ p.year }}</p>
-    <p class="project-tags">{{ p.tags | join(", ") }}</p>
   </header>
 
   {% if p.rows.hero %}
@@ -37,7 +35,7 @@ eleventyComputed:
   {% endif %}
 
   {% for row in p.rows.rows %}
-  <div class="row row-{{ row.kind }} grid">
+  <div class="row row-{{ row.kind }}{% if row.cells.length > 2 and row.kind == 'group' %} row-keeps{% endif %} grid">
     {% for c in row.cells %}
     <div class="cell cell-{{ c.block.type }}" style="{% if c.vw %}--ar: {{ c.block.ar }}{% else %}--start: {{ c.start }}; --span: {{ c.span }}{% endif %}">
       {% if c.block.type == 'text' %}

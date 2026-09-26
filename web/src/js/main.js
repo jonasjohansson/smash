@@ -8,7 +8,7 @@
 // comes at you (on a log scale, so every stretch of the approach takes as long)
 // through the gap between the M and the A, until its edges pass the edges of
 // the screen and the pictures fill it. The cut slows as you go and lands on
-// one project, whose title shows; the pictures, further back, grow a little
+// one project; the pictures, further back, grow a little
 // less than the mark does. Reduced motion dissolves the mark instead.
 // Landed, the address becomes the project's, and scrolling on reads it: its
 // page (/work/<slug>/) is fetched and set below the picture, which scrolls away,
@@ -22,7 +22,7 @@
 
 import { DEFAULTS, buildMark, markShape, paintMark, diveFocus, toDataUrl } from './mark.js';
 import { GLASS_DEFAULTS, createGlass } from './glass.js';
-import { createFeed, page, titles } from './feed.js';
+import { createFeed, page } from './feed.js';
 
 const AHEAD = 24;
 const PARALLEL = 6;
@@ -65,7 +65,6 @@ if (stage && framesEl) {
   const save = () => { try { localStorage.setItem(STORE, JSON.stringify(params)); } catch {} };
 
   const slow = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const titleEl = document.querySelector('[data-title]');
   const trackEl = document.querySelector('[data-track]');
   const more = document.querySelector('[data-project]'); // the projects, below the dive
   const feed = dives && more ? createFeed(more) : null;
@@ -117,16 +116,16 @@ if (stage && framesEl) {
     // a pixel short of max: the last pixel counts as the bottom.
     target = max > 0 ? (scrollY >= max - 1 ? 1 : Math.max(0, scrollY / max)) : 0;
     // The landed picture is the project's hero: past the dive it scrolls away
-    // with the page, its title with it, and the project follows right below.
+    // with the page, and the project follows right below.
     over = Math.max(0, scrollY - max);
     const under = over >= innerHeight; // scrolled out of sight
-    const lift = over ? `translate3d(0, ${-Math.min(over, innerHeight)}px, 0)` : '';
-    stage.style.transform = lift;
-    if (titleEl) titleEl.style.transform = lift;
+    stage.style.transform = over ? `translate3d(0, ${-Math.min(over, innerHeight)}px, 0)` : '';
     stage.style.visibility = under ? 'hidden' : '';
     reading = over && feed ? feed.read() : '';
-    // Only the mark at rest is a link; once scrolling in, the pictures are not.
+    // Only the mark at rest is a link; once scrolling in, the pictures are not,
+    // and the header and the studio's line along the bottom go.
     if (stage.inert !== target > 0) stage.inert = target > 0;
+    document.body.classList.toggle('is-diving', target > 0);
   }
 
   // The mark's zoom and offset for the dive at view.t, and the pictures' zoom.
@@ -195,7 +194,6 @@ if (stage && framesEl) {
     shown = i;
     onScreen = slug;
     stage.href = `/work/${slug}/`;
-    if (titleEl) titleEl.textContent = titles[slug] ?? '';
     if (glass) return glass.setImage(picture);
     dirty = true;
     if (!slide.classList.contains('is-drawn')) {
@@ -292,7 +290,6 @@ if (stage && framesEl) {
   let refresh = 1000 / 60;
   let prev = 0;
   let ticks = 0;
-  let titleShows = -1;
 
   function tick(now) {
     const dt = prev ? Math.min(now - prev, 50) : 0;
@@ -341,9 +338,6 @@ if (stage && framesEl) {
       if (landed && over) reading = feed.read();
       feed.address(landed ? reading || onScreen : '');
     }
-    // The title shows as the cut slows.
-    const shows = dives && params.land ? Math.round(smooth(0.6, 0.95, view.e) * 100) / 100 : 0;
-    if (titleEl && shows !== titleShows) titleEl.style.opacity = titleShows = shows;
 
     if (dirty && !glass) { render(); dirty = false; }
     requestAnimationFrame(tick);

@@ -5,18 +5,21 @@
  * Authors write content in order and only place things when they care
  * (`size: half-left`, or `colStart`/`colSpan`). Everything unplaced is set by
  * rules, so pages vary without anyone laying them out by hand. Pictures go as
- * on jonasjohansson.se, full width or two to a row, with text beside them:
+ * on jonasjohansson.se, full width or side by side, with text beside them:
  *
  *  - an image and a short text next to each other share a row, image and text
  *    on alternating sides, text sitting on the image's baseline;
  *  - a landscape image takes the full width;
- *  - two portrait (or square) images in a row stand side by side, sharing the
- *    width in proportion to their shapes, so both are the same height and
- *    neither is cropped; a portrait left over takes one of two columns;
+ *  - a run of portrait (or square) images stands side by side, up to four to
+ *    a row and the rows as even as they can be, sharing the width in
+ *    proportion to their shapes, so all stand the same height and none is
+ *    cropped; a portrait on its own takes one of two columns;
+ *  - images placed side by side across all twelve columns stay one row, the
+ *    same way;
  *  - a lone text alternates between two reading columns.
  *
- * A cell is { block, start, span }, spans in whole columns; a cell of a pair
- * is { block, vw }, its share of the width in percent.
+ * A cell is { block, start, span }, spans in whole columns; a cell of a group
+ * (side by side) is { block, vw }, its share of the width in percent.
  */
 
 export const SIZES = {
@@ -38,16 +41,32 @@ const CAPTION_MAX = 700;
 const isMedia = (b) => b?.type === 'image' || b?.type === 'video';
 const placed = (b) => b.size || b.colStart || b.colSpan;
 const portrait = (b) => b.ar < 0.95;
-const tall = (b) => b.ar <= 1; // pairs up, rather than taking the full width
+const tall = (b) => b.ar <= 1; // stands beside others, rather than taking the full width
 const cell = (block, [start, span]) => ({ block, start, span });
-const pair = (a, b) => ({
-  kind: 'pair',
-  cells: [a, b].map((block) => ({ block, vw: Math.round((block.ar / (a.ar + b.ar)) * 100) })),
-});
+const PER_ROW = 4;
+
+/** Side by side, each as wide as its shape asks, so all stand the same height. */
+function group(items) {
+  const sum = items.reduce((total, b) => total + b.ar, 0);
+  return { kind: 'group', cells: items.map((block) => ({ block, vw: Math.round((block.ar / sum) * 100) })) };
+}
 
 function explicit(b) {
   const [start, span] = SIZES[b.size] ?? [b.colStart ?? 1, b.colSpan ?? 12];
   return [b.colStart ?? start, b.colSpan ?? span];
+}
+
+/** How many placed images from i tile one row from column 1 to 12 (0 if none do). */
+function authoredRow(blocks, i) {
+  let column = 1;
+  let n = 0;
+  while (isMedia(blocks[i + n]) && placed(blocks[i + n]) && column < 13) {
+    const [start, span] = explicit(blocks[i + n]);
+    if (start !== column) break;
+    column += span;
+    n++;
+  }
+  return column === 13 ? n : 0;
 }
 
 export function compose(project) {
@@ -86,10 +105,10 @@ export function compose(project) {
     } else if (b.type === 'text') {
       rows.push({ kind: 'text', cells: [cell(b, placed(b) ? explicit(b) : TEXT_SOLO[text++ % 2])] });
     } else if (placed(b)) {
-      // Authored pairs stay pairs: half-left followed by half-right is one row.
-      if (b.size?.endsWith('-left') && next && isMedia(next) && next.size?.endsWith('-right')) {
-        rows.push({ kind: 'media', cells: [cell(b, explicit(b)), cell(next, explicit(next))] });
-        i++;
+      const run = authoredRow(blocks, i);
+      if (run > 1) {
+        rows.push(group(blocks.slice(i, i + run)));
+        i += run - 1;
       } else {
         const [start, span] = explicit(b);
         rows.push({ kind: span === 12 ? 'full' : 'media', cells: [cell(b, [start, span])] });
@@ -97,11 +116,22 @@ export function compose(project) {
     } else if (next?.type === 'text' && !placed(next) && next.content.length <= CAPTION_MAX) {
       rows.push(caption(b, next));
       i++;
-    } else if (tall(b) && isMedia(next) && !placed(next) && tall(next)) {
-      rows.push(pair(b, next));
-      i++;
     } else if (tall(b)) {
-      rows.push({ kind: 'media', cells: [cell(b, HALVES[half++ % 2])] });
+      let end = i;
+      while (isMedia(blocks[end + 1]) && !placed(blocks[end + 1]) && tall(blocks[end + 1])) end++;
+      const run = blocks.slice(i, end + 1);
+      if (run.length === 1) {
+        rows.push({ kind: 'media', cells: [cell(b, HALVES[half++ % 2])] });
+      } else {
+        // Five make three and two, not four and one.
+        const count = Math.ceil(run.length / PER_ROW);
+        for (let j = 0, at = 0; j < count; j++) {
+          const n = Math.floor(run.length / count) + (j < run.length % count ? 1 : 0);
+          rows.push(group(run.slice(at, at + n)));
+          at += n;
+        }
+      }
+      i = end;
     } else {
       rows.push({ kind: 'full', cells: [cell(b, [1, 12])] });
     }

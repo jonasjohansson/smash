@@ -12,7 +12,13 @@ layout: base.njk
   </div>
 </a>
 {% if not renderer %}
-<p class="dive-title" data-title aria-hidden="true"></p>
+{# At rest the landing says who SMASH is; the header along the top is the
+   site's own (base.njk). Both go as the dive starts. #}
+<footer class="landing-foot grid">
+  <p class="lf-who">Experience design studio, Stockholm</p>
+  <p class="lf-what">Interactive installations, projection mapping, immersive environments, stage design and animated film</p>
+  <a class="lf-mail" href="mailto:hello@smash.studio">hello@smash.studio</a>
+</footer>
 <div class="dive-track" data-track></div>
 <div class="dive-project" data-project></div>
 {% include "titles.njk" %}

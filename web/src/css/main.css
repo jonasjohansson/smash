@@ -112,21 +112,33 @@ b, strong { font-weight: inherit; }
 .dive-project:empty { display: none; }
 html:has(.home.can-dive) { scrollbar-width: none; }
 html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
-.dive-title {
+/* At rest, who SMASH is: the site's header along the top, the studio along
+   the bottom, over the mark. Both go as the dive starts (main.js). */
+.home.can-dive .site-header { display: grid; position: fixed; inset: 0 0 auto; z-index: 10; background: none; color: #fff; }
+.landing-foot {
   position: fixed;
-  left: var(--margin);
-  bottom: 28px;
+  inset: auto 0 0;
   z-index: 10;
-  margin: 0;
+  align-items: end;
+  padding-block: 24px;
   font-size: var(--t-small);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #fff;
-  /* Legible on a white picture too. */
-  text-shadow: 0 0 2px rgb(0 0 0 / 0.6), 0 0 12px rgb(0 0 0 / 0.4);
-  opacity: 0;
-  pointer-events: none;
 }
+.home:not(.can-dive) .landing-foot { display: none; }
+.lf-who { grid-column: 1 / span 3; }
+.lf-what { grid-column: 4 / span 6; opacity: 0.55; }
+.lf-mail { grid-column: 10 / span 3; justify-self: end; }
+/* A soft shade behind each, so the words hold over an edge-to-edge mark. */
+.home.can-dive .site-header { background: linear-gradient(rgb(0 0 0 / 0.6), transparent); }
+.landing-foot { padding-top: 48px; background: linear-gradient(transparent, rgb(0 0 0 / 0.6)); }
+.home.can-dive :is(.site-header, .landing-foot) {
+  text-shadow: 0 0 8px rgb(0 0 0 / 0.4);
+  transition: opacity 0.4s, visibility 0s;
+}
+.home.is-diving :is(.site-header, .landing-foot) { opacity: 0; visibility: hidden; transition: opacity 0.4s, visibility 0s 0.4s; }
+.home.light :is(.site-header, .landing-foot) { color: #111; text-shadow: none; background: none; }
 /* S: white ground instead of black. (A, invert, is drawn into the mask.) */
 .home.light { background: #fff; }
 /* H: the tweak panel, above the full-screen link. */
@@ -170,27 +182,21 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 
 /* ---- project page ------------------------------------------------------- */
 
-/* Projects are shown on black, as the landing is, with light text. */
-.project-page, .dive-project { --bg: #000; --ink: #ededed; --line: #262626; }
+/* Projects are shown on a dark ground, with light text. */
+.project-page, .dive-project { --bg: #161616; --ink: #f0f0f0; --muted: rgb(240 240 240 / 0.62); --line: rgb(240 240 240 / 0.16); }
 
 /* Each project on a dark tint of its own colour (data.md's `color`, or its
    cover's), so the next one is plain to see as it scrolls in: projects follow
    one another without end (feed.js), flush, the tint changing between them. */
-.project { background: color-mix(in oklab, var(--tint, var(--bg)) 20%, var(--bg)); padding-bottom: var(--row-gap); }
+.project { background: color-mix(in oklab, var(--tint, var(--bg)) 32%, var(--bg)); padding-bottom: var(--row-gap); }
 
 .project-head { padding-block: clamp(48px, 8vw, 128px) clamp(24px, 3vw, 48px); align-items: baseline; }
-/* Title, year and tags at one size; only the grey sets the facts apart. */
-.project-head > * { font-size: var(--t-title); line-height: 1; letter-spacing: -0.025em; }
-.project-title { grid-column: 1 / span 6; }
-.project-year, .project-tags { color: var(--muted); }
-.project-year { grid-column: 7 / span 2; }
-.project-tags { grid-column: 9 / span 4; }
-.project-tags::first-letter { text-transform: uppercase; }
+.project-title { grid-column: 1 / -1; font-size: var(--t-title); line-height: 1; letter-spacing: -0.025em; }
 
 /* Pictures on their own, or two to a row, run edge to edge, as on
    jonasjohansson.se; text, and pictures beside text, keep the margins. */
 .project-hero { margin: 0; }
-.row-full, .row-pair { padding-inline: 0; }
+.row-full, .row-group { padding-inline: 0; }
 .project-hero img, .project-hero video { max-height: calc(100svh - 48px); object-fit: cover; }
 
 .project-lead { margin-top: var(--row-gap); }
@@ -199,12 +205,12 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 
 .row { margin-top: var(--row-gap); align-items: end; }
 .row-media { align-items: start; }
-/* Two pictures side by side share the row in proportion to their shapes, so
+/* Pictures side by side share the row in proportion to their shapes, so
    they stand the same height, uncropped (as on jonasjohansson.se). */
-.row-pair { display: flex; gap: var(--gutter); align-items: flex-start; }
-.row-pair > .cell { flex: var(--ar) 1 0; min-width: 0; }
+.row-group { display: flex; gap: var(--gutter); align-items: flex-start; }
+.row-group > .cell { flex: var(--ar) 1 0; min-width: 0; }
 /* Pictures follow pictures closely; text keeps its air. */
-:is(.project-hero, .row-full, .row-pair) + :is(.row-full, .row-pair) { margin-top: var(--gutter); }
+:is(.project-hero, .row-full, .row-group) + :is(.row-full, .row-group) { margin-top: var(--gutter); }
 .row-caption .cell-text { align-self: end; }
 .cell-text .prose { max-width: 42ch; }
 .prose p + p { margin-top: 1em; }
@@ -253,17 +259,19 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
   .contact { grid-column: 11 / span 2; }
   [style*="--span"], .cell, .tile { grid-column: 1 / -1; }
   .row-media .cell + .cell, .row-caption .cell + .cell { margin-top: var(--gutter); }
-  .row-pair { flex-direction: column; }
-  .row-pair > .cell { flex: none; width: 100%; }
+  /* Two stack; three or four stay side by side. */
+  .row-group:not(.row-keeps) { flex-direction: column; }
+  .row-group:not(.row-keeps) > .cell { flex: none; width: 100%; }
   .row-caption .cell-text { margin-top: 16px; }
   .tile-media { aspect-ratio: 4 / 3; }
   .f-copy { grid-column: 1 / span 6; }
   .f-mail, .site-footer .f-mail { grid-column: 7 / span 6; justify-self: end; }
   .f-top { display: none; }
+  .lf-who { grid-column: 1 / span 6; }
+  .lf-what { display: none; }
+  .lf-mail { grid-column: 7 / span 6; }
   .page-title, .project-title, .lead, .studio-statement, .studio-about, .studio-list, .studio-list:first-of-type { grid-column: 1 / -1; }
   .page-meta { grid-column: 1 / -1; justify-self: start; margin-top: 12px; }
-  .project-year { grid-column: 1 / span 3; margin-top: 0.3em; }
-  .project-tags { grid-column: 4 / span 9; margin-top: 0.3em; }
   .next-label { grid-column: 1 / -1; }
   .next-title { grid-column: 1 / -1; margin-top: 12px; }
 }
