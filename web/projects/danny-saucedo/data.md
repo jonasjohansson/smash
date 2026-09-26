@@ -4,6 +4,7 @@ date: 2024-01-01
 smash: true
 category: originals
 caption: "Melodifestivalen"
+thumb: 03.jpg
 color: '#9b2500'
 tags:
   - mapping
