@@ -134,6 +134,9 @@ export default function (config) {
       picture: await image(path.join('team', p.picture), p.name, '(max-width: 720px) 33vw, 22vw'),
     })));
   });
+  // The typeface's specimen (/typeface/), kept with the font in type/.
+  config.addWatchTarget('../type/specimen.html');
+  config.addGlobalData('specimen', () => fs.readFile('../type/specimen.html', 'utf8'));
   // Stamped on every stylesheet and script address, so a page is never shown
   // with a stylesheet or script from an earlier build still in the browser's
   // cache (GitHub Pages lets them be kept for ten minutes).

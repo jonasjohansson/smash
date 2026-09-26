@@ -231,6 +231,7 @@ b, strong { font-weight: inherit; }
 .cta-side { grid-column: 9 / span 4; display: flex; flex-direction: column; gap: 1.6em; font-size: clamp(13px, 1.04vw, 16px); line-height: 1.6; text-transform: uppercase; -webkit-text-stroke: 0.05em currentColor; } /* as 600: only Neue Montreal's Regular is here, and not every browser makes it bold itself */
 .cta-social { display: flex; flex-direction: column; align-items: start; }
 .cta-address { margin: 0; }
+.cta-type { align-self: start; }
 .cta-mail { grid-column: 1 / -1; font: 400 clamp(32px, 7.4vw, 124px) / 1 var(--display); text-transform: uppercase; white-space: nowrap; }
 
 html:has(.home.can-dive) { scrollbar-width: none; }

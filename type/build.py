@@ -1,5 +1,5 @@
 """
-SMASH Slot: the typeface drawn from the SMASH mark, built from its rules.
+SMASH: the typeface drawn from the SMASH mark, built from its rules.
 
 Every letter is a small grid of cells on the mark's own measures (see
 web/src/js/mark.js): columns alternate bar and slot (1, 2 or 3 bars), rows
@@ -38,7 +38,7 @@ CAP = 700
 K = CAP / H  # mark units to font units
 KAPPA = 0.5523  # a quarter circle as one cubic
 
-# The letters, as in type/smash-slot-specimen.html. # is ink.
+# The letters, as in type/specimen.html. # is ink.
 G = {
     'A': '###/#.#/#.#/###/#.#/#.#/#.#', 'B': '###/#.#/#.#/##./#.#/#.#/###', 'C': '###/#.#/#../#../#../#.#/###',
     'D': '##./#.#/#.#/#.#/#.#/#.#/##.', 'E': '###/#.#/#../###/#../#.#/###', 'F': '###/#.#/#../###/#../#../#..',
@@ -198,7 +198,7 @@ def glyph_contours(rows, slot, pitch, crossbar, dotted=False, spur=None):
 
 def write_master(path, slot, pitch, crossbar, style):
     ufo = ufoLib2.Font()
-    ufo.info.familyName = 'SMASH Slot'
+    ufo.info.familyName = 'SMASH'
     ufo.info.styleName = style
     ufo.info.unitsPerEm = UPM
     ufo.info.capHeight = CAP
@@ -255,25 +255,25 @@ def main():
         a.tag, a.name, a.minimum, a.default, a.maximum = tag, name, lo, default, hi
         doc.addAxis(a)
     for style, p, loc in masters:
-        path = OUT / f'SMASHSlot-{style}.ufo'
+        path = OUT / f'SMASH-{style}.ufo'
         write_master(path, style=style, **p)
         src = SourceDescriptor()
         src.path = str(path)
         src.name = style
-        src.familyName = 'SMASH Slot'
+        src.familyName = 'SMASH'
         src.styleName = style
         src.location = {'Weight': loc['wght'], 'Width': loc['wdth'], 'Crossbar': loc['CRSB']}
         doc.addSource(src)
     for style, w in [('Light', 300), ('Regular', 500), ('Bold', 650), ('Heavy', 800)]:
         inst = InstanceDescriptor()
-        inst.familyName, inst.styleName = 'SMASH Slot', style
+        inst.familyName, inst.styleName = 'SMASH', style
         inst.location = {'Weight': w, 'Width': 100, 'Crossbar': 235.5}
         doc.addInstance(inst)
-    ds = OUT / 'SMASHSlot.designspace'
+    ds = OUT / 'SMASH.designspace'
     doc.write(ds)
     venv = Path(__file__).parent / '.venv' / 'bin'
     subprocess.run([str(venv / 'fontmake'), '-m', str(ds), '-o', 'variable', '--output-dir', str(OUT / 'fonts'), '--no-production-names'], check=True)
-    subprocess.run([str(venv / 'ufo2glyphs'), str(ds), '--output-path', str(OUT / 'SMASHSlot.glyphs')], check=True)
+    subprocess.run([str(venv / 'ufo2glyphs'), str(ds), '--output-path', str(OUT / 'SMASH.glyphs')], check=True)
 
 
 if __name__ == '__main__':
