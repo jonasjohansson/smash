@@ -13,26 +13,5 @@
     "name": "Emile Pascoe",
     "email": "emile@smash.studio",
     "picture": "emile-pascoe.jpg"
-  },
-  {
-    "name": "Jonas Johansson",
-    "email": null,
-    "picture": "jonas-johansson.jpg"
-  },
-  {
-    "name": "Rose Hallgren",
-    "email": null,
-    "picture": "rose-hallgren.jpg"
-  },
-  {
-    "name": "Harry",
-    "email": null,
-    "picture": null
-  },
-  {
-    "name": "Intern",
-    "mark": "?",
-    "email": "hello@smash.studio",
-    "picture": null
   }
 ]

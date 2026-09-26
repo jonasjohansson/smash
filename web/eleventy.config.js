@@ -125,13 +125,13 @@ export default function (config) {
     }));
   });
   // The people in the studio (team/team.json), each with a portrait from
-  // team/, in black and white (main.css); without one, a card with the name.
+  // team/, in black and white (main.css).
   config.addWatchTarget('team/');
   config.addGlobalData('team', async () => {
     const people = JSON.parse(await fs.readFile('team/team.json', 'utf8'));
     return Promise.all(people.map(async (p) => ({
       ...p,
-      picture: p.picture ? await image(path.join('team', p.picture), p.name, '(max-width: 720px) 50vw, 25vw') : null,
+      picture: await image(path.join('team', p.picture), p.name, '(max-width: 720px) 33vw, 22vw'),
     })));
   });
   // Stamped on every stylesheet and script address, so a page is never shown
