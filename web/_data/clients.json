@@ -2,37 +2,51 @@
   {
     "name": "Kanal 5",
     "project": "jagad",
-    "logo": "kanal5.svg"
+    "logo": "kanal5.svg",
+    "width": 512,
+    "height": 512
   },
   {
     "name": "TV4",
     "project": "vi-kommer-i-fred",
-    "logo": "tv4.svg"
+    "logo": "tv4.svg",
+    "width": 200,
+    "height": 200
   },
   {
     "name": "Melodifestivalen",
     "project": "danny-saucedo",
-    "logo": "melodifestivalen.svg"
+    "logo": "melodifestivalen.svg",
+    "width": 539,
+    "height": 71
   },
   {
     "name": "KTH",
     "project": "dome-conductor",
-    "logo": "kth.svg"
+    "logo": "kth.svg",
+    "width": 360,
+    "height": 180
   },
   {
     "name": "Tekniska museet",
     "project": "dome-conductor",
-    "logo": "tekniska-museet.png"
+    "logo": "tekniska-museet.png",
+    "width": 554,
+    "height": 104
   },
   {
     "name": "World Jewish Congress",
     "project": "heroes",
-    "logo": "world-jewish-congress.svg"
+    "logo": "world-jewish-congress.svg",
+    "width": 120,
+    "height": 51
   },
   {
     "name": "Raoul Wallenberg Academy",
     "project": "heroes",
-    "logo": "raoul-wallenberg-academy.svg"
+    "logo": "raoul-wallenberg-academy.svg",
+    "width": 341,
+    "height": 122
   },
   {
     "name": "Nobel Week Lights",
@@ -45,6 +59,8 @@
   {
     "name": "Sala kommun",
     "project": "sala-hjartslag",
-    "logo": "sala-kommun.png"
+    "logo": "sala-kommun.png",
+    "width": 147,
+    "height": 63
   }
 ]

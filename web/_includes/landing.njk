@@ -76,7 +76,7 @@ layout: base.njk
      the work (_data/clients.json; a logo file replaces a name when it is in). #}
   <section class="row clients" aria-label="Clients">
     <div class="clients-strip">
-      <div class="clients-run">{% for pass in [1, 2] %}{% for c in clients %}<a class="client" href="/{{ c.project }}/"{% if pass == 2 %} aria-hidden="true" tabindex="-1"{% endif %}>{% if c.logo %}<img src="/clients/{{ c.logo }}" alt="{{ c.name }}">{% else %}{{ c.name }}{% endif %}</a>{% endfor %}{% endfor %}</div>
+      <div class="clients-run">{% for pass in [1, 2] %}{% for c in clients %}<a class="client" href="/{{ c.project }}/"{% if pass == 2 %} aria-hidden="true" tabindex="-1"{% endif %}>{% if c.logo %}<img src="/clients/{{ c.logo }}" alt="{{ c.name }}" width="{{ c.width }}" height="{{ c.height }}">{% else %}{{ c.name }}{% endif %}</a>{% endfor %}{% endfor %}</div>
     </div>
   </section>
 </section>

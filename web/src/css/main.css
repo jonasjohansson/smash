@@ -218,7 +218,7 @@ b, strong { font-weight: inherit; }
 .home:not(.can-dive) .cta { display: none; }
 /* The typeface (typeface.njk): its name set in itself, its files, and the
    font to try, its five axes on sliders. */
-@font-face { font-family: "SMASH"; font-weight: 300 800; font-display: swap; src: url(/typeface/SMASH-VF.ttf) format("truetype"); }
+@font-face { font-family: "SMASH"; font-weight: 300 800; font-display: block; src: url(/typeface/SMASH-VF.ttf) format("truetype"); } /* preloaded where it is used (typeface.njk), so the lines never jump */
 .typeface { padding-block: clamp(32px, 4vw, 64px) var(--row-gap); }
 .typeface-head { align-items: end; row-gap: 24px; }
 .typeface-title { grid-column: 1 / span 6; margin: 0; font: 400 clamp(96px, 16vw, 280px) / 0.8 "SMASH", var(--display); color: var(--accent); }
@@ -252,6 +252,9 @@ b, strong { font-weight: inherit; }
 .cta-side { grid-column: 9 / span 4; display: flex; flex-direction: column; gap: 1.6em; font-size: clamp(13px, 1.04vw, 16px); line-height: 1.6; text-transform: uppercase; -webkit-text-stroke: 0.05em currentColor; } /* as 600: only Neue Montreal's Regular is here, and not every browser makes it bold itself */
 .cta-social { display: flex; flex-direction: column; align-items: start; }
 .cta-address { margin: 0; }
+/* Links in a list, each big enough to hit (24px). */
+.cta-social a, .cta-type, .typeface-files a, .category-nav a { min-height: 24px; }
+.cta-social a, .typeface-files a { display: block; }
 .cta-type { align-self: start; }
 .cta-mail { grid-column: 1 / -1; font: 400 clamp(32px, 7.4vw, 124px) / 1 var(--display); text-transform: uppercase; white-space: nowrap; }
 

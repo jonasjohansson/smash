@@ -226,10 +226,9 @@ if (stage && framesEl) {
   }
 
   const reel = document.querySelector('[data-reel]'); // SMASH's reel, where the dive lands
-  // Fetched once the landing is in, or at the first scroll if sooner, so it is
-  // ready as soon as the dive begins.
+  // Fetched at the first scroll (or click), as the dive begins: it has until
+  // the film is due to come in, and no one who only looks is sent its 4 MB.
   const wantReel = () => { if (reel && reel.preload !== 'auto') { reel.preload = 'auto'; reel.load(); } };
-  addEventListener('load', () => setTimeout(wantReel, 800), { once: true });
   let onReel = false;
   const decoded = new Map(); // frame index -> ImageBitmap
   const pending = new Set();
@@ -346,11 +345,12 @@ if (stage && framesEl) {
       const at = (n) => mctx.measureText(row.text.slice(0, n)).width * row.scale;
       const from = row.text.lastIndexOf(address);
       const left = row.x + at(from);
+      const h = Math.max(24, row.h); // big enough to hit, however small the row
       Object.assign(mail.style, {
         left: `${left}px`,
-        top: `${row.y}px`,
+        top: `${row.y - (h - row.h) / 2}px`,
         width: `${row.x + at(from + address.length) - left}px`,
-        height: `${row.h}px`,
+        height: `${h}px`,
       });
       mctx.restore();
     }
