@@ -16,11 +16,14 @@
   --line: #e6e6e6;
   --ground: #fff; /* the projects' ground */
   --accent: #f7b304; /* SMASH's deep yellow: on white, never for text */
-  --hero-pad: 1.2svh; /* round a hero, as round the mark on the landing */
+  --hero-pad: var(--margin); /* round a hero, as round the mark on the landing */
   --radius: 6px; /* a card's corners: the offerings, the projects' thumbnails */
 
   --cols: 12;
-  --margin: clamp(16px, 3.2vw, 56px);
+  /* The margin is the mark's stem: a slot, 20 of its 550 units, round a mark
+     that spans the rest of the width. Round the marks and the heroes, and at
+     the sides of the page, the room is the same. */
+  --margin: calc(100vw * 20 / 590);
   --gutter: clamp(12px, 1.4vw, 24px);
   --row-gap: clamp(56px, 9vw, 168px);
   --header: 72px;
@@ -44,7 +47,9 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 img, video { display: block; width: 100%; height: auto; }
-::selection { background: var(--accent); color: #111; }
+/* Selected text turns yellow, the ground left as it is, so tight lines
+   (the headings) are never covered by the next line's highlight. */
+::selection { background: transparent; color: var(--accent); }
 [hidden] { display: none !important; }
 picture { display: contents; }
 a { color: inherit; text-decoration: none; }
@@ -112,7 +117,14 @@ b, strong { font-weight: inherit; }
   -webkit-mask: url("/brand/smash-mask.svg") center / 100% 100% no-repeat;
   mask: url("/brand/smash-mask.svg") center / 100% 100% no-repeat;
 }
-.slide img, .slide canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.slide img, .slide canvas, .slide video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+/* The reel is drawn to the canvas (main.js); the element itself stays unseen. */
+.slide .reel { opacity: 0; pointer-events: none; }
+/* Dived in, the logo stands top left over the picture. */
+.landed-logo { position: fixed; z-index: 2; top: var(--margin); left: var(--margin); display: none; color: #fff; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
+.home.can-dive .landed-logo { display: block; }
+.landed-logo svg { display: block; height: clamp(24px, 2.4vw, 36px); width: auto; }
+.home.is-landed .landed-logo { opacity: 1; pointer-events: auto; }
 /* Once main.js has a picture it draws the mark itself: on a 2D canvas (v1),
    or in WebGL (v2). */
 .slide.is-drawn, .slide.is-glass { -webkit-mask: none; mask: none; }
@@ -158,6 +170,22 @@ b, strong { font-weight: inherit; }
   .pillar:hover { flex-grow: 1.45; }
 }
 .pillar:focus-visible { flex-grow: 1.45; outline: 2px solid var(--accent); outline-offset: 4px; }
+/* Clients, as on gentilhomme.com: a strip that runs on sideways (still for
+   reduced motion), names until their logos are in. */
+.row.clients { text-align: center; }
+.clients-title { margin: 0 0 clamp(40px, 5vw, 80px); font: 400 clamp(24px, 2.4vw, 36px) / 1 var(--font); text-transform: uppercase; }
+.clients-strip { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.clients-run { --gap: clamp(48px, 6vw, 120px); display: flex; align-items: center; width: max-content; gap: var(--gap); padding-right: var(--gap); animation: clients 45s linear infinite; }
+.clients-strip:hover .clients-run { animation-play-state: paused; }
+.client { font: 400 clamp(20px, 2vw, 32px) / 1 var(--font); text-transform: uppercase; white-space: nowrap; transition: color 0.3s; }
+.client:hover { color: var(--muted); }
+.client img { display: block; width: auto; height: clamp(32px, 3.4vw, 56px); }
+@keyframes clients { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) {
+  .clients-run { flex-wrap: wrap; justify-content: center; width: auto; padding: 0 var(--margin); animation: none; }
+  .clients-run [aria-hidden] { display: none; }
+}
+
 /* The way in (cta.njk), at the foot of the studio and of each offering, as
    on gentilhomme.com: SMASH yellow, an invitation, the address large. */
 .cta { position: relative; z-index: 1; background: var(--accent); color: #111; padding-block: clamp(80px, 12vw, 200px) clamp(40px, 5vw, 80px); }
@@ -170,7 +198,7 @@ b, strong { font-weight: inherit; }
 .about-contact { margin-top: 1.6em; }
 .cta-links { grid-column: 9 / span 4; display: flex; flex-direction: column; align-items: start; font-size: clamp(13px, 1.04vw, 16px); line-height: 1.6; text-transform: uppercase; }
 .cta-links a:hover, .cta-mail:hover { text-decoration: underline; text-decoration-thickness: 0.06em; text-underline-offset: 0.12em; }
-.cta ::selection { background: #111; color: var(--accent); }
+.cta ::selection, .pillar ::selection { color: #fff; }
 .cta-mail { grid-column: 1 / -1; font: 400 clamp(28px, 5.8vw, 96px) / 1 var(--font); text-transform: uppercase; white-space: nowrap; transition: color 0.3s; }
 
 html:has(.home.can-dive) { scrollbar-width: none; }

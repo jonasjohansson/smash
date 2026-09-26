@@ -8,6 +8,7 @@ layout: base.njk
 <a class="stage"{% if renderer %} data-renderer="{{ renderer }}"{% endif %} href="/{{ poster.slug }}/" data-stage aria-label="SMASH — see the work">
   <div class="slide">
     <img src="{{ poster.src }}" alt="" fetchpriority="high" data-frame>
+    <video class="reel" src="/reel/showreel.mp4" muted loop playsinline preload="none" aria-hidden="true" data-reel></video>
   </div>
 </a>
 {% if not renderer %}
@@ -15,6 +16,7 @@ layout: base.njk
    bottom, as on svartljus.se: main.js paints these words there, the pictures
    showing through them. The studio, not its people. Here they are for screen
    readers, and the email's link lies over its painted letters. #}
+<a class="landed-logo" href="/" data-top data-landed-logo aria-label="SMASH, back to the start">{% include "logo.svg" %}</a>
 <div class="info" data-info>
   <p data-row>Installations Projection mapping Immersive environments</p>
   <p data-row>Experience design studio Stockholm hello@smash.studio</p>
@@ -25,7 +27,7 @@ layout: base.njk
    scrolls away above it. The projects run on only from a project's page. #}
 <section class="about" aria-label="About SMASH">
   <div class="grid about-intro">
-    <h2 class="about-head">SMASH is an experience design studio in Stockholm</h2>
+    <h2 class="about-head">SMASH is the experience design studio in Stockholm</h2>
     <div class="about-text">
       <p>We make interactive installations, projection mapping, immersive environments and the digital work that carries them further.</p>
       <p>We take projects from the first idea to the last night of the run, designing for the room and for the crew who operates it at seven in the morning.</p>
@@ -45,6 +47,14 @@ layout: base.njk
     </a>
     {% endfor %}
   </div>
+  {# Who SMASH has made work for, from the projects' own texts, each leading to
+     the work (_data/clients.json; a logo file replaces a name when it is in). #}
+  <section class="row clients" aria-labelledby="clients">
+    <h2 class="clients-title" id="clients">Clients</h2>
+    <div class="clients-strip">
+      <div class="clients-run">{% for pass in [1, 2] %}{% for c in clients %}<a class="client" href="/{{ c.project }}/"{% if pass == 2 %} aria-hidden="true" tabindex="-1"{% endif %}>{% if c.logo %}<img src="/clients/{{ c.logo }}" alt="{{ c.name }}">{% else %}{{ c.name }}{% endif %}</a>{% endfor %}{% endfor %}</div>
+    </div>
+  </section>
 </section>
 {% include "cta.njk" %}
 {% endif %}

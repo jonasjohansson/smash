@@ -41,8 +41,7 @@ const DIVE_DEFAULTS = {
   invert: true, // the pictures through the slots and round the mark, the block white (A)
   light: true, // on white, as the projects are (S)
   info: true, // who SMASH is, in rows of the mask along the top and bottom
-  infoSize: 0.03, // each row's height, of the screen's
-  infoGap: 0.012, // between the rows and the mark
+  infoSize: 0.03, // each row's height, of the screen's (the room round them is a slot's width)
 };
 
 const stage = document.querySelector('[data-stage]');
@@ -129,6 +128,7 @@ if (stage && framesEl) {
   let target = 0;
   let over = 0; // px scrolled past the dive, into the project
   let under = false; // and the pictures scrolled out of sight: the cut rests
+  const logo = document.querySelector('[data-landed-logo]'); // shown once dived in
   const view = { t: 0, e: 0, s: 1, x: 0, y: 0, image: 1, fade: 0 };
 
   function track() {
@@ -143,6 +143,12 @@ if (stage && framesEl) {
     under = over >= innerHeight; // scrolled out of sight
     stage.style.transform = over ? `translate3d(0, ${-Math.min(over, innerHeight)}px, 0)` : '';
     stage.style.visibility = under ? 'hidden' : '';
+    // Dived in, the logo stands top left, and scrolls away with the picture.
+    if (logo) {
+      logo.style.transform = stage.style.transform;
+      document.body.classList.toggle('is-landed', target >= 1 && !under);
+    }
+    if (reel && target > 0 && reel.preload !== 'auto') { reel.preload = 'auto'; reel.load(); }
     document.body.classList.toggle('is-reading', under);
     // Only the mark at rest is a link; once scrolling in, the pictures are not,
     // and the header and the studio's line along the bottom go.
@@ -187,6 +193,8 @@ if (stage && framesEl) {
     if (k > 0) [frames[i], frames[k]] = [frames[k], frames[i]];
   }
 
+  const reel = document.querySelector('[data-reel]'); // SMASH's reel, where the dive lands
+  let onReel = false;
   const decoded = new Map(); // frame index -> ImageBitmap
   const pending = new Set();
   const broken = new Set();
@@ -215,7 +223,7 @@ if (stage && framesEl) {
     current = picture;
     shown = i;
     onScreen = slug;
-    stage.href = `/${slug}/`;
+    if (slug) stage.href = `/${slug}/`;
     if (glass) return glass.setImage(picture);
     dirty = true;
     if (!slide.classList.contains('is-drawn')) {
@@ -242,7 +250,8 @@ if (stage && framesEl) {
   // object-fit: cover, by hand, `zoom` times larger about the centre.
   function cover(picture, zoom) {
     const cw = canvas.width, ch = canvas.height;
-    const iw = picture.naturalWidth || picture.width, ih = picture.naturalHeight || picture.height;
+    const iw = picture.videoWidth || picture.naturalWidth || picture.width;
+    const ih = picture.videoHeight || picture.naturalHeight || picture.height;
     const scale = Math.max(cw / iw, ch / ih) * zoom;
     const w = iw * scale, h = ih * scale;
     ctx.drawImage(picture, (cw - w) / 2, (ch - h) / 2, w, h);
@@ -336,7 +345,7 @@ if (stage && framesEl) {
     const landed = dives && params.land && target >= 1;
     const hold = landed ? 1 : dives && params.land ? view.e : 0;
     const every = Math.max(1, Math.round((base * Math.pow(Math.max(1, HOLD / base), hold)) / refresh));
-    if (!document.hidden && !params.paused && !landed && !under && ++ticks >= every) {
+    if (!document.hidden && !params.paused && !landed && !under && !onReel && ++ticks >= every) {
       if (broken.has(next)) next = (next + 1) % frames.length;
       const bitmap = decoded.get(next);
       if (bitmap) {
@@ -349,6 +358,19 @@ if (stage && framesEl) {
       }
     }
     if (landed) sharpen();
+
+    // The dive ends on the reel: in its last stretch, the cut gives way to the
+    // reel's first frame; landed, it plays. It rests out of sight, and starts
+    // over when the cut comes back.
+    if (reel && !glass) {
+      const want = view.e > 0.92 && reel.readyState >= 2;
+      if (want && !onReel) { onReel = true; show(reel, -2, onScreen); }
+      else if (onReel && view.e <= 0.92) { onReel = false; reel.pause(); reel.currentTime = 0; ticks = every; }
+      const play = onReel && target >= 1 && !under && !document.hidden && (!slow || heard);
+      if (play && reel.paused) reel.play().catch(() => {});
+      else if (!play && !reel.paused) reel.pause();
+      if (onReel && !reel.paused) dirty = true;
+    }
 
     if (dirty && !glass) { render(); dirty = false; }
     requestAnimationFrame(tick);
@@ -370,6 +392,15 @@ if (stage && framesEl) {
       glide(trackEl.offsetHeight - innerHeight);
     });
   }
+
+  // Landed on the reel, a click gives it sound (and, with reduced motion, starts it).
+  let heard = false;
+  document.addEventListener('click', (e) => {
+    if (!onReel || target < 1 || under || e.target.closest?.('a, button, .about, .cta')) return;
+    heard = true;
+    reel.muted = !reel.muted;
+    if (reel.paused) reel.play().catch(() => {});
+  });
 
   let gliding = 0;
   function glide(to) {
@@ -449,7 +480,6 @@ if (stage && framesEl) {
       const info = pane.addFolder({ title: 'Info' });
       info.addBinding(params, 'info', { label: 'rows of text' });
       info.addBinding(params, 'infoSize', { label: 'row height', min: 0.01, max: 0.08, step: 0.001 });
-      info.addBinding(params, 'infoGap', { label: 'gap to the mark', min: 0, max: 0.05, step: 0.001 });
     }
 
     const slideshow = pane.addFolder({ title: 'Slideshow' });
