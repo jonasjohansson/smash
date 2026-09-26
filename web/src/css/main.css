@@ -138,6 +138,14 @@ b, strong { font-weight: inherit; }
 }
 .about-text { grid-column: 7 / span 6; font: 400 clamp(20px, 2.22vw, 34px) / 1.18 var(--serif); }
 .about-text p + p { margin-top: 0.8em; }
+/* The studio's three offerings, side by side, each name the mask of its
+   picture (below, with the projects' title masks). */
+.row.pillars { align-items: start; }
+.pillar { grid-column: span 4; }
+.pillar-media { position: relative; isolation: isolate; aspect-ratio: 4 / 5; overflow: hidden; }
+.pillar-media img { width: 100%; height: 100%; object-fit: cover; }
+.pillar-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.pillar .label { margin: clamp(12px, 1.4vw, 20px) 0 0; }
 .row.about-facts { align-items: start; font-size: var(--t-small); line-height: 1.8; }
 .about-facts dl { margin: 0; }
 .about-facts dt { color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
@@ -214,7 +222,7 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
    picture shows only through the letters (as the work does through the mark
    on the landing). The words stay for screen readers. */
 .has-hero { isolation: isolate; }
-.title-mask { position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: multiply; pointer-events: none; }
+.title-mask, .pillar-mask { position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: multiply; pointer-events: none; }
 /* A second pass turns that black into the projects' ground, so the hero is
    one surface with its page: screen leaves the letters' picture as it is. */
 .title-ground { mix-blend-mode: screen; }
@@ -292,6 +300,8 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
   .f-top { display: none; }
   .page-title, .project-title, .lead, .about-head, .about-text { grid-column: 1 / -1; }
   .about-facts dl + dl { margin-top: 28px; }
+  .pillar { grid-column: 1 / -1; }
+  .pillar + .pillar { margin-top: 40px; }
   .page-meta { grid-column: 1 / -1; justify-self: start; margin-top: 12px; }
   .next-label { grid-column: 1 / -1; }
   .next-title { grid-column: 1 / -1; margin-top: 12px; }

@@ -32,6 +32,21 @@ layout: base.njk
       <p>We take projects from the first idea to the last night of the run, designing for the room and for the crew who operates it at seven in the morning.</p>
     </div>
   </div>
+  {# The studio's three offerings, each name the mask of a picture from its
+     kind of work, as a project's title is of its hero (eleventy.config.js;
+     main.js fits the letters to the picture's edges). #}
+  <div class="row grid pillars">
+    {% for p in pillars %}
+    <section class="pillar">
+      <h3 class="pillar-name">{{ p.name }}</h3>
+      <div class="pillar-media">
+        {{ p.picture | safe }}
+        {% for ground in [false, true] %}<svg class="pillar-mask{% if ground %} title-ground{% endif %}" viewBox="0 0 1000 1000" preserveAspectRatio="none" data-gap="{{ p.gap }}" aria-hidden="true"><rect x="-99999" y="-99999" width="199999" height="199999" fill="{{ '#fff' if ground else '#000' }}"/>{% for line in p.lines %}<text font-family="Anton" font-size="100" fill="{{ '#000' if ground else '#fff' }}" transform="{{ line.transform }}">{{ line.text }}</text>{% endfor %}</svg>{% endfor %}
+      </div>
+      <p class="label">{{ p.note }}</p>
+    </section>
+    {% endfor %}
+  </div>
   <div class="row grid about-facts">
     <dl style="--start: 1; --span: 3"><dt>Work</dt><dd>Interactive installations</dd><dd>Projection mapping</dd><dd>Immersive environments</dd><dd>Stage design</dd><dd>Animated film</dd></dl>
     <dl style="--start: 4; --span: 3"><dt>Contact</dt><dd><a href="mailto:hello@smash.studio">hello@smash.studio</a></dd><dd>Stockholm</dd></dl>

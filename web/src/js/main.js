@@ -7,9 +7,10 @@
 // Scrolling dives into the mark, like the Marvel intro run backwards: the mark
 // comes at you (on a log scale, so every stretch of the approach takes as long)
 // through the gap between the M and the A, until its edges pass the edges of
-// the screen and the pictures fill it. The cut slows as you go and lands on
-// one project; the pictures, further back, grow a little
-// less than the mark does. Reduced motion dissolves the mark instead.
+// the screen and the pictures fill it, the cut running on all the while (with
+// `land`, it slows instead and stops on one picture); the pictures, further
+// back, grow a little less than the mark does. Reduced motion dissolves the
+// mark instead.
 // Landed, the address becomes the project's, and scrolling on reads it: its
 // page (/<slug>/) is fetched and set below the picture, which scrolls away,
 // and the next project follows it, and the next, without end; the address
@@ -23,9 +24,12 @@
 // The modules come from the same build as this script: its address carries
 // the build's stamp (base.njk), and so do theirs.
 const build = new URL(import.meta.url).search;
-const { DEFAULTS, buildMark, markShape, paintMark, paintInfo, diveFocus, toDataUrl, INFO_FONT } = await import(`./mark.js${build}`);
+const { DEFAULTS, buildMark, markShape, paintMark, paintInfo, diveFocus, toDataUrl } = await import(`./mark.js${build}`);
 const { GLASS_DEFAULTS, createGlass } = await import(`./glass.js${build}`);
-const { createFeed, page, first } = await import(`./feed.js${build}`);
+const { createFeed, page, first, fitLines, typeface } = await import(`./feed.js${build}`);
+
+// The studio's offerings, under its introduction: each name the mask of its picture.
+document.querySelectorAll('.pillar-mask').forEach(fitLines);
 
 const AHEAD = 24;
 const PARALLEL = 6;
@@ -34,7 +38,7 @@ const HOLD = 3000; // ms per image just before the dive lands
 const DIVE_DEFAULTS = {
   length: 2, // screens of scrolling from the mark to the pictures
   parallax: 1.15, // how much the pictures have grown when the mark has passed
-  land: true, // slow the cut to a stop as the dive goes in
+  land: false, // slow the cut to a stop as the dive goes in, or let it run on
   light: true, // on white, as the projects are (S)
   info: true, // who SMASH is, in rows of the mask along the top and bottom
   infoSize: 0.03, // each row's height, of the screen's
@@ -125,6 +129,7 @@ if (stage && framesEl) {
   // frame so a mouse wheel's steps glide like a trackpad.
   let target = 0;
   let over = 0; // px scrolled past the dive, into the project
+  let under = false; // and the pictures scrolled out of sight: the cut rests
   const view = { t: 0, e: 0, s: 1, x: 0, y: 0, image: 1, fade: 0 };
 
   function track() {
@@ -136,7 +141,7 @@ if (stage && framesEl) {
     // The landed picture is the project's hero: past the dive it scrolls away
     // with the page, and the project follows right below.
     over = Math.max(0, scrollY - max);
-    const under = over >= innerHeight; // scrolled out of sight
+    under = over >= innerHeight; // scrolled out of sight
     stage.style.transform = over ? `translate3d(0, ${-Math.min(over, innerHeight)}px, 0)` : '';
     stage.style.visibility = under ? 'hidden' : '';
     document.body.classList.toggle('is-reading', under);
@@ -145,7 +150,6 @@ if (stage && framesEl) {
     // and the header and the studio's line along the bottom go.
     if (stage.inert !== target > 0) stage.inert = target > 0;
     document.body.classList.toggle('is-diving', target > 0);
-    // Landed: the picture carries its project's title (only with the cut stopped).
   }
 
   // The mark's zoom and offset for the dive at view.t, and the pictures' zoom.
@@ -336,13 +340,14 @@ if (stage && framesEl) {
       dirty = maskDirty = true;
     }
 
-    // The cut slows on a log scale as the dive goes in, and stops once the
-    // scroll reaches the end of the dive (the picture follows a moment later).
+    // With `land`, the cut slows on a log scale as the dive goes in, and stops
+    // once the scroll reaches the end of the dive (the picture follows a moment
+    // later); without, it runs on at its pace.
     const base = slow ? 2500 : params.speed;
     const landed = dives && params.land && target >= 1;
     const hold = landed ? 1 : dives && params.land ? view.e : 0;
     const every = Math.max(1, Math.round((base * Math.pow(Math.max(1, HOLD / base), hold)) / refresh));
-    if (!document.hidden && !params.paused && !landed && ++ticks >= every) {
+    if (!document.hidden && !params.paused && !landed && !under && ++ticks >= every) {
       if (broken.has(next)) next = (next + 1) % frames.length;
       const bitmap = decoded.get(next);
       if (bitmap) {
@@ -376,15 +381,7 @@ if (stage && framesEl) {
     addEventListener('scroll', track, { passive: true });
     poster.decode().then(() => { if (!current) show(poster, -1, stage.pathname.split('/').at(-2)); }).catch(() => {});
     // The rows wait for their typeface rather than flash another.
-    const face = document.querySelector('[data-info-font]');
-    new Promise((resolve) => {
-      if (!face || face.sheet) return resolve();
-      face.addEventListener('load', resolve, { once: true });
-      face.addEventListener('error', resolve, { once: true });
-    })
-      .then(() => document.fonts.load(`40px ${INFO_FONT}`, infoRows.join(' ')))
-      .catch(() => {})
-      .then(() => { infoReady = true; dirty = maskDirty = true; });
+    typeface(infoRows.join(' ')).then(() => { infoReady = true; dirty = maskDirty = true; });
   }
   fit();
   addEventListener('resize', fit);

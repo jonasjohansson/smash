@@ -1,3 +1,4 @@
+import path from 'node:path';
 import Image from '@11ty/eleventy-img';
 import markdownIt from 'markdown-it';
 import { listed, readProjects } from './scripts/projects.js';
@@ -89,6 +90,33 @@ export default function (config) {
     const first = projects.filter((p) => p.featured).sort((a, b) => a.featured - b.featured)[0]
       ?? projects.find((p) => p.cover?.ar > 1.2) ?? projects[0];
     return { slug: first.slug, src: await imageSrc(first.cover.src, 1280, 'webp') };
+  });
+  // The studio's three offerings, under its introduction on the landing: each
+  // its name in lines (the mask of its picture), what it covers, and a picture
+  // from one of its projects.
+  const PILLARS = [
+    { name: 'Experience Design', note: 'Museum work', from: 'dome-conductor', src: 'dome-orchestra.jpg' },
+    { name: 'Digital Interactive', note: 'Digital installations', from: 'jagad', src: 'joystick-hero.jpg' },
+    { name: 'SMASH Originals', note: 'Projection pieces', from: 'resonance', src: '01.jpg' },
+  ];
+  const GAP = 40; // between a name's lines, of the picture's 1000
+  const sizes = (k) => `(max-width: 720px) ${Math.ceil(100 * k)}vw, ${Math.ceil(33 * k)}vw`;
+  config.addGlobalData('pillars', async () => {
+    const projects = await readProjects('projects');
+    return Promise.all(PILLARS.map(async (p) => {
+      const block = projects.find((q) => q.slug === p.from)?.blocks.find((b) => b.type === 'image' && path.basename(b.src) === p.src);
+      if (!block) throw new Error(`The ${p.name} picture, ${p.from}/${p.src}, is not an image of a project on the site`);
+      const words = p.name.split(' ');
+      const h = (1000 - GAP * (words.length - 1)) / words.length;
+      return {
+        ...p,
+        gap: GAP,
+        // Until the typeface is in (feed.js fits each line to its ink), a guess from the length.
+        lines: words.map((w, i) => ({ text: w.toUpperCase(), transform: `translate(0 ${i * (h + GAP) + h}) scale(${1000 / (w.length * 41)} ${h / 88})` })),
+        // Cropped to the pillar's 4:5, a wider picture is drawn wider than its box.
+        picture: await image(block.src, block.alt ?? '', sizes(Math.max(1, (block.ar * 5) / 4))),
+      };
+    }));
   });
   // Stamped on every stylesheet and script address, so a page is never shown
   // with a stylesheet or script from an earlier build still in the browser's

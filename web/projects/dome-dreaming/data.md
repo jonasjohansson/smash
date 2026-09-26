@@ -1,7 +1,6 @@
 ---
 title: Dome Dreaming
 date: 2026-05-01
-smash: true
 caption: "Wisdome Stockholm and Malmö"
 color: '#c75200'
 tags:

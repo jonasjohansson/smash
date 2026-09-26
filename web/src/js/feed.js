@@ -34,24 +34,77 @@ export function page(slug) {
   return request;
 }
 
+// The masks' typeface. Its stylesheet (base.njk, data-info-font) has to be in
+// before the typeface can be asked for, and WebKit runs this module before it
+// is: asked too soon, the answer is that there is no such typeface yet.
+const FONT = 'Anton';
+const sheet = new Promise((resolve) => {
+  const link = document.querySelector('link[data-info-font]');
+  if (!link || link.sheet) return resolve();
+  link.addEventListener('load', resolve, { once: true });
+  link.addEventListener('error', resolve, { once: true });
+});
+export const typeface = (text) => sheet.then(() => document.fonts.load(`100px ${FONT}`, text)).catch(() => {});
+
+// The ink of `text` set at 100px: left of and right of the origin, above and
+// below the baseline. Read from its pixels, set large: WebKit's measureText
+// gives the advance for the sides, not the ink.
+const LARGE = 200;
+const ruler = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+function ink(text) {
+  ruler.font = `${LARGE}px ${FONT}`;
+  const pad = LARGE / 2, base = LARGE * 1.5;
+  const w = Math.ceil(ruler.measureText(text).width + 2 * pad), h = LARGE * 2;
+  Object.assign(ruler.canvas, { width: w, height: h }); // clears it, and its font
+  ruler.font = `${LARGE}px ${FONT}`;
+  ruler.fillText(text, pad, base);
+  const px = ruler.getImageData(0, 0, w, h).data;
+  let x0 = w, x1 = -1, y0 = h, y1 = -1;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (px[(y * w + x) * 4 + 3] < 128) continue;
+      if (x < x0) x0 = x;
+      if (x > x1) x1 = x;
+      if (y < y0) y0 = y;
+      y1 = y;
+    }
+  }
+  if (x1 < 0) return null;
+  const k = 100 / LARGE;
+  return { left: (pad - x0) * k, right: (x1 + 1 - pad) * k, up: (base - y0) * k, down: (y1 + 1 - base) * k };
+}
+
 // A project's title as the mask of its hero (project.njk): its letters sized
 // by their ink, so that stretched over the hero they meet its edges exactly,
 // accents and all. Until the typeface is in, a guess from the length stands.
-const FONT = 'Anton';
-const ruler = document.createElement('canvas').getContext('2d');
 export async function fitTitle(svg) {
   const text = svg?.querySelector('text');
   const words = text?.textContent;
   if (!words) return;
-  await document.fonts.load(`100px ${FONT}`, words).catch(() => {});
+  await typeface(words);
   if (text.textContent !== words) return; // changed while the typeface loaded
-  ruler.font = `100px ${FONT}`;
-  const m = ruler.measureText(words);
-  const w = m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
-  const h = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent;
-  if (w > 0 && h > 0) svg.setAttribute('viewBox', `${-m.actualBoundingBoxLeft} ${-m.actualBoundingBoxAscent} ${w} ${h}`);
+  const m = ink(words);
+  if (m) svg.setAttribute('viewBox', `${-m.left} ${-m.up} ${m.left + m.right} ${m.up + m.down}`);
 }
 export const fitTitles = (root) => root.querySelectorAll('.title-mask').forEach(fitTitle);
+
+// A name in lines as the mask of a picture (the studio's offerings, on the
+// landing): in a 1000 × 1000 viewBox stretched over the picture, each line's
+// ink meets both sides, and the lines share the height, `data-gap` apart.
+export async function fitLines(svg) {
+  const lines = [...svg.querySelectorAll('text')];
+  const words = lines.map((t) => t.textContent).join(' ');
+  if (!words.trim()) return;
+  await typeface(words);
+  const gap = Number(svg.dataset.gap) || 0;
+  const h = (1000 - gap * (lines.length - 1)) / lines.length;
+  lines.forEach((t, i) => {
+    const m = ink(t.textContent);
+    if (!m) return;
+    const sx = 1000 / (m.left + m.right), sy = h / (m.up + m.down);
+    t.setAttribute('transform', `translate(${m.left * sx} ${i * (h + gap) + m.up * sy}) scale(${sx} ${sy})`);
+  });
+}
 
 // Videos play only while on screen: the feed only grows, and every copy left
 // playing above the reader would go on decoding.
