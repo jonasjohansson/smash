@@ -29,18 +29,18 @@ layout: base.njk
     <div class="about-text">
       <p>We make interactive installations, projection mapping, immersive environments and the digital work that carries them further.</p>
       <p>We take projects from the first idea to the last night of the run, designing for the room and for the crew who operates it at seven in the morning.</p>
+      <a class="cta-button about-contact" href="mailto:hello@smash.studio">Contact</a>
     </div>
   </div>
   {# The studio's offerings (categories/): tall pictures side by side, each
      named at its foot and leading to its page, as on gentilhomme.com. One
-     hovered widens and says what it covers. #}
+     hovered widens. #}
   <div class="row pillars">
     {% for c in categories %}
     <a class="pillar" href="/{{ c.slug }}/">
       {{ c.picture | safe }}
       <span class="pillar-text">
         <span class="pillar-name">{% for w in c.words %}<span>{{ w }}</span>{% if not loop.last %} {% endif %}{% endfor %}</span>
-        <span class="pillar-note">{{ c.note }}</span>
       </span>
     </a>
     {% endfor %}

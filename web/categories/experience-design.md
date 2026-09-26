@@ -1,7 +1,6 @@
 ---
 name: Experience Design
 order: 1
-note: Museum work
 label: The work
 picture: dome-conductor/dome-experience.jpg
 ---

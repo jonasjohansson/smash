@@ -1,7 +1,6 @@
 ---
-name: SMASH Originals
+name: Originals
 order: 3
-note: Projection pieces
 label: Philosophy
 picture: resonance/02.jpg
 ---

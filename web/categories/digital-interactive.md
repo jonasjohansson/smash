@@ -1,7 +1,6 @@
 ---
 name: Digital Interactive
 order: 2
-note: Digital installations
 label: The work
 picture: vi-kommer-i-fred/03.jpg
 ---

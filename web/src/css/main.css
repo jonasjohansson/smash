@@ -17,6 +17,7 @@
   --ground: #fff; /* the projects' ground */
   --accent: #f7b304; /* SMASH's deep yellow: on white, never for text */
   --hero-pad: 1.2svh; /* round a hero, as round the mark on the landing */
+  --radius: 6px; /* a card's corners: the offerings, the projects' thumbnails */
 
   --cols: 12;
   --margin: clamp(16px, 3.2vw, 56px);
@@ -145,33 +146,31 @@ b, strong { font-weight: inherit; }
 .about-text p + p { margin-top: 0.8em; }
 /* The studio's three offerings: tall pictures side by side, all but the
    screen's height, each named at its foot, as on gentilhomme.com. One hovered
-   widens, and says what it covers (on a touch screen it always does). */
+   widens. */
 .row.pillars { display: flex; align-items: stretch; gap: var(--gutter); padding-inline: var(--margin); }
-.pillar { position: relative; display: block; flex: 1 1 0; min-width: 0; height: calc(100svh - 2 * var(--margin)); overflow: hidden; color: #fff; transition: flex-grow 0.6s cubic-bezier(0.77, 0, 0.175, 1); }
+.pillar { position: relative; display: block; flex: 1 1 0; min-width: 0; height: calc(100svh - 2 * var(--margin)); overflow: hidden; border-radius: var(--radius); color: #fff; transition: flex-grow 0.6s cubic-bezier(0.77, 0, 0.175, 1); }
 .pillar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .pillar::after { content: ""; position: absolute; inset: 50% 0 0; background: linear-gradient(rgb(0 0 0 / 0), rgb(0 0 0 / 0.55)); pointer-events: none; }
-.pillar-text { position: absolute; z-index: 1; inset: auto 0 0; display: flex; flex-direction: column-reverse; padding: clamp(14px, 1.3vw, 24px); }
+.pillar-text { position: absolute; z-index: 1; inset: auto 0 0; padding: clamp(14px, 1.3vw, 24px); }
 .pillar-name { font: 400 clamp(20px, 1.9vw, 34px) / 1.14 var(--font); text-transform: uppercase; color: var(--accent); }
 .pillar-name span { display: block; }
-.pillar-note { display: block; margin: 0 0 12px; color: var(--accent); font-size: var(--t-small); letter-spacing: 0.04em; text-transform: uppercase; opacity: 0; transform: translateY(6px); transition: opacity 0.4s, transform 0.6s var(--ease); }
 @media (hover: hover) {
   .pillar:hover { flex-grow: 1.45; }
-  .pillar:hover .pillar-note { opacity: 1; transform: none; }
 }
 .pillar:focus-visible { flex-grow: 1.45; outline: 2px solid var(--accent); outline-offset: 4px; }
-.pillar:focus-visible .pillar-note { opacity: 1; transform: none; }
-@media (hover: none) { .pillar-note { opacity: 1; transform: none; } }
 /* The way in (cta.njk), at the foot of the studio and of each offering, as
-   on gentilhomme.com: black, an invitation, the address large. */
-.cta { position: relative; z-index: 1; background: #111; color: #fff; padding-block: clamp(80px, 12vw, 200px) clamp(40px, 5vw, 80px); }
+   on gentilhomme.com: SMASH yellow, an invitation, the address large. */
+.cta { position: relative; z-index: 1; background: var(--accent); color: #111; padding-block: clamp(80px, 12vw, 200px) clamp(40px, 5vw, 80px); }
 .home:not(.can-dive) .cta { display: none; }
 .cta-inner { row-gap: clamp(24px, 3vw, 48px); align-items: start; }
 .cta-title { grid-column: 1 / span 8; margin: 0; font: 400 clamp(40px, 5.8vw, 96px) / 0.98 var(--font); text-transform: uppercase; }
 .cta-title > span { display: block; }
-.cta-button { display: inline-block; vertical-align: 0.3em; margin-left: 0.3em; padding: 0.45em 0.6em 0.4em; background: var(--accent); color: #111; font-size: clamp(13px, 1.04vw, 16px); line-height: 1; transition: background 0.3s; }
-.cta-button:hover { background: #fff; }
+.cta-button { display: inline-block; padding: 0.5em 0.7em 0.45em; background: var(--accent); color: #111; font: 400 clamp(14px, 1.2vw, 18px) / 1 var(--font); text-transform: uppercase; transition: background 0.3s, color 0.3s; }
+.cta-button:hover { background: #111; color: #fff; }
+.about-contact { margin-top: 1.6em; }
 .cta-links { grid-column: 9 / span 4; display: flex; flex-direction: column; align-items: start; font-size: clamp(13px, 1.04vw, 16px); line-height: 1.6; text-transform: uppercase; }
-.cta-links a:hover, .cta-mail:hover { color: var(--accent); }
+.cta-links a:hover, .cta-mail:hover { text-decoration: underline; text-decoration-thickness: 0.06em; text-underline-offset: 0.12em; }
+.cta ::selection { background: #111; color: var(--accent); }
 .cta-mail { grid-column: 1 / -1; font: 400 clamp(28px, 5.8vw, 96px) / 1 var(--font); text-transform: uppercase; white-space: nowrap; transition: color 0.3s; }
 
 html:has(.home.can-dive) { scrollbar-width: none; }
@@ -219,12 +218,11 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 .category-nav a:hover, .category-nav [aria-current] { color: var(--ink); }
 .category-nav [aria-current] { text-decoration: underline var(--accent) 3px; text-underline-offset: 0.18em; }
 .category-projects { padding-bottom: var(--row-gap); }
-.category-label { grid-column: 1 / -1; }
 .category-tiles { row-gap: clamp(40px, 5vw, 80px); align-items: start; }
 .category-projects .tile { grid-column: span 4; display: flex; flex-direction: column; }
 .category-projects .tile .label { margin-bottom: 8px; }
 .tile-title { margin-bottom: 14px; font: 400 clamp(18px, 1.5vw, 24px) / 1.2 var(--serif); }
-.category-projects .tile-media { aspect-ratio: 1; }
+.category-projects .tile-media { aspect-ratio: 1; border-radius: var(--radius); }
 
 /* ---- work index -------------------------------------------------------- */
 
