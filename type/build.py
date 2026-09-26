@@ -4,11 +4,14 @@ SMASH Slot: the typeface drawn from the SMASH mark, built from its rules.
 Every letter is a small grid of cells on the mark's own measures (see
 web/src/js/mark.js): columns alternate bar and slot (1, 2 or 3 bars), rows
 are top rail, upper stem, upper strip, middle rail, lower strip, lower stem
-and bottom rail. The outline of the inked cells is traced, and every inside
-corner is rounded the way the mark's are: a half circle where a counter ends
-against the top or bottom (flat against the middle rail, as in the logo's A
-and H), a sideways half circle where a counter ends against a bar, and the
-outer corner of every bend as wide as a slot.
+and bottom rail, and for Q a tail row under the baseline, a rail deep (so
+that Q is no wider than O). The outline of the inked cells is traced, and
+every inside corner is rounded the way the mark's are: a half circle where a
+counter ends against the top or bottom (flat against the middle rail, as in
+the logo's A and H), a sideways half circle where a counter ends against a
+bar, and the outer corner of every bend as wide as a slot. G breaks the grid a little:
+the end of its lower stroke turns in towards its back, a wedge three
+quarters of a slot long, so that it reads as G and not C.
 
 Three axes, all straight lines in the mark's numbers, so seven masters
 interpolate exactly:
@@ -39,10 +42,10 @@ KAPPA = 0.5523  # a quarter circle as one cubic
 G = {
     'A': '###/#.#/#.#/###/#.#/#.#/#.#', 'B': '###/#.#/#.#/##./#.#/#.#/###', 'C': '###/#.#/#../#../#../#.#/###',
     'D': '##./#.#/#.#/#.#/#.#/#.#/##.', 'E': '###/#.#/#../###/#../#.#/###', 'F': '###/#.#/#../###/#../#../#..',
-    'G': '#####/#...#/#..../#.###/#...#/#...#/#####', 'H': '#.#/#.#/#.#/###/#.#/#.#/#.#', 'I': '#/#/#/#/#/#/#',
+    'G': '###/#.#/#../#.#/#.#/#.#/###', 'H': '#.#/#.#/#.#/###/#.#/#.#/#.#', 'I': '#/#/#/#/#/#/#',
     'J': '..#/..#/..#/..#/#.#/#.#/###', 'K': '#.#../#.#../#.#../#####/#...#/#...#/#...#', 'L': '#../#../#../#../#../#../###',
     'M': '#####/#.#.#/#.#.#/#.#.#/#.#.#/#.#.#/#.#.#', 'N': '###/#.#/#.#/#.#/#.#/#.#/#.#', 'O': '###/#.#/#.#/#.#/#.#/#.#/###',
-    'P': '###/#.#/#.#/###/#../#../#..', 'Q': '###../#.#../#.#../#.#../#.#../#.#../#####', 'R': '###../#.#../#.#../#####/#...#/#...#/#...#',
+    'P': '###/#.#/#.#/###/#../#../#..', 'Q': '###/#.#/#.#/#.#/#.#/#.#/###/..#', 'R': '###../#.#../#.#../#####/#...#/#...#/#...#',
     'S': '###/#.#/#../###/..#/#.#/###', 'T': '#####/..#../..#../..#../..#../..#../..#..', 'U': '#.#/#.#/#.#/#.#/#.#/#.#/###',
     'V': '#...#/#...#/#...#/#...#/#...#/##.##/.###.', 'W': '#.#.#/#.#.#/#.#.#/#.#.#/#.#.#/#.#.#/#####',
     'X': '#...#/#...#/#####/..#../#####/#...#/#...#', 'Y': '#...#/#...#/#...#/#####/..#../..#../..#..', 'Z': '###/..#/..#/###/#../#../###',
@@ -56,6 +59,9 @@ G = {
 # Letters whose dot sits a slot under the stroke: the lower stem row shrinks
 # to that gap, the stroke running down to it.
 DOTTED = {'!', '?'}
+# Where a stroke's end turns in: the grid point at the top of the stroke's
+# inner side (row line, column line), and how far in, in slots.
+SPURS = {'G': ((3, 2), 0.75)}
 
 NAMES = {'.': 'period', '-': 'hyphen', "'": 'quotesingle', ':': 'colon', '!': 'exclam', '?': 'question',
          **{d: n for d, n in zip('0123456789', ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'])}}
@@ -69,6 +75,8 @@ def grid(rows, slot, pitch, crossbar, dotted=False):
         xs.append(xs[-1] + (slot if c % 2 else pitch - slot))
     up, lo = crossbar - GAP / 2, crossbar + GAP / 2
     ys = [0, INSET - slot / 2, up - slot / 2, up + slot / 2, lo - slot / 2, lo + slot / 2, H - INSET + slot / 2, H]
+    if len(rows) > 7:  # a tail under the baseline, a rail deep
+        ys.append(H + INSET - slot / 2)
     if dotted:
         ys[5] = ys[6] - slot
     return xs, ys
@@ -77,10 +85,10 @@ def grid(rows, slot, pitch, crossbar, dotted=False):
 def trace(rows):
     """The inked cells' outline as loops of grid points (row line, column line),
     ink on the right of every step (clockwise on screen)."""
-    n = len(rows[0])
-    ink = lambda r, c: 0 <= r < 7 and 0 <= c < n and rows[r][c] == '#'
+    n, m = len(rows[0]), len(rows)
+    ink = lambda r, c: 0 <= r < m and 0 <= c < n and rows[r][c] == '#'
     edges = set()
-    for r in range(7):
+    for r in range(m):
         for c in range(n):
             if not ink(r, c):
                 continue
@@ -123,7 +131,7 @@ def _dir(a, b):
     return ((b[0] > a[0]) - (b[0] < a[0]), (b[1] > a[1]) - (b[1] < a[1]))
 
 
-def glyph_contours(rows, slot, pitch, crossbar, dotted=False):
+def glyph_contours(rows, slot, pitch, crossbar, dotted=False, spur=None):
     """Contours in font units (y up), each a list of (x, y, type) points."""
     xs, ys = grid(rows, slot, pitch, crossbar, dotted)
     loops, ink = trace(rows)
@@ -135,6 +143,15 @@ def glyph_contours(rows, slot, pitch, crossbar, dotted=False):
             a, b = loop[i - 1], loop[(i + 1) % m]
             din, dout = _dir(a, v), _dir(v, b)  # (drow, dcol)
             vx, vy = xs[v[1]], ys[v[0]]
+            if spur and v == spur[0]:
+                # The stroke's end turns in: up its inner side to a quarter
+                # circle, which runs in to a point level with its top.
+                r = spur[1] * slot
+                pts.append((vx, vy + r, 'line'))
+                pts.append((vx, vy + r - KAPPA * r, None))
+                pts.append((vx - r + KAPPA * r, vy, None))
+                pts.append((vx - r, vy, 'curve'))
+                continue
             # A left turn (screen) is an inside corner of the ink.
             cross = din[1] * dout[0] - din[0] * dout[1]
             rad = 0
@@ -190,7 +207,7 @@ def write_master(path, slot, pitch, crossbar, style):
             g.unicodes = [ord(ch), ord(ch.lower())]
         else:
             g.unicodes = [ord(ch)]
-        contours, width = glyph_contours(rows, slot, pitch, crossbar, ch in DOTTED)
+        contours, width = glyph_contours(rows, slot, pitch, crossbar, ch in DOTTED, SPURS.get(ch))
         pen = g.getPointPen()
         for pts in contours:
             pen.beginPath()
