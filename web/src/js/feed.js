@@ -1,16 +1,15 @@
-// The endless feed of projects: after one project's page comes the next one's,
-// round all of them and on, and the address follows the one being read.
-// A project's own page is the start of one; so is the landing, once its dive
-// has landed (main.js).
+// The feed of projects: after one project's page comes the next one's, once
+// round the projects of its offering, and the address follows the one being
+// read. A project's own page is the start of one (main.js); when every one of
+// the round is in, the feed ends and the footer closes it.
 //
 // Each project's page is fetched once, and only its article is taken; a copy
-// goes into the feed, so a project can come round again. The order is the
-// site's, newest first, from the #titles list the page carries.
+// goes into the feed. The order is its offering's, newest first, from the
+// #titles list the page carries.
 
 const list = JSON.parse(document.getElementById('titles')?.textContent || '[]'); // [slug, title]
 export const titles = Object.fromEntries(list);
 const order = list.map(([slug]) => slug);
-export const first = order[0]; // the newest
 
 const RETRY = 5000; // ms before trying the network again
 const OFFLINE = Symbol('offline');
@@ -98,13 +97,15 @@ const inView = new IntersectionObserver((entries) => {
 });
 const watch = (article) => article.querySelectorAll('video[autoplay]').forEach((v) => inView.observe(v));
 
-export function createFeed(container) {
+// Projects go in before `end` (the footer), and `onEnd` is called once the
+// round is complete.
+export function createFeed(container, { end = null, onEnd } = {}) {
   const articles = () => container.querySelectorAll(':scope > .project');
   let feed = [...articles()].map((a) => a.dataset.slug);
   articles().forEach(watch);
   articles().forEach(fitTitles);
   let feeding = false; // one on its way
-  let missing = 0; // pages not there, in a row: give up after a few
+  let ended = false; // every one of the round is in
   let run = 0; // bumped whenever the feed starts over
   const home = location.pathname;
   const homeTitle = document.title;
@@ -117,7 +118,7 @@ export function createFeed(container) {
     });
     feed = [];
     feeding = false;
-    missing = 0;
+    ended = false;
   }
 
   // Resolves true once `slug` is in (or skipped, if it has no page); offline,
@@ -132,19 +133,25 @@ export function createFeed(container) {
       }
       feeding = false;
       feed.push(slug);
-      if (!article) { missing++; return true; }
-      missing = 0;
+      if (!article) return true;
       const copy = article.cloneNode(true);
-      container.append(copy);
+      container.insertBefore(copy, end);
       watch(copy);
       fitTitles(copy);
       return true;
     });
   }
 
-  // Keep a couple of screens of project ahead of the reader.
+  // Keep a couple of screens of project ahead of the reader, until the round
+  // is complete (a page that is not there counts as shown).
   function grow() {
-    if (!feed.length || feeding || missing >= 3 || container.getBoundingClientRect().bottom > innerHeight * 3) return;
+    if (!feed.length || feeding || ended) return;
+    if (order.every((slug) => feed.includes(slug))) {
+      ended = true;
+      onEnd?.();
+      return;
+    }
+    if (container.getBoundingClientRect().bottom > innerHeight * 3) return;
     const at = order.indexOf(feed.at(-1));
     append(order[(at + 1) % order.length]).then((ok) => ok && grow());
   }

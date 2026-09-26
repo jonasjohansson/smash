@@ -201,6 +201,7 @@ b, strong { font-weight: inherit; }
    links in SMASH yellow, the first two in the chunky face. */
 .cta { position: relative; z-index: 1; background: var(--ground); color: var(--accent); padding-block: var(--row-gap) clamp(40px, 5vw, 80px); }
 .home:not(.can-dive) .cta { display: none; }
+.js .project-page .cta:not(.is-end) { display: none; } /* until the feed has been round (feed.js) */
 .cta-inner { position: relative; row-gap: clamp(24px, 3vw, 48px); align-items: start; }
 .cta-title { grid-column: 1 / span 8; margin: 0; font: 400 clamp(48px, 7.4vw, 124px) / 0.92 var(--display); text-transform: uppercase; }
 .cta-title > span { display: block; }

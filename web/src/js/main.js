@@ -580,14 +580,15 @@ if (stage && framesEl) {
   });
 }
 
-// A project's own page is the start of the feed too: it carries on into the
-// next project, and the next, and the address follows the one being read. The
-// link to the next project and the footer are for pages without JavaScript.
+// A project's own page is the start of the feed: it carries on into the next
+// project of its offering, and the next, round all of them, and the address
+// follows the one being read. Then the footer (hidden until then, main.css)
+// closes it. The link to the next project is for pages without JavaScript.
 const own = !stage && document.querySelector('main > article.project');
 if (own) {
   own.querySelector('.next')?.remove();
-  document.querySelector('.site-footer')?.remove();
-  const feed = createFeed(own.parentElement);
+  const end = document.querySelector('main > .cta');
+  const feed = createFeed(own.parentElement, { end, onEnd: () => end?.classList.add('is-end') });
   const path = location.pathname;
   let queued = false;
   const follow = () => {

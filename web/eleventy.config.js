@@ -60,7 +60,13 @@ export default function (config) {
   config.addGlobalData('projects', async () => {
     const projects = (await readProjects('projects')).map((p) => ({ ...p, rows: compose(p) }));
     const index = indexLayout(projects);
-    return projects.map((p, i) => ({ ...p, tile: index[i], next: projects[(i + 1) % projects.length] }));
+    // A project's page goes once round the projects of its offering (feed.js),
+    // newest first; without JavaScript, by the link to the next of them.
+    return projects.map((p, i) => {
+      const round = p.category ? projects.filter((q) => q.category === p.category) : projects;
+      const next = round[(round.indexOf(p) + 1) % round.length];
+      return { ...p, tile: index[i], round: round.map(({ slug, title }) => ({ slug, title })), next: next === p ? null : next };
+    });
   });
   // The landing's slideshow: every image of every project, at two sizes, and
   // a third for the one the dive lands on, full screen.

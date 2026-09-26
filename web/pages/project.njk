@@ -2,6 +2,7 @@
 layout: base.njk
 section: work
 bodyClass: project-page
+fullscreen: true
 pagination:
   data: projects
   size: 1
@@ -10,8 +11,9 @@ permalink: "/{{ p.slug }}/"
 eleventyComputed:
   title: "{{ p.title }}"
 ---
-{# Scrolled to its end, the page carries on into the next project (feed.js);
-   the "Next project" link is for pages without JavaScript. #}
+{# Scrolled to its end, the page carries on into the next project of its
+   offering, round all of them, and then the footer (feed.js); the "Next
+   project" link is for pages without JavaScript. #}
 {% include "titles.njk" %}
 <article class="project" data-slug="{{ p.slug }}">
   {# The project opens on its hero picture, its title in the middle of it. #}
@@ -66,8 +68,11 @@ eleventyComputed:
   </div>
   {% endfor %}
 
+  {% if p.next %}
   <a class="next grid" href="/{{ p.next.slug }}/">
     <span class="next-label">Next project</span>
     <span class="next-title">{{ p.next.title }}</span>
   </a>
+  {% endif %}
 </article>
+{% include "cta.njk" %}
