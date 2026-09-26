@@ -10,14 +10,14 @@
 @font-face { font-family: "Season Mix"; font-weight: 400; font-style: italic; font-display: swap; src: url(/fonts/SeasonMix-RegularItalic.woff) format("woff"); }
 
 :root {
-  /* The ground follows the browser: white, or in dark mode a deep warm grey
-     with a hint of brown, to go with SMASH's yellow. */
-  --bg: #fff;
-  --ink: #111;
-  --muted: #8b8b8b;
-  --line: #e6e6e6;
-  --ground: #fff; /* the projects' ground */
-  --tile: #f2f2f2; /* a picture's place while it loads */
+  /* Black, in light and dark mode alike (the H panel can set another). */
+  color-scheme: dark;
+  --bg: #000;
+  --ink: #f3efe8;
+  --muted: rgb(243 239 232 / 0.55);
+  --line: rgb(243 239 232 / 0.14);
+  --ground: #000; /* the projects' ground */
+  --tile: #141414; /* a picture's place while it loads */
   --accent: #f7b304; /* SMASH's deep yellow: on white, never for text */
   --hero-pad: var(--margin); /* round a hero, as round the mark on the landing */
   --radius: 6px; /* a card's corners: the offerings, the projects' thumbnails */
@@ -41,9 +41,6 @@
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root { color-scheme: dark; --bg: #26231f; --ground: #26231f; --ink: #f3efe8; --muted: rgb(243 239 232 / 0.55); --line: rgb(243 239 232 / 0.14); --tile: #322e29; }
-}
 
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
