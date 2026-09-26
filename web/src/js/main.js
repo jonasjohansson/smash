@@ -37,7 +37,7 @@ const HOLD = 3000; // ms per image just before the dive lands
 const DIVE_DEFAULTS = {
   length: 2, // screens of scrolling from the mark to the pictures
   overlap: 0, // screens the page is already scrolling before the dive is through
-  reel: 0.04, // how far into the dive (of its scroll) the reel takes over from the cut
+  reel: 0.15, // how far into the dive (of its scroll) the reel takes over from the cut
   parallax: 1.15, // how much the pictures have grown when the mark has passed
   land: false, // slow the cut to a stop as the dive goes in, or let it run on
   invert: true, // the pictures through the slots and round the mark, the block white (A)
