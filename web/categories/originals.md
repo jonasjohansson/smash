@@ -1,5 +1,6 @@
 ---
 name: SMASH Originals
+mask: Originals
 order: 3
 note: Projection pieces
 label: Philosophy

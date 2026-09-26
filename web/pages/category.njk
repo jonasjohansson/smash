@@ -10,14 +10,19 @@ permalink: "/{{ c.slug }}/"
 eleventyComputed:
   title: "{{ c.name }}"
 ---
-{# One of the studio's offerings (categories/<slug>.md), as on gentilhomme.com:
-   its name with the others beside it, what it stands for, and its projects. #}
-<header class="grid category-head">
-  <h1 class="category-title">{% for w in c.words %}<span>{{ w }}</span>{% if not loop.last %} {% endif %}{% endfor %}</h1>
-  <nav class="category-nav" aria-label="What we do">
-    {% for o in categories %}<a href="/{{ o.slug }}/"{% if o.slug == c.slug %} aria-current="page"{% endif %}>{{ o.name }}</a>{% endfor %}
-  </nav>
+{# One of the studio's offerings (categories/<slug>.md): its picture, masked by
+   its name as a project's hero is by its title (main.js fits the letters),
+   the others beside it, what it stands for, and its projects. #}
+<header class="project-head has-hero">
+  <figure class="project-hero">{% image c.hero.src, c.hero.alt, "100vw", "eager" %}</figure>
+  <svg class="title-mask" viewBox="0 -88 {{ (c.mask | length) * 41 }} 89" preserveAspectRatio="none" aria-hidden="true"><rect x="-99999" y="-99999" width="199999" height="199999" fill="#000"/><text font-family="Anton" font-size="100" fill="#fff">{{ c.mask | upper }}</text></svg>
+  <svg class="title-mask title-ground" viewBox="0 -88 {{ (c.mask | length) * 41 }} 89" preserveAspectRatio="none" aria-hidden="true"><rect x="-99999" y="-99999" width="199999" height="199999" fill="#fff"/><text font-family="Anton" font-size="100" fill="#000">{{ c.mask | upper }}</text></svg>
+  <h1 class="project-title">{{ c.name }}</h1>
 </header>
+
+<nav class="grid category-nav" aria-label="What we do">
+  <div>{% for o in categories %}<a href="/{{ o.slug }}/"{% if o.slug == c.slug %} aria-current="page"{% endif %}>{{ o.name }}</a>{% endfor %}</div>
+</nav>
 
 <div class="grid project-lead">
   <div class="lead">

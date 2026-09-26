@@ -4,8 +4,7 @@ layout: base.njk
 {# Every image of every project, shuffled and cut fast behind the mark.
    The frame list is built in eleventy.config.js (async shortcodes lose
    arguments inside layouts). Scrolling dives into the mark, the length of
-   the track, lands on one picture, and goes on into the studio and then every
-   project (main.js); v2's glass does not. #}
+   the track, and goes on into the studio (main.js); v2's glass does not. #}
 <a class="stage"{% if renderer %} data-renderer="{{ renderer }}"{% endif %} href="/{{ poster.slug }}/" data-stage aria-label="SMASH — see the work">
   <div class="slide">
     <img src="{{ poster.src }}" alt="" fetchpriority="high" data-frame>
@@ -22,8 +21,8 @@ layout: base.njk
 </div>
 <a class="info-mail" href="mailto:hello@smash.studio" data-mail hidden>hello@smash.studio</a>
 <div class="dive-track" data-track></div>
-{# Past the dive, the studio first, then the projects, newest first
-   (feed.js). The landed picture scrolls away above it. #}
+{# Past the dive, the studio, and the page ends with it: the landed picture
+   scrolls away above it. The projects run on only from a project's page. #}
 <section class="about" aria-label="About SMASH">
   <div class="grid about-intro">
     <h2 class="about-head">SMASH is an experience design studio in Stockholm</h2>
@@ -51,7 +50,5 @@ layout: base.njk
     <dl style="--start: 4; --span: 3"><dt>Contact</dt><dd><a href="mailto:hello@smash.studio">hello@smash.studio</a></dd><dd>Stockholm</dd></dl>
   </div>
 </section>
-<div class="dive-project" data-project></div>
-{% include "titles.njk" %}
 {% endif %}
 <script type="application/json" id="frames">{{ frames | dump | safe }}</script>

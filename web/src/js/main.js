@@ -11,10 +11,9 @@
 // `land`, it slows instead and stops on one picture); the pictures, further
 // back, grow a little less than the mark does. Reduced motion dissolves the
 // mark instead.
-// Landed, the address becomes the project's, and scrolling on reads it: its
-// page (/<slug>/) is fetched and set below the picture, which scrolls away,
-// and the next project follows it, and the next, without end; the address
-// follows whichever one is being read.
+// Landed, scrolling on reads the studio (landing.njk): the picture scrolls
+// away above it, and the page ends with it. The projects run on without end
+// only on a project's own page (below).
 // (v2's glass stays a single screen.)
 //
 // Keys on the landing page: H opens the tweak panel (the mark is drawn from
@@ -26,7 +25,7 @@
 const build = new URL(import.meta.url).search;
 const { DEFAULTS, buildMark, markShape, paintMark, paintInfo, diveFocus, toDataUrl } = await import(`./mark.js${build}`);
 const { GLASS_DEFAULTS, createGlass } = await import(`./glass.js${build}`);
-const { createFeed, page, first, typeface } = await import(`./feed.js${build}`);
+const { createFeed, typeface, fitTitles } = await import(`./feed.js${build}`);
 
 const AHEAD = 24;
 const PARALLEL = 6;
@@ -84,8 +83,6 @@ if (stage && framesEl) {
   const mail = document.querySelector('[data-mail]');
   let infoReady = false; // the typeface has loaded
   const trackEl = document.querySelector('[data-track]');
-  const more = document.querySelector('[data-project]'); // the projects, below the dive
-  const feed = dives && more ? createFeed(more) : null;
 
   // ---- the mark ---------------------------------------------------------
 
@@ -142,7 +139,6 @@ if (stage && framesEl) {
     stage.style.transform = over ? `translate3d(0, ${-Math.min(over, innerHeight)}px, 0)` : '';
     stage.style.visibility = under ? 'hidden' : '';
     document.body.classList.toggle('is-reading', under);
-    reading = over && feed ? feed.read() : '';
     // Only the mark at rest is a link; once scrolling in, the pictures are not,
     // and the header and the studio's line along the bottom go.
     if (stage.inert !== target > 0) stage.inert = target > 0;
@@ -237,15 +233,6 @@ if (stage && framesEl) {
       .then((bitmap) => (shown === i ? show(bitmap, i, frames[i].slug) : bitmap.close()))
       .catch(() => {});
   }
-
-  // ---- the projects, below the dive ------------------------------------------
-
-  // Past the dive comes the studio (landing.njk), then the projects, newest
-  // first and on without end (feed.js). The address is the landing's until a
-  // project is being read, then that project's.
-
-  let reading = ''; // the project at the middle of the screen, once past the studio
-
 
   // object-fit: cover, by hand, `zoom` times larger about the centre.
   function cover(picture, zoom) {
@@ -356,16 +343,7 @@ if (stage && framesEl) {
         load();
       }
     }
-    if (feed) {
-      if (view.e > 0.8) page(first); // on its way before the studio is read
-      if (landed) sharpen();
-      if (target >= 1) {
-        if (!feed.length) feed.start(first);
-        feed.grow();
-      }
-      if (over) reading = feed.read();
-      feed.address(target >= 1 ? reading : '');
-    }
+    if (landed) sharpen();
 
     if (dirty && !glass) { render(); dirty = false; }
     requestAnimationFrame(tick);
@@ -498,6 +476,10 @@ if (own) {
   addEventListener('resize', soon);
   soon();
 }
+
+// An offering's page opens on its picture, masked by its name (category.njk).
+const offering = document.querySelector('.category-page .project-head');
+if (offering) fitTitles(offering);
 
 document.addEventListener('keydown', (e) => {
   if (e.key.toLowerCase() === 'g' && !e.metaKey && !e.ctrlKey && !typing(e)) {
