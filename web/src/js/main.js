@@ -131,6 +131,7 @@ if (stage && framesEl) {
   let target = 0;
   let over = 0; // px scrolled past the dive, into the project
   let under = false; // and the pictures scrolled out of sight: the cut rests
+  const intro = document.querySelector('.about-intro-wrap'); // its headline shows the film
   const view = { t: 0, e: 0, s: 1, x: 0, y: 0, image: 1, fade: 0 };
 
   // Where the dive is through: `overlap` screens past the end of the track,
@@ -145,9 +146,10 @@ if (stage && framesEl) {
     // pixel short: the last pixel counts as the end.
     target = end > 0 ? (scrollY >= end - 1 ? 1 : Math.max(0, scrollY / end)) : 0;
     // Past the track the film stays where it is, and the studio scrolls up
-    // over it (main.css), until it covers the screen.
+    // over it (main.css), until it covers the screen and the headline, which
+    // shows the film through its letters, has gone by.
     over = Math.max(0, scrollY - max);
-    under = over >= innerHeight; // covered
+    under = over >= innerHeight && !(intro && intro.getBoundingClientRect().bottom > 0); // covered
     stage.style.visibility = under ? 'hidden' : '';
     if (reel && target > 0 && reel.preload !== 'auto') { reel.preload = 'auto'; reel.load(); }
     document.body.classList.toggle('is-reading', under);

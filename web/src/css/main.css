@@ -102,8 +102,8 @@ b, strong { font-weight: inherit; }
 .logo svg { display: block; height: 30px; width: auto; }
 .nav { grid-column: 4 / span 6; display: flex; gap: 2.2em; }
 .contact { grid-column: 12; justify-self: end; }
-.nav a, .contact { opacity: 0.55; transition: opacity 0.2s; }
-.nav a:hover, .nav a[aria-current], .contact:hover { opacity: 1; }
+.nav a, .contact { opacity: 0.55; }
+.nav a[aria-current] { opacity: 1; }
 
 
 /* ---- home: one screen, and a dive into it ------------------------------
@@ -145,7 +145,19 @@ b, strong { font-weight: inherit; }
    flashes its black where the browser has yet to paint. */
 .home.is-reading { background: var(--ground); }
 /* The studio, between the dive and the projects. */
-.about { position: relative; z-index: 1; display: flow-root; background: var(--bg); color: var(--ink); padding-bottom: var(--row-gap); }
+/* No stacking context of its own and no ground under the intro, so the
+   headline can blend with the film behind it; the rest has the ground. */
+.about { position: relative; display: flow-root; color: var(--ink); }
+.about > .row { margin-top: 0; padding-top: var(--row-gap); background: var(--ground); }
+.about > :last-child { padding-bottom: var(--row-gap); }
+/* The headline cut out of the ground: black with white letters, multiplied
+   over the film, then the ground with black letters, screened over that; the
+   words themselves (for reading, selecting, and screen readers) lie on top. */
+.about-intro-wrap { position: relative; }
+.about-knock { position: absolute; inset: 0; background: #000; color: #fff; mix-blend-mode: multiply; pointer-events: none; }
+.about-knock-ground { background: var(--ground); color: #000; mix-blend-mode: screen; }
+.about-intro-wrap > .about-intro:last-child { position: relative; }
+.about-intro-wrap > .about-intro:last-child .about-head { color: transparent; }
 .home:not(.can-dive) .about { display: none; }
 /* The intro, striking: a chunky headline in the mask's capitals, the words
    beside it large. */
@@ -178,8 +190,7 @@ b, strong { font-weight: inherit; }
 .clients-strip { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
 .clients-run { --gap: clamp(48px, 6vw, 120px); display: flex; align-items: center; width: max-content; gap: var(--gap); padding-right: var(--gap); animation: clients 45s linear infinite; }
 .clients-strip:hover .clients-run { animation-play-state: paused; }
-.client { font: 400 clamp(20px, 2vw, 32px) / 1 var(--font); text-transform: uppercase; white-space: nowrap; transition: color 0.3s; }
-.client:hover { color: var(--muted); }
+.client { font: 400 clamp(20px, 2vw, 32px) / 1 var(--font); text-transform: uppercase; white-space: nowrap; }
 .client img { display: block; width: auto; height: clamp(32px, 3.4vw, 56px); }
 @keyframes clients { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) {
@@ -205,13 +216,12 @@ b, strong { font-weight: inherit; }
 .cta-inner { position: relative; row-gap: clamp(24px, 3vw, 48px); align-items: start; }
 .cta-title { grid-column: 1 / span 8; margin: 0; font: 400 clamp(40px, 5.8vw, 96px) / 0.98 var(--font); text-transform: uppercase; }
 .cta-title > span { display: block; }
-.cta-button { display: inline-block; padding: 0.5em 0.7em 0.45em; background: var(--accent); color: #111; font: 400 clamp(14px, 1.2vw, 18px) / 1 var(--font); text-transform: uppercase; transition: background 0.3s, color 0.3s; }
-.cta-button:hover { background: #111; color: #fff; }
+/* Rounded as the cards are. Nothing on the site changes colour under the
+   pointer. */
+.cta-button { display: inline-block; padding: 0.5em 0.7em 0.45em; border-radius: var(--radius); background: var(--accent); color: #111; font: 400 clamp(14px, 1.2vw, 18px) / 1 var(--font); text-transform: uppercase; }
 .about-contact { margin-top: 1.6em; }
-.cta-links { grid-column: 9 / span 4; display: flex; flex-direction: column; align-items: start; font-size: clamp(13px, 1.04vw, 16px); line-height: 1.6; text-transform: uppercase; }
-.cta-links a:hover, .cta-mail:hover { text-decoration: underline; text-decoration-thickness: 0.06em; text-underline-offset: 0.12em; }
 .cta ::selection, .pillar ::selection { color: #fff; }
-.cta-mail { grid-column: 1 / -1; font: 400 clamp(28px, 5.8vw, 96px) / 1 var(--font); text-transform: uppercase; white-space: nowrap; transition: color 0.3s; }
+.cta-mail { grid-column: 1 / -1; font: 400 clamp(28px, 5.8vw, 96px) / 1 var(--font); text-transform: uppercase; white-space: nowrap; }
 
 html:has(.home.can-dive) { scrollbar-width: none; }
 html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
@@ -238,7 +248,6 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 .f-top { grid-column: 10 / span 3; justify-self: end; }
 .site-footer { margin-top: var(--row-gap); padding-block: 24px; border-top: 1px solid var(--line); }
 .site-footer .f-mail { grid-column: 4 / span 6; justify-self: start; }
-.f-mail:hover, .f-top:hover { color: var(--ink); }
 
 /* ---- page heads -------------------------------------------------------- */
 
@@ -254,8 +263,8 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 .category-title { grid-column: 1 / span 6; margin: 0; font: 400 clamp(40px, 5.8vw, 96px) / 0.9 var(--font); text-transform: uppercase; }
 .category-title span { display: block; }
 .category-nav { grid-column: 7 / span 6; display: flex; flex-direction: column; align-items: start; font: 400 clamp(20px, 2.22vw, 32px) / 1.18 var(--serif); }
-.category-nav a { color: var(--muted); transition: color 0.3s; }
-.category-nav a:hover, .category-nav [aria-current] { color: var(--ink); }
+.category-nav a { color: var(--muted); }
+.category-nav [aria-current] { color: var(--ink); }
 .category-nav [aria-current] { text-decoration: underline var(--accent) 3px; text-underline-offset: 0.18em; }
 .category-projects { padding-bottom: var(--row-gap); }
 .category-tiles { row-gap: clamp(40px, 5vw, 80px); align-items: start; }
@@ -269,7 +278,6 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 .index { row-gap: clamp(40px, 6vw, 112px); align-items: end; }
 .tile-media { aspect-ratio: var(--ar); overflow: hidden; background: var(--tile); }
 .tile-media img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s var(--ease), opacity 0.4s; }
-.tile:hover .tile-media img { transform: scale(1.025); }
 .tile-caption {
   display: flex;
   justify-content: space-between;
@@ -361,7 +369,6 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 }
 .next-label { grid-column: 1 / span 3; font-size: var(--t-small); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 .next-title { grid-column: 4 / span 9; font-size: var(--t-title); line-height: 1; letter-spacing: -0.025em; transition: opacity 0.3s; }
-.next:hover .next-title { opacity: 0.5; }
 
 /* ---- small screens: the grid keeps its 12 columns, cells take all of them -- */
 
@@ -382,7 +389,7 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
   .f-mail, .site-footer .f-mail { grid-column: 7 / span 6; justify-self: end; }
   .f-top { display: none; }
   .page-title, .project-title, .lead, .about-head, .about-text { grid-column: 1 / -1; }
-  .cta-title, .cta-links { grid-column: 1 / -1; }
+  .cta-title { grid-column: 1 / -1; }
   .cta-mail { font-size: 7.4vw; }
   .row.pillars { flex-direction: column; }
   .category-title, .category-nav, .category-projects .tile { grid-column: 1 / -1; }

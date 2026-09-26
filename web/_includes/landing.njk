@@ -25,12 +25,19 @@ layout: base.njk
 {# Past the dive, the studio, and the page ends with it: it scrolls up over
    the film, which stays put. The projects run on only from a project's page. #}
 <section class="about" aria-label="About SMASH">
-  <div class="grid about-intro">
-    <h2 class="about-head">SMASH is the experience design studio in Sweden</h2>
-    <div class="about-text">
-      <p>We make interactive installations, projection mapping, immersive environments and the digital work that carries them further.</p>
-      <p>We take projects from the first idea to the last night of the run, designing for the room and for the crew who operates it at seven in the morning.</p>
-      <a class="cta-button about-contact" href="mailto:hello@smash.studio">Contact</a>
+  {# The headline is cut out of the ground, the film showing through its
+     letters as it scrolls up over it: the same words twice more beneath,
+     blended (main.css), as a project's title masks its hero. #}
+  <div class="about-intro-wrap">
+    <div class="grid about-intro about-knock" aria-hidden="true"><p class="about-head">SMASH is the experience design studio in Sweden</p></div>
+    <div class="grid about-intro about-knock about-knock-ground" aria-hidden="true"><p class="about-head">SMASH is the experience design studio in Sweden</p></div>
+    <div class="grid about-intro">
+      <h2 class="about-head">SMASH is the experience design studio in Sweden</h2>
+      <div class="about-text">
+        <p>We make interactive installations, projection mapping, immersive environments and the digital work that carries them further.</p>
+        <p>We take projects from the first idea to the last night of the run, designing for the room and for the crew who operates it at seven in the morning.</p>
+        <a class="cta-button about-contact" href="mailto:hello@smash.studio">Contact</a>
+      </div>
     </div>
   </div>
   {# The studio's offerings (categories/): tall pictures side by side, each
