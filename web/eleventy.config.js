@@ -1,3 +1,4 @@
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import Image from '@11ty/eleventy-img';
 import markdownIt from 'markdown-it';
@@ -122,6 +123,16 @@ export default function (config) {
         projects: projects.filter((p) => p.category === c.slug).map(({ slug, title, caption, year, thumb }) => ({ slug, title, caption, year, cover: thumb })),
       };
     }));
+  });
+  // The people in the studio (team/team.json), each with a portrait from
+  // team/, in black and white (main.css); without one, a card with the name.
+  config.addWatchTarget('team/');
+  config.addGlobalData('team', async () => {
+    const people = JSON.parse(await fs.readFile('team/team.json', 'utf8'));
+    return Promise.all(people.map(async (p) => ({
+      ...p,
+      picture: p.picture ? await image(path.join('team', p.picture), p.name, '(max-width: 720px) 50vw, 25vw') : null,
+    })));
   });
   // Stamped on every stylesheet and script address, so a page is never shown
   // with a stylesheet or script from an earlier build still in the browser's

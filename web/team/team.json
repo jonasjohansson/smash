@@ -1,0 +1,51 @@
+[
+  {
+    "name": "Ashley Reed",
+    "text": "Design Director, with a background in music and digital design. Ashley makes cinematic experiences where the technology serves the story.",
+    "email": "ash@smash.studio",
+    "picture": "ashley-reed.jpg"
+  },
+  {
+    "name": "Veronica Reed",
+    "text": "Account Director and Project Manager. Veronica brings interactive and audiovisual experiences to life, and runs projects from concept to execution.",
+    "email": "veronica@smash.studio",
+    "picture": "veronica-reed.jpg"
+  },
+  {
+    "name": "Emile Pascoe",
+    "text": "Lead Technical Artist, specialising in Unreal Engine. Emile comes from VR development for architectural firms: real-time rendering, optimisation and immersive environments.",
+    "email": "emile@smash.studio",
+    "picture": "emile-pascoe.jpg"
+  },
+  {
+    "name": "Jonas Johansson",
+    "text": "Lead Technical Director. Jonas is an artist, educator and designer working with motion graphics, immersive media and audiovisual art, formerly at Moment Factory, Field.io and KRAM/WEISSHAAR.",
+    "email": null,
+    "picture": "jonas-johansson.jpg"
+  },
+  {
+    "name": "Rose Hallgren",
+    "text": "Architect, artist and designer based in Stockholm. Rose's practice moves across materials and disciplines, wherever a project, vision or whisper may lead.",
+    "email": null,
+    "picture": "rose-hallgren.jpg"
+  },
+  {
+    "name": "Harry",
+    "text": "Visiting the studio.",
+    "email": null,
+    "picture": null
+  },
+  {
+    "name": "Intern",
+    "mark": "?",
+    "text": "Could be you.",
+    "email": "hello@smash.studio",
+    "picture": null
+  },
+  {
+    "name": "Ru",
+    "text": "Studio dog.",
+    "email": null,
+    "picture": null
+  }
+]

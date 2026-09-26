@@ -54,6 +54,21 @@ layout: base.njk
     </a>
     {% endfor %}
   </div>
+  {# The people in the studio (team/team.json), as on SMASH's proposals: who
+     each is and what they do, how to reach them, and their portrait. The
+     rows line up across the cards (main.css). #}
+  <section class="row team" aria-label="The studio">
+    <ul class="team-list">
+      {% for p in team %}
+      <li class="person">
+        <h3 class="label person-name">{{ p.name }}</h3>
+        <p class="person-text">{{ p.text }}</p>
+        {% if p.email %}<a class="person-mail" href="mailto:{{ p.email }}">{{ p.email }}</a>{% else %}<span></span>{% endif %}
+        <div class="person-picture">{% if p.picture %}{{ p.picture | safe }}{% else %}<span class="person-mark" aria-hidden="true">{{ p.mark or p.name }}</span>{% endif %}</div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
   {# Who SMASH has made work for, from the projects' own texts, each leading to
      the work (_data/clients.json; a logo file replaces a name when it is in). #}
   <section class="row clients" aria-label="Clients">
