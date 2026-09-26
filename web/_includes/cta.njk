@@ -1,14 +1,21 @@
 {# The way in, at the foot of the studio and of each offering, as on
    gentilhomme.com: an invitation, the address and the studio's, and where
-   else to find SMASH.
+   else to find SMASH, under the mark.
    Nothing else. #}
-<footer class="cta">
-  <div class="grid cta-inner">
+{% set inner %}
     <p class="cta-title"><span>Let's work</span> <span>together</span></p>
     <div class="cta-side">
+      <span class="cta-logo">{% include "logo.svg" %}</span>
       <nav class="cta-social" aria-label="SMASH elsewhere"><a href="https://www.instagram.com/studio.smash/" target="_blank" rel="noopener">Instagram</a><a href="https://www.linkedin.com/company/smashstudiosthlm/" target="_blank" rel="noopener">LinkedIn</a></nav>
       <p class="cta-address">Åsögatan 122<br>116 24 Stockholm</p>
     </div>
     <a class="cta-mail" href="mailto:hello@smash.studio">hello@smash.studio</a>
-  </div>
+{% endset %}
+<footer class="cta">
+  {# On the landing the mark is cut out of the ground, the film running behind
+     it, as the studio's headline is: the same footer twice more beneath, only
+     the mark showing in them, blended (main.css). #}
+  <div class="cta-knock" aria-hidden="true" inert><div class="grid cta-inner">{{ inner | safe }}</div></div>
+  <div class="cta-knock cta-knock-ground" aria-hidden="true" inert><div class="grid cta-inner">{{ inner | safe }}</div></div>
+  <div class="grid cta-inner">{{ inner | safe }}</div>
 </footer>
