@@ -1,6 +1,7 @@
 ---
 title: Kagora
 date: 2026-07-25
+color: '#6448ff'
 featured: 2
 tags:
   - light

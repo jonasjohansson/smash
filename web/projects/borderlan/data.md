@@ -1,6 +1,7 @@
 ---
 title: BorderLAN
 date: 2026-07-22
+color: '#d85b32'
 featured: 3
 tags:
   - community

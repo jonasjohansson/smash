@@ -1,6 +1,7 @@
 ---
 title: Signs of Presence
 date: 2026-02-18
+color: '#c8c8c8'
 tags:
   - stage
 blocks:

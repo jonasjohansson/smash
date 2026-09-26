@@ -1,6 +1,7 @@
 ---
 title: Lights for Ukraine
 date: 2022-01-01
+color: '#5500a0'
 tags:
   - light
   - community

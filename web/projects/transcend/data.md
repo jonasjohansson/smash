@@ -1,6 +1,7 @@
 ---
 title: Transcend
 date: 2017-01-01
+color: '#cc1c65'
 tags:
   - mixed reality
 blocks:

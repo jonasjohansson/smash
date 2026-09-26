@@ -1,6 +1,7 @@
 ---
 title: Icehotel
 date: 2023-01-01
+color: '#0b4f80'
 tags:
   - design
 blocks:

@@ -1,6 +1,7 @@
 ---
 title: WYSIWYG
 date: 2026-07-09
+color: '#c69564'
 featured: 5
 tags:
   - mixed reality

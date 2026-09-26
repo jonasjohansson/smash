@@ -1,6 +1,7 @@
 ---
 title: Emerging Sensation
 date: 2019-01-01
+color: '#1521b4'
 tags:
   - light
   - mixed reality

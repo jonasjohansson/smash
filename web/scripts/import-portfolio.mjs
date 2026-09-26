@@ -1,8 +1,8 @@
 /**
  * Stand-in content: copy Jonas Johansson's portfolio projects into `projects/`.
  *
- * Keeps each project's authored blocks (text, image, video, credits) and its
- * data.md shape, so real SMASH projects can later be written the same way.
+ * Keeps each project's authored blocks (text, image, video, credits), its
+ * colour and its data.md shape, so real SMASH projects can later be written the same way.
  * Placements other than `full` are dropped: they were tuned for the portfolio's
  * grid, and leaving them out lets this site's layout composer place everything.
  * Images are resized to 2000px JPEGs; videos over 10 MB and audio are left out.
@@ -78,7 +78,7 @@ for (const slug of fs.readdirSync(SRC).sort()) {
     continue;
   }
   const clean = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined));
-  const out = clean({ title: data.title, date: String(data.date), tags: data.tags, blocks: blocks.map(clean) });
+  const out = clean({ title: data.title, date: String(data.date), color: data.color, tags: data.tags, blocks: blocks.map(clean) });
   imported.push({ slug, date: out.date, heroAr, out });
 }
 

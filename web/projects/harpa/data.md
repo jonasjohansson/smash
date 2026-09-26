@@ -1,6 +1,7 @@
 ---
 title: Harpa
 date: 2017-01-01
+color: '#ff5c1a'
 tags:
   - light
 blocks:

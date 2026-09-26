@@ -1,6 +1,7 @@
 ---
 title: Heroes
 date: 2022-01-01
+color: '#727171'
 tags:
   - mapping
 blocks:

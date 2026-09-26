@@ -1,6 +1,7 @@
 ---
 title: Danny Saucedo
 date: 2024-01-01
+color: '#9b2500'
 tags:
   - mapping
   - stage

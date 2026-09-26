@@ -1,6 +1,7 @@
 ---
 title: Tiny/Massive
 date: 2019-01-01
+color: '#00338e'
 tags:
   - light
   - community

@@ -1,6 +1,7 @@
 ---
 title: People in Orbit
 date: 2023-01-01
+color: '#e16518'
 tags:
   - design
 blocks:

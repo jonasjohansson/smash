@@ -1,6 +1,7 @@
 ---
 title: Vista
 date: 2018-01-01
+color: '#8401ff'
 tags:
   - light
 blocks:

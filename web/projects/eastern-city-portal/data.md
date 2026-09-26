@@ -1,6 +1,7 @@
 ---
 title: Eastern City Portal
 date: 2024-01-01
+color: '#4698d2'
 tags:
   - mixed reality
 blocks:

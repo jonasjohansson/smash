@@ -1,6 +1,7 @@
 ---
 title: Retrospectives
 date: 2022-01-01
+color: '#ff6a1a'
 tags:
   - design
 blocks:

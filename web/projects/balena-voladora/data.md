@@ -1,6 +1,7 @@
 ---
 title: Balena Voladora
 date: 2026-07-11
+color: '#8fcbd3'
 featured: 4
 tags:
   - light

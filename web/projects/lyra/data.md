@@ -1,6 +1,7 @@
 ---
 title: Lyra
 date: 2013-01-01
+color: '#070a79'
 tags:
   - light
 blocks:

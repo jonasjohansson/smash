@@ -62,9 +62,11 @@ export function compose(project) {
   // Media and text share a row, on alternating sides. Cells are listed in
   // visual order so the stacked mobile layout reads left to right.
   const caption = (media, words) => {
+    // Side by side, no empty column between: a landscape takes three
+    // quarters of the row, a portrait half.
     const [m, w] = portrait(media)
-      ? side ? [[8, 5], [2, 4]] : [[1, 5], [7, 4]]
-      : side ? [[5, 8], [1, 3]] : [[1, 8], [10, 3]];
+      ? side ? [[7, 6], [3, 4]] : [[1, 6], [7, 4]]
+      : side ? [[4, 9], [1, 3]] : [[1, 9], [10, 3]];
     side ^= 1;
     const cells = [cell(media, m), cell(words, w)];
     return { kind: 'caption', cells: m[0] < w[0] ? cells : cells.reverse() };

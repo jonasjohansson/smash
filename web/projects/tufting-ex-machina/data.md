@@ -1,6 +1,7 @@
 ---
 title: Tufting Ex Machina
 date: 2024-01-01
+color: '#f37100'
 tags:
   - community
 blocks:

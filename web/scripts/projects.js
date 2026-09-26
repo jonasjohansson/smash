@@ -14,6 +14,32 @@ async function aspect(file) {
   return cache.get(file);
 }
 
+/**
+ * A project's colour when data.md gives none, from its cover: the average of
+ * its pixels weighted by how vivid each is (so a night shot gives its lights,
+ * not its black), brought up to full brightness. Grey if nothing is vivid.
+ */
+const tints = new Map();
+async function dominant(file) {
+  if (!tints.has(file)) {
+    tints.set(file, sharp(file).resize(64, 64, { fit: 'inside' }).removeAlpha().raw().toBuffer().then((px) => {
+      const sum = [0, 0, 0];
+      let total = 0;
+      for (let i = 0; i < px.length; i += 3) {
+        const [r, g, b] = [px[i], px[i + 1], px[i + 2]];
+        const w = (Math.max(r, g, b) - Math.min(r, g, b)) ** 2;
+        sum[0] += r * w; sum[1] += g * w; sum[2] += b * w;
+        total += w;
+      }
+      if (total < 1) return '#808080';
+      const avg = sum.map((v) => v / total);
+      const lift = 255 / Math.max(...avg, 1);
+      return `#${avg.map((v) => Math.round(Math.min(255, v * lift)).toString(16).padStart(2, '0')).join('')}`;
+    }));
+  }
+  return tints.get(file);
+}
+
 export async function readProjects(root) {
   const projects = await Promise.all(fs.readdirSync(root, { withFileTypes: true })
     .filter((d) => d.isDirectory() && fs.existsSync(path.join(root, d.name, 'data.md')))
@@ -35,6 +61,7 @@ export async function readProjects(root) {
       return {
         slug: d.name,
         title: data.title,
+        color: data.color ?? (cover ? await dominant(cover.src) : null),
         date: String(data.date),
         year: new Date(data.date).getFullYear(),
         tags: data.tags ?? [],

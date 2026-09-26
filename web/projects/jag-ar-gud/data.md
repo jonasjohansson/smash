@@ -1,6 +1,7 @@
 ---
 title: Jag är Gud
 date: 2024-01-01
+color: '#833e00'
 tags:
   - light
   - stage

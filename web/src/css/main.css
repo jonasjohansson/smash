@@ -103,14 +103,13 @@ b, strong { font-weight: inherit; }
 
 /* Scrolling dives into the mark (main.js): the page scrolls, the stage stays.
    The track is the dive, --dive screens long; the project it lands on is set
-   below it, on the project pages' white, and slides up over the picture;
-   every project after it follows (see .project + .project). */
+   below it, on the project pages' black, and the picture scrolls away above it;
+   every project after it follows, each on its own tint (see .project). */
 .home.can-dive { height: auto; overflow: visible; }
 .dive-track { display: none; }
 .home.can-dive .dive-track { display: block; height: calc(100svh * (1 + var(--dive, 2))); }
 .dive-project { position: relative; z-index: 1; background: var(--bg); color: var(--ink); }
 .dive-project:empty { display: none; }
-.home.is-reading { background: var(--bg); }
 html:has(.home.can-dive) { scrollbar-width: none; }
 html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 .dive-title {
@@ -171,16 +170,27 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 
 /* ---- project page ------------------------------------------------------- */
 
-/* Projects follow one another without end (feed.js), a line between each. */
-.project + .project { margin-top: var(--row-gap); border-top: 1px solid var(--line); }
+/* Projects are shown on black, as the landing is, with light text. */
+.project-page, .dive-project { --bg: #000; --ink: #ededed; --line: #262626; }
+
+/* Each project on a dark tint of its own colour (data.md's `color`, or its
+   cover's), so the next one is plain to see as it scrolls in: projects follow
+   one another without end (feed.js), flush, the tint changing between them. */
+.project { background: color-mix(in oklab, var(--tint, var(--bg)) 20%, var(--bg)); padding-bottom: var(--row-gap); }
 
 .project-head { padding-block: clamp(48px, 8vw, 128px) clamp(24px, 3vw, 48px); align-items: baseline; }
-.project-title { grid-column: 1 / span 7; font-size: var(--t-title); line-height: 1; letter-spacing: -0.025em; }
-.project-year, .project-tags { font-size: var(--t-small); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-.project-year { grid-column: 9 / span 1; }
-.project-tags { grid-column: 10 / span 3; justify-self: end; }
+/* Title, year and tags at one size; only the grey sets the facts apart. */
+.project-head > * { font-size: var(--t-title); line-height: 1; letter-spacing: -0.025em; }
+.project-title { grid-column: 1 / span 6; }
+.project-year, .project-tags { color: var(--muted); }
+.project-year { grid-column: 7 / span 2; }
+.project-tags { grid-column: 9 / span 4; }
+.project-tags::first-letter { text-transform: uppercase; }
 
-.project-hero { margin: 0; padding-inline: var(--margin); }
+/* Pictures on their own, or two to a row, run edge to edge, as on
+   jonasjohansson.se; text, and pictures beside text, keep the margins. */
+.project-hero { margin: 0; }
+.row-full, .row-pair { padding-inline: 0; }
 .project-hero img, .project-hero video { max-height: calc(100svh - 48px); object-fit: cover; }
 
 .project-lead { margin-top: var(--row-gap); }
@@ -252,8 +262,8 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
   .f-top { display: none; }
   .page-title, .project-title, .lead, .studio-statement, .studio-about, .studio-list, .studio-list:first-of-type { grid-column: 1 / -1; }
   .page-meta { grid-column: 1 / -1; justify-self: start; margin-top: 12px; }
-  .project-year { grid-column: 1 / span 3; margin-top: 16px; }
-  .project-tags { grid-column: 4 / span 9; margin-top: 16px; }
+  .project-year { grid-column: 1 / span 3; margin-top: 0.3em; }
+  .project-tags { grid-column: 4 / span 9; margin-top: 0.3em; }
   .next-label { grid-column: 1 / -1; }
   .next-title { grid-column: 1 / -1; margin-top: 12px; }
 }

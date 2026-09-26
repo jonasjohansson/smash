@@ -1,6 +1,7 @@
 ---
 layout: base.njk
 section: work
+bodyClass: project-page
 pagination:
   data: projects
   size: 1
@@ -12,7 +13,7 @@ eleventyComputed:
 {# Scrolled to its end, the page carries on into the next project (feed.js);
    the "Next project" link is for pages without JavaScript. #}
 {% include "titles.njk" %}
-<article class="project" data-slug="{{ p.slug }}">
+<article class="project" data-slug="{{ p.slug }}"{% if p.color %} style="--tint: {{ p.color }}"{% endif %}>
   <header class="project-head grid">
     <h1 class="project-title">{{ p.title }}</h1>
     <p class="project-year">{{ p.year }}</p>

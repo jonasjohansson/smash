@@ -1,6 +1,7 @@
 ---
 title: Resonance
 date: 2024-01-01
+color: '#4f0396'
 tags:
   - mapping
 blocks:

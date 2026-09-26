@@ -1,6 +1,7 @@
 ---
 title: Society Expo
 date: 2026-05-27
+color: '#7161d5'
 featured: 6
 tags:
   - light

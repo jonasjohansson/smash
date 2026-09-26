@@ -1,6 +1,7 @@
 ---
 title: Sala Hjärtslag
 date: 2024-01-01
+color: '#962d00'
 tags:
   - mapping
 blocks:

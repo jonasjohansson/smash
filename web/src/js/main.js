@@ -11,7 +11,7 @@
 // one project, whose title shows; the pictures, further back, grow a little
 // less than the mark does. Reduced motion dissolves the mark instead.
 // Landed, the address becomes the project's, and scrolling on reads it: its
-// page (/work/<slug>/) is fetched and set below, sliding up over the picture,
+// page (/work/<slug>/) is fetched and set below the picture, which scrolls away,
 // and the next project follows it, and the next, without end; the address
 // follows whichever one is being read.
 // (v2's glass stays a single screen.)
@@ -116,16 +116,14 @@ if (stage && framesEl) {
     // At fractional zoom innerHeight is rounded, and the real bottom can fall
     // a pixel short of max: the last pixel counts as the bottom.
     target = max > 0 ? (scrollY >= max - 1 ? 1 : Math.max(0, scrollY / max)) : 0;
-    // The landed picture is the project's hero: it drifts up at half speed and
-    // darkens as the page slides over it.
+    // The landed picture is the project's hero: past the dive it scrolls away
+    // with the page, its title with it, and the project follows right below.
     over = Math.max(0, scrollY - max);
-    const under = over >= innerHeight; // covered by the projects
-    stage.style.transform = over ? `translate3d(0, ${-Math.min(over, innerHeight) * (slow ? 1 : 0.5)}px, 0)` : '';
-    stage.style.opacity = over ? 1 - 0.5 * Math.min(1, over / innerHeight) : '';
+    const under = over >= innerHeight; // scrolled out of sight
+    const lift = over ? `translate3d(0, ${-Math.min(over, innerHeight)}px, 0)` : '';
+    stage.style.transform = lift;
+    if (titleEl) titleEl.style.transform = lift;
     stage.style.visibility = under ? 'hidden' : '';
-    // Reading, the page is white underneath too, so a fast fling never
-    // flashes the landing's black where the browser has yet to paint.
-    document.body.classList.toggle('is-reading', under);
     reading = over && feed ? feed.read() : '';
     // Only the mark at rest is a link; once scrolling in, the pictures are not.
     if (stage.inert !== target > 0) stage.inert = target > 0;
@@ -338,8 +336,8 @@ if (stage && framesEl) {
       }
       feed.address(landed ? reading || onScreen : '');
     }
-    // The title shows as the cut slows, and goes as the page comes up.
-    const shows = dives && params.land ? Math.round(smooth(0.6, 0.95, view.e) * (1 - smooth(0, 160, over)) * 100) / 100 : 0;
+    // The title shows as the cut slows.
+    const shows = dives && params.land ? Math.round(smooth(0.6, 0.95, view.e) * 100) / 100 : 0;
     if (titleEl && shows !== titleShows) titleEl.style.opacity = titleShows = shows;
 
     if (dirty && !glass) { render(); dirty = false; }

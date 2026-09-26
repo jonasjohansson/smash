@@ -1,6 +1,7 @@
 ---
 title: Svartljus
 date: 2017-01-01
+color: '#b07600'
 tags:
   - light
   - community

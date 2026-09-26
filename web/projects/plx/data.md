@@ -1,6 +1,7 @@
 ---
 title: PLX
 date: 2026-05-16
+color: '#c724a0'
 tags:
   - light
   - community

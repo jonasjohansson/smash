@@ -1,6 +1,7 @@
 ---
 title: Firestarter
 date: 2024-01-01
+color: '#005d80'
 tags:
   - light
 blocks:

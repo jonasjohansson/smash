@@ -1,6 +1,7 @@
 ---
 title: Embed
 date: 2021-01-01
+color: '#1a43fe'
 tags:
   - mapping
 blocks:
