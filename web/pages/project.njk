@@ -10,6 +10,8 @@ pagination:
 permalink: "/{{ p.slug }}/"
 eleventyComputed:
   title: "{{ p.title }}"
+  description: "{{ p.description | safe }}"
+  ogImage: "{{ p.og }}"
 ---
 {# Scrolled to its end, the page carries on into the next project of its
    offering, round all of them, and then the footer (feed.js); the "Next

@@ -9,6 +9,8 @@ pagination:
 permalink: "/{{ c.slug }}/"
 eleventyComputed:
   title: "{{ c.name }}"
+  description: "{{ c.description | safe }}"
+  ogImage: "{{ c.og }}"
 ---
 {# One of the studio's offerings (categories/<slug>.md): its picture seen
    through the mark (main.js draws it to size), its name with the others beside

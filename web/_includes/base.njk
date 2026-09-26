@@ -10,7 +10,22 @@
   <link rel="icon" href="/brand/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
   <title>{% if title %}{{ title }} — {% endif %}SMASH</title>
-  <meta name="description" content="{{ description or 'SMASH is a creative studio making interactive installations, projection mapping, immersive environments and digital experiences.' }}">
+  {# What a page says of itself, and shows when it is shared: its own text and
+     picture where it has them (projects, offerings, the typeface), else the
+     studio's line and the landing's picture through the mark (og.js). #}
+  {% set about = description or 'SMASH is the experience design studio in Sweden. We make interactive installations, projection mapping, immersive environments and the digital work that carries them further.' %}
+  {% set address = site.url + page.url %}
+  <meta name="description" content="{{ about }}">
+  <link rel="canonical" href="{{ address }}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="SMASH">
+  <meta property="og:title" content="{% if title %}{{ title }} — {% endif %}SMASH">
+  <meta property="og:description" content="{{ about }}">
+  <meta property="og:url" content="{{ address }}">
+  <meta property="og:image" content="{{ site.url }}{{ ogImage or poster.og }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
   {# With JavaScript, the mark is shown only once main.js has drawn it (as
      set, or as the viewer tuned it: H), never the static one first. #}
   <script>document.documentElement.classList.add('js');</script>

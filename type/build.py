@@ -34,6 +34,8 @@ from pathlib import Path
 
 import ufoLib2
 from fontTools.designspaceLib import AxisDescriptor, DesignSpaceDocument, SourceDescriptor, InstanceDescriptor
+from fontTools.pens.svgPathPen import SVGPathPen
+from fontTools.ttLib import TTFont
 
 OUT = Path(__file__).parent / 'build'
 SITE = Path(__file__).parent.parent / 'web' / 'src' / 'typeface'  # offered on /typeface/
@@ -260,6 +262,31 @@ def write_master(path, slot, pitch, crossbar, style, height=H, rounding=1.0):
     ufo.save(path, overwrite=True)
 
 
+def og_svg(font_path, out):
+    """The typeface's share picture, 1200 × 630, set in the font itself: SMASH
+    in the yellow, the characters under it (the site makes it a JPEG, og.js)."""
+    font = TTFont(font_path)
+    cmap, glyphs = font.getBestCmap(), font.getGlyphSet()
+
+    def line(text, x, baseline, cap, fill):
+        k = cap / CAP  # font units to pixels
+        parts = []
+        for ch in text:
+            name = 'space' if ch == ' ' else cmap[ord(ch)]
+            pen = SVGPathPen(glyphs)
+            glyphs[name].draw(pen)
+            if ch != ' ':
+                parts.append(f'<path transform="translate({x:.2f} {baseline:.2f}) scale({k:.5f} {-k:.5f})" d="{pen.getCommands()}"/>')
+            x += glyphs[name].width * k
+        return f'<g fill="{fill}">{"".join(parts)}</g>'
+
+    out.write_text('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">'
+                   '<rect width="1200" height="630" fill="#000"/>'
+                   + line('SMASH', 64, 430, 360, '#f7be04')
+                   + line('ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789', 64, 566, 72, '#f3efe8')
+                   + '</svg>\n')
+
+
 def main():
     OUT.mkdir(exist_ok=True)
     LOGO = dict(slot=20, pitch=51.78, crossbar=235.5, height=H, rounding=1.0)
@@ -314,6 +341,7 @@ def main():
     for p in [ds, *OUT.glob('SMASH-*.ufo')]:
         (shutil.copytree if p.is_dir() else shutil.copy)(p, sources / p.name)
     shutil.make_archive(str(SITE / 'SMASH-sources'), 'zip', sources)
+    og_svg(OUT / 'fonts' / 'SMASH-VF.ttf', SITE / 'og.svg')
 
 
 if __name__ == '__main__':

@@ -5,6 +5,7 @@ import markdownIt from 'markdown-it';
 import { listed, readProjects } from './scripts/projects.js';
 import { readCategories } from './scripts/categories.js';
 import { compose, indexLayout } from './scripts/compose.js';
+import { ogImage, summary } from './scripts/og.js';
 
 const md = markdownIt({ html: true, linkify: true });
 const external = (html) => html.replace(/<a href="(https?:[^"]*)">/g, '<a href="$1" target="_blank" rel="noopener">');
@@ -63,11 +64,15 @@ export default function (config) {
     const index = indexLayout(projects);
     // A project's page goes once round the projects of its offering (feed.js),
     // newest first; without JavaScript, by the link to the next of them.
-    return projects.map((p, i) => {
+    // Shared, it shows its card's picture and the start of its introduction.
+    return Promise.all(projects.map(async (p, i) => {
       const round = p.category ? projects.filter((q) => q.category === p.category) : projects;
       const next = round[(round.indexOf(p) + 1) % round.length];
-      return { ...p, tile: index[i], round: round.map(({ slug, title }) => ({ slug, title })), next: next === p ? null : next };
-    });
+      return {
+        ...p, tile: index[i], round: round.map(({ slug, title }) => ({ slug, title })), next: next === p ? null : next,
+        description: summary(p.rows.lead?.content), og: await ogImage((p.thumb ?? p.cover).src),
+      };
+    }));
   });
   // The landing's slideshow: every image of every project, at two sizes, and
   // a third for the one the dive lands on, full screen.
@@ -98,7 +103,9 @@ export default function (config) {
     const projects = await readProjects('projects');
     const first = projects.filter((p) => p.featured).sort((a, b) => a.featured - b.featured)[0]
       ?? projects.find((p) => p.cover?.ar > 1.2) ?? projects[0];
-    return { slug: first.slug, src: await imageSrc(first.cover.src, 1280, 'webp') };
+    // Shared, the landing (and any page without a picture of its own) shows
+    // this picture through the mark, as the landing opens.
+    return { slug: first.slug, src: await imageSrc(first.cover.src, 1280, 'webp'), og: await ogImage(first.cover.src, { mark: true }) };
   });
   // The studio's offerings (categories/): under its introduction on the
   // landing, a tall picture each, leading to its own page with its projects.
@@ -121,9 +128,13 @@ export default function (config) {
         hero: { src: block.src, alt: block.alt ?? '' },
         picture: await image(block.src, block.alt ?? '', `(max-width: 720px) ${Math.ceil(125 * ar)}vw, ${Math.ceil(100 * ar)}vh`),
         projects: projects.filter((p) => p.category === c.slug).map(({ slug, title, caption, year, thumb }) => ({ slug, title, caption, year, cover: thumb })),
+        // Shared, its picture through the mark, as its page opens.
+        description: summary(c.intro), og: await ogImage(block.src, { mark: true }),
       };
     }));
   });
+  // The typeface's share picture, drawn by type/build.py in the font itself.
+  config.addGlobalData('typefaceOg', () => ogImage('src/typeface/og.svg'));
   // The people in the studio (team/team.json), each with a portrait from
   // team/, in black and white (main.css).
   config.addWatchTarget('team/');
@@ -139,6 +150,7 @@ export default function (config) {
   // cache (GitHub Pages lets them be kept for ten minutes).
   const build = Date.now().toString(36);
   config.addGlobalData('build', build);
+  config.addGlobalData('site', { url: 'https://smash.jonasjohansson.se', name: 'SMASH' });
   config.addGlobalData('featured', async () =>
     (await readProjects('projects')).filter((p) => p.featured).sort((a, b) => a.featured - b.featured));
 
