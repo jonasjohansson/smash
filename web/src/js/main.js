@@ -233,7 +233,8 @@ if (stage && framesEl) {
       if (!ok || feed.first !== slug) return;
       // The landed picture is the hero already: if the page opens with the
       // same one, leave it out.
-      const key = frames[i]?.l.match(/\/img\/([^/]+)-\d+\./)?.[1];
+      const src = i >= 0 ? frames[i].l : poster.getAttribute('src'); // landed before the first cut
+      const key = src?.match(/\/img\/([^/]+)-\d+\./)?.[1];
       const hero = more.firstElementChild?.querySelector('.project-hero');
       if (hero) hero.hidden = Boolean(key) && hero.innerHTML.includes(`/img/${key}-`);
     });
@@ -328,12 +329,16 @@ if (stage && framesEl) {
       if (params.land && view.e > 0.8 && onScreen) page(onScreen);
       if (landed) {
         sharpen();
-        if (unfoldedFor !== shown) { unfoldedFor = shown; unfold(onScreen, shown); }
+        // Only once a picture is on screen: until then there is no project to start from.
+        if (onScreen && unfoldedFor !== shown) { unfoldedFor = shown; unfold(onScreen, shown); }
         feed.grow();
       } else {
         unfoldedFor = -2;
         if (!params.land && feed.length) feed.clear();
       }
+      // Measured now, against the feed actually below (a jump back in can land
+      // on another project and start a new one in the same frame).
+      if (landed && over) reading = feed.read();
       feed.address(landed ? reading || onScreen : '');
     }
     // The title shows as the cut slows.
@@ -444,11 +449,17 @@ const own = !stage && document.querySelector('main > article.project');
 if (own) {
   own.querySelector('.next')?.remove();
   document.querySelector('.site-footer')?.remove();
-  // A reload opens the page the address names, from its top.
-  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   const feed = createFeed(own.parentElement);
+  const path = location.pathname;
   let queued = false;
-  const follow = () => { queued = false; feed.grow(); feed.address(feed.read() || feed.first); };
+  const follow = () => {
+    queued = false;
+    feed.grow();
+    feed.address(feed.read() || feed.first);
+    // Moved on to another project, a reload opens that one from its top;
+    // still on this page's own, Back and reload keep the place as usual.
+    if ('scrollRestoration' in history) history.scrollRestoration = location.pathname === path ? 'auto' : 'manual';
+  };
   const soon = () => { if (!queued) { queued = true; requestAnimationFrame(follow); } };
   addEventListener('scroll', soon, { passive: true });
   addEventListener('resize', soon);

@@ -11,58 +11,92 @@ const list = JSON.parse(document.getElementById('titles')?.textContent || '[]');
 export const titles = Object.fromEntries(list);
 const order = list.map(([slug]) => slug);
 
-// Without the link to the next project: the next one simply follows.
+const RETRY = 5000; // ms before trying the network again
+const OFFLINE = Symbol('offline');
+
+// Without the link to the next project: the next one simply follows. A page
+// that is not there resolves to null and is skipped; a failed request resolves
+// to OFFLINE and is tried again once RETRY has passed.
 const pages = new Map();
 export function page(slug) {
-  if (!pages.has(slug)) {
-    pages.set(slug, fetch(`/work/${slug}/`)
-      .then((r) => (r.ok ? r.text() : Promise.reject(r.status)))
-      .then((html) => {
-        const article = new DOMParser().parseFromString(html, 'text/html').querySelector('article.project');
-        article?.querySelector('.next')?.remove();
-        return article;
-      })
-      .catch(() => null)); // skipped from then on
-  }
-  return pages.get(slug);
+  const cached = pages.get(slug);
+  if (cached && !(cached.retryAt <= performance.now())) return cached;
+  const request = fetch(`/work/${slug}/`)
+    .then((r) => (r.ok ? r.text() : null))
+    .then((html) => {
+      const article = html && new DOMParser().parseFromString(html, 'text/html').querySelector('article.project');
+      article?.querySelector('.next')?.remove();
+      return article || null;
+    })
+    .catch(() => { request.retryAt = performance.now() + RETRY; return OFFLINE; });
+  pages.set(slug, request);
+  return request;
 }
 
+// Videos play only while on screen: the feed only grows, and every copy left
+// playing above the reader would go on decoding.
+const inView = new IntersectionObserver((entries) => {
+  for (const { target, isIntersecting } of entries) {
+    if (isIntersecting) target.play().catch(() => {});
+    else target.pause();
+  }
+});
+const watch = (article) => article.querySelectorAll('video[autoplay]').forEach((v) => inView.observe(v));
+
 export function createFeed(container) {
-  let feed = [...container.querySelectorAll(':scope > .project')].map((a) => a.dataset.slug);
+  const articles = () => container.querySelectorAll(':scope > .project');
+  let feed = [...articles()].map((a) => a.dataset.slug);
+  articles().forEach(watch);
   let feeding = false; // one on its way
-  let failed = 0; // in a row: give up after a few
+  let missing = 0; // pages not there, in a row: give up after a few
   let run = 0; // bumped whenever the feed starts over
   const home = location.pathname;
   const homeTitle = document.title;
 
   function clear() {
     run++;
-    container.querySelectorAll(':scope > .project').forEach((a) => a.remove());
+    articles().forEach((a) => {
+      a.querySelectorAll('video').forEach((v) => inView.unobserve(v));
+      a.remove();
+    });
     feed = [];
     feeding = false;
-    failed = 0;
+    missing = 0;
   }
 
+  // Resolves true once `slug` is in (or skipped, if it has no page); offline,
+  // it waits and tries the same one again, for as long as this run lasts.
   function append(slug) {
     const mine = run;
     feeding = true;
     return page(slug).then((article) => {
       if (mine !== run) return false;
+      if (article === OFFLINE) {
+        return new Promise((resolve) => setTimeout(resolve, RETRY)).then(() => mine === run && append(slug));
+      }
       feeding = false;
-      if (!article) { feed.push(slug); failed++; return false; }
-      failed = 0;
+      feed.push(slug);
+      if (!article) { missing++; return true; }
+      missing = 0;
       const copy = article.cloneNode(true);
       container.append(copy);
-      feed.push(slug);
-      for (const v of copy.querySelectorAll('video[autoplay]')) v.play().catch(() => {});
+      watch(copy);
       return true;
     });
+  }
+
+  // Keep a couple of screens of project ahead of the reader.
+  function grow() {
+    if (!feed.length || feeding || missing >= 3 || container.getBoundingClientRect().bottom > innerHeight * 3) return;
+    const at = order.indexOf(feed.at(-1));
+    append(order[(at + 1) % order.length]).then((ok) => ok && grow());
   }
 
   return {
     get first() { return feed[0]; },
     get length() { return feed.length; },
     clear,
+    grow,
 
     // Start over from `slug`; resolves true once its page is in.
     start(slug) {
@@ -72,18 +106,11 @@ export function createFeed(container) {
       return append(slug);
     },
 
-    // Keep a couple of screens of project ahead of the reader.
-    grow() {
-      if (!feed.length || feeding || failed >= 3 || container.getBoundingClientRect().bottom > innerHeight * 3) return;
-      const at = order.indexOf(feed.at(-1));
-      append(order[(at + 1) % order.length]).then((ok) => ok && this.grow());
-    },
-
     // The project being read: the last one whose top has passed the middle of
     // the screen ('' before the first).
     read() {
       let slug = '';
-      for (const article of container.querySelectorAll(':scope > .project')) {
+      for (const article of articles()) {
         if (article.getBoundingClientRect().top > innerHeight / 2) break;
         slug = article.dataset.slug;
       }
