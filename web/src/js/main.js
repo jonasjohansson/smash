@@ -33,11 +33,11 @@ const [
 const AHEAD = 24;
 const PARALLEL = 6;
 const HOLD = 3000; // ms per image just before the dive lands
-const REEL = 0.35; // how far into the dive the reel takes over from the cut
+const REEL = 0.2; // how far into the dive the reel takes over from the cut
 
 const DIVE_DEFAULTS = {
   length: 2, // screens of scrolling from the mark to the pictures
-  overlap: 0.35, // screens the page is already scrolling before the dive is through
+  overlap: 0.6, // screens the page is already scrolling before the dive is through
   parallax: 1.15, // how much the pictures have grown when the mark has passed
   land: false, // slow the cut to a stop as the dive goes in, or let it run on
   invert: true, // the pictures through the slots and round the mark, the block white (A)
@@ -131,7 +131,6 @@ if (stage && framesEl) {
   let target = 0;
   let over = 0; // px scrolled past the dive, into the project
   let under = false; // and the pictures scrolled out of sight: the cut rests
-  const logo = document.querySelector('[data-landed-logo]'); // shown once dived in
   const view = { t: 0, e: 0, s: 1, x: 0, y: 0, image: 1, fade: 0 };
 
   // Where the dive is through: `overlap` screens past the end of the track,
@@ -150,8 +149,6 @@ if (stage && framesEl) {
     over = Math.max(0, scrollY - max);
     under = over >= innerHeight; // covered
     stage.style.visibility = under ? 'hidden' : '';
-    // Dived in, the logo stands top left over the film, and is covered with it.
-    if (logo) document.body.classList.toggle('is-landed', target >= 1 && !under);
     if (reel && target > 0 && reel.preload !== 'auto') { reel.preload = 'auto'; reel.load(); }
     document.body.classList.toggle('is-reading', under);
     // Only the mark at rest is a link; once scrolling in, the pictures are not,
@@ -545,6 +542,39 @@ if (own) {
   addEventListener('scroll', soon, { passive: true });
   addEventListener('resize', soon);
   soon();
+}
+
+// The way in (cta.njk) comes out of the ground in yellow dots: a strip of
+// them, dense at the foot and thinning out upward, drawn to the screen's own
+// pixels (a scaled mask would blur them) and repeated across the band.
+const DOT = 2; // px, each dot of the dither
+function dither(band) {
+  const dpr = devicePixelRatio || 1;
+  const fade = Math.round(Math.min(360, Math.max(160, innerWidth * 0.22)));
+  const w = 512, cols = w / DOT, rows = Math.ceil(fade / DOT);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(rows * DOT * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#000';
+  const px = DOT * dpr;
+  for (let y = 0; y < rows; y++) {
+    const t = (y + 0.5) / rows; // how yellow this row is
+    for (let x = 0; x < cols; x++) {
+      if (Math.random() < t) ctx.fillRect(Math.round(x * px), Math.round(y * px), Math.ceil(px), Math.ceil(px));
+    }
+  }
+  band.style.setProperty('--dither', `url(${canvas.toDataURL()})`);
+  band.style.setProperty('--dither-size', `${w}px ${rows * DOT}px`);
+  band.style.setProperty('--fade', `${rows * DOT}px`);
+  band.classList.add('is-dithered');
+}
+const bands = document.querySelectorAll('.cta');
+if (bands.length) {
+  let last = 0;
+  const redither = () => { if (innerWidth !== last) { last = innerWidth; bands.forEach(dither); } };
+  redither();
+  addEventListener('resize', redither);
 }
 
 // An offering's page opens on its picture seen through the mark, drawn to the
