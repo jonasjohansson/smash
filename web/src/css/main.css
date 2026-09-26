@@ -6,6 +6,7 @@
   --ink: #111;
   --muted: #8b8b8b;
   --line: #e6e6e6;
+  --dark: #1c1c1c; /* the projects' ground */
 
   --cols: 12;
   --margin: clamp(16px, 3.2vw, 56px);
@@ -87,10 +88,8 @@ b, strong { font-weight: inherit; }
 
 .home { height: 100svh; overflow: hidden; background: #000; color: #fff; }
 .home .site-header { display: none; }
-/* A project page's header is its logo alone, over the hero picture; the
-   landed picture on the landing carries the same logo once the dive lands
-   (main.js moves it with the picture). */
-.project-page .site-header, .hero-logo {
+/* A project page's header is its logo alone, over the hero picture. */
+.project-page .site-header {
   position: absolute;
   inset: 0 0 auto;
   z-index: 10;
@@ -98,9 +97,6 @@ b, strong { font-weight: inherit; }
   color: #fff;
   filter: drop-shadow(0 0 12px rgb(0 0 0 / 0.35));
 }
-.hero-logo { position: fixed; display: flex; align-items: center; height: var(--header); padding-inline: var(--margin); right: auto; opacity: 0; visibility: hidden; transition: opacity 0.6s, visibility 0s 0.6s; }
-.hero-logo svg { display: block; height: 30px; width: auto; }
-.home.is-landed .hero-logo { opacity: 1; visibility: visible; transition: opacity 0.6s, visibility 0s; }
 
 .stage { position: fixed; inset: 0; display: block; }
 .slide {
@@ -119,12 +115,20 @@ b, strong { font-weight: inherit; }
 /* Scrolling dives into the mark (main.js): the page scrolls, the stage stays.
    The track is the dive, --dive screens long; the project it lands on is set
    below it, on the project pages' black, and the picture scrolls away above it;
-   every project after it follows, each on its own tint (see .project). */
+   every project after it follows, on the same grey (see .project). */
 .home.can-dive { height: auto; overflow: visible; }
 .dive-track { display: none; }
 .home.can-dive .dive-track { display: block; height: calc(100svh * (1 + var(--dive, 2))); }
 .dive-project { position: relative; z-index: 1; background: var(--bg); color: var(--ink); }
 .dive-project:empty { display: none; }
+/* The studio, between the dive and the projects. */
+.about { position: relative; z-index: 1; display: flow-root; background: var(--bg); color: var(--ink); padding-bottom: var(--row-gap); border-bottom: 1px solid rgb(255 255 255 / 0.28); }
+.home:not(.can-dive) .about { display: none; }
+.row.about-facts { align-items: start; font-size: var(--t-small); line-height: 1.8; }
+.about-facts dl { margin: 0; }
+.about-facts dt { color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+.about-facts dd { margin: 0; }
+.about-facts a { text-decoration: underline; text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
 html:has(.home.can-dive) { scrollbar-width: none; }
 html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 /* Who SMASH is: rows of the mask along the top and bottom (main.js paints
@@ -178,14 +182,12 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 /* ---- project page ------------------------------------------------------- */
 
 /* Projects are shown on a dark ground, with light text. */
-.project-page, .dive-project { --bg: #161616; --ink: #f0f0f0; --muted: rgb(240 240 240 / 0.62); --line: rgb(240 240 240 / 0.16); }
+.project-page, .dive-project, .about { --bg: var(--dark); --ink: #f0f0f0; --muted: rgb(240 240 240 / 0.62); --line: rgb(240 240 240 / 0.16); }
 
-/* Each project on a dark tint of its own colour (data.md's `color`, or its
-   cover's), so the next one is plain to see as it scrolls in: projects follow
-   one another without end (feed.js), flush, the tint changing between them. */
-/* flow-root keeps a first child's margin inside, on the tint (the landed
-   project on the landing starts with its lead: its heading is the picture). */
-.project { display: flow-root; background: color-mix(in oklab, var(--tint, var(--bg)) 32%, var(--bg)); padding-bottom: var(--row-gap); }
+/* Every project on the same dark grey, a line between each (they follow one
+   another without end, feed.js). flow-root keeps a first child's margin on
+   the grey (the landed project on the landing starts with its text). */
+.project { display: flow-root; background: var(--bg); padding-bottom: var(--row-gap); }
 .project + .project { border-top: 1px solid rgb(255 255 255 / 0.28); }
 
 /* A project opens on its hero picture, edge to edge, its title in the middle
@@ -199,9 +201,29 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
    on the landing). The words stay for screen readers. */
 .has-hero { isolation: isolate; }
 .title-mask { position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: multiply; pointer-events: none; }
+/* A second pass turns that black into the projects' grey, so the hero is
+   one surface with its page: screen leaves the letters' picture as it is. */
+.title-ground { mix-blend-mode: screen; }
+.title-ground rect { fill: var(--dark); }
 .has-hero .project-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-.stage .title-mask { z-index: 1; opacity: 0; transition: opacity 0.8s; }
-.stage.is-landed .title-mask { opacity: 1; }
+/* Scrolled into from the one before, a project's hero shows whole, its title
+   over it; the mask is for its own page, opened directly. */
+.in-feed .title-mask { display: none; }
+.in-feed .has-hero .project-title {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+  padding-inline: var(--margin);
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 0 32px rgb(0 0 0 / 0.4);
+  pointer-events: none;
+}
 
 /* Pictures on their own, or two to a row, run edge to edge, as on
    jonasjohansson.se; text, and pictures beside text, keep the margins. */
@@ -255,7 +277,7 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 
 @media (max-width: 720px) {
   :root { --header: 56px; }
-  .logo svg, .hero-logo svg { height: 26px; }
+  .logo svg { height: 26px; }
   .logo { grid-column: 1 / span 5; }
   .nav { grid-column: 6 / span 5; gap: 1.2em; }
   .contact { grid-column: 11 / span 2; }

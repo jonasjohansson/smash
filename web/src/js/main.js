@@ -25,7 +25,7 @@
 const build = new URL(import.meta.url).search;
 const { DEFAULTS, buildMark, markShape, paintMark, paintInfo, diveFocus, toDataUrl, INFO_FONT } = await import(`./mark.js${build}`);
 const { GLASS_DEFAULTS, createGlass } = await import(`./glass.js${build}`);
-const { createFeed, page, titles, fitTitle } = await import(`./feed.js${build}`);
+const { createFeed, page, first } = await import(`./feed.js${build}`);
 
 const AHEAD = 24;
 const PARALLEL = 6;
@@ -68,11 +68,14 @@ if (stage && framesEl) {
   // Settings are a per-viewer convenience; the page works without them.
   const params = { ...BASE };
   try { Object.assign(params, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch {}
-  const save = () => { try { localStorage.setItem(STORE, JSON.stringify(params)); } catch {} };
+  // Only what differs from the defaults is kept, so a default changed later
+  // still reaches whoever has not touched that setting.
+  const save = () => {
+    const changed = Object.fromEntries(Object.entries(params).filter(([k, v]) => v !== BASE[k]));
+    try { localStorage.setItem(STORE, JSON.stringify(changed)); } catch {}
+  };
 
   const slow = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const titleEl = document.querySelector('[data-title]');
-  const logoEl = document.querySelector('[data-logo]');
   // The rows' words are in the page (for screen readers too); the email's link
   // lies over its painted letters.
   const infoRows = [...document.querySelectorAll('[data-info] [data-row]')].map((p) => p.textContent.trim());
@@ -134,7 +137,6 @@ if (stage && framesEl) {
     over = Math.max(0, scrollY - max);
     const under = over >= innerHeight; // scrolled out of sight
     stage.style.transform = over ? `translate3d(0, ${-Math.min(over, innerHeight)}px, 0)` : '';
-    if (logoEl) logoEl.style.transform = stage.style.transform; // the landed picture's logo goes with it
     stage.style.visibility = under ? 'hidden' : '';
     reading = over && feed ? feed.read() : '';
     // Only the mark at rest is a link; once scrolling in, the pictures are not,
@@ -142,8 +144,6 @@ if (stage && framesEl) {
     if (stage.inert !== target > 0) stage.inert = target > 0;
     document.body.classList.toggle('is-diving', target > 0);
     // Landed: the picture carries its project's title (only with the cut stopped).
-    stage.classList.toggle('is-landed', target >= 1 && params.land);
-    document.body.classList.toggle('is-landed', target >= 1 && params.land);
   }
 
   // The mark's zoom and offset for the dive at view.t, and the pictures' zoom.
@@ -212,10 +212,6 @@ if (stage && framesEl) {
     shown = i;
     onScreen = slug;
     stage.href = `/${slug}/`;
-    if (titleEl) {
-      titleEl.querySelector('text').textContent = (titles[slug] ?? '').toUpperCase();
-      fitTitle(titleEl);
-    }
     if (glass) return glass.setImage(picture);
     dirty = true;
     if (!slide.classList.contains('is-drawn')) {
@@ -241,21 +237,12 @@ if (stage && framesEl) {
 
   // ---- the projects, below the dive ------------------------------------------
 
-  // Landed, the feed starts below the dive (feed.js): the landed project's
-  // page, then the next project's, and on. The address is the landed
-  // project's, then whichever one is being read.
+  // Past the dive comes the studio (landing.njk), then the projects, newest
+  // first and on without end (feed.js). The address is the landing's until a
+  // project is being read, then that project's.
 
-  let unfoldedFor = -2; // the frame the feed was started from
-  let reading = ''; // the project at the middle of the screen, once past the picture
+  let reading = ''; // the project at the middle of the screen, once past the studio
 
-  function unfold(slug) {
-    feed.start(slug).then((ok) => {
-      if (!ok || feed.first !== slug) return;
-      // The landed picture is this project's hero, its title on it already.
-      const head = more.firstElementChild?.querySelector('.project-head');
-      if (head) head.hidden = true;
-    });
-  }
 
   // object-fit: cover, by hand, `zoom` times larger about the centre.
   function cover(picture, zoom) {
@@ -366,21 +353,14 @@ if (stage && framesEl) {
       }
     }
     if (feed) {
-      // Fetch the page of whatever the slowing cut might land on.
-      if (params.land && view.e > 0.8 && onScreen) page(onScreen);
-      if (landed) {
-        sharpen();
-        // Only once a picture is on screen: until then there is no project to start from.
-        if (onScreen && unfoldedFor !== shown) { unfoldedFor = shown; unfold(onScreen); }
+      if (view.e > 0.8) page(first); // on its way before the studio is read
+      if (landed) sharpen();
+      if (target >= 1) {
+        if (!feed.length) feed.start(first);
         feed.grow();
-      } else {
-        unfoldedFor = -2;
-        if (!params.land && feed.length) feed.clear();
       }
-      // Measured now, against the feed actually below (a jump back in can land
-      // on another project and start a new one in the same frame).
-      if (landed && over) reading = feed.read();
-      feed.address(landed ? reading || onScreen : '');
+      if (over) reading = feed.read();
+      feed.address(target >= 1 ? reading : '');
     }
 
     if (dirty && !glass) { render(); dirty = false; }
@@ -418,6 +398,12 @@ if (stage && framesEl) {
     pane = new Pane({ title: glass ? 'SMASH v2' : 'SMASH' });
     pane.element.parentElement.classList.add('tweak');
     const change = () => { drawMark(); save(); };
+    pane.addButton({ title: 'Reset all settings' }).on('click', () => {
+      try { localStorage.removeItem(STORE); } catch {}
+      Object.assign(params, BASE);
+      pane.refresh();
+      drawMark();
+    });
 
     const mark = pane.addFolder({ title: 'Mark' });
     mark.addBinding(params, 'stroke', { label: 'thickness', min: 2, max: 48, step: 0.5 });
@@ -472,7 +458,6 @@ if (stage && framesEl) {
       URL.revokeObjectURL(a.href);
     });
     pane.addButton({ title: 'Copy settings' }).on('click', () => navigator.clipboard?.writeText(JSON.stringify(params, null, 2)));
-    pane.addButton({ title: 'Reset' }).on('click', () => { Object.assign(params, BASE); pane.refresh(); change(); });
 
     pane.on('change', change);
   }

@@ -4,13 +4,12 @@ layout: base.njk
 {# Every image of every project, shuffled and cut fast behind the mark.
    The frame list is built in eleventy.config.js (async shortcodes lose
    arguments inside layouts). Scrolling dives into the mark, the length of
-   the track, and on into the project it lands on and every one after it
-   (main.js); v2's glass does not. #}
+   the track, lands on one picture, and goes on into the studio and then every
+   project (main.js); v2's glass does not. #}
 <a class="stage"{% if renderer %} data-renderer="{{ renderer }}"{% endif %} href="/{{ poster.slug }}/" data-stage aria-label="SMASH — see the work">
   <div class="slide">
     <img src="{{ poster.src }}" alt="" fetchpriority="high" data-frame>
   </div>
-  {% if not renderer %}<svg class="title-mask" viewBox="0 -88 100 89" preserveAspectRatio="none" aria-hidden="true" data-title><rect x="-99999" y="-99999" width="199999" height="199999" fill="#000"/><text font-family="Anton" font-size="100" fill="#fff"></text></svg>{% endif %}
 </a>
 {% if not renderer %}
 {# Who SMASH is, in rows of the mask along the top and bottom, as on
@@ -18,12 +17,26 @@ layout: base.njk
    through them. Here they are for screen readers, and the email's link lies
    over its painted letters. #}
 <div class="info" data-info>
-  <p data-row>Ashley &amp; Veronica Reed Emile Pascoe</p>
+  <p data-row>Ashley Reed Veronica Reed Emile Pascoe</p>
   <p data-row>Experience design studio Stockholm hello@smash.studio</p>
 </div>
 <a class="info-mail" href="mailto:hello@smash.studio" data-mail hidden>hello@smash.studio</a>
-<a class="hero-logo" href="/" data-logo aria-label="SMASH">{% include "logo.svg" %}</a>
 <div class="dive-track" data-track></div>
+{# Past the dive, the studio first, then the projects, newest first
+   (feed.js). The landed picture scrolls away above it. #}
+<section class="about" aria-label="About SMASH">
+  <div class="grid project-lead">
+    <div class="lead"><p>SMASH is a creative studio working where art, design, technology and space meet. We make interactive installations, projection mapping, immersive environments and the digital work that carries them further.</p></div>
+  </div>
+  <div class="row row-text grid">
+    <div class="cell" style="--start: 2; --span: 5"><div class="prose"><p>We take projects from the first idea to the last night of the run, designing for the room and for the crew who operates it at seven in the morning.</p></div></div>
+  </div>
+  <div class="row grid about-facts">
+    <dl style="--start: 1; --span: 3"><dt>Studio</dt><dd>Ashley Reed</dd><dd>Veronica Reed</dd><dd>Emile Pascoe</dd><dd>Stockholm</dd></dl>
+    <dl style="--start: 4; --span: 3"><dt>Work</dt><dd>Interactive installations</dd><dd>Projection mapping</dd><dd>Immersive environments</dd><dd>Stage design</dd><dd>Animated film</dd></dl>
+    <dl style="--start: 7; --span: 3"><dt>Contact</dt><dd><a href="mailto:hello@smash.studio">hello@smash.studio</a></dd></dl>
+  </div>
+</section>
 <div class="dive-project" data-project></div>
 {% include "titles.njk" %}
 {% endif %}
