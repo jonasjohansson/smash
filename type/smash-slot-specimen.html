@@ -87,6 +87,7 @@
   <div class="controls">
     <div class="field"><label for="words">Words</label><input id="words" type="text" value="SMASH Originals" autocomplete="off" spellcheck="false"></div>
     <div class="slider"><label for="slot">Slot</label><input id="slot" type="range" min="12" max="28" step="0.5" value="20"><output id="slot-out" for="slot">20</output></div>
+    <label class="toggle"><input id="liga" type="checkbox" checked> L and T forms</label>
     <label class="toggle"><input id="grid" type="checkbox"> Grid</label>
     <div class="grounds"><span id="ground-label">Ground</span><div role="group" aria-labelledby="ground-label" style="display:flex;gap:6px">
       <button type="button" class="g-white" data-ground="white" aria-pressed="true" aria-label="White"></button>
@@ -143,17 +144,29 @@
 
   let slot = 20;
 
-  function build(ch) {
+  // A corner rounded off with ink: from corner (px, py), a radius r along
+  // each side into the open quadrant (ix, iy), joined by a quarter circle.
+  const f = (v) => +v.toFixed(2);
+  function fillet(px, py, ix, iy, r) {
+    const ax = px + r * ix, by = py + r * iy;
+    const turn = -(py - by) * (px - ax);
+    return `M${f(px)} ${f(py)}L${f(ax)} ${f(py)}A${f(r)} ${f(r)} 0 0 ${turn > 0 ? 1 : 0} ${f(px)} ${f(by)}Z`;
+  }
+  const rect = (x0, y0, x1, y1) => `M${f(x0)} ${f(y0)}H${f(x1)}V${f(y1)}H${f(x0)}Z`;
+
+  // A letter, standing from `top` to `bot` (all but the tallest stems keep
+  // their places: the rails stay level with the rest of the line).
+  function build(ch, top = 0, bot = H) {
     const rows = (G[ch] ?? G['?']).split('/');
     const n = rows[0].length;
     const s = slot, bar = PITCH - s;
     const xs = [0]; for (let c = 0; c < n; c++) xs.push(xs[c] + (c % 2 ? s : bar));
-    const ys = [0, INSET - s / 2, UP - s / 2, UP + s / 2, LO - s / 2, LO + s / 2, H - INSET + s / 2, H];
+    const rail = INSET - s / 2;
+    const ys = [top, top + rail, UP - s / 2, UP + s / 2, LO - s / 2, LO + s / 2, bot - rail, bot];
     const ink = (r, c) => r >= 0 && r < 7 && c >= 0 && c < n && rows[r][c] === '#';
-    const f = (v) => +v.toFixed(2);
     let d = '';
     for (let r = 0; r < 7; r++) for (let c = 0; c < n; c++) {
-      if (ink(r, c)) d += `M${f(xs[c])} ${f(ys[r])}H${f(xs[c + 1])}V${f(ys[r + 1])}H${f(xs[c])}Z`;
+      if (ink(r, c)) d += rect(xs[c], ys[r], xs[c + 1], ys[r + 1]);
     }
     // Round the inside: where a counter ends against ink on both sides, a half
     // circle (flat against the middle rail, as in the logo's A and H); the
@@ -168,31 +181,76 @@
         else if (ink(r - dy, c)) rad = h / 2; // counter ends sideways
         else rad = Math.min(s, w, h); // a bend
         if (rad <= 0) continue;
-        const px = dx < 0 ? xs[c] : xs[c + 1], py = dy < 0 ? ys[r] : ys[r + 1];
-        const ix = -dx, iy = -dy; // into the cell
-        const ax = px + rad * ix, by = py + rad * iy;
-        // From the corner along one side, round the arc (centred a radius in
-        // on both) to the other side, and back.
-        const turn = (0 - 0) * (by - by) - (py - by) * (px - ax); // (A − C) × (B − C), A = (ax, py), B = (px, by), C = (ax, by)
-        d += `M${f(px)} ${f(py)}L${f(ax)} ${f(py)}A${f(rad)} ${f(rad)} 0 0 ${turn > 0 ? 1 : 0} ${f(px)} ${f(by)}Z`;
+        d += fillet(dx < 0 ? xs[c] : xs[c + 1], dy < 0 ? ys[r] : ys[r + 1], -dx, -dy, rad);
       }
     }
     return { d, w: xs[n], n, xs, ys };
   }
 
+  // Setting a line. With the L and T forms on: the letter after an L stands on
+  // its foot, which runs on under it; the letters either side of a T tuck in
+  // under its arm, which runs on over them. Only their outer rails move; the
+  // middle rails stay level.
+  let liga = true;
+  const letter = (c) => !!c && /[A-Z0-9]/.test(c);
   function setLine(text, height) {
-    const s = slot;
-    let x = 0; const parts = [];
-    for (const raw of text.toUpperCase()) {
-      if (raw === ' ') { x += PITCH; continue; }
-      if (!G[raw]) continue;
-      const g = build(raw);
-      x += s / 2;
-      parts.push(`<path transform="translate(${x.toFixed(2)} 0)" d="${g.d}"/>`);
-      x += g.w + s / 2;
+    const s = slot, bar = PITCH - s, rail = INSET - s / 2;
+    const cs = [...text.toUpperCase()].filter((c) => c === ' ' || G[c]);
+    const n = cs.length;
+    const top = Array(n).fill(0), bot = Array(n).fill(H);
+    const onFoot = Array(n).fill(false), underArm = Array(n).fill(false);
+    if (liga) {
+      for (let i = 0; i < n; i++) {
+        if (cs[i] === 'L' && letter(cs[i + 1])) { onFoot[i + 1] = true; bot[i + 1] = H - rail - s; }
+        if (cs[i] === 'T') for (const j of [i - 1, i + 1]) {
+          if (letter(cs[j]) && cs[j] !== 'T') { underArm[j] = true; top[j] = rail + s; }
+        }
+      }
     }
-    const w = Math.max(1, x);
-    return `<svg viewBox="0 0 ${w.toFixed(2)} ${H}" style="height:${height}px;width:${(w / H * height).toFixed(1)}px" fill="currentColor" role="img" aria-label="${text.replace(/"/g, '&quot;')}">${parts.join('')}</svg>`;
+    const at = [], ws = []; const parts = [], glyphs = [];
+    let x = s / 2;
+    const arms = [];
+    for (let i = 0; i < n; i++) {
+      const c = cs[i];
+      if (c === ' ') { x += PITCH; continue; }
+      if (liga && c === 'T') {
+        // The stem, with room for the arm's own reach where no letter tucks under it.
+        let sx = onFoot[i] ? at[i - 1] + bar + s : (underArm[i - 1] ? x : x + bar + s);
+        at[i] = sx; ws[i] = bar;
+        parts.push(rect(sx, top[i] + rail, sx + bar, bot[i]));
+        parts.push(fillet(sx, top[i] + rail, -1, 1, s), fillet(sx + bar, top[i] + rail, 1, 1, s));
+        arms.push(i);
+        x = sx + bar + s;
+        if (!underArm[i + 1]) x += bar + s;
+        continue;
+      }
+      const gx = onFoot[i] ? at[i - 1] + bar + s : x;
+      at[i] = gx;
+      if (liga && c === 'L' && onFoot[i + 1]) {
+        ws[i] = bar;
+        parts.push(rect(gx, top[i], gx + bar, bot[i] - rail));
+        parts.push(fillet(gx + bar, bot[i] - rail, 1, -1, s));
+        x = gx + bar + s;
+        continue;
+      }
+      const g = build(c, top[i], bot[i]);
+      ws[i] = g.w;
+      glyphs.push(`<path transform="translate(${f(gx)} 0)" d="${g.d}"/>`);
+      x = gx + g.w + s;
+    }
+    // Feet and arms, now that the letters they run under and over are placed.
+    for (let i = 0; i < n; i++) {
+      if (liga && cs[i] === 'L' && onFoot[i + 1]) parts.push(rect(at[i], bot[i] - rail, at[i + 1] + ws[i + 1], bot[i]));
+    }
+    for (const i of arms) {
+      const sx = at[i];
+      const left = underArm[i - 1] ? at[i - 1] : sx - bar - s;
+      const right = underArm[i + 1] ? at[i + 1] + ws[i + 1] : sx + 2 * bar + s;
+      parts.push(rect(left, top[i], right, top[i] + rail));
+    }
+    const w = Math.max(1, x - s / 2);
+    const minX = Math.min(0, ...at.filter((v) => v !== undefined));
+    return `<svg viewBox="${f(minX)} 0 ${f(w - minX)} ${H}" style="height:${height}px;width:${((w - minX) / H * height).toFixed(1)}px" fill="currentColor" role="img" aria-label="${text.replace(/"/g, '&quot;')}"><path d="${parts.join('')}"/>${glyphs.join('')}</svg>`;
   }
 
   function glyphCell(ch) {
@@ -206,7 +264,7 @@
       <b>${ch === "'" ? '’' : ch}</b></div>`;
   }
 
-  const SAMPLES = ['Experience design', 'Digital interactive', 'Originals', "Let's work together", 'Jagad 2026', 'Resonance'];
+  const SAMPLES = ['Experience design', 'Digital interactive', 'Originals', "Let's work together", 'Allt ljus', 'Tekniska museet', 'Light', 'Jagad 2026'];
   const words = document.getElementById('words');
   function render() {
     document.getElementById('proof').innerHTML = setLine('SMASH', 64);
@@ -217,6 +275,7 @@
   words.addEventListener('input', () => { document.getElementById('typed').innerHTML = setLine(words.value.trim() || 'SMASH Originals', 150); });
   const slotIn = document.getElementById('slot'), slotOut = document.getElementById('slot-out');
   slotIn.addEventListener('input', () => { slot = +slotIn.value; slotOut.textContent = slotIn.value; render(); });
+  document.getElementById('liga').addEventListener('change', (e) => { liga = e.target.checked; render(); });
   document.getElementById('grid').addEventListener('change', (e) => document.body.classList.toggle('show-grid', e.target.checked));
   const stage = document.querySelector('.stage');
   document.querySelectorAll('.grounds button').forEach((b) => b.addEventListener('click', () => {
