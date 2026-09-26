@@ -11,7 +11,7 @@
 // one project; the pictures, further back, grow a little
 // less than the mark does. Reduced motion dissolves the mark instead.
 // Landed, the address becomes the project's, and scrolling on reads it: its
-// page (/work/<slug>/) is fetched and set below the picture, which scrolls away,
+// page (/<slug>/) is fetched and set below the picture, which scrolls away,
 // and the next project follows it, and the next, without end; the address
 // follows whichever one is being read.
 // (v2's glass stays a single screen.)
@@ -25,7 +25,7 @@
 const build = new URL(import.meta.url).search;
 const { DEFAULTS, buildMark, markShape, paintMark, paintInfo, diveFocus, toDataUrl, INFO_FONT } = await import(`./mark.js${build}`);
 const { GLASS_DEFAULTS, createGlass } = await import(`./glass.js${build}`);
-const { createFeed, page, titles } = await import(`./feed.js${build}`);
+const { createFeed, page, titles, fitTitle } = await import(`./feed.js${build}`);
 
 const AHEAD = 24;
 const PARALLEL = 6;
@@ -72,6 +72,7 @@ if (stage && framesEl) {
 
   const slow = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const titleEl = document.querySelector('[data-title]');
+  const logoEl = document.querySelector('[data-logo]');
   // The rows' words are in the page (for screen readers too); the email's link
   // lies over its painted letters.
   const infoRows = [...document.querySelectorAll('[data-info] [data-row]')].map((p) => p.textContent.trim());
@@ -133,6 +134,7 @@ if (stage && framesEl) {
     over = Math.max(0, scrollY - max);
     const under = over >= innerHeight; // scrolled out of sight
     stage.style.transform = over ? `translate3d(0, ${-Math.min(over, innerHeight)}px, 0)` : '';
+    if (logoEl) logoEl.style.transform = stage.style.transform; // the landed picture's logo goes with it
     stage.style.visibility = under ? 'hidden' : '';
     reading = over && feed ? feed.read() : '';
     // Only the mark at rest is a link; once scrolling in, the pictures are not,
@@ -141,6 +143,7 @@ if (stage && framesEl) {
     document.body.classList.toggle('is-diving', target > 0);
     // Landed: the picture carries its project's title (only with the cut stopped).
     stage.classList.toggle('is-landed', target >= 1 && params.land);
+    document.body.classList.toggle('is-landed', target >= 1 && params.land);
   }
 
   // The mark's zoom and offset for the dive at view.t, and the pictures' zoom.
@@ -208,8 +211,11 @@ if (stage && framesEl) {
     current = picture;
     shown = i;
     onScreen = slug;
-    stage.href = `/work/${slug}/`;
-    if (titleEl) titleEl.textContent = titles[slug] ?? '';
+    stage.href = `/${slug}/`;
+    if (titleEl) {
+      titleEl.querySelector('text').textContent = (titles[slug] ?? '').toUpperCase();
+      fitTitle(titleEl);
+    }
     if (glass) return glass.setImage(picture);
     dirty = true;
     if (!slide.classList.contains('is-drawn')) {

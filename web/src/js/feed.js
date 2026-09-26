@@ -21,7 +21,7 @@ const pages = new Map();
 export function page(slug) {
   const cached = pages.get(slug);
   if (cached && !(cached.retryAt <= performance.now())) return cached;
-  const request = fetch(`/work/${slug}/`)
+  const request = fetch(`/${slug}/`)
     .then((r) => (r.ok ? r.text() : null))
     .then((html) => {
       const article = html && new DOMParser().parseFromString(html, 'text/html').querySelector('article.project');
@@ -32,6 +32,25 @@ export function page(slug) {
   pages.set(slug, request);
   return request;
 }
+
+// A project's title as the mask of its hero (project.njk): its letters sized
+// by their ink, so that stretched over the hero they meet its edges exactly,
+// accents and all. Until the typeface is in, a guess from the length stands.
+const FONT = 'Anton';
+const ruler = document.createElement('canvas').getContext('2d');
+export async function fitTitle(svg) {
+  const text = svg?.querySelector('text');
+  const words = text?.textContent;
+  if (!words) return;
+  await document.fonts.load(`100px ${FONT}`, words).catch(() => {});
+  if (text.textContent !== words) return; // changed while the typeface loaded
+  ruler.font = `100px ${FONT}`;
+  const m = ruler.measureText(words);
+  const w = m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
+  const h = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent;
+  if (w > 0 && h > 0) svg.setAttribute('viewBox', `${-m.actualBoundingBoxLeft} ${-m.actualBoundingBoxAscent} ${w} ${h}`);
+}
+export const fitTitles = (root) => root.querySelectorAll('.title-mask').forEach(fitTitle);
 
 // Videos play only while on screen: the feed only grows, and every copy left
 // playing above the reader would go on decoding.
@@ -47,6 +66,7 @@ export function createFeed(container) {
   const articles = () => container.querySelectorAll(':scope > .project');
   let feed = [...articles()].map((a) => a.dataset.slug);
   articles().forEach(watch);
+  articles().forEach(fitTitles);
   let feeding = false; // one on its way
   let missing = 0; // pages not there, in a row: give up after a few
   let run = 0; // bumped whenever the feed starts over
@@ -81,6 +101,7 @@ export function createFeed(container) {
       const copy = article.cloneNode(true);
       container.append(copy);
       watch(copy);
+      fitTitles(copy);
       return true;
     });
   }
@@ -119,7 +140,7 @@ export function createFeed(container) {
 
     // The address of `slug`, or of the page the feed started on.
     address(slug) {
-      const path = slug ? `/work/${slug}/` : home;
+      const path = slug ? `/${slug}/` : home;
       if (location.pathname === path) return;
       history.replaceState(history.state, '', path + location.search);
       document.title = slug && titles[slug] ? `${titles[slug]} — SMASH` : homeTitle;

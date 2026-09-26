@@ -6,23 +6,23 @@ layout: base.njk
    arguments inside layouts). Scrolling dives into the mark, the length of
    the track, and on into the project it lands on and every one after it
    (main.js); v2's glass does not. #}
-<a class="stage"{% if renderer %} data-renderer="{{ renderer }}"{% endif %} href="/work/{{ poster.slug }}/" data-stage aria-label="SMASH — see the work">
+<a class="stage"{% if renderer %} data-renderer="{{ renderer }}"{% endif %} href="/{{ poster.slug }}/" data-stage aria-label="SMASH — see the work">
   <div class="slide">
     <img src="{{ poster.src }}" alt="" fetchpriority="high" data-frame>
   </div>
-  {% if not renderer %}<p class="hero-title" data-title aria-hidden="true"></p>{% endif %}
+  {% if not renderer %}<svg class="title-mask" viewBox="0 -88 100 89" preserveAspectRatio="none" aria-hidden="true" data-title><rect x="-99999" y="-99999" width="199999" height="199999" fill="#000"/><text font-family="Anton" font-size="100" fill="#fff"></text></svg>{% endif %}
 </a>
 {% if not renderer %}
 {# Who SMASH is, in rows of the mask along the top and bottom, as on
    svartljus.se: main.js paints these words there, the pictures showing
    through them. Here they are for screen readers, and the email's link lies
    over its painted letters. #}
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=block" data-info-font>
 <div class="info" data-info>
-  <p data-row>Ashley Reed Veronica Reed Emile Pascoe</p>
+  <p data-row>Ashley &amp; Veronica Reed Emile Pascoe</p>
   <p data-row>Experience design studio Stockholm hello@smash.studio</p>
 </div>
 <a class="info-mail" href="mailto:hello@smash.studio" data-mail hidden>hello@smash.studio</a>
+<a class="hero-logo" href="/" data-logo aria-label="SMASH">{% include "logo.svg" %}</a>
 <div class="dive-track" data-track></div>
 <div class="dive-project" data-project></div>
 {% include "titles.njk" %}

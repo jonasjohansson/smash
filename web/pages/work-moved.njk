@@ -1,0 +1,20 @@
+---
+pagination:
+  data: projects
+  size: 1
+  alias: p
+permalink: "/work/{{ p.slug }}/"
+eleventyExcludeFromCollections: true
+---
+{# Projects used to live under /work/; old links go to where they are now. #}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ p.title }} — SMASH</title>
+  <meta http-equiv="refresh" content="0; url=/{{ p.slug }}/">
+  <link rel="canonical" href="/{{ p.slug }}/">
+  <script>location.replace('/{{ p.slug }}/' + location.search + location.hash);</script>
+</head>
+<body></body>
+</html>

@@ -114,11 +114,12 @@ function filleted(points, r) {
  */
 export function markShape(p, W, H) {
   const pad = p.padding;
-  // The rows of text, if any, take a band off the top and the bottom.
+  // The rows of text, if any, take a band off the top and the bottom, with
+  // as much room on their far side as between them and the mark.
   const row = p.info ? Math.round(H * p.infoSize) : 0;
   const gap = p.info ? Math.round(H * p.infoGap) : 0;
   let bw = Math.max(1, W - 2 * pad);
-  let bh = Math.max(1, H - 2 * pad - 2 * (row + gap));
+  let bh = Math.max(1, H - 2 * pad - 2 * (row + 2 * gap));
   if (p.fit === 'contain') {
     const s = Math.min(bw / UNITS.w, bh / UNITS.h);
     bw = UNITS.w * s;
@@ -224,17 +225,19 @@ export function paintInfo(ctx, shape, texts, invert, least = 0.8) {
   shape.rows.forEach((box, i) => {
     const text = (texts[i] || '').toUpperCase();
     if (!text) return;
-    // Size the capitals to the row, then fit the line to its width.
-    ctx.font = `100px ${INFO_FONT}`;
-    const probe = ctx.measureText('H');
-    const cap = probe.actualBoundingBoxAscent / 100 || 0.72;
-    // The ink, not the advance, meets the edges.
+    // The ink, not the type's box, meets the row's edges on all four sides,
+    // so the room around each row is exactly what was asked for.
     const ink = (s) => {
       ctx.font = `${s}px ${INFO_FONT}`;
       const t = ctx.measureText(text);
-      return { left: t.actualBoundingBoxLeft, width: t.actualBoundingBoxLeft + t.actualBoundingBoxRight };
+      return {
+        left: t.actualBoundingBoxLeft,
+        width: t.actualBoundingBoxLeft + t.actualBoundingBoxRight,
+        up: t.actualBoundingBoxAscent,
+        height: t.actualBoundingBoxAscent + t.actualBoundingBoxDescent,
+      };
     };
-    let size = box.h / cap;
+    let size = (box.h / ink(100).height) * 100;
     let m = ink(size);
     let scale = box.w / m.width;
     if (scale < least) {
@@ -242,8 +245,8 @@ export function paintInfo(ctx, shape, texts, invert, least = 0.8) {
       m = ink(size);
       scale = box.w / m.width;
     }
-    const h = size * cap;
-    const y = box.y + (box.h + h) / 2; // the baseline, capitals centred in the row
+    const top = box.y + (box.h - m.height) / 2; // centred, if it had to be set smaller
+    const y = top + m.up; // the baseline
     ctx.save();
     ctx.globalCompositeOperation = invert ? 'destination-out' : 'source-over';
     ctx.fillStyle = '#fff';
@@ -252,7 +255,7 @@ export function paintInfo(ctx, shape, texts, invert, least = 0.8) {
     ctx.scale(scale, 1);
     ctx.fillText(text, 0, 0);
     ctx.restore();
-    out[i] = { x: box.x + m.left * scale, y: y - h, h, scale, font: ctx.font, text };
+    out[i] = { x: box.x + m.left * scale, y: top, h: m.height, scale, font: ctx.font, text };
   });
   return out;
 }

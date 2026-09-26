@@ -12,7 +12,7 @@ permalink: /v3/
 <p class="maze-title" data-title aria-live="polite"></p>
 <button class="maze-up" type="button" data-up hidden>Up</button>
 <nav class="projector-list" aria-label="Projects">
-  {% for p in projects %}<a href="/work/{{ p.slug }}/">{{ p.title }}</a>{% endfor %}
+  {% for p in projects %}<a href="/{{ p.slug }}/">{{ p.title }}</a>{% endfor %}
 </nav>
 <script type="application/json" id="slides">{{ slides | dump | safe }}</script>
 <script type="importmap">

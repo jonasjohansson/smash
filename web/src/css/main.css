@@ -87,6 +87,20 @@ b, strong { font-weight: inherit; }
 
 .home { height: 100svh; overflow: hidden; background: #000; color: #fff; }
 .home .site-header { display: none; }
+/* A project page's header is its logo alone, over the hero picture; the
+   landed picture on the landing carries the same logo once the dive lands
+   (main.js moves it with the picture). */
+.project-page .site-header, .hero-logo {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 10;
+  background: none;
+  color: #fff;
+  filter: drop-shadow(0 0 12px rgb(0 0 0 / 0.35));
+}
+.hero-logo { position: fixed; display: flex; align-items: center; height: var(--header); padding-inline: var(--margin); right: auto; opacity: 0; visibility: hidden; transition: opacity 0.6s, visibility 0s 0.6s; }
+.hero-logo svg { display: block; height: 30px; width: auto; }
+.home.is-landed .hero-logo { opacity: 1; visibility: visible; transition: opacity 0.6s, visibility 0s; }
 
 .stage { position: fixed; inset: 0; display: block; }
 .slide {
@@ -169,27 +183,25 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 /* Each project on a dark tint of its own colour (data.md's `color`, or its
    cover's), so the next one is plain to see as it scrolls in: projects follow
    one another without end (feed.js), flush, the tint changing between them. */
-.project { background: color-mix(in oklab, var(--tint, var(--bg)) 32%, var(--bg)); padding-bottom: var(--row-gap); }
+/* flow-root keeps a first child's margin inside, on the tint (the landed
+   project on the landing starts with its lead: its heading is the picture). */
+.project { display: flow-root; background: color-mix(in oklab, var(--tint, var(--bg)) 32%, var(--bg)); padding-bottom: var(--row-gap); }
 .project + .project { border-top: 1px solid rgb(255 255 255 / 0.28); }
 
 /* A project opens on its hero picture, edge to edge, its title in the middle
    of it; the landed picture on the landing carries its title the same way. */
 .project-head { position: relative; }
 .project-head:not(.has-hero) { padding: clamp(48px, 8vw, 128px) var(--margin) clamp(24px, 3vw, 48px); }
-.project-title, .hero-title { margin: 0; font-size: var(--t-title); line-height: 1; letter-spacing: -0.025em; }
-.has-hero .project-title, .hero-title {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  padding-inline: var(--margin);
-  text-align: center;
-  color: #fff;
-  text-shadow: 0 0 32px rgb(0 0 0 / 0.4);
-  pointer-events: none;
-}
-.hero-title { z-index: 1; opacity: 0; transition: opacity 0.6s; }
-.stage.is-landed .hero-title { opacity: 1; }
+.project-title { margin: 0; font-size: var(--t-title); line-height: 1; letter-spacing: -0.025em; }
+/* With a hero, the title is the hero's mask: black with the title cut out,
+   stretched over the picture edge to edge and multiplied with it, so the
+   picture shows only through the letters (as the work does through the mark
+   on the landing). The words stay for screen readers. */
+.has-hero { isolation: isolate; }
+.title-mask { position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: multiply; pointer-events: none; }
+.has-hero .project-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.stage .title-mask { z-index: 1; opacity: 0; transition: opacity 0.8s; }
+.stage.is-landed .title-mask { opacity: 1; }
 
 /* Pictures on their own, or two to a row, run edge to edge, as on
    jonasjohansson.se; text, and pictures beside text, keep the margins. */
@@ -243,7 +255,7 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 
 @media (max-width: 720px) {
   :root { --header: 56px; }
-  .logo svg { height: 26px; }
+  .logo svg, .hero-logo svg { height: 26px; }
   .logo { grid-column: 1 / span 5; }
   .nav { grid-column: 6 / span 5; gap: 1.2em; }
   .contact { grid-column: 11 / span 2; }

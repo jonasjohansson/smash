@@ -429,7 +429,7 @@ function pick() {
 
 function click() {
   if (state === 'outside') return enter();
-  if (hovered) location.href = `/work/${hovered.slug}/`;
+  if (hovered) location.href = `/${hovered.slug}/`;
 }
 
 // ---- entering ----------------------------------------------------------------

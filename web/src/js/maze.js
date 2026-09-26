@@ -1222,7 +1222,7 @@ canvas.addEventListener('pointerup', (e) => {
   if (!click) return;
   if (mode === 'above') return dive();
   const p = printUnder(e);
-  if (p) location.href = `/work/${p.slug}/`;
+  if (p) location.href = `/${p.slug}/`;
 });
 
 /** Stand at the middle of a zone's longest run, looking along it. */
