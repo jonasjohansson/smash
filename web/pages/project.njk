@@ -33,17 +33,23 @@ eleventyComputed:
     <h1 class="project-title">{{ p.title }}</h1>
   </header>
 
+  {# Over the introduction, where the project was (or who it was for) and when;
+     over each further text, what it is about: small, in capitals. #}
   {% if p.rows.lead %}
   <div class="grid project-lead">
-    <div class="lead">{{ p.rows.lead.content | md | safe }}</div>
+    <div class="lead">
+      {% if p.caption %}<p class="label">{{ p.caption }}, {{ p.year }}</p>{% endif %}
+      <div class="lead-text">{{ p.rows.lead.content | md | safe }}</div>
+    </div>
   </div>
   {% endif %}
 
   {% for row in p.rows.rows %}
-  <div class="row row-{{ row.kind }}{% if row.cells.length > 2 and row.kind == 'group' %} row-keeps{% endif %} grid">
+  <div class="row row-{{ row.kind }}{% if row.keeps %} row-keeps{% endif %} grid">
     {% for c in row.cells %}
     <div class="cell cell-{{ c.block.type }}" style="{% if c.vw %}--ar: {{ c.block.ar }}{% else %}--start: {{ c.start }}; --span: {{ c.span }}{% endif %}">
       {% if c.block.type == 'text' %}
+      {% if c.block.label %}<h2 class="label">{{ c.block.label }}</h2>{% endif %}
       <div class="prose">{{ c.block.content | md | safe }}</div>
       {% elif c.block.type == 'credits' %}
       <ul class="credits">{% for line in c.block.credits %}<li>{{ line | mdInline | safe }}</li>{% endfor %}</ul>

@@ -6,14 +6,17 @@
  * (`size: half-left`, or `colStart`/`colSpan`). Everything unplaced is set by
  * rules, so pages vary without anyone laying them out by hand. A project reads
  * in sections: its hero, a large introduction, and then each further text,
- * large and centred, over the pictures that follow it:
+ * large, in the middle of the page, over the pictures that follow it:
  *
- *  - a text is a section of its own, the width of the page but the margins;
+ *  - a text is a section of its own, six columns in the middle of the page;
  *  - two landscape images in a row stand side by side, one on its own takes
  *    the full width;
  *  - a run of portrait (or square) images stands side by side, up to four to
- *    a row and the rows as even as they can be; a portrait on its own takes
- *    one of two columns;
+ *    a row and the rows as even as they can be;
+ *  - no picture stands alone at less than the full width: a portrait on its
+ *    own joins the pictures beside it (a landscape on its own, else a pair,
+ *    making three), or else stands beside a text (the one it follows, or else
+ *    the next), or else takes the full width;
  *  - side by side, images share the width in proportion to their shapes, so
  *    all stand the same height and none is cropped;
  *  - images placed side by side across all twelve columns stay one row, the
@@ -34,8 +37,10 @@ export const SIZES = {
   'small-right': [8, 5],
 };
 
-const HALVES = [[1, 6], [7, 6]];
-const SECTION = [2, 10];
+const SECTION = [4, 6];
+// A text and a picture side by side: the text in five columns, the picture
+// in six, the text first if it came first.
+const BESIDE = { after: [[1, 5], [7, 6]], before: [[1, 6], [8, 5]] };
 
 const isMedia = (b) => b?.type === 'image' || b?.type === 'video';
 const placed = (b) => b.size || b.colStart || b.colSpan;
@@ -43,10 +48,15 @@ const tall = (b) => b.ar <= 1; // stands beside others, rather than taking the f
 const cell = (block, [start, span]) => ({ block, start, span });
 const PER_ROW = 4;
 
-/** Side by side, each as wide as its shape asks, so all stand the same height. */
+/**
+ * Side by side, each as wide as its shape asks, so all stand the same height.
+ * Three or four portraits stay side by side on a phone too (`keeps`); a row
+ * with a landscape in it stacks there, or the landscape would be a sliver.
+ */
 function group(items) {
   const sum = items.reduce((total, b) => total + b.ar, 0);
-  return { kind: 'group', cells: items.map((block) => ({ block, vw: Math.round((block.ar / sum) * 100) })) };
+  const keeps = items.length > 2 && items.every(tall);
+  return { kind: 'group', keeps, cells: items.map((block) => ({ block, vw: Math.round((block.ar / sum) * 100) })) };
 }
 
 function explicit(b) {
@@ -75,7 +85,6 @@ export function compose(project) {
   const lead = leadIndex >= 0 ? blocks.splice(leadIndex, 1)[0] : null;
 
   const rows = [];
-  let half = 0;
 
   // A run of pictures between texts, laid out.
   function pictures(run) {
@@ -85,7 +94,7 @@ export function compose(project) {
         while (run[end + 1] && tall(run[end + 1])) end++;
         const talls = run.slice(j, end + 1);
         if (talls.length === 1) {
-          rows.push({ kind: 'media', cells: [cell(talls[0], HALVES[half++ % 2])] });
+          rows.push({ kind: 'lone', block: talls[0] });
         } else {
           // Five make three and two, not four and one.
           const count = Math.ceil(talls.length / PER_ROW);
@@ -115,17 +124,46 @@ export function compose(project) {
     } else if (placed(b)) {
       const run = authoredRow(blocks, i);
       if (run > 1) {
-        rows.push(group(blocks.slice(i, i + run)));
+        rows.push({ ...group(blocks.slice(i, i + run)), placed: true });
         i += run - 1;
+      } else if (explicit(b)[1] === 12) {
+        rows.push({ kind: 'full', cells: [cell(b, [1, 12])], placed: true });
       } else {
-        const [start, span] = explicit(b);
-        rows.push({ kind: span === 12 ? 'full' : 'media', cells: [cell(b, [start, span])] });
+        rows.push({ kind: 'lone', block: b });
       }
     } else {
       let end = i;
       while (isMedia(blocks[end + 1]) && !placed(blocks[end + 1])) end++;
       pictures(blocks.slice(i, end + 1));
       i = end;
+    }
+  }
+
+  // No picture left on its own at less than the full width.
+  const media = (r) => r.cells.map((c) => c.block);
+  const single = (r) => r?.kind === 'full' && !r.placed && isMedia(r.cells[0].block);
+  const pair = (r) => r?.kind === 'group' && !r.placed && r.cells.length === 2;
+  const text = (r) => r?.kind === 'section' && !placed(r.cells[0].block);
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i].kind !== 'lone') continue;
+    const b = rows[i].block;
+    const [prev, next] = [rows[i - 1], rows[i + 1]];
+    const mate = [prev, next].find(single) ?? [prev, next].find(pair);
+    const words = [prev, next].find(text);
+    if (mate && mate === prev) {
+      rows.splice(i - 1, 2, group([...media(prev), b]));
+      i--;
+    } else if (mate) {
+      rows.splice(i, 2, group([b, ...media(next)]));
+    } else if (words && words === prev) {
+      const [t, p] = BESIDE.after;
+      rows.splice(i - 1, 2, { kind: 'split', cells: [cell(prev.cells[0].block, t), cell(b, p)] });
+      i--;
+    } else if (words) {
+      const [p, t] = BESIDE.before;
+      rows.splice(i, 2, { kind: 'split', cells: [cell(b, p), cell(next.cells[0].block, t)] });
+    } else {
+      rows[i] = { kind: 'full', cells: [cell(b, [1, 12])] };
     }
   }
 

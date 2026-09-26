@@ -4,7 +4,9 @@ import matter from 'gray-matter';
 import sharp from 'sharp';
 
 /**
- * Every folder in `projects/` with a data.md is a project. Newest first.
+ * Every folder in `projects/` with a data.md is a project; the site shows the
+ * ones SMASH made (`smash: true`). The rest are Jonas Johansson's own, brought
+ * in with them from his portfolio (scripts/import-portfolio.mjs). Newest first.
  * Asset paths and image aspect ratios are resolved here, so templates and the
  * layout composer never touch the disk.
  */
@@ -40,12 +42,18 @@ async function dominant(file) {
   return tints.get(file);
 }
 
-export async function readProjects(root) {
-  const projects = await Promise.all(fs.readdirSync(root, { withFileTypes: true })
+/** The projects on the site, as { slug, data } from their data.md; read as is. */
+export function listed(root) {
+  return fs.readdirSync(root, { withFileTypes: true })
     .filter((d) => d.isDirectory() && fs.existsSync(path.join(root, d.name, 'data.md')))
-    .map(async (d) => {
-      const dir = path.join(root, d.name);
-      const data = matter(fs.readFileSync(path.join(dir, 'data.md'), 'utf8')).data;
+    .map((d) => ({ slug: d.name, data: matter(fs.readFileSync(path.join(root, d.name, 'data.md'), 'utf8')).data }))
+    .filter(({ data }) => data.smash);
+}
+
+export async function readProjects(root) {
+  const projects = await Promise.all(listed(root)
+    .map(async ({ slug, data }) => {
+      const dir = path.join(root, slug);
       const blocks = await Promise.all((data.blocks ?? []).map(async (b) => {
         if (b.type === 'image') {
           const src = path.join(dir, b.src);
@@ -58,12 +66,15 @@ export async function readProjects(root) {
         return b;
       }));
       const cover = blocks.find((b) => b.type === 'image') ?? null;
+      // YAML reads a bare date as a Date: kept as its ISO day, so it sorts.
+      const date = new Date(data.date);
       return {
-        slug: d.name,
+        slug,
         title: data.title,
+        caption: data.caption ?? null, // who it was for, or where: the small line over the introduction
         color: data.color ?? (cover ? await dominant(cover.src) : null),
-        date: String(data.date),
-        year: new Date(data.date).getFullYear(),
+        date: date.toISOString().slice(0, 10),
+        year: date.getUTCFullYear(),
         tags: data.tags ?? [],
         featured: data.featured ?? null,
         blocks,

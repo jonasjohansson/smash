@@ -1,6 +1,8 @@
 ---
 title: Jagad
 date: 2026-01-01
+smash: true
+caption: "Kanal 5, Stockholm"
 tags:
   - mapping
 blocks:
@@ -12,6 +14,7 @@ blocks:
   - type: image
     src: 07.jpg
   - type: text
+    label: "The game"
     fontSize: small
     content: "To mark the launch of Kanal 5's show \"Jagad\", we rebuilt a classic top-down chase game onto the building itself: the windows became the blocks, the gaps between them became the streets. Players worked custom arcade controllers down on the pavement, hunting roaming celebrity avatars across the facade. Catch one and the whole road network flooded with your colour. High scores and player names were projected straight back onto the wall."
   - type: image
@@ -43,6 +46,7 @@ blocks:
   - type: image
     src: 08.jpg
   - type: text
+    label: "Credits"
     fontSize: small
     content: Made with [Smash Studio](https://www.smash.studio/) and [Platon Marko](https://platon.design/). I handled the game and real-time visuals, designed and built the physical arcade controllers and their instruction panels, and built the [web version](https://jagad.jonasjohansson.se/) so anyone could play from a phone. Over three nights hundreds queued up, some to chase down their own avatar.
 ---

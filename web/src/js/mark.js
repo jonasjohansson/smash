@@ -115,10 +115,11 @@ function filleted(points, r) {
 export function markShape(p, W, H) {
   const pad = p.padding;
   // The rows of text, if any, take a band off the top and the bottom, with
-  // as much room on their far side as between them and the mark.
+  // as much room on their far side as between them and the mark; the same
+  // room is left at the sides.
   const row = p.info ? Math.round(H * p.infoSize) : 0;
   const gap = p.info ? Math.round(H * p.infoGap) : 0;
-  let bw = Math.max(1, W - 2 * pad);
+  let bw = Math.max(1, W - 2 * (pad + gap));
   let bh = Math.max(1, H - 2 * pad - 2 * (row + 2 * gap));
   if (p.fit === 'contain') {
     const s = Math.min(bw / UNITS.w, bh / UNITS.h);

@@ -1,6 +1,8 @@
 ---
 title: Vi kommer i fred
 date: 2025-11-06
+smash: true
+caption: "Kungsträdgården, Stockholm"
 tags:
   - mixed reality
 blocks:
@@ -15,6 +17,7 @@ blocks:
     src: 01.jpg
     alt: A freestanding screen stands in front of the Royal Castle, showing an altered view of the square.
   - type: text
+    label: "The launch"
     fontSize: small
     content: For the launch of TV4's sci-fi drama "Vi kommer i fred", a single-camera totem stood in Kungsträdgården, facing the Royal Castle across the water, and dropped whoever walked by straight into the show's opening scene, a huge alien craft breaking through the clouds over the city.
   - type: image
@@ -22,6 +25,7 @@ blocks:
   - type: image
     src: 04.jpg
   - type: text
+    label: "How it works"
     fontSize: small
     content: Behind it, the whole invasion ran live in Resolume, mapped onto the live camera feed so anyone who stepped up landed inside the shot. Two versions of the scene, one for day and one for night, swapped on a timer to match the light, and it ran around the clock for two weeks.
   - type: image
@@ -43,6 +47,7 @@ blocks:
     src: 09-wide.jpg
     alt: A laptop running the alien invasion scene in Resolume overlooks the softly lit Stockholm waterfront at night.
   - type: text
+    label: "Credits"
     fontSize: small
     content: Made with [Smash Studio](https://www.smash.studio/). I did the real-time integration and the on-site install, getting the live camera feed placed into the scene and mapped onto the totem, then calibrated on location.
 ---

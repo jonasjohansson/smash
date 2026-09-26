@@ -9,6 +9,10 @@
  * The six most recent projects with a landscape hero are marked `featured`,
  * which puts them on the landing page.
  *
+ * The site shows only the projects since marked `smash: true` by hand, and
+ * those carry a `caption` and their texts `label`s, written here: running this
+ * again replaces `projects/` and loses all three.
+ *
  *   node scripts/import-portfolio.mjs [path-to-jonasjohansson.se]
  */
 

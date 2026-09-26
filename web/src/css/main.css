@@ -226,10 +226,13 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 .row-full, .row-group { padding-inline: 0; }
 .project-hero img, .project-hero video { max-height: calc(100svh - 48px); object-fit: cover; }
 
-/* After the hero, the project introduced in large words, centred; each further
-   text a section of its own, as large, over the pictures that follow it. */
+/* After the hero, the project introduced in large words; each further text a
+   section of its own, over the pictures that follow it. The texts stand in the
+   middle of the page, narrow, set flush left. */
 .project-lead { margin-top: var(--row-gap); }
-.lead { grid-column: 2 / span 10; text-align: center; font: 400 clamp(24px, 3.12vw, 46px) / 1.15 var(--serif); }
+.lead { grid-column: 3 / span 8; font: 400 clamp(24px, 3.12vw, 46px) / 1.15 var(--serif); }
+/* A small line in capitals over a text, as on gentilhomme.com. */
+.label { margin: 0 0 clamp(14px, 1.7vw, 26px); font: 400 clamp(11px, 1.04vw, 15px) / 1 var(--font); text-transform: uppercase; }
 .lead p + p { margin-top: 0.8em; }
 
 .row { margin-top: var(--row-gap); align-items: end; }
@@ -243,8 +246,9 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 .cell-text .prose { max-width: 42ch; }
 .prose p + p { margin-top: 1em; }
 .prose a, .credits a, .lead a { text-decoration: underline; text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
-.row-section .cell { text-align: center; }
-.row-section .prose { max-width: none; font: 400 clamp(20px, 2.22vw, 32px) / 1.18 var(--serif); }
+.row-section .prose, .row-split .prose { max-width: none; font: 400 clamp(20px, 2.22vw, 32px) / 1.18 var(--serif); }
+/* A text beside a picture of its own (compose.js), level with its top. */
+.row-split { align-items: start; }
 
 .credits {
   list-style: none;
@@ -278,6 +282,7 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
   .contact { grid-column: 11 / span 2; }
   [style*="--span"], .cell, .tile { grid-column: 1 / -1; }
   .row-media .cell + .cell { margin-top: var(--gutter); }
+  .row-split .cell + .cell { margin-top: 28px; }
   /* Two stack; three or four stay side by side. */
   .row-group:not(.row-keeps) { flex-direction: column; }
   .row-group:not(.row-keeps) > .cell { flex: none; width: 100%; }

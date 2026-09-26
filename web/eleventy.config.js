@@ -1,6 +1,6 @@
 import Image from '@11ty/eleventy-img';
 import markdownIt from 'markdown-it';
-import { readProjects } from './scripts/projects.js';
+import { listed, readProjects } from './scripts/projects.js';
 import { compose, indexLayout } from './scripts/compose.js';
 
 const md = markdownIt({ html: true, linkify: true });
@@ -36,7 +36,13 @@ async function imageSrc(src, width = 640, format = 'jpeg') {
 
 export default function (config) {
   config.addPassthroughCopy({ 'src/css': 'css', 'src/fonts': 'fonts', 'src/js': 'js', 'src/CNAME': 'CNAME', 'src/brand': 'brand', 'src/gate': 'gate', 'src/v3': 'assets/v3' });
-  config.addPassthroughCopy('projects/**/*.{mp4,webm}');
+  // The videos of the projects on the site, and their poster frames.
+  for (const { slug, data } of listed('projects')) {
+    for (const b of (data.blocks ?? []).filter((b) => b.type === 'video')) {
+      config.addPassthroughCopy(`projects/${slug}/${b.src}`);
+      if (b.poster) config.addPassthroughCopy(`projects/${slug}/${b.poster}`);
+    }
+  }
   config.addWatchTarget('src/');
   config.addWatchTarget('scripts/');
   config.addWatchTarget('projects/');
@@ -79,7 +85,9 @@ export default function (config) {
     })));
   });
   config.addGlobalData('poster', async () => {
-    const first = (await readProjects('projects')).filter((p) => p.featured).sort((a, b) => a.featured - b.featured)[0];
+    const projects = await readProjects('projects');
+    const first = projects.filter((p) => p.featured).sort((a, b) => a.featured - b.featured)[0]
+      ?? projects.find((p) => p.cover?.ar > 1.2) ?? projects[0];
     return { slug: first.slug, src: await imageSrc(first.cover.src, 1280, 'webp') };
   });
   // Stamped on every stylesheet and script address, so a page is never shown
