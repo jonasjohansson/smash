@@ -40,7 +40,6 @@ const DIVE_DEFAULTS = {
   reel: 0.15, // how far into the dive (of its scroll) the reel takes over from the cut
   parallax: 1.15, // how much the pictures have grown when the mark has passed
   land: false, // slow the cut to a stop as the dive goes in, or let it run on
-  invert: true, // the pictures through the slots and round the mark, the block white (A)
   light: true, // on the page's ground (white, or warm grey in dark mode), as the projects are (S)
   info: true, // who SMASH is, in rows of the mask along the top and bottom
   infoSize: 0.03, // each row's height, of the screen's (the room round the whole is a slot's width)
