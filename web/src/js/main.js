@@ -138,6 +138,7 @@ if (stage && framesEl) {
     const under = over >= innerHeight; // scrolled out of sight
     stage.style.transform = over ? `translate3d(0, ${-Math.min(over, innerHeight)}px, 0)` : '';
     stage.style.visibility = under ? 'hidden' : '';
+    document.body.classList.toggle('is-reading', under);
     reading = over && feed ? feed.read() : '';
     // Only the mark at rest is a link; once scrolling in, the pictures are not,
     // and the header and the studio's line along the bottom go.

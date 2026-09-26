@@ -6,7 +6,7 @@
   --ink: #111;
   --muted: #8b8b8b;
   --line: #e6e6e6;
-  --dark: #1c1c1c; /* the projects' ground */
+  --ground: #fff; /* the projects' ground */
 
   --cols: 12;
   --margin: clamp(16px, 3.2vw, 56px);
@@ -88,14 +88,16 @@ b, strong { font-weight: inherit; }
 
 .home { height: 100svh; overflow: hidden; background: #000; color: #fff; }
 .home .site-header { display: none; }
-/* A project page's header is its logo alone, over the hero picture. */
+/* A project page's header is its logo alone, over the hero picture: white,
+   inverted against whatever is under it (the ground or the picture in the
+   title's letters), so it always shows. */
 .project-page .site-header {
   position: absolute;
   inset: 0 0 auto;
   z-index: 10;
   background: none;
   color: #fff;
-  filter: drop-shadow(0 0 12px rgb(0 0 0 / 0.35));
+  mix-blend-mode: difference;
 }
 
 .stage { position: fixed; inset: 0; display: block; }
@@ -115,14 +117,17 @@ b, strong { font-weight: inherit; }
 /* Scrolling dives into the mark (main.js): the page scrolls, the stage stays.
    The track is the dive, --dive screens long; the project it lands on is set
    below it, on the project pages' black, and the picture scrolls away above it;
-   every project after it follows, on the same grey (see .project). */
+   every project after it follows, on the same white (see .project). */
 .home.can-dive { height: auto; overflow: visible; }
 .dive-track { display: none; }
 .home.can-dive .dive-track { display: block; height: calc(100svh * (1 + var(--dive, 2))); }
 .dive-project { position: relative; z-index: 1; background: var(--bg); color: var(--ink); }
 .dive-project:empty { display: none; }
+/* Reading, the landing is white underneath too, so a fast fling never
+   flashes its black where the browser has yet to paint. */
+.home.is-reading { background: var(--ground); }
 /* The studio, between the dive and the projects. */
-.about { position: relative; z-index: 1; display: flow-root; background: var(--bg); color: var(--ink); padding-bottom: var(--row-gap); border-bottom: 1px solid rgb(255 255 255 / 0.28); }
+.about { position: relative; z-index: 1; display: flow-root; background: var(--bg); color: var(--ink); padding-bottom: var(--row-gap); border-bottom: 1px solid rgb(17 17 17 / 0.2); }
 .home:not(.can-dive) .about { display: none; }
 .row.about-facts { align-items: start; font-size: var(--t-small); line-height: 1.8; }
 .about-facts dl { margin: 0; }
@@ -181,14 +186,14 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 
 /* ---- project page ------------------------------------------------------- */
 
-/* Projects are shown on a dark ground, with light text. */
-.project-page, .dive-project, .about { --bg: var(--dark); --ink: #f0f0f0; --muted: rgb(240 240 240 / 0.62); --line: rgb(240 240 240 / 0.16); }
+/* Projects are shown on white, with dark text (--ground). */
+.project-page, .dive-project, .about { --bg: var(--ground); --ink: #111; --muted: rgb(17 17 17 / 0.55); --line: rgb(17 17 17 / 0.14); }
 
-/* Every project on the same dark grey, a line between each (they follow one
+/* Every project on the same ground, a line between each (they follow one
    another without end, feed.js). flow-root keeps a first child's margin on
-   the grey (the landed project on the landing starts with its text). */
+   the ground (a project may start with its text). */
 .project { display: flow-root; background: var(--bg); padding-bottom: var(--row-gap); }
-.project + .project { border-top: 1px solid rgb(255 255 255 / 0.28); }
+.project + .project { border-top: 1px solid rgb(17 17 17 / 0.2); }
 
 /* A project opens on its hero picture, edge to edge, its title in the middle
    of it; the landed picture on the landing carries its title the same way. */
@@ -201,10 +206,10 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
    on the landing). The words stay for screen readers. */
 .has-hero { isolation: isolate; }
 .title-mask { position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: multiply; pointer-events: none; }
-/* A second pass turns that black into the projects' grey, so the hero is
+/* A second pass turns that black into the projects' ground, so the hero is
    one surface with its page: screen leaves the letters' picture as it is. */
 .title-ground { mix-blend-mode: screen; }
-.title-ground rect { fill: var(--dark); }
+.title-ground rect { fill: var(--ground); }
 .has-hero .project-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 /* Scrolled into from the one before, a project's hero shows whole, its title
    over it; the mask is for its own page, opened directly. */
