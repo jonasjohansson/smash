@@ -35,6 +35,7 @@ const DIVE_DEFAULTS = {
   length: 2, // screens of scrolling from the mark to the pictures
   parallax: 1.15, // how much the pictures have grown when the mark has passed
   land: true, // slow the cut to a stop as the dive goes in
+  light: true, // on white, as the projects are (S)
   info: true, // who SMASH is, in rows of the mask along the top and bottom
   infoSize: 0.03, // each row's height, of the screen's
   infoGap: 0.012, // between the rows and the mark

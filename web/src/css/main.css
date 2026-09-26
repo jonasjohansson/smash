@@ -88,17 +88,8 @@ b, strong { font-weight: inherit; }
 
 .home { height: 100svh; overflow: hidden; background: #000; color: #fff; }
 .home .site-header { display: none; }
-/* A project page's header is its logo alone, over the hero picture: white,
-   inverted against whatever is under it (the ground or the picture in the
-   title's letters), so it always shows. */
-.project-page .site-header {
-  position: absolute;
-  inset: 0 0 auto;
-  z-index: 10;
-  background: none;
-  color: #fff;
-  mix-blend-mode: difference;
-}
+/* A project page opens on its hero; no header. */
+.project-page .site-header { display: none; }
 
 .stage { position: fixed; inset: 0; display: block; }
 .slide {
@@ -129,6 +120,17 @@ b, strong { font-weight: inherit; }
 /* The studio, between the dive and the projects. */
 .about { position: relative; z-index: 1; display: flow-root; background: var(--bg); color: var(--ink); padding-bottom: var(--row-gap); border-bottom: 1px solid rgb(17 17 17 / 0.2); }
 .home:not(.can-dive) .about { display: none; }
+/* The intro, striking: a chunky headline in the mask's capitals, the words
+   beside it large. */
+.about-intro { padding-top: clamp(48px, 8vw, 128px); align-items: start; row-gap: 32px; }
+.about-head {
+  grid-column: 1 / span 6;
+  margin: 0;
+  font: 400 clamp(44px, 6.4vw, 104px) / 0.92 Anton, var(--font);
+  text-transform: uppercase;
+}
+.about-text { grid-column: 7 / span 6; font-size: clamp(20px, 2.2vw, 34px); font-weight: 400; line-height: 1.22; letter-spacing: -0.01em; }
+.about-text p + p { margin-top: 0.8em; }
 .row.about-facts { align-items: start; font-size: var(--t-small); line-height: 1.8; }
 .about-facts dl { margin: 0; }
 .about-facts dt { color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
@@ -211,25 +213,6 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 .title-ground { mix-blend-mode: screen; }
 .title-ground rect { fill: var(--ground); }
 .has-hero .project-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-/* Scrolled into from the one before, a project's hero shows whole, its title
-   over it; the mask is for its own page, opened directly. */
-.in-feed .title-mask { display: none; }
-.in-feed .has-hero .project-title {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  width: auto;
-  height: auto;
-  overflow: visible;
-  clip-path: none;
-  padding-inline: var(--margin);
-  text-align: center;
-  color: #fff;
-  text-shadow: 0 0 32px rgb(0 0 0 / 0.4);
-  pointer-events: none;
-}
-
 /* Pictures on their own, or two to a row, run edge to edge, as on
    jonasjohansson.se; text, and pictures beside text, keep the margins. */
 .project-hero { margin: 0; }
@@ -296,7 +279,8 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
   .f-copy { grid-column: 1 / span 6; }
   .f-mail, .site-footer .f-mail { grid-column: 7 / span 6; justify-self: end; }
   .f-top { display: none; }
-  .page-title, .project-title, .lead { grid-column: 1 / -1; }
+  .page-title, .project-title, .lead, .about-head, .about-text { grid-column: 1 / -1; }
+  .about-facts dl + dl { margin-top: 28px; }
   .page-meta { grid-column: 1 / -1; justify-self: start; margin-top: 12px; }
   .next-label { grid-column: 1 / -1; }
   .next-title { grid-column: 1 / -1; margin-top: 12px; }

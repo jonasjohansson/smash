@@ -100,9 +100,6 @@ export function createFeed(container) {
       if (!article) { missing++; return true; }
       missing = 0;
       const copy = article.cloneNode(true);
-      // Scrolled into, not opened: its hero shows whole, the title over it
-      // (the mask is for a project's own page).
-      copy.classList.add('in-feed');
       container.append(copy);
       watch(copy);
       fitTitles(copy);
