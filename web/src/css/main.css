@@ -200,19 +200,10 @@ b, strong { font-weight: inherit; }
 
 /* The way in (cta.njk), at the foot of the studio and of each offering, as
    on gentilhomme.com: SMASH yellow, an invitation, the address large. */
-/* The page's ground runs into the yellow (blended in oklab, so the way
-   through stays clean rather than muddy). */
-.cta { position: relative; z-index: 1; background: var(--accent); background: linear-gradient(in oklab, var(--ground), var(--accent) clamp(160px, 22vw, 360px)); color: #111; padding-block: clamp(200px, 26vw, 420px) clamp(40px, 5vw, 80px); }
+/* The page's ground runs into the yellow: a long fade, blended in oklab and
+   eased at both ends, so there is no edge where it starts or stops. */
+.cta { --fade: clamp(280px, 40vw, 640px); position: relative; z-index: 1; background: var(--accent); background: linear-gradient(in oklab, color-mix(in oklab, var(--accent) 0%, var(--ground)) calc(var(--fade) * 0), color-mix(in oklab, var(--accent) 2.8%, var(--ground)) calc(var(--fade) * 0.1), color-mix(in oklab, var(--accent) 10.4%, var(--ground)) calc(var(--fade) * 0.2), color-mix(in oklab, var(--accent) 21.6%, var(--ground)) calc(var(--fade) * 0.3), color-mix(in oklab, var(--accent) 35.2%, var(--ground)) calc(var(--fade) * 0.4), color-mix(in oklab, var(--accent) 50.0%, var(--ground)) calc(var(--fade) * 0.5), color-mix(in oklab, var(--accent) 64.8%, var(--ground)) calc(var(--fade) * 0.6), color-mix(in oklab, var(--accent) 78.4%, var(--ground)) calc(var(--fade) * 0.7), color-mix(in oklab, var(--accent) 89.6%, var(--ground)) calc(var(--fade) * 0.8), color-mix(in oklab, var(--accent) 97.2%, var(--ground)) calc(var(--fade) * 0.9), color-mix(in oklab, var(--accent) 100%, var(--ground)) calc(var(--fade) * 1)); color: #111; padding-block: calc(var(--fade) + clamp(24px, 3vw, 48px)) clamp(40px, 5vw, 80px); }
 .home:not(.can-dive) .cta { display: none; }
-/* With JavaScript the way in is dithered instead: yellow dots on the ground,
-   thinning out upward (main.js draws them to the screen's pixels), so the
-   ground and the yellow never mix into a third colour. */
-.cta.is-dithered { background: var(--ground); }
-.cta.is-dithered::before {
-  content: ""; position: absolute; inset: 0; background: var(--accent);
-  -webkit-mask: var(--dither) repeat-x 0 0 / var(--dither-size), linear-gradient(transparent var(--fade), #000 var(--fade));
-  mask: var(--dither) repeat-x 0 0 / var(--dither-size), linear-gradient(transparent var(--fade), #000 var(--fade));
-}
 .cta-inner { position: relative; row-gap: clamp(24px, 3vw, 48px); align-items: start; }
 .cta-title { grid-column: 1 / span 8; margin: 0; font: 400 clamp(40px, 5.8vw, 96px) / 0.98 var(--font); text-transform: uppercase; }
 .cta-title > span { display: block; }

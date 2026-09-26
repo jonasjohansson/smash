@@ -33,11 +33,11 @@ const [
 const AHEAD = 24;
 const PARALLEL = 6;
 const HOLD = 3000; // ms per image just before the dive lands
-const REEL = 0.2; // how far into the dive the reel takes over from the cut
 
 const DIVE_DEFAULTS = {
   length: 2, // screens of scrolling from the mark to the pictures
-  overlap: 0.6, // screens the page is already scrolling before the dive is through
+  overlap: 1, // screens the page is already scrolling before the dive is through
+  reel: 0.04, // how far into the dive (of its scroll) the reel takes over from the cut
   parallax: 1.15, // how much the pictures have grown when the mark has passed
   land: false, // slow the cut to a stop as the dive goes in, or let it run on
   invert: true, // the pictures through the slots and round the mark, the block white (A)
@@ -46,6 +46,31 @@ const DIVE_DEFAULTS = {
   infoSize: 0.03, // each row's height, of the screen's (the room round the whole is a slot's width)
   infoGap: 0.012, // between the rows and the mark
 };
+
+// The page's background, from the tweak panel (H): off, it follows the
+// browser's light or dark mode (main.css); on, it is the colour picked there,
+// on every page, the type turning dark or light to suit it.
+const GROUND_DEFAULTS = { ownGround: false, ground: '#26231f' };
+function paintGround(p) {
+  const root = document.documentElement.style;
+  const meta = document.querySelectorAll('meta[name="theme-color"]');
+  if (!p?.ownGround || !/^#[0-9a-f]{6}$/i.test(p.ground)) {
+    for (const k of ['--bg', '--ground', '--ink', '--muted', '--line', '--tile']) root.removeProperty(k);
+    meta.forEach((m) => m.content = m.dataset.content ?? m.content);
+    return;
+  }
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(p.ground.slice(i, i + 2), 16) / 255);
+  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const ink = lum > 0.5 ? '17 17 17' : '243 239 232';
+  root.setProperty('--bg', p.ground);
+  root.setProperty('--ground', p.ground);
+  root.setProperty('--ink', `rgb(${ink})`);
+  root.setProperty('--muted', `rgb(${ink} / 0.55)`);
+  root.setProperty('--line', `rgb(${ink} / 0.14)`);
+  root.setProperty('--tile', `color-mix(in oklab, ${p.ground}, rgb(${ink}) 8%)`);
+  meta.forEach((m) => { m.dataset.content ??= m.content; m.content = p.ground; });
+}
+try { paintGround(JSON.parse(localStorage.getItem('smash-mark') || '{}')); } catch {}
 
 const stage = document.querySelector('[data-stage]');
 const framesEl = document.getElementById('frames');
@@ -70,7 +95,7 @@ if (stage && framesEl) {
     poster.decode().then(() => { if (!current) glass.setImage(poster); }).catch(() => {});
   }
   const STORE = glass ? 'smash-mark-v2' : 'smash-mark';
-  const BASE = glass ? { ...DEFAULTS, ...GLASS_DEFAULTS } : { ...DEFAULTS, ...DIVE_DEFAULTS };
+  const BASE = glass ? { ...DEFAULTS, ...GLASS_DEFAULTS, ...GROUND_DEFAULTS } : { ...DEFAULTS, ...DIVE_DEFAULTS, ...GROUND_DEFAULTS };
 
   // Settings are a per-viewer convenience; the page works without them.
   const params = { ...BASE };
@@ -151,7 +176,7 @@ if (stage && framesEl) {
     over = Math.max(0, scrollY - max);
     under = over >= innerHeight && !(intro && intro.getBoundingClientRect().bottom > 0); // covered
     stage.style.visibility = under ? 'hidden' : '';
-    if (reel && target > 0 && reel.preload !== 'auto') { reel.preload = 'auto'; reel.load(); }
+    if (reel && target > 0) wantReel();
     document.body.classList.toggle('is-reading', under);
     // Only the mark at rest is a link; once scrolling in, the pictures are not,
     // and the header and the studio's line along the bottom go.
@@ -197,6 +222,10 @@ if (stage && framesEl) {
   }
 
   const reel = document.querySelector('[data-reel]'); // SMASH's reel, where the dive lands
+  // Fetched once the landing is in, or at the first scroll if sooner, so it is
+  // ready as soon as the dive begins.
+  const wantReel = () => { if (reel && reel.preload !== 'auto') { reel.preload = 'auto'; reel.load(); } };
+  addEventListener('load', () => setTimeout(wantReel, 800), { once: true });
   let onReel = false;
   const decoded = new Map(); // frame index -> ImageBitmap
   const pending = new Set();
@@ -366,9 +395,9 @@ if (stage && framesEl) {
     // it plays on through the rest of the dive and after. It rests out of
     // sight, and starts over when the cut comes back.
     if (reel && !glass) {
-      const want = view.e > REEL && reel.readyState >= 2;
+      const want = view.t > params.reel && reel.readyState >= 2;
       if (want && !onReel) { onReel = true; show(reel, -2, onScreen); }
-      else if (onReel && view.e <= REEL) { onReel = false; reel.pause(); reel.currentTime = 0; ticks = every; }
+      else if (onReel && view.t <= params.reel) { onReel = false; reel.pause(); reel.currentTime = 0; ticks = every; }
       const play = onReel && !under && !document.hidden && (!slow || heard);
       if (play && reel.paused) reel.play().catch(() => {});
       else if (!play && !reel.paused) reel.pause();
@@ -444,6 +473,7 @@ if (stage && framesEl) {
       try { localStorage.removeItem(STORE); } catch {}
       Object.assign(params, BASE);
       pane.refresh();
+      paintGround(params);
       drawMark();
     });
 
@@ -478,7 +508,8 @@ if (stage && framesEl) {
     if (dives) {
       const d = pane.addFolder({ title: 'Dive' });
       d.addBinding(params, 'length', { label: 'scroll (screens)', min: 0.5, max: 6, step: 0.1 });
-      d.addBinding(params, 'overlap', { label: 'page moves before end', min: 0, max: 1, step: 0.05 }).on('change', track);
+      d.addBinding(params, 'reel', { label: 'film starts at', min: 0, max: 0.95, step: 0.01 });
+      d.addBinding(params, 'overlap', { label: 'page moves before end', min: 0, max: 2, step: 0.05 }).on('change', track);
       d.addBinding(params, 'parallax', { label: 'pictures grow', min: 1, max: 1.6, step: 0.01 });
       d.addBinding(params, 'land', { label: 'land on a project' });
       const info = pane.addFolder({ title: 'Info' });
@@ -486,6 +517,10 @@ if (stage && framesEl) {
       info.addBinding(params, 'infoSize', { label: 'row height', min: 0.01, max: 0.08, step: 0.001 });
       info.addBinding(params, 'infoGap', { label: 'gap to the mark', min: 0, max: 0.05, step: 0.001 });
     }
+
+    const colour = pane.addFolder({ title: 'Colour' });
+    colour.addBinding(params, 'ownGround', { label: 'own background' }).on('change', () => paintGround(params));
+    colour.addBinding(params, 'ground', { label: 'background' }).on('change', () => paintGround(params));
 
     const slideshow = pane.addFolder({ title: 'Slideshow' });
     slideshow.addBinding(params, 'speed', { label: 'ms per image', min: 17, max: 1000, step: 1 });
@@ -544,39 +579,6 @@ if (own) {
   addEventListener('scroll', soon, { passive: true });
   addEventListener('resize', soon);
   soon();
-}
-
-// The way in (cta.njk) comes out of the ground in yellow dots: a strip of
-// them, dense at the foot and thinning out upward, drawn to the screen's own
-// pixels (a scaled mask would blur them) and repeated across the band.
-const DOT = 2; // px, each dot of the dither
-function dither(band) {
-  const dpr = devicePixelRatio || 1;
-  const fade = Math.round(Math.min(360, Math.max(160, innerWidth * 0.22)));
-  const w = 512, cols = w / DOT, rows = Math.ceil(fade / DOT);
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(w * dpr);
-  canvas.height = Math.round(rows * DOT * dpr);
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#000';
-  const px = DOT * dpr;
-  for (let y = 0; y < rows; y++) {
-    const t = (y + 0.5) / rows; // how yellow this row is
-    for (let x = 0; x < cols; x++) {
-      if (Math.random() < t) ctx.fillRect(Math.round(x * px), Math.round(y * px), Math.ceil(px), Math.ceil(px));
-    }
-  }
-  band.style.setProperty('--dither', `url(${canvas.toDataURL()})`);
-  band.style.setProperty('--dither-size', `${w}px ${rows * DOT}px`);
-  band.style.setProperty('--fade', `${rows * DOT}px`);
-  band.classList.add('is-dithered');
-}
-const bands = document.querySelectorAll('.cta');
-if (bands.length) {
-  let last = 0;
-  const redither = () => { if (innerWidth !== last) { last = innerWidth; bands.forEach(dither); } };
-  redither();
-  addEventListener('resize', redither);
 }
 
 // An offering's page opens on its picture seen through the mark, drawn to the
