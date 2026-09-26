@@ -1,17 +1,41 @@
 ---
+layout: base.njk
+title: Typeface
+description: SMASH, the typeface drawn from the SMASH mark. A variable font with five axes, to try and to download.
+bodyClass: typeface-page
+fullscreen: true
 permalink: /typeface/
 ---
-{# SMASH, the typeface drawn from the mark: its specimen (type/specimen.html),
-   linked from the footer. The page is the specimen as it is, on its own. #}
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="/brand/favicon-32.png" sizes="32x32" type="image/png">
-  <link rel="icon" href="/brand/favicon.svg" type="image/svg+xml">
-</head>
-<body>
-{{ specimen | safe }}
-</body>
-</html>
+{# SMASH, the typeface drawn from the mark (type/): the font to try and to
+   take, and nothing else. type/build.py writes the files to src/typeface/. #}
+<section class="typeface" data-typeface>
+  <header class="grid typeface-head">
+    <h1 class="typeface-title">SMASH</h1>
+    <nav class="typeface-files" aria-label="Files">
+      <a href="/typeface/SMASH-VF.ttf" download>Font (TTF)</a>
+      <a href="/typeface/SMASH.glyphs" download>Glyphs file</a>
+      <a href="/typeface/SMASH-sources.zip" download>Sources (UFO)</a>
+    </nav>
+  </header>
+  <div class="grid typeface-axes">
+    {% for a in [["wght", "Weight", 300, 800, 500, 1], ["wdth", "Width", 93, 116, 100, 0.5], ["crsb", "Crossbar", 180, 300, 235.5, 0.5], ["rond", "Roundness", 0, 100, 100, 1], ["hght", "Height", 360, 560, 471, 1]] %}
+    <label class="typeface-axis"><span>{{ a[1] }}</span><input type="range" data-axis="{{ a[0] }}" min="{{ a[2] }}" max="{{ a[3] }}" step="{{ a[5] }}" value="{{ a[4] }}"><output>{{ a[4] }}</output></label>
+    {% endfor %}
+  </div>
+  <div class="typeface-sample typeface-tester" contenteditable="true" spellcheck="false" aria-label="Type to try the font">SMASH Originals</div>
+  <div class="typeface-sample typeface-glyphs">{% for ch in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-':!?".split('') %}<span>{{ ch }}</span>{% endfor %}</div>
+  <p class="label typeface-set">Stylistic set 1</p>
+  <div class="typeface-sample typeface-glyphs typeface-alts">{% for ch in "RKVX".split('') %}<span>{{ ch }}</span>{% endfor %}</div>
+</section>
+{% include "cta.njk" %}
+<script type="module">
+  // The sliders set the samples' axes.
+  const root = document.querySelector('[data-typeface]');
+  for (const input of root.querySelectorAll('[data-axis]')) {
+    const out = input.nextElementSibling;
+    input.addEventListener('input', () => {
+      root.style.setProperty(`--${input.dataset.axis}`, input.value);
+      out.value = input.value;
+    });
+  }
+</script>

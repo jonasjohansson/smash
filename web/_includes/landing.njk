@@ -60,14 +60,15 @@ layout: base.njk
   <section class="row grid team" aria-label="The studio">
     <p class="team-text">The studio on Åsögatan in Stockholm. Every project gets its own lead, with a senior creative and a senior technical lead beside them, and we bring in makers from our network as the work needs. We are looking for interns in production and design.</p>
     <ul class="team-list">
-      {% for p in team %}
-      <li class="person">
-        <div class="person-picture">
+      {# The whole card writes to them. #}
+      {% for p in team %}{% set at = p.email.split('@') %}
+      <li><a class="person" href="mailto:{{ p.email }}">
+        <span class="person-picture">
           {{ p.picture | safe }}
           <span class="person-name">{% for w in p.name.split(' ') %}<span>{{ w }}</span>{% if not loop.last %} {% endif %}{% endfor %}</span>
-        </div>
-        {% if p.email %}{% set at = p.email.split('@') %}<a class="person-mail" href="mailto:{{ p.email }}">{{ at[0] }}<wbr>@{{ at[1] }}</a>{% endif %}
-      </li>
+        </span>
+        <span class="person-mail">{{ at[0] }}<wbr>@{{ at[1] }}</span>
+      </a></li>
       {% endfor %}
     </ul>
   </section>

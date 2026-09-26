@@ -38,7 +38,7 @@ async function imageSrc(src, width = 640, format = 'jpeg') {
 }
 
 export default function (config) {
-  config.addPassthroughCopy({ 'src/css': 'css', 'src/fonts': 'fonts', 'src/js': 'js', 'src/CNAME': 'CNAME', 'src/brand': 'brand', 'src/gate': 'gate', 'src/v3': 'assets/v3', 'src/reel': 'reel', 'src/clients': 'clients' });
+  config.addPassthroughCopy({ 'src/css': 'css', 'src/fonts': 'fonts', 'src/js': 'js', 'src/CNAME': 'CNAME', 'src/brand': 'brand', 'src/gate': 'gate', 'src/v3': 'assets/v3', 'src/reel': 'reel', 'src/clients': 'clients', 'src/typeface': 'typeface' });
   // The videos of the projects on the site, and their poster frames.
   for (const { slug, data } of listed('projects')) {
     for (const b of (data.blocks ?? []).filter((b) => b.type === 'video')) {
@@ -134,9 +134,6 @@ export default function (config) {
       picture: await image(path.join('team', p.picture), p.name, '(max-width: 720px) 33vw, 22vw'),
     })));
   });
-  // The typeface's specimen (/typeface/), kept with the font in type/.
-  config.addWatchTarget('../type/specimen.html');
-  config.addGlobalData('specimen', () => fs.readFile('../type/specimen.html', 'utf8'));
   // Stamped on every stylesheet and script address, so a page is never shown
   // with a stylesheet or script from an earlier build still in the browser's
   // cache (GitHub Pages lets them be kept for ten minutes).

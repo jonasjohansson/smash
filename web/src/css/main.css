@@ -112,7 +112,7 @@ b, strong { font-weight: inherit; }
 .home { height: 100svh; overflow: hidden; background: #000; color: #fff; }
 .home .site-header { display: none; }
 /* A project page opens on its hero; no header. */
-:is(.project-page, .category-page) .site-header { display: none; }
+:is(.project-page, .category-page, .typeface-page) .site-header { display: none; }
 
 .stage { position: fixed; inset: 0; display: block; }
 .slide {
@@ -187,13 +187,14 @@ b, strong { font-weight: inherit; }
 .row.team { align-items: start; row-gap: clamp(24px, 3vw, 48px); }
 .team-text { grid-column: 1 / span 4; margin: 0; max-width: 24ch; font: 400 clamp(20px, 1.9vw, 30px) / 1.18 var(--serif); }
 .team-list { grid-column: 5 / span 8; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(24px, 3vw, 48px) var(--gutter); margin: 0; padding: 0; list-style: none; }
+.person { display: block; }
 .person-picture { position: relative; display: flex; align-items: center; justify-content: center; aspect-ratio: 5 / 7; overflow: hidden; border-radius: var(--radius); background: var(--tile); }
 .person-picture picture { position: absolute; inset: 0; }
 .person-picture img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1); }
 .person-picture::after { content: ""; position: absolute; inset: 50% 0 0; background: linear-gradient(rgb(0 0 0 / 0), rgb(0 0 0 / 0.7)); pointer-events: none; } /* white names on bright pictures too */
 .person-name { position: absolute; z-index: 1; inset: auto 0 0; padding: clamp(10px, 1vw, 18px); font: 400 clamp(22px, 2.3vw, 40px) / 0.92 var(--display); text-transform: uppercase; color: var(--ink); }
 .person-name span { display: block; }
-.person-mail { display: inline-block; margin-top: 0.7em; font-size: var(--t-small); color: var(--ink); } /* on a phone, a line each side of the @ */
+.person-mail { display: block; margin-top: 0.7em; font-size: var(--t-small); color: var(--ink); } /* on a phone, a line each side of the @ */
 @media (max-width: 720px) {
   .team-text, .team-list { grid-column: 1 / -1; }
 }
@@ -215,6 +216,26 @@ b, strong { font-weight: inherit; }
    links in SMASH yellow, the first two in the chunky face. */
 .cta { position: relative; z-index: 1; background: var(--ground); color: var(--accent); padding-block: var(--row-gap) clamp(40px, 5vw, 80px); }
 .home:not(.can-dive) .cta { display: none; }
+/* The typeface (typeface.njk): its name set in itself, its files, and the
+   font to try, its five axes on sliders. */
+@font-face { font-family: "SMASH"; font-weight: 300 800; font-display: swap; src: url(/typeface/SMASH-VF.ttf) format("truetype"); }
+.typeface { padding-block: clamp(32px, 4vw, 64px) var(--row-gap); }
+.typeface-head { align-items: end; row-gap: 24px; }
+.typeface-title { grid-column: 1 / span 6; margin: 0; font: 400 clamp(96px, 16vw, 280px) / 0.8 "SMASH", var(--display); color: var(--accent); }
+.typeface-files { grid-column: 9 / span 4; display: flex; flex-direction: column; align-items: start; font-size: clamp(13px, 1.04vw, 16px); line-height: 1.6; text-transform: uppercase; color: var(--accent); }
+.typeface-axes { margin-top: clamp(40px, 5vw, 80px); row-gap: 14px; }
+.typeface-axis { grid-column: span 4; display: grid; grid-template-columns: 7.5em minmax(0, 1fr) 3.5em; align-items: center; gap: 12px; font-size: var(--t-small); text-transform: uppercase; }
+.typeface-axis input { width: 100%; accent-color: var(--accent); }
+.typeface-axis output { justify-self: end; font-variant-numeric: tabular-nums; }
+.typeface-sample { padding-inline: var(--margin); font-family: "SMASH", var(--display); font-variation-settings: "wght" var(--wght, 500), "wdth" var(--wdth, 100), "CRSB" var(--crsb, 235.5), "ROND" var(--rond, 100), "HGHT" var(--hght, 471); }
+.typeface-tester { margin-top: clamp(32px, 4vw, 64px); font-size: clamp(64px, 12vw, 220px); line-height: 1.1; overflow-wrap: anywhere; outline: none; }
+.typeface-glyphs { display: flex; flex-wrap: wrap; gap: 0.25em 0.45em; margin-top: clamp(32px, 4vw, 64px); font-size: clamp(40px, 5vw, 88px); line-height: 1.15; }
+.typeface .typeface-set { margin: clamp(32px, 4vw, 64px) var(--margin) 0; }
+.typeface .typeface-set + .typeface-glyphs { margin-top: clamp(10px, 1vw, 16px); }
+.typeface-alts { font-feature-settings: "ss01"; }
+@media (max-width: 720px) {
+  .typeface-title, .typeface-files, .typeface-axis { grid-column: 1 / -1; }
+}
 /* The mark over the links, in yellow, leading home. */
 .cta-logo { display: block; align-self: start; }
 .cta-logo svg { display: block; width: auto; height: calc(0.3 * 2 * 0.92 * clamp(48px, 7.4vw, 124px)); } /* 30% of "Let's work together"'s height */
