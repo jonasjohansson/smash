@@ -11,8 +11,8 @@ permalink: /gate/
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300&display=swap">
-  <link rel="stylesheet" href="/css/main.css">
-  <link rel="stylesheet" href="/gate/gate.css">
+  <link rel="stylesheet" href="/css/main.css?v={{ build }}">
+  <link rel="stylesheet" href="/gate/gate.css?v={{ build }}">
   <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js">
   <script type="importmap">
   {
@@ -22,17 +22,13 @@ permalink: /gate/
     }
   }
   </script>
-  <script type="module" src="/gate/gate.js"></script>
+  <script type="module" src="/gate/gate.js?v={{ build }}"></script>
 </head>
 <body class="gate" data-state="loading">
   <canvas class="gate-canvas" data-gate-canvas></canvas>
 
   <header class="site-header grid">
     <a class="logo" href="/">{% include "logo.svg" %}</a>
-    <nav class="nav">
-      <a href="/work/">Work</a>
-      <a href="/studio/">Studio</a>
-    </nav>
     <a class="contact" href="mailto:hello@smash.studio">Contact</a>
   </header>
 
@@ -42,7 +38,7 @@ permalink: /gate/
     <p class="gate-hint" data-hint>Drag or scroll to walk</p>
   </div>
 
-  <noscript><p class="gate-fallback"><a href="/work/">See the work</a></p></noscript>
+  <noscript><p class="gate-fallback"><a href="/">See the work</a></p></noscript>
 
   <script type="application/json" id="projects-data">[
     {%- for p in projects %}

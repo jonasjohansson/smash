@@ -14,19 +14,19 @@ eleventyComputed:
    the "Next project" link is for pages without JavaScript. #}
 {% include "titles.njk" %}
 <article class="project" data-slug="{{ p.slug }}"{% if p.color %} style="--tint: {{ p.color }}"{% endif %}>
-  <header class="project-head grid">
+  {# The project opens on its hero picture, its title in the middle of it. #}
+  <header class="project-head{% if p.rows.hero %} has-hero{% endif %}">
+    {% if p.rows.hero %}
+    <figure class="project-hero">
+      {% if p.rows.hero.type == 'video' %}
+      <video src="{{ p.rows.hero.src }}"{% if p.rows.hero.poster %} poster="/{{ p.rows.hero.poster }}"{% endif %} autoplay muted loop playsinline aria-label="{{ p.rows.hero.alt }}"></video>
+      {% else %}
+      {% image p.rows.hero.src, p.rows.hero.alt, "100vw", "eager" %}
+      {% endif %}
+    </figure>
+    {% endif %}
     <h1 class="project-title">{{ p.title }}</h1>
   </header>
-
-  {% if p.rows.hero %}
-  <figure class="project-hero">
-    {% if p.rows.hero.type == 'video' %}
-    <video src="{{ p.rows.hero.src }}"{% if p.rows.hero.poster %} poster="/{{ p.rows.hero.poster }}"{% endif %} autoplay muted loop playsinline aria-label="{{ p.rows.hero.alt }}"></video>
-    {% else %}
-    {% image p.rows.hero.src, p.rows.hero.alt, "100vw", "eager" %}
-    {% endif %}
-  </figure>
-  {% endif %}
 
   {% if p.rows.lead %}
   <div class="grid project-lead">

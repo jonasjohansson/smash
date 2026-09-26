@@ -8,7 +8,7 @@
  * on jonasjohansson.se, full width or side by side, with text beside them:
  *
  *  - an image and a short text next to each other share a row, image and text
- *    on alternating sides, text sitting on the image's baseline;
+ *    on alternating sides, the text level with the image's top;
  *  - a landscape image takes the full width;
  *  - a run of portrait (or square) images stands side by side, up to four to
  *    a row and the rows as even as they can be, sharing the width in

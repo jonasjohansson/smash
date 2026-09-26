@@ -82,6 +82,11 @@ export default function (config) {
     const first = (await readProjects('projects')).filter((p) => p.featured).sort((a, b) => a.featured - b.featured)[0];
     return { slug: first.slug, src: await imageSrc(first.cover.src, 1280, 'webp') };
   });
+  // Stamped on every stylesheet and script address, so a page is never shown
+  // with a stylesheet or script from an earlier build still in the browser's
+  // cache (GitHub Pages lets them be kept for ten minutes).
+  const build = Date.now().toString(36);
+  config.addGlobalData('build', build);
   config.addGlobalData('featured', async () =>
     (await readProjects('projects')).filter((p) => p.featured).sort((a, b) => a.featured - b.featured));
 

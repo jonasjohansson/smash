@@ -39,7 +39,7 @@ let renderer;
 try {
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
 } catch {
-  location.replace('/work/');
+  location.replace('/');
   throw new Error('WebGL unavailable');
 }
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));

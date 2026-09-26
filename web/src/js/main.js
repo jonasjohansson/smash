@@ -20,9 +20,12 @@
 // parameters, see mark.js), A inverts the mask, S swaps black for white.
 // Anywhere: G shows the grid.
 
-import { DEFAULTS, buildMark, markShape, paintMark, diveFocus, toDataUrl } from './mark.js';
-import { GLASS_DEFAULTS, createGlass } from './glass.js';
-import { createFeed, page } from './feed.js';
+// The modules come from the same build as this script: its address carries
+// the build's stamp (base.njk), and so do theirs.
+const build = new URL(import.meta.url).search;
+const { DEFAULTS, buildMark, markShape, paintMark, diveFocus, toDataUrl } = await import(`./mark.js${build}`);
+const { GLASS_DEFAULTS, createGlass } = await import(`./glass.js${build}`);
+const { createFeed, page, titles } = await import(`./feed.js${build}`);
 
 const AHEAD = 24;
 const PARALLEL = 6;
@@ -65,6 +68,7 @@ if (stage && framesEl) {
   const save = () => { try { localStorage.setItem(STORE, JSON.stringify(params)); } catch {} };
 
   const slow = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const titleEl = document.querySelector('[data-title]');
   const trackEl = document.querySelector('[data-track]');
   const more = document.querySelector('[data-project]'); // the projects, below the dive
   const feed = dives && more ? createFeed(more) : null;
@@ -126,6 +130,8 @@ if (stage && framesEl) {
     // and the header and the studio's line along the bottom go.
     if (stage.inert !== target > 0) stage.inert = target > 0;
     document.body.classList.toggle('is-diving', target > 0);
+    // Landed: the picture carries its project's title (only with the cut stopped).
+    stage.classList.toggle('is-landed', target >= 1 && params.land);
   }
 
   // The mark's zoom and offset for the dive at view.t, and the pictures' zoom.
@@ -194,6 +200,7 @@ if (stage && framesEl) {
     shown = i;
     onScreen = slug;
     stage.href = `/work/${slug}/`;
+    if (titleEl) titleEl.textContent = titles[slug] ?? '';
     if (glass) return glass.setImage(picture);
     dirty = true;
     if (!slide.classList.contains('is-drawn')) {
@@ -226,15 +233,12 @@ if (stage && framesEl) {
   let unfoldedFor = -2; // the frame the feed was started from
   let reading = ''; // the project at the middle of the screen, once past the picture
 
-  function unfold(slug, i) {
+  function unfold(slug) {
     feed.start(slug).then((ok) => {
       if (!ok || feed.first !== slug) return;
-      // The landed picture is the hero already: if the page opens with the
-      // same one, leave it out.
-      const src = i >= 0 ? frames[i].l : poster.getAttribute('src'); // landed before the first cut
-      const key = src?.match(/\/img\/([^/]+)-\d+\./)?.[1];
-      const hero = more.firstElementChild?.querySelector('.project-hero');
-      if (hero) hero.hidden = Boolean(key) && hero.innerHTML.includes(`/img/${key}-`);
+      // The landed picture is this project's hero, its title on it already.
+      const head = more.firstElementChild?.querySelector('.project-head');
+      if (head) head.hidden = true;
     });
   }
 
@@ -327,7 +331,7 @@ if (stage && framesEl) {
       if (landed) {
         sharpen();
         // Only once a picture is on screen: until then there is no project to start from.
-        if (onScreen && unfoldedFor !== shown) { unfoldedFor = shown; unfold(onScreen, shown); }
+        if (onScreen && unfoldedFor !== shown) { unfoldedFor = shown; unfold(onScreen); }
         feed.grow();
       } else {
         unfoldedFor = -2;

@@ -31,6 +31,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 img, video { display: block; width: 100%; height: auto; }
+[hidden] { display: none !important; }
 picture { display: contents; }
 a { color: inherit; text-decoration: none; }
 p { margin: 0; }
@@ -112,33 +113,34 @@ b, strong { font-weight: inherit; }
 .dive-project:empty { display: none; }
 html:has(.home.can-dive) { scrollbar-width: none; }
 html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
-/* At rest, who SMASH is: the site's header along the top, the studio along
-   the bottom, over the mark. Both go as the dive starts (main.js). */
-.home.can-dive .site-header { display: grid; position: fixed; inset: 0 0 auto; z-index: 10; background: none; color: #fff; }
-.landing-foot {
+/* At rest, who SMASH is, in two slim rows over the mark: what the studio
+   does and how to reach it along the top, who it is along the bottom, each on
+   a soft shade so the words hold over an edge-to-edge mark. Both go as the
+   dive starts (main.js). */
+.landing-top, .landing-foot {
   position: fixed;
-  inset: auto 0 0;
+  left: 0;
+  right: 0;
   z-index: 10;
-  align-items: end;
-  padding-block: 24px;
+  align-items: center;
+  white-space: nowrap;
   font-size: var(--t-small);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #fff;
-}
-.home:not(.can-dive) .landing-foot { display: none; }
-.lf-who { grid-column: 1 / span 3; }
-.lf-what { grid-column: 4 / span 6; opacity: 0.55; }
-.lf-mail { grid-column: 10 / span 3; justify-self: end; }
-/* A soft shade behind each, so the words hold over an edge-to-edge mark. */
-.home.can-dive .site-header { background: linear-gradient(rgb(0 0 0 / 0.6), transparent); }
-.landing-foot { padding-top: 48px; background: linear-gradient(transparent, rgb(0 0 0 / 0.6)); }
-.home.can-dive :is(.site-header, .landing-foot) {
   text-shadow: 0 0 8px rgb(0 0 0 / 0.4);
   transition: opacity 0.4s, visibility 0s;
 }
-.home.is-diving :is(.site-header, .landing-foot) { opacity: 0; visibility: hidden; transition: opacity 0.4s, visibility 0s 0.4s; }
-.home.light :is(.site-header, .landing-foot) { color: #111; text-shadow: none; background: none; }
+.landing-top { top: 0; padding-block: 14px 32px; background: linear-gradient(rgb(0 0 0 / 0.6), transparent); }
+.landing-foot { bottom: 0; padding-block: 32px 14px; background: linear-gradient(transparent, rgb(0 0 0 / 0.6)); }
+.home:not(.can-dive) :is(.landing-top, .landing-foot) { display: none; }
+.lt-line { grid-column: 1 / span 9; }
+.lt-contact { grid-column: 10 / span 3; justify-self: end; }
+.lf-who { grid-column: 1 / span 3; }
+.lf-names { grid-column: 4 / span 6; }
+.lf-mail { grid-column: 10 / span 3; justify-self: end; }
+.home.is-diving :is(.landing-top, .landing-foot) { opacity: 0; visibility: hidden; transition: opacity 0.4s, visibility 0s 0.4s; }
+.home.light :is(.landing-top, .landing-foot) { color: #111; text-shadow: none; background: none; }
 /* S: white ground instead of black. (A, invert, is drawn into the mask.) */
 .home.light { background: #fff; }
 /* H: the tweak panel, above the full-screen link. */
@@ -189,9 +191,26 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
    cover's), so the next one is plain to see as it scrolls in: projects follow
    one another without end (feed.js), flush, the tint changing between them. */
 .project { background: color-mix(in oklab, var(--tint, var(--bg)) 32%, var(--bg)); padding-bottom: var(--row-gap); }
+.project + .project { border-top: 1px solid rgb(255 255 255 / 0.28); }
 
-.project-head { padding-block: clamp(48px, 8vw, 128px) clamp(24px, 3vw, 48px); align-items: baseline; }
-.project-title { grid-column: 1 / -1; font-size: var(--t-title); line-height: 1; letter-spacing: -0.025em; }
+/* A project opens on its hero picture, edge to edge, its title in the middle
+   of it; the landed picture on the landing carries its title the same way. */
+.project-head { position: relative; }
+.project-head:not(.has-hero) { padding: clamp(48px, 8vw, 128px) var(--margin) clamp(24px, 3vw, 48px); }
+.project-title, .hero-title { margin: 0; font-size: var(--t-title); line-height: 1; letter-spacing: -0.025em; }
+.has-hero .project-title, .hero-title {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding-inline: var(--margin);
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 0 32px rgb(0 0 0 / 0.4);
+  pointer-events: none;
+}
+.hero-title { z-index: 1; opacity: 0; transition: opacity 0.6s; }
+.stage.is-landed .hero-title { opacity: 1; }
 
 /* Pictures on their own, or two to a row, run edge to edge, as on
    jonasjohansson.se; text, and pictures beside text, keep the margins. */
@@ -210,8 +229,10 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 .row-group { display: flex; gap: var(--gutter); align-items: flex-start; }
 .row-group > .cell { flex: var(--ar) 1 0; min-width: 0; }
 /* Pictures follow pictures closely; text keeps its air. */
-:is(.project-hero, .row-full, .row-group) + :is(.row-full, .row-group) { margin-top: var(--gutter); }
-.row-caption .cell-text { align-self: end; }
+:is(.project-head, .row-full, .row-group) + :is(.row-full, .row-group) { margin-top: var(--gutter); }
+/* Text beside a picture starts level with its top edge. */
+.row-caption { align-items: start; }
+.row-caption .prose > :first-child { text-box: trim-start cap alphabetic; }
 .cell-text .prose { max-width: 42ch; }
 .prose p + p { margin-top: 1em; }
 .prose a, .credits a, .lead a { text-decoration: underline; text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
@@ -239,16 +260,6 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 .next-title { grid-column: 4 / span 9; font-size: var(--t-title); line-height: 1; letter-spacing: -0.025em; transition: opacity 0.3s; }
 .next:hover .next-title { opacity: 0.5; }
 
-/* ---- studio -------------------------------------------------------------- */
-
-.studio { row-gap: var(--row-gap); }
-.studio-statement { grid-column: 1 / span 10; font-size: var(--t-lead); line-height: 1.3; letter-spacing: -0.01em; }
-.studio-about { grid-column: 7 / span 5; }
-.studio-list { grid-column: span 3; margin: 0; font-size: var(--t-small); line-height: 1.8; }
-.studio-list:first-of-type { grid-column: 1 / span 3; }
-.studio-list dt { color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
-.studio-list dd { margin: 0; }
-
 /* ---- small screens: the grid keeps its 12 columns, cells take all of them -- */
 
 @media (max-width: 720px) {
@@ -267,10 +278,12 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
   .f-copy { grid-column: 1 / span 6; }
   .f-mail, .site-footer .f-mail { grid-column: 7 / span 6; justify-self: end; }
   .f-top { display: none; }
-  .lf-who { grid-column: 1 / span 6; }
-  .lf-what { display: none; }
-  .lf-mail { grid-column: 7 / span 6; }
-  .page-title, .project-title, .lead, .studio-statement, .studio-about, .studio-list, .studio-list:first-of-type { grid-column: 1 / -1; }
+  /* One row each still: the line and Contact, the names (the email is Contact). */
+  .lt-line { grid-column: 1 / span 9; white-space: normal; }
+  .lt-contact { grid-column: 10 / span 3; }
+  .lf-who, .lf-mail { display: none; }
+  .lf-names { grid-column: 1 / -1; }
+  .page-title, .project-title, .lead { grid-column: 1 / -1; }
   .page-meta { grid-column: 1 / -1; justify-self: start; margin-top: 12px; }
   .next-label { grid-column: 1 / -1; }
   .next-title { grid-column: 1 / -1; margin-top: 12px; }
@@ -280,49 +293,7 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
   *, *::before, *::after { transition-duration: 0.01ms !important; }
 }
 
-/* ---- work: the slide projector ----------------------------------------- */
-
-.work-page { height: 100svh; overflow: hidden; background: #000; color: #fff; }
-.work-page main { height: 100%; }
-.work-page .site-header { position: absolute; inset: 0 0 auto; z-index: 10; background: none; color: #fff; }
-.work-page .logo svg { height: 44px; }
-
-.projector { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
-.projector.is-dragging { cursor: grabbing; }
-.projector.is-pointing { cursor: pointer; }
-
-.projector-title {
-  position: fixed;
-  left: var(--margin);
-  bottom: 28px;
-  z-index: 10;
-  font-size: var(--t-small);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  pointer-events: none;
-}
-.projector-views {
-  position: fixed;
-  right: var(--margin);
-  bottom: 20px;
-  z-index: 10;
-  display: flex;
-  gap: 1.6em;
-}
-.projector-views button {
-  appearance: none;
-  border: 0;
-  background: none;
-  color: #fff;
-  font: inherit;
-  font-size: var(--t-small);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  opacity: 0.45;
-  cursor: pointer;
-  padding: 8px 4px;
-}
-.projector-views button[aria-pressed="true"], .projector-views button:hover { opacity: 1; }
+/* ---- the project list, for keyboards and screen readers (v3) ------------ */
 
 /* For keyboards and screen readers, and if WebGL is missing. */
 .projector-list { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }

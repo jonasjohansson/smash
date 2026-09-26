@@ -10,13 +10,18 @@ layout: base.njk
   <div class="slide">
     <img src="{{ poster.src }}" alt="" fetchpriority="high" data-frame>
   </div>
+  {% if not renderer %}<p class="hero-title" data-title aria-hidden="true"></p>{% endif %}
 </a>
 {% if not renderer %}
-{# At rest the landing says who SMASH is; the header along the top is the
-   site's own (base.njk). Both go as the dive starts. #}
+{# At rest the landing says who SMASH is, in a row along the top and one
+   along the bottom (what was the studio page). Both go as the dive starts. #}
+<header class="landing-top grid">
+  <p class="lt-line">We turn spaces into experiences people remember</p>
+  <a class="lt-contact" href="mailto:hello@smash.studio">Contact</a>
+</header>
 <footer class="landing-foot grid">
   <p class="lf-who">Experience design studio, Stockholm</p>
-  <p class="lf-what">Interactive installations, projection mapping, immersive environments, stage design and animated film</p>
+  <p class="lf-names">Ashley Reed, Veronica Reed, Emile Pascoe</p>
   <a class="lf-mail" href="mailto:hello@smash.studio">hello@smash.studio</a>
 </footer>
 <div class="dive-track" data-track></div>
