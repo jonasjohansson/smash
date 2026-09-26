@@ -427,7 +427,7 @@ if (stage && framesEl) {
     stage.addEventListener('click', (e) => {
       if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || !trackEl) return;
       e.preventDefault();
-      glide(diveEnd());
+      glide(diveEnd() + innerHeight * 0.2); // a little past, so the page below shows its edge
     });
   }
 
