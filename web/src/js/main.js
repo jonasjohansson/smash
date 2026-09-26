@@ -2,21 +2,42 @@
 // mark. Frames are decoded off the main thread a couple of dozen ahead and
 // drawn to a canvas on the display's own clock, so a cut never waits on a
 // decode; if the next frame is not ready the current one simply holds.
-// A click opens the project on screen.
+// At rest, a click opens the project on screen.
+//
+// Scrolling dives into the mark, like the Marvel intro run backwards: the mark
+// comes at you (on a log scale, so every stretch of the approach takes as long)
+// through the gap between the M and the A, until its edges pass the edges of
+// the screen and the pictures fill it. The cut slows as you go and lands on
+// one project, whose title shows; the pictures, further back, grow a little
+// less than the mark does. Reduced motion dissolves the mark instead.
+// Landed, the address becomes the project's, and scrolling on reads it: its
+// page (/work/<slug>/) is fetched and set below, sliding up over the picture,
+// and the next project follows it, and the next, without end; the address
+// follows whichever one is being read.
+// (v2's glass stays a single screen.)
 //
 // Keys on the landing page: H opens the tweak panel (the mark is drawn from
 // parameters, see mark.js), A inverts the mask, S swaps black for white.
 // Anywhere: G shows the grid.
 
-import { DEFAULTS, buildMark, toDataUrl } from './mark.js';
+import { DEFAULTS, buildMark, markShape, paintMark, diveFocus, toDataUrl } from './mark.js';
 import { GLASS_DEFAULTS, createGlass } from './glass.js';
+import { createFeed, page, titles } from './feed.js';
 
 const AHEAD = 24;
 const PARALLEL = 6;
+const HOLD = 3000; // ms per image just before the dive lands
+
+const DIVE_DEFAULTS = {
+  length: 2, // screens of scrolling from the mark to the pictures
+  parallax: 1.15, // how much the pictures have grown when the mark has passed
+  land: true, // slow the cut to a stop as the dive goes in
+};
 
 const stage = document.querySelector('[data-stage]');
 const framesEl = document.getElementById('frames');
 const typing = (e) => e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement;
+const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 
 if (stage && framesEl) {
   const slide = stage.querySelector('.slide');
@@ -25,23 +46,36 @@ if (stage && framesEl) {
   slide.append(canvas);
 
   // v2 draws the mark as liquid glass in WebGL; v1 (and v2 without WebGL 2)
-  // masks a 2D canvas with CSS.
+  // draws it on a 2D canvas, over the picture.
   const glass = stage.dataset.renderer === 'glass' ? createGlass(canvas) : null;
   const ctx = glass ? null : canvas.getContext('2d');
+  const mask = glass ? null : document.createElement('canvas');
+  const mctx = mask?.getContext('2d');
+  const dives = stage.dataset.renderer !== 'glass'; // v2 stays one screen, even without WebGL 2
   if (glass) {
     slide.classList.add('is-glass');
     poster.decode().then(() => { if (!current) glass.setImage(poster); }).catch(() => {});
   }
   const STORE = glass ? 'smash-mark-v2' : 'smash-mark';
-  const BASE = glass ? { ...DEFAULTS, ...GLASS_DEFAULTS } : { ...DEFAULTS };
+  const BASE = glass ? { ...DEFAULTS, ...GLASS_DEFAULTS } : { ...DEFAULTS, ...DIVE_DEFAULTS };
 
   // Settings are a per-viewer convenience; the page works without them.
   const params = { ...BASE };
   try { Object.assign(params, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch {}
   const save = () => { try { localStorage.setItem(STORE, JSON.stringify(params)); } catch {} };
 
+  const slow = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const titleEl = document.querySelector('[data-title]');
+  const trackEl = document.querySelector('[data-track]');
+  const more = document.querySelector('[data-project]'); // the projects, below the dive
+  const feed = dives && more ? createFeed(more) : null;
+
   // ---- the mark ---------------------------------------------------------
 
+  let shape = null; // the mark laid out for the current size (v1)
+  let focus = null; // where the dive goes, and how far it zooms
+  let dirty = true; // the canvas needs drawing
+  let maskDirty = true; // and the mark with it (not on every cut)
   let lastShape = '';
   function drawMark() {
     const W = slide.clientWidth, H = slide.clientHeight;
@@ -54,9 +88,68 @@ if (stage && framesEl) {
       if (shape !== lastShape) { lastShape = shape; glass.setMask(buildMark(params, W, H), W, H); }
       return;
     }
-    const url = toDataUrl(buildMark(params, W, H));
-    slide.style.webkitMaskImage = url;
-    slide.style.maskImage = url;
+    shape = markShape(params, W, H);
+    focus = diveFocus(params, shape);
+    document.body.style.setProperty('--dive', params.length);
+    track();
+    frame();
+    dirty = maskDirty = true;
+    // Until the canvas has a picture, the poster is masked with CSS.
+    if (!current) {
+      const url = toDataUrl(buildMark(params, W, H));
+      slide.style.webkitMaskImage = url;
+      slide.style.maskImage = url;
+    }
+  }
+
+  // ---- the dive ---------------------------------------------------------
+
+  // Scroll position (0 at the mark, 1 at the pictures), eased toward on each
+  // frame so a mouse wheel's steps glide like a trackpad.
+  let target = 0;
+  let over = 0; // px scrolled past the dive, into the project
+  const view = { t: 0, e: 0, s: 1, x: 0, y: 0, image: 1, fade: 0 };
+
+  function track() {
+    if (!trackEl) return;
+    const max = trackEl.offsetHeight - innerHeight;
+    // At fractional zoom innerHeight is rounded, and the real bottom can fall
+    // a pixel short of max: the last pixel counts as the bottom.
+    target = max > 0 ? (scrollY >= max - 1 ? 1 : Math.max(0, scrollY / max)) : 0;
+    // The landed picture is the project's hero: it drifts up at half speed and
+    // darkens as the page slides over it.
+    over = Math.max(0, scrollY - max);
+    const under = over >= innerHeight; // covered by the projects
+    stage.style.transform = over ? `translate3d(0, ${-Math.min(over, innerHeight) * (slow ? 1 : 0.5)}px, 0)` : '';
+    stage.style.opacity = over ? 1 - 0.5 * Math.min(1, over / innerHeight) : '';
+    stage.style.visibility = under ? 'hidden' : '';
+    // Reading, the page is white underneath too, so a fast fling never
+    // flashes the landing's black where the browser has yet to paint.
+    document.body.classList.toggle('is-reading', under);
+    reading = over && feed ? feed.read() : '';
+    // Only the mark at rest is a link; once scrolling in, the pictures are not.
+    if (stage.inert !== target > 0) stage.inert = target > 0;
+  }
+
+  // The mark's zoom and offset for the dive at view.t, and the pictures' zoom.
+  function frame() {
+    const e = (view.e = 0.5 - Math.cos(Math.PI * view.t) / 2);
+    if (slow) { Object.assign(view, { s: 1, x: 0, y: 0, image: 1, fade: e }); return; }
+    const W = slide.clientWidth, H = slide.clientHeight;
+    const s = Math.exp(e * Math.log(focus.depth));
+    // The focus drifts to the centre of the screen as the mark comes in.
+    view.s = s;
+    view.x = focus.x + (W / 2 - focus.x) * e - s * focus.x;
+    view.y = focus.y + (H / 2 - focus.y) * e - s * focus.y;
+    // A camera moving in on both: the pictures are further back, at a distance
+    // that makes them `parallax` times larger by the time the mark has passed.
+    const z = 1 - 1 / s, zEnd = 1 - 1 / focus.depth;
+    const far = params.parallax > 1 ? (params.parallax * zEnd) / (params.parallax - 1) : Infinity;
+    view.image = far / (far - z) || 1;
+    // The mark is gone well before the end; fade what could be left, so it
+    // never vanishes in one frame. If the gap never opens (slots thicker than
+    // their spacing, or a zoom past the limit), dissolve it over the last stretch.
+    view.fade = smooth(focus.open ? 0.97 : 0.75, 1, view.t);
   }
 
   // ---- the slideshow ----------------------------------------------------
@@ -79,7 +172,10 @@ if (stage && framesEl) {
   const pending = new Set();
   const broken = new Set();
   let next = 0; // the frame to cut to
-  let current = null;
+  let current = null; // what is on screen: an ImageBitmap, or the poster
+  let shown = -1; // its frame index
+  let onScreen = ''; // and its project
+  let sharpened = -1; // the frame last swapped for a bigger size
 
   const load = () => {
     for (let k = 0; k < AHEAD && pending.size < PARALLEL; k++) {
@@ -95,53 +191,168 @@ if (stage && framesEl) {
     }
   };
 
-  // object-fit: cover, by hand.
-  function draw(bitmap) {
-    if (glass) return glass.setImage(bitmap);
+  function show(picture, i, slug) {
+    if (current !== picture) current?.close?.();
+    current = picture;
+    shown = i;
+    onScreen = slug;
+    stage.href = `/work/${slug}/`;
+    if (titleEl) titleEl.textContent = titles[slug] ?? '';
+    if (glass) return glass.setImage(picture);
+    dirty = true;
+    if (!slide.classList.contains('is-drawn')) {
+      slide.classList.add('is-drawn');
+      slide.style.webkitMaskImage = slide.style.maskImage = '';
+    }
+  }
+
+  // Landed: the picture fills the screen, so fetch it at its biggest (a
+  // phone held upright crops a landscape picture to a third of its width).
+  function sharpen() {
+    const i = shown;
+    if (i < 0 || sharpened === i) return;
+    sharpened = i;
+    const url = frames[i].x;
+    if (!url || url === frames[i][size]) return;
+    fetch(url)
+      .then((r) => r.blob())
+      .then((blob) => createImageBitmap(blob))
+      .then((bitmap) => (shown === i ? show(bitmap, i, frames[i].slug) : bitmap.close()))
+      .catch(() => {});
+  }
+
+  // ---- the projects, below the dive ------------------------------------------
+
+  // Landed, the feed starts below the dive (feed.js): the landed project's
+  // page, then the next project's, and on. The address is the landed
+  // project's, then whichever one is being read.
+
+  let unfoldedFor = -2; // the frame the feed was started from
+  let reading = ''; // the project at the middle of the screen, once past the picture
+
+  function unfold(slug, i) {
+    feed.start(slug).then((ok) => {
+      if (!ok || feed.first !== slug) return;
+      // The landed picture is the hero already: if the page opens with the
+      // same one, leave it out.
+      const key = frames[i]?.l.match(/\/img\/([^/]+)-\d+\./)?.[1];
+      const hero = more.firstElementChild?.querySelector('.project-hero');
+      if (hero) hero.hidden = Boolean(key) && hero.innerHTML.includes(`/img/${key}-`);
+    });
+  }
+
+  // object-fit: cover, by hand, `zoom` times larger about the centre.
+  function cover(picture, zoom) {
     const cw = canvas.width, ch = canvas.height;
-    const scale = Math.max(cw / bitmap.width, ch / bitmap.height);
-    const w = bitmap.width * scale, h = bitmap.height * scale;
-    ctx.drawImage(bitmap, (cw - w) / 2, (ch - h) / 2, w, h);
+    const iw = picture.naturalWidth || picture.width, ih = picture.naturalHeight || picture.height;
+    const scale = Math.max(cw / iw, ch / ih) * zoom;
+    const w = iw * scale, h = ih * scale;
+    ctx.drawImage(picture, (cw - w) / 2, (ch - h) / 2, w, h);
+  }
+
+  // The picture, then the mark cut out of it: whatever the mask leaves clear
+  // shows the page behind (black, or white with S).
+  function render() {
+    const cw = canvas.width, ch = canvas.height;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, cw, ch);
+    if (!current) return;
+    cover(current, view.image);
+    if (view.t >= 1) return; // the mark has passed
+    if (maskDirty) {
+      const dpr = cw / slide.clientWidth;
+      mctx.setTransform(1, 0, 0, 1, 0, 0);
+      mctx.clearRect(0, 0, cw, ch);
+      mctx.setTransform(dpr * view.s, 0, 0, dpr * view.s, dpr * view.x, dpr * view.y);
+      paintMark(mctx, shape, params.invert);
+      if (view.fade > 0) {
+        mctx.setTransform(1, 0, 0, 1, 0, 0);
+        mctx.globalAlpha = view.fade;
+        mctx.fillRect(0, 0, cw, ch);
+        mctx.globalAlpha = 1;
+      }
+      maskDirty = false;
+    }
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.drawImage(mask, 0, 0);
+    ctx.globalCompositeOperation = 'source-over';
   }
 
   const fit = () => {
-    const dpr = Math.min(devicePixelRatio, 2);
+    // The 2D canvas carries the mark's edges too, so it goes to 3x on phones.
+    const dpr = Math.min(devicePixelRatio, glass ? 2 : 3);
     canvas.width = Math.round(slide.clientWidth * dpr);
     canvas.height = Math.round(slide.clientHeight * dpr);
-    if (current) draw(current);
+    if (mask) { mask.width = canvas.width; mask.height = canvas.height; }
+    if (glass && current) glass.setImage(current);
     drawMark();
   };
-
-  const slow = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Cut on a whole number of display refreshes, so the rhythm is even:
   // 75 ms does not divide 60 Hz, and alternating 67/83 ms reads as a stagger.
   let refresh = 1000 / 60;
   let prev = 0;
   let ticks = 0;
+  let titleShows = -1;
 
   function tick(now) {
-    if (prev) refresh += (Math.min(now - prev, 50) - refresh) * 0.05;
+    const dt = prev ? Math.min(now - prev, 50) : 0;
+    if (prev) refresh += (dt - refresh) * 0.05;
     prev = now;
-    const every = Math.max(1, Math.round((slow ? 2500 : params.speed) / refresh));
-    if (!document.hidden && !params.paused && ++ticks >= every) {
+
+    if (dives && view.t !== target) {
+      view.t += (target - view.t) * (1 - Math.exp(-dt / 110));
+      if (Math.abs(target - view.t) < 1e-4) view.t = target;
+      frame();
+      dirty = maskDirty = true;
+    }
+
+    // The cut slows on a log scale as the dive goes in, and stops once the
+    // scroll reaches the end of the dive (the picture follows a moment later).
+    const base = slow ? 2500 : params.speed;
+    const landed = dives && params.land && target >= 1;
+    const hold = landed ? 1 : dives && params.land ? view.e : 0;
+    const every = Math.max(1, Math.round((base * Math.pow(Math.max(1, HOLD / base), hold)) / refresh));
+    if (!document.hidden && !params.paused && !landed && ++ticks >= every) {
       if (broken.has(next)) next = (next + 1) % frames.length;
       const bitmap = decoded.get(next);
       if (bitmap) {
-        draw(bitmap);
+        show(bitmap, next, frames[next].slug);
         if (poster.isConnected) poster.remove();
         decoded.delete(next);
-        current?.close();
-        current = bitmap;
-        stage.href = `/work/${frames[next].slug}/`;
         next = (next + 1) % frames.length;
         ticks = 0;
         load();
       }
     }
+    if (feed) {
+      // Fetch the page of whatever the slowing cut might land on.
+      if (params.land && view.e > 0.8 && onScreen) page(onScreen);
+      if (landed) {
+        sharpen();
+        if (unfoldedFor !== shown) { unfoldedFor = shown; unfold(onScreen, shown); }
+        feed.grow();
+      } else {
+        unfoldedFor = -2;
+        if (!params.land && feed.length) feed.clear();
+      }
+      feed.address(landed ? reading || onScreen : '');
+    }
+    // The title shows as the cut slows, and goes as the page comes up.
+    const shows = dives && params.land ? Math.round(smooth(0.6, 0.95, view.e) * (1 - smooth(0, 160, over)) * 100) / 100 : 0;
+    if (titleEl && shows !== titleShows) titleEl.style.opacity = titleShows = shows;
+
+    if (dirty && !glass) { render(); dirty = false; }
     requestAnimationFrame(tick);
   }
 
+  if (dives) {
+    // The intro always starts at the mark.
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    document.body.classList.add('can-dive');
+    addEventListener('scroll', track, { passive: true });
+    poster.decode().then(() => { if (!current) show(poster, -1, stage.pathname.split('/').at(-2)); }).catch(() => {});
+  }
   fit();
   addEventListener('resize', fit);
   load();
@@ -185,9 +396,16 @@ if (stage && framesEl) {
       g.addBinding(params, 'flow', { label: 'liquid', min: 0, max: 2, step: 0.01 });
     }
 
-    const show = pane.addFolder({ title: 'Slideshow' });
-    show.addBinding(params, 'speed', { label: 'ms per image', min: 17, max: 1000, step: 1 });
-    show.addBinding(params, 'paused');
+    if (dives) {
+      const d = pane.addFolder({ title: 'Dive' });
+      d.addBinding(params, 'length', { label: 'scroll (screens)', min: 0.5, max: 6, step: 0.1 });
+      d.addBinding(params, 'parallax', { label: 'pictures grow', min: 1, max: 1.6, step: 0.01 });
+      d.addBinding(params, 'land', { label: 'land on a project' });
+    }
+
+    const slideshow = pane.addFolder({ title: 'Slideshow' });
+    slideshow.addBinding(params, 'speed', { label: 'ms per image', min: 17, max: 1000, step: 1 });
+    slideshow.addBinding(params, 'paused');
 
     pane.addButton({ title: 'Export SVG' }).on('click', () => {
       const svg = buildMark({ ...params, fit: 'contain', padding: 0, invert: false }, 1100, 942);
@@ -221,8 +439,34 @@ if (stage && framesEl) {
   });
 }
 
+// A project's own page is the start of the feed too: it carries on into the
+// next project, and the next, and the address follows the one being read. The
+// link to the next project and the footer are for pages without JavaScript.
+const own = !stage && document.querySelector('main > article.project');
+if (own) {
+  own.querySelector('.next')?.remove();
+  document.querySelector('.site-footer')?.remove();
+  // A reload opens the page the address names, from its top.
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  const feed = createFeed(own.parentElement);
+  let queued = false;
+  const follow = () => { queued = false; feed.grow(); feed.address(feed.read() || feed.first); };
+  const soon = () => { if (!queued) { queued = true; requestAnimationFrame(follow); } };
+  addEventListener('scroll', soon, { passive: true });
+  addEventListener('resize', soon);
+  soon();
+}
+
 document.addEventListener('keydown', (e) => {
   if (e.key.toLowerCase() === 'g' && !e.metaKey && !e.ctrlKey && !typing(e)) {
     document.body.classList.toggle('show-grid');
   }
+});
+
+// Back to top, without leaving #top in the address. On the landing it flies
+// back out through the mark.
+document.addEventListener('click', (e) => {
+  if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || !e.target.closest?.('[data-top]')) return;
+  e.preventDefault();
+  scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 });

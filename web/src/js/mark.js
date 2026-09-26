@@ -7,7 +7,8 @@
 // filleted at 10 (half a slot). Every one of those is a parameter here.
 //
 // buildMark() returns an SVG sized to the box it will mask, so strokes keep a
-// true width however far the mark is stretched.
+// true width however far the mark is stretched. paintMark() draws the same
+// shape on a canvas, where it stays sharp at any zoom (the landing's dive).
 
 export const UNITS = { w: 550, h: 471 };
 
@@ -29,6 +30,10 @@ export const DEFAULTS = {
 
 const PITCH = 51.78;
 const FIRST = 42; // pixel 32..51 spans 32.0 to 52.0: its centre is 42
+const MID = FIRST + PITCH * 4.5; // the columns spread from here
+
+/** The centre line of slot column i, in mark units. */
+const column = (p, i) => MID + (FIRST + PITCH * i - MID) * p.columns;
 
 /**
  * The slot centre lines, in mark units, with what happens at each end:
@@ -37,8 +42,7 @@ const FIRST = 42; // pixel 32..51 spans 32.0 to 52.0: its centre is 42
  */
 export function slots(p) {
   const out = UNITS.h * 0.5;
-  const mid = FIRST + PITCH * 4.5;
-  const c = (i) => mid + (FIRST + PITCH * i - mid) * p.columns;
+  const c = (i) => column(p, i);
   const top = p.inset;
   const bot = UNITS.h - p.inset;
   const up = p.crossbar - p.gap / 2;
@@ -100,11 +104,11 @@ function filleted(points, r) {
 }
 
 /**
- * An SVG, W × H px, usable as a CSS mask: opaque where the image should show.
- * Normal: the block shows the image and the slots are cut out.
- * Inverted: only the slots (and anything outside the block) show it.
+ * The mark laid out in a W × H px box: the block, and the slots as one path
+ * (`d`) to be drawn `stroke` px wide with flat ends, plus a round cap at each
+ * of `dots`.
  */
-export function buildMark(p, W, H) {
+export function markShape(p, W, H) {
   const pad = p.padding;
   let bw = Math.max(1, W - 2 * pad);
   let bh = Math.max(1, H - 2 * pad);
@@ -132,6 +136,16 @@ export function buildMark(p, W, H) {
     }
     return filleted(px, corner);
   }).join('');
+  return { W, H, bx, by, bw, bh, sx, sy, stroke, d, dots, join: p.corner > 0 ? 'round' : 'miter' };
+}
+
+/**
+ * An SVG, W × H px, usable as a CSS mask: opaque where the image should show.
+ * Normal: the block shows the image and the slots are cut out.
+ * Inverted: only the slots (and anything outside the block) show it.
+ */
+export function buildMark(p, W, H) {
+  const { bx, by, bw, bh, stroke, d, dots, join } = markShape(p, W, H);
   const caps = dots.map(([x, y]) => `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(stroke / 2).toFixed(2)}"/>`).join('');
 
   const ground = p.invert ? '#fff' : '#000';
@@ -142,8 +156,61 @@ export function buildMark(p, W, H) {
     + `<mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}">`
     + `<rect width="${W}" height="${H}" fill="${ground}"/>`
     + `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="${block}"/>`
-    + `<g clip-path="url(#b)" fill="${cut}"><path d="${d}" fill="none" stroke="${cut}" stroke-width="${stroke}" stroke-linecap="butt" stroke-linejoin="${p.corner > 0 ? 'round' : 'miter'}"/>${caps}</g>`
+    + `<g clip-path="url(#b)" fill="${cut}"><path d="${d}" fill="none" stroke="${cut}" stroke-width="${stroke}" stroke-linecap="butt" stroke-linejoin="${join}"/>${caps}</g>`
     + `</mask></defs><rect width="${W}" height="${H}" mask="url(#m)"/></svg>`;
+}
+
+/**
+ * The same mask on a 2D canvas, in whatever transform is set: opaque where
+ * the image should show, clear elsewhere. `shape` is from markShape().
+ */
+export function paintMark(ctx, shape, invert) {
+  const { W, H, bx, by, bw, bh, stroke, dots, join } = shape;
+  shape.path ??= new Path2D(shape.d);
+  ctx.fillStyle = ctx.strokeStyle = '#fff';
+  if (invert) {
+    // Outside the block shows the image too. At rest or zoomed in, the screen
+    // never sees past a ground three boxes wide.
+    ctx.beginPath();
+    ctx.rect(-W, -H, 3 * W, 3 * H);
+    ctx.rect(bx, by, bw, bh);
+    ctx.fill('evenodd');
+  } else {
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.globalCompositeOperation = 'destination-out';
+  }
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(bx, by, bw, bh);
+  ctx.clip();
+  ctx.lineWidth = stroke;
+  ctx.lineCap = 'butt';
+  ctx.lineJoin = join;
+  ctx.stroke(shape.path);
+  ctx.beginPath();
+  for (const [x, y] of dots) {
+    ctx.moveTo(x + stroke / 2, y);
+    ctx.arc(x, y, stroke / 2, 0, Math.PI * 2);
+  }
+  ctx.fill();
+  ctx.restore();
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+/**
+ * Where the landing's dive goes, in px of the laid-out mark: into the picture
+ * between the M and the A, at the very centre of the mark; inverted, down the
+ * middle of the M's last slot. `depth` is the zoom at which the edges of that
+ * gap (or slot) have passed the edges of the screen, once the dive has brought
+ * it to the centre; `open` is false when no zoom up to the limit gets there.
+ */
+export function diveFocus(p, shape) {
+  const { W, H, bx, by, bh, sx, sy } = shape;
+  const x = p.invert ? column(p, 4) : (column(p, 4) + column(p, 5)) / 2;
+  const gap = p.invert ? p.stroke / 2 : (PITCH * p.columns - p.stroke) / 2;
+  // The gap runs the block's full height; above and below it is ground.
+  const depth = Math.max(W / 2 / (Math.max(0.5, gap) * sx), p.invert ? 1 : H / bh) * 1.03;
+  return { x: bx + x * sx, y: by + (UNITS.h / 2) * sy, depth: Math.min(400, depth), open: gap > 0 && depth <= 400 };
 }
 
 export const toDataUrl = (svg) => `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;

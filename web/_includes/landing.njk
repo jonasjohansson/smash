@@ -3,10 +3,18 @@ layout: base.njk
 ---
 {# Every image of every project, shuffled and cut fast behind the mark.
    The frame list is built in eleventy.config.js (async shortcodes lose
-   arguments inside layouts). #}
+   arguments inside layouts). Scrolling dives into the mark, the length of
+   the track, and on into the project it lands on and every one after it
+   (main.js); v2's glass does not. #}
 <a class="stage"{% if renderer %} data-renderer="{{ renderer }}"{% endif %} href="/work/{{ poster.slug }}/" data-stage aria-label="SMASH — see the work">
   <div class="slide">
     <img src="{{ poster.src }}" alt="" fetchpriority="high" data-frame>
   </div>
 </a>
+{% if not renderer %}
+<p class="dive-title" data-title aria-hidden="true"></p>
+<div class="dive-track" data-track></div>
+<div class="dive-project" data-project></div>
+{% include "titles.njk" %}
+{% endif %}
 <script type="application/json" id="frames">{{ frames | dump | safe }}</script>

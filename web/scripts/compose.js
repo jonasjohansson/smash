@@ -4,17 +4,19 @@
  *
  * Authors write content in order and only place things when they care
  * (`size: half-left`, or `colStart`/`colSpan`). Everything unplaced is set by
- * rules, so pages vary without anyone laying them out by hand:
+ * rules, so pages vary without anyone laying them out by hand. Pictures go as
+ * on jonasjohansson.se, full width or two to a row, with text beside them:
  *
  *  - an image and a short text next to each other share a row, image and text
  *    on alternating sides, text sitting on the image's baseline;
- *  - two unplaced images in a row become a pair with uneven widths, but never
- *    two pairs back to back;
- *  - a lone image steps through full, inset and offset positions, and a
- *    portrait one is never wider than five columns;
+ *  - a landscape image takes the full width;
+ *  - two portrait (or square) images in a row stand side by side, sharing the
+ *    width in proportion to their shapes, so both are the same height and
+ *    neither is cropped; a portrait left over takes one of two columns;
  *  - a lone text alternates between two reading columns.
  *
- * A cell is { block, start, span }. Spans are always whole columns.
+ * A cell is { block, start, span }, spans in whole columns; a cell of a pair
+ * is { block, vw }, its share of the width in percent.
  */
 
 export const SIZES = {
@@ -28,9 +30,7 @@ export const SIZES = {
   'small-right': [8, 5],
 };
 
-const LANDSCAPE_SOLO = [[1, 12], [3, 8], [1, 9], [5, 8]];
-const PORTRAIT_SOLO = [[2, 5], [7, 5], [4, 5]];
-const PAIRS = [[[1, 7], [8, 5]], [[1, 5], [6, 7]], [[1, 6], [7, 6]]];
+const HALVES = [[1, 6], [7, 6]];
 const TEXT_SOLO = [[2, 5], [7, 5]];
 /** Longer than this and a text needs its own row to stay readable. */
 const CAPTION_MAX = 700;
@@ -38,7 +38,12 @@ const CAPTION_MAX = 700;
 const isMedia = (b) => b?.type === 'image' || b?.type === 'video';
 const placed = (b) => b.size || b.colStart || b.colSpan;
 const portrait = (b) => b.ar < 0.95;
+const tall = (b) => b.ar <= 1; // pairs up, rather than taking the full width
 const cell = (block, [start, span]) => ({ block, start, span });
+const pair = (a, b) => ({
+  kind: 'pair',
+  cells: [a, b].map((block) => ({ block, vw: Math.round((block.ar / (a.ar + b.ar)) * 100) })),
+});
 
 function explicit(b) {
   const [start, span] = SIZES[b.size] ?? [b.colStart ?? 1, b.colSpan ?? 12];
@@ -64,8 +69,7 @@ export function compose(project) {
     const cells = [cell(media, m), cell(words, w)];
     return { kind: 'caption', cells: m[0] < w[0] ? cells : cells.reverse() };
   };
-  let solo = 0;
-  let pair = 0;
+  let half = 0;
   let text = 0;
 
   for (let i = 0; i < blocks.length; i++) {
@@ -85,18 +89,19 @@ export function compose(project) {
         rows.push({ kind: 'media', cells: [cell(b, explicit(b)), cell(next, explicit(next))] });
         i++;
       } else {
-        rows.push({ kind: 'media', cells: [cell(b, explicit(b))] });
+        const [start, span] = explicit(b);
+        rows.push({ kind: span === 12 ? 'full' : 'media', cells: [cell(b, [start, span])] });
       }
     } else if (next?.type === 'text' && !placed(next) && next.content.length <= CAPTION_MAX) {
       rows.push(caption(b, next));
       i++;
-    } else if (isMedia(next) && !placed(next) && rows.at(-1)?.pair !== true) {
-      const [a, c] = PAIRS[pair++ % PAIRS.length];
-      rows.push({ kind: 'media', pair: true, cells: [cell(b, a), cell(next, c)] });
+    } else if (tall(b) && isMedia(next) && !placed(next) && tall(next)) {
+      rows.push(pair(b, next));
       i++;
+    } else if (tall(b)) {
+      rows.push({ kind: 'media', cells: [cell(b, HALVES[half++ % 2])] });
     } else {
-      const cycle = portrait(b) ? PORTRAIT_SOLO : LANDSCAPE_SOLO;
-      rows.push({ kind: 'media', cells: [cell(b, cycle[solo++ % cycle.length])] });
+      rows.push({ kind: 'full', cells: [cell(b, [1, 12])] });
     }
   }
 

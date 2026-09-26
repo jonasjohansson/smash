@@ -78,11 +78,11 @@ b, strong { font-weight: inherit; }
 .nav a:hover, .nav a[aria-current], .contact:hover { opacity: 1; }
 
 
-/* ---- home: one screen, no scroll ---------------------------------------
+/* ---- home: one screen, and a dive into it ------------------------------
    The work is seen through the mark: the SMASH logo, stretched edge to edge,
    masks a fast shuffled cut through every project image (as on svartljus.se).
    The static mask below is the no-JS fallback; main.js replaces it with one
-   drawn from parameters (mark.js). */
+   drawn from parameters (mark.js), and scrolling flies through it. */
 
 .home { height: 100svh; overflow: hidden; background: #000; color: #fff; }
 .home .site-header { display: none; }
@@ -96,9 +96,38 @@ b, strong { font-weight: inherit; }
   mask: url("/brand/smash-mask.svg") center / 100% 100% no-repeat;
 }
 .slide img, .slide canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-/* v2 draws the mark itself, in WebGL. */
-.slide.is-glass { -webkit-mask: none; mask: none; }
-.slide.is-glass img { visibility: hidden; }
+/* Once main.js has a picture it draws the mark itself: on a 2D canvas (v1),
+   or in WebGL (v2). */
+.slide.is-drawn, .slide.is-glass { -webkit-mask: none; mask: none; }
+.slide.is-drawn img, .slide.is-glass img { visibility: hidden; }
+
+/* Scrolling dives into the mark (main.js): the page scrolls, the stage stays.
+   The track is the dive, --dive screens long; the project it lands on is set
+   below it, on the project pages' white, and slides up over the picture;
+   every project after it follows (see .project + .project). */
+.home.can-dive { height: auto; overflow: visible; }
+.dive-track { display: none; }
+.home.can-dive .dive-track { display: block; height: calc(100svh * (1 + var(--dive, 2))); }
+.dive-project { position: relative; z-index: 1; background: var(--bg); color: var(--ink); }
+.dive-project:empty { display: none; }
+.home.is-reading { background: var(--bg); }
+html:has(.home.can-dive) { scrollbar-width: none; }
+html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
+.dive-title {
+  position: fixed;
+  left: var(--margin);
+  bottom: 28px;
+  z-index: 10;
+  margin: 0;
+  font-size: var(--t-small);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+  /* Legible on a white picture too. */
+  text-shadow: 0 0 2px rgb(0 0 0 / 0.6), 0 0 12px rgb(0 0 0 / 0.4);
+  opacity: 0;
+  pointer-events: none;
+}
 /* S: white ground instead of black. (A, invert, is drawn into the mask.) */
 .home.light { background: #fff; }
 /* H: the tweak panel, above the full-screen link. */
@@ -142,6 +171,9 @@ b, strong { font-weight: inherit; }
 
 /* ---- project page ------------------------------------------------------- */
 
+/* Projects follow one another without end (feed.js), a line between each. */
+.project + .project { margin-top: var(--row-gap); border-top: 1px solid var(--line); }
+
 .project-head { padding-block: clamp(48px, 8vw, 128px) clamp(24px, 3vw, 48px); align-items: baseline; }
 .project-title { grid-column: 1 / span 7; font-size: var(--t-title); line-height: 1; letter-spacing: -0.025em; }
 .project-year, .project-tags { font-size: var(--t-small); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
@@ -157,6 +189,12 @@ b, strong { font-weight: inherit; }
 
 .row { margin-top: var(--row-gap); align-items: end; }
 .row-media { align-items: start; }
+/* Two pictures side by side share the row in proportion to their shapes, so
+   they stand the same height, uncropped (as on jonasjohansson.se). */
+.row-pair { display: flex; gap: var(--gutter); align-items: flex-start; }
+.row-pair > .cell { flex: var(--ar) 1 0; min-width: 0; }
+/* Pictures follow pictures closely; text keeps its air. */
+:is(.project-hero, .row-full, .row-pair) + :is(.row-full, .row-pair) { margin-top: var(--gutter); }
 .row-caption .cell-text { align-self: end; }
 .cell-text .prose { max-width: 42ch; }
 .prose p + p { margin-top: 1em; }
@@ -205,6 +243,8 @@ b, strong { font-weight: inherit; }
   .contact { grid-column: 11 / span 2; }
   [style*="--span"], .cell, .tile { grid-column: 1 / -1; }
   .row-media .cell + .cell, .row-caption .cell + .cell { margin-top: var(--gutter); }
+  .row-pair { flex-direction: column; }
+  .row-pair > .cell { flex: none; width: 100%; }
   .row-caption .cell-text { margin-top: 16px; }
   .tile-media { aspect-ratio: 4 / 3; }
   .f-copy { grid-column: 1 / span 6; }

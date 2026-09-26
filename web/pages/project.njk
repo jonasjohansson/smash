@@ -9,7 +9,10 @@ permalink: "/work/{{ p.slug }}/"
 eleventyComputed:
   title: "{{ p.title }}"
 ---
-<article class="project">
+{# Scrolled to its end, the page carries on into the next project (feed.js);
+   the "Next project" link is for pages without JavaScript. #}
+{% include "titles.njk" %}
+<article class="project" data-slug="{{ p.slug }}">
   <header class="project-head grid">
     <h1 class="project-title">{{ p.title }}</h1>
     <p class="project-year">{{ p.year }}</p>
@@ -35,7 +38,7 @@ eleventyComputed:
   {% for row in p.rows.rows %}
   <div class="row row-{{ row.kind }} grid">
     {% for c in row.cells %}
-    <div class="cell cell-{{ c.block.type }}" style="--start: {{ c.start }}; --span: {{ c.span }}">
+    <div class="cell cell-{{ c.block.type }}" style="{% if c.vw %}--ar: {{ c.block.ar }}{% else %}--start: {{ c.start }}; --span: {{ c.span }}{% endif %}">
       {% if c.block.type == 'text' %}
       <div class="prose">{{ c.block.content | md | safe }}</div>
       {% elif c.block.type == 'credits' %}
@@ -45,7 +48,7 @@ eleventyComputed:
       {% if c.block.type == 'video' %}
       <video src="{{ c.block.src }}"{% if c.block.poster %} poster="/{{ c.block.poster }}"{% endif %} autoplay muted loop playsinline preload="metadata" aria-label="{{ c.block.alt }}" style="aspect-ratio: {{ c.block.ar }}"></video>
       {% else %}
-      {% image c.block.src, c.block.alt, "(max-width: 720px) 100vw, " + ((c.span / 12 * 100) | round) + "vw" %}
+      {% image c.block.src, c.block.alt, "(max-width: 720px) 100vw, " + ((c.vw or (c.span / 12 * 100)) | round) + "vw" %}
       {% endif %}
       {% endif %}
     </div>

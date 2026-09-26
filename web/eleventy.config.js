@@ -53,13 +53,19 @@ export default function (config) {
     const index = indexLayout(projects);
     return projects.map((p, i) => ({ ...p, tile: index[i], next: projects[(i + 1) % projects.length] }));
   });
-  // The landing's slideshow: every image of every project, at two sizes.
+  // The landing's slideshow: every image of every project, at two sizes, and
+  // a third for the one the dive lands on, full screen.
   config.addGlobalData('frames', async () => {
     const projects = await readProjects('projects');
     const frames = [];
     for (const p of projects) {
       for (const b of p.blocks.filter((b) => b.type === 'image')) {
-        frames.push({ slug: p.slug, s: await imageSrc(b.src, 640, 'webp'), l: await imageSrc(b.src, 1280, 'webp') });
+        frames.push({
+          slug: p.slug,
+          s: await imageSrc(b.src, 640, 'webp'),
+          l: await imageSrc(b.src, 1280, 'webp'),
+          x: await imageSrc(b.src, 2000, 'webp'),
+        });
       }
     }
     return frames;
