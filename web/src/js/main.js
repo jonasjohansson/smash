@@ -33,7 +33,7 @@ const [
 const AHEAD = 24;
 const PARALLEL = 6;
 const HOLD = 3000; // ms per image just before the dive lands
-const REEL = 0.5; // how far into the dive the reel takes over from the cut: halfway
+const REEL = 0.35; // how far into the dive the reel takes over from the cut
 
 const DIVE_DEFAULTS = {
   length: 2, // screens of scrolling from the mark to the pictures
