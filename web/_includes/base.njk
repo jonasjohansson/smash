@@ -9,9 +9,9 @@
   <meta name="color-scheme" content="light">
   <title>{% if title %}{{ title }} — {% endif %}SMASH</title>
   <meta name="description" content="{{ description or 'SMASH is a creative studio making interactive installations, projection mapping, immersive environments and digital experiences.' }}">
-  {# A viewer who has tuned the mark (H) sees it only once drawn their way,
-     never the default first. #}
-  <script>try { if ((localStorage.getItem('smash-mark') || '{}') !== '{}') document.documentElement.classList.add('tuned'); } catch {}</script>
+  {# With JavaScript, the mark is shown only once main.js has drawn it (as
+     set, or as the viewer tuned it: H), never the static one first. #}
+  <script>document.documentElement.classList.add('js');</script>
   <link rel="preload" href="/fonts/Anton-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/NeueMontreal-Regular.woff" as="font" type="font/woff" crossorigin>
   <link rel="preload" href="/fonts/SeasonMix-Regular.woff" as="font" type="font/woff" crossorigin>

@@ -116,8 +116,8 @@ b, strong { font-weight: inherit; }
    or in WebGL (v2). */
 .slide.is-drawn, .slide.is-glass { -webkit-mask: none; mask: none; }
 .slide.is-drawn img, .slide.is-glass img { visibility: hidden; }
-/* Tuned (base.njk), the default mark is never shown first. */
-.tuned .stage:not([data-renderer]) .slide:not(.is-set), .tuned [data-mark]:not(.is-set) { visibility: hidden; }
+/* With JavaScript (base.njk), the static mark is never shown first. */
+.js .stage:not([data-renderer]) .slide:not(.is-set), .js [data-mark]:not(.is-set) { visibility: hidden; }
 
 /* Scrolling dives into the mark (main.js): the page scrolls, the stage stays.
    The track is the dive, --dive screens long; the project it lands on is set
