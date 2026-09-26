@@ -53,11 +53,15 @@ G = {
     '.': '././././././#', '-': '.../.../.../###/.../.../...', "'": '#/#/././././.', ':': './././#/././#',
     '!': '#/#/#/#/#/./#', '?': '###/#.#/..#/###/#../.../#..',
 }
+# Letters whose dot sits a slot under the stroke: the lower stem row shrinks
+# to that gap, the stroke running down to it.
+DOTTED = {'!', '?'}
+
 NAMES = {'.': 'period', '-': 'hyphen', "'": 'quotesingle', ':': 'colon', '!': 'exclam', '?': 'question',
          **{d: n for d, n in zip('0123456789', ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'])}}
 
 
-def grid(rows, slot, pitch, crossbar):
+def grid(rows, slot, pitch, crossbar, dotted=False):
     """Column and row edges, in mark units (y down)."""
     n = len(rows[0])
     xs = [0.0]
@@ -65,6 +69,8 @@ def grid(rows, slot, pitch, crossbar):
         xs.append(xs[-1] + (slot if c % 2 else pitch - slot))
     up, lo = crossbar - GAP / 2, crossbar + GAP / 2
     ys = [0, INSET - slot / 2, up - slot / 2, up + slot / 2, lo - slot / 2, lo + slot / 2, H - INSET + slot / 2, H]
+    if dotted:
+        ys[5] = ys[6] - slot
     return xs, ys
 
 
@@ -117,9 +123,9 @@ def _dir(a, b):
     return ((b[0] > a[0]) - (b[0] < a[0]), (b[1] > a[1]) - (b[1] < a[1]))
 
 
-def glyph_contours(rows, slot, pitch, crossbar):
+def glyph_contours(rows, slot, pitch, crossbar, dotted=False):
     """Contours in font units (y up), each a list of (x, y, type) points."""
-    xs, ys = grid(rows, slot, pitch, crossbar)
+    xs, ys = grid(rows, slot, pitch, crossbar, dotted)
     loops, ink = trace(rows)
     out = []
     for loop in loops:
@@ -184,7 +190,7 @@ def write_master(path, slot, pitch, crossbar, style):
             g.unicodes = [ord(ch), ord(ch.lower())]
         else:
             g.unicodes = [ord(ch)]
-        contours, width = glyph_contours(rows, slot, pitch, crossbar)
+        contours, width = glyph_contours(rows, slot, pitch, crossbar, ch in DOTTED)
         pen = g.getPointPen()
         for pts in contours:
             pen.beginPath()
