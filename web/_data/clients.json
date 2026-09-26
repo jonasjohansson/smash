@@ -1,31 +1,38 @@
 [
   {
     "name": "Kanal 5",
-    "project": "jagad"
+    "project": "jagad",
+    "logo": "kanal5.svg"
   },
   {
     "name": "TV4",
-    "project": "vi-kommer-i-fred"
+    "project": "vi-kommer-i-fred",
+    "logo": "tv4.svg"
   },
   {
     "name": "Melodifestivalen",
-    "project": "danny-saucedo"
+    "project": "danny-saucedo",
+    "logo": "melodifestivalen.svg"
   },
   {
     "name": "KTH",
-    "project": "dome-conductor"
+    "project": "dome-conductor",
+    "logo": "kth.svg"
   },
   {
     "name": "Tekniska museet",
-    "project": "dome-conductor"
+    "project": "dome-conductor",
+    "logo": "tekniska-museet.png"
   },
   {
     "name": "World Jewish Congress",
-    "project": "heroes"
+    "project": "heroes",
+    "logo": "world-jewish-congress.svg"
   },
   {
     "name": "Raoul Wallenberg Academy",
-    "project": "heroes"
+    "project": "heroes",
+    "logo": "raoul-wallenberg-academy.svg"
   },
   {
     "name": "Nobel Week Lights",
@@ -37,6 +44,7 @@
   },
   {
     "name": "Sala kommun",
-    "project": "sala-hjartslag"
+    "project": "sala-hjartslag",
+    "logo": "sala-kommun.png"
   }
 ]

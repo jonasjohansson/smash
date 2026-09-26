@@ -187,7 +187,8 @@ b, strong { font-weight: inherit; }
 .clients-run { --gap: clamp(48px, 6vw, 120px); display: flex; align-items: center; width: max-content; gap: var(--gap); padding-right: var(--gap); animation: clients 45s linear infinite; }
 .clients-strip:hover .clients-run { animation-play-state: paused; }
 .client { font: 400 clamp(20px, 2vw, 32px) / 1 var(--font); text-transform: uppercase; white-space: nowrap; }
-.client img { display: block; width: auto; height: clamp(32px, 3.4vw, 56px); }
+/* The logos all in white, whatever their colours. */
+.client img { display: block; width: auto; max-width: 220px; height: clamp(32px, 3.4vw, 56px); object-fit: contain; filter: brightness(0) invert(1); }
 @keyframes clients { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) {
   .clients-run { flex-wrap: wrap; justify-content: center; width: auto; padding: 0 var(--margin); animation: none; }
