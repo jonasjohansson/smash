@@ -114,14 +114,15 @@ function filleted(points, r) {
  */
 export function markShape(p, W, H) {
   const pad = p.padding;
-  // The rows of text, if any, take a band off the top and the bottom. The room
-  // round everything (at the sides, above and below, and between the rows and
-  // the mark) is one of the mark's slots, as wide as its stroke is drawn.
+  // The rows of text, if any, take a band off the top and the bottom, close
+  // to the mark (infoGap). The room round the whole, at the sides, above and
+  // below, is one of the mark's slots, as wide as its stroke is drawn.
   const row = p.info ? Math.round(H * p.infoSize) : 0;
+  const gap = p.info ? Math.round(H * p.infoGap) : 0;
   const inner = (W - 2 * pad) / (p.info ? 1 + (2 * p.stroke) / UNITS.w : 1);
-  const gap = p.info ? (p.stroke * inner) / UNITS.w : 0;
+  const edge = p.info ? (p.stroke * inner) / UNITS.w : 0;
   let bw = Math.max(1, inner);
-  let bh = Math.max(1, H - 2 * pad - 2 * (row + 2 * gap));
+  let bh = Math.max(1, H - 2 * pad - 2 * (edge + row + gap));
   if (p.fit === 'contain') {
     const s = Math.min(bw / UNITS.w, bh / UNITS.h);
     bw = UNITS.w * s;

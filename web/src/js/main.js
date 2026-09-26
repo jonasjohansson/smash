@@ -33,15 +33,17 @@ const [
 const AHEAD = 24;
 const PARALLEL = 6;
 const HOLD = 3000; // ms per image just before the dive lands
+const REEL = 0.5; // how far into the dive the reel takes over from the cut: halfway
 
 const DIVE_DEFAULTS = {
   length: 2, // screens of scrolling from the mark to the pictures
   parallax: 1.15, // how much the pictures have grown when the mark has passed
   land: false, // slow the cut to a stop as the dive goes in, or let it run on
   invert: true, // the pictures through the slots and round the mark, the block white (A)
-  light: true, // on white, as the projects are (S)
+  light: true, // on the page's ground (white, or warm grey in dark mode), as the projects are (S)
   info: true, // who SMASH is, in rows of the mask along the top and bottom
-  infoSize: 0.03, // each row's height, of the screen's (the room round them is a slot's width)
+  infoSize: 0.03, // each row's height, of the screen's (the room round the whole is a slot's width)
+  infoGap: 0.012, // between the rows and the mark
 };
 
 const stage = document.querySelector('[data-stage]');
@@ -359,14 +361,14 @@ if (stage && framesEl) {
     }
     if (landed) sharpen();
 
-    // The dive ends on the reel: in its last stretch, the cut gives way to the
-    // reel's first frame; landed, it plays. It rests out of sight, and starts
-    // over when the cut comes back.
+    // The dive ends on the reel: a little way in, the cut gives way to it, and
+    // it plays on through the rest of the dive and after. It rests out of
+    // sight, and starts over when the cut comes back.
     if (reel && !glass) {
-      const want = view.e > 0.92 && reel.readyState >= 2;
+      const want = view.e > REEL && reel.readyState >= 2;
       if (want && !onReel) { onReel = true; show(reel, -2, onScreen); }
-      else if (onReel && view.e <= 0.92) { onReel = false; reel.pause(); reel.currentTime = 0; ticks = every; }
-      const play = onReel && target >= 1 && !under && !document.hidden && (!slow || heard);
+      else if (onReel && view.e <= REEL) { onReel = false; reel.pause(); reel.currentTime = 0; ticks = every; }
+      const play = onReel && !under && !document.hidden && (!slow || heard);
       if (play && reel.paused) reel.play().catch(() => {});
       else if (!play && !reel.paused) reel.pause();
       if (onReel && !reel.paused) dirty = true;
@@ -393,10 +395,10 @@ if (stage && framesEl) {
     });
   }
 
-  // Landed on the reel, a click gives it sound (and, with reduced motion, starts it).
+  // On the reel, a click gives it sound (and, with reduced motion, starts it).
   let heard = false;
   document.addEventListener('click', (e) => {
-    if (!onReel || target < 1 || under || e.target.closest?.('a, button, .about, .cta')) return;
+    if (!onReel || under || e.target.closest?.('a, button, .about, .cta')) return;
     heard = true;
     reel.muted = !reel.muted;
     if (reel.paused) reel.play().catch(() => {});
@@ -480,6 +482,7 @@ if (stage && framesEl) {
       const info = pane.addFolder({ title: 'Info' });
       info.addBinding(params, 'info', { label: 'rows of text' });
       info.addBinding(params, 'infoSize', { label: 'row height', min: 0.01, max: 0.08, step: 0.001 });
+      info.addBinding(params, 'infoGap', { label: 'gap to the mark', min: 0, max: 0.05, step: 0.001 });
     }
 
     const slideshow = pane.addFolder({ title: 'Slideshow' });

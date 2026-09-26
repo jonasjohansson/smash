@@ -27,7 +27,7 @@ layout: base.njk
    scrolls away above it. The projects run on only from a project's page. #}
 <section class="about" aria-label="About SMASH">
   <div class="grid about-intro">
-    <h2 class="about-head">SMASH is the experience design studio in Stockholm</h2>
+    <h2 class="about-head">SMASH is the experience design studio in Sweden</h2>
     <div class="about-text">
       <p>We make interactive installations, projection mapping, immersive environments and the digital work that carries them further.</p>
       <p>We take projects from the first idea to the last night of the run, designing for the room and for the crew who operates it at seven in the morning.</p>
@@ -49,8 +49,7 @@ layout: base.njk
   </div>
   {# Who SMASH has made work for, from the projects' own texts, each leading to
      the work (_data/clients.json; a logo file replaces a name when it is in). #}
-  <section class="row clients" aria-labelledby="clients">
-    <h2 class="clients-title" id="clients">Clients</h2>
+  <section class="row clients" aria-label="Clients">
     <div class="clients-strip">
       <div class="clients-run">{% for pass in [1, 2] %}{% for c in clients %}<a class="client" href="/{{ c.project }}/"{% if pass == 2 %} aria-hidden="true" tabindex="-1"{% endif %}>{% if c.logo %}<img src="/clients/{{ c.logo }}" alt="{{ c.name }}">{% else %}{{ c.name }}{% endif %}</a>{% endfor %}{% endfor %}</div>
     </div>

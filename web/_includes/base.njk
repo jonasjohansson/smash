@@ -3,10 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  {# Browsers that tint their bars with the page (Safari, Chrome on Android)
-     take on its white, so the page runs on into the window. #}
-  <meta name="theme-color" content="#ffffff">
-  <meta name="color-scheme" content="light">
+  {# The page follows the browser's light or dark mode (main.css): white, or
+     a deep warm grey; browsers that tint their bars with the page (Safari,
+     Chrome on Android) take the same. #}
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#26231f" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
   <link rel="icon" href="/brand/favicon-32.png" sizes="32x32" type="image/png">
   <link rel="icon" href="/brand/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">

@@ -10,11 +10,14 @@
 @font-face { font-family: "Season Mix"; font-weight: 400; font-style: italic; font-display: swap; src: url(/fonts/SeasonMix-RegularItalic.woff) format("woff"); }
 
 :root {
+  /* The ground follows the browser: white, or in dark mode a deep warm grey
+     with a hint of brown, to go with SMASH's yellow. */
   --bg: #fff;
   --ink: #111;
   --muted: #8b8b8b;
   --line: #e6e6e6;
   --ground: #fff; /* the projects' ground */
+  --tile: #f2f2f2; /* a picture's place while it loads */
   --accent: #f7b304; /* SMASH's deep yellow: on white, never for text */
   --hero-pad: var(--margin); /* round a hero, as round the mark on the landing */
   --radius: 6px; /* a card's corners: the offerings, the projects' thumbnails */
@@ -35,6 +38,10 @@
   --t-lead: clamp(20px, 2vw, 32px);
   --t-title: clamp(28px, 3.4vw, 56px);
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root { color-scheme: dark; --bg: #26231f; --ground: #26231f; --ink: #f3efe8; --muted: rgb(243 239 232 / 0.55); --line: rgb(243 239 232 / 0.14); --tile: #322e29; }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -173,7 +180,6 @@ b, strong { font-weight: inherit; }
 /* Clients, as on gentilhomme.com: a strip that runs on sideways (still for
    reduced motion), names until their logos are in. */
 .row.clients { text-align: center; }
-.clients-title { margin: 0 0 clamp(40px, 5vw, 80px); font: 400 clamp(24px, 2.4vw, 36px) / 1 var(--font); text-transform: uppercase; }
 .clients-strip { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
 .clients-run { --gap: clamp(48px, 6vw, 120px); display: flex; align-items: center; width: max-content; gap: var(--gap); padding-right: var(--gap); animation: clients 45s linear infinite; }
 .clients-strip:hover .clients-run { animation-play-state: paused; }
@@ -211,7 +217,7 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 .info-mail:focus-visible { outline: 1px solid #fff; outline-offset: 4px; }
 .home.is-diving .info-mail { visibility: hidden; }
 /* S: white ground instead of black. (A, invert, is drawn into the mask.) */
-.home.light { background: #fff; }
+.home.light { background: var(--ground); }
 /* H: the tweak panel, above the full-screen link. */
 .tweak { z-index: 100; top: 12px !important; right: 12px !important; width: 280px !important; }
 
@@ -255,7 +261,7 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 /* ---- work index -------------------------------------------------------- */
 
 .index { row-gap: clamp(40px, 6vw, 112px); align-items: end; }
-.tile-media { aspect-ratio: var(--ar); overflow: hidden; background: #f2f2f2; }
+.tile-media { aspect-ratio: var(--ar); overflow: hidden; background: var(--tile); }
 .tile-media img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s var(--ease), opacity 0.4s; }
 .tile:hover .tile-media img { transform: scale(1.025); }
 .tile-caption {
@@ -272,13 +278,13 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 /* ---- project page ------------------------------------------------------- */
 
 /* Projects are shown on white, with dark text (--ground). */
-.project-page, .about { --bg: var(--ground); --ink: #111; --muted: rgb(17 17 17 / 0.55); --line: rgb(17 17 17 / 0.14); }
+.project-page, .about { --bg: var(--ground); }
 
 /* Every project on the same ground, a line between each (they follow one
    another without end, feed.js). flow-root keeps a first child's margin on
    the ground (a project may start with its text). */
 .project { display: flow-root; background: var(--bg); padding-bottom: var(--row-gap); }
-.project + .project { border-top: 1px solid rgb(17 17 17 / 0.2); }
+.project + .project { border-top: 1px solid var(--line); }
 
 /* A project opens on its hero picture, edge to edge, its title in the middle
    of it; the landed picture on the landing carries its title the same way. */
