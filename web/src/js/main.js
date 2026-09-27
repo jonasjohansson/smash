@@ -38,7 +38,7 @@ const DIVE_DEFAULTS = {
   length: 2, // screens of scrolling from the mark to the pictures
   overlap: 0, // screens the page is already scrolling before the dive is through
   reel: 0.15, // how far into the dive (of its scroll) the reel takes over from the cut
-  vignette: 0.4, // how dark the corners fall
+  vignette: 0.4, // how dark the corners fall once the pictures fill the screen
   parallax: 1.15, // how much the pictures have grown when the mark has passed
   land: false, // slow the cut to a stop as the dive goes in, or let it run on
   light: true, // on the page's ground (white, or warm grey in dark mode), as the projects are (S)
@@ -49,10 +49,13 @@ const DIVE_DEFAULTS = {
 
 // The page's background, from the tweak panel (H): off, it follows the
 // browser's light or dark mode (main.css); on, it is the colour picked there,
-// on every page, the type turning dark or light to suit it.
-const GROUND_DEFAULTS = { ownGround: false, ground: '#26231f' };
+// on every page, the type turning dark or light to suit it. And the film
+// grain over it all.
+const GROUND_DEFAULTS = { ownGround: false, ground: '#1f1915', grain: 0.08 };
 function paintGround(p) {
   const root = document.documentElement.style;
+  if (typeof p?.grain === 'number') root.setProperty('--grain', p.grain);
+  else root.removeProperty('--grain');
   const meta = document.querySelectorAll('meta[name="theme-color"]');
   if (!p?.ownGround || !/^#[0-9a-f]{6}$/i.test(p.ground)) {
     for (const k of ['--bg', '--ground', '--ink', '--muted', '--line', '--tile']) root.removeProperty(k);
@@ -299,12 +302,14 @@ if (stage && framesEl) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, cw, ch);
     if (!current) return;
-    // A soft vignette on the pictures and the film.
+    // A soft vignette on the pictures and the film once they fill the screen:
+    // none in the mark at rest, coming in as the dive goes through it.
     cover(current, view.image);
-    if (params.vignette > 0) {
+    const vignette = (params.vignette || 0) * view.e;
+    if (vignette > 0) {
       const v = ctx.createRadialGradient(cw / 2, ch / 2, Math.min(cw, ch) * 0.3, cw / 2, ch / 2, Math.hypot(cw, ch) / 2);
       v.addColorStop(0, 'rgba(0,0,0,0)');
-      v.addColorStop(1, `rgba(0,0,0,${params.vignette})`);
+      v.addColorStop(1, `rgba(0,0,0,${vignette})`);
       ctx.fillStyle = v;
       ctx.fillRect(0, 0, cw, ch);
     }
@@ -524,6 +529,7 @@ if (stage && framesEl) {
       const d = pane.addFolder({ title: 'Dive' });
       d.addBinding(params, 'length', { label: 'scroll (screens)', min: 0.5, max: 6, step: 0.1 });
       d.addBinding(params, 'reel', { label: 'film starts at', min: 0, max: 0.95, step: 0.01 });
+      if (!glass) d.addBinding(params, 'vignette', { min: 0, max: 1, step: 0.01 });
       d.addBinding(params, 'overlap', { label: 'page moves before end', min: 0, max: 2, step: 0.05 }).on('change', track);
       d.addBinding(params, 'parallax', { label: 'pictures grow', min: 1, max: 1.6, step: 0.01 });
       d.addBinding(params, 'land', { label: 'land on a project' });
@@ -536,11 +542,11 @@ if (stage && framesEl) {
     const colour = pane.addFolder({ title: 'Colour' });
     colour.addBinding(params, 'ownGround', { label: 'own background' }).on('change', () => paintGround(params));
     colour.addBinding(params, 'ground', { label: 'background' }).on('change', () => paintGround(params));
+    colour.addBinding(params, 'grain', { min: 0, max: 0.3, step: 0.005 }).on('change', () => paintGround(params));
 
     const slideshow = pane.addFolder({ title: 'Slideshow' });
     slideshow.addBinding(params, 'speed', { label: 'ms per image', min: 17, max: 1000, step: 1 });
     slideshow.addBinding(params, 'paused');
-    if (!glass) slideshow.addBinding(params, 'vignette', { min: 0, max: 1, step: 0.01 });
 
     pane.addButton({ title: 'Export SVG' }).on('click', () => {
       const svg = buildMark({ ...params, fit: 'contain', padding: 0, invert: false, info: false }, 1100, 942);
@@ -637,6 +643,7 @@ if (!stage) {
     const colour = pane.addFolder({ title: 'Colour' });
     colour.addBinding(params, 'ownGround', { label: 'own background' });
     colour.addBinding(params, 'ground', { label: 'background' });
+    colour.addBinding(params, 'grain', { min: 0, max: 0.3, step: 0.005 });
     if (marked) {
       const mark = pane.addFolder({ title: 'Mark' });
       mark.addBinding(params, 'stroke', { label: 'thickness', min: 2, max: 48, step: 0.5 });

@@ -10,15 +10,15 @@
 @font-face { font-family: "Season Mix"; font-weight: 400; font-style: italic; font-display: swap; src: url(/fonts/SeasonMix-RegularItalic.woff) format("woff"); }
 
 :root {
-  /* White with black text, in light and dark mode alike (the H panel can
-     set another); SMASH yellow round the mark on the landing. */
-  color-scheme: light;
-  --bg: #fff;
-  --ink: #111;
-  --muted: rgb(17 17 17 / 0.55);
-  --line: rgb(17 17 17 / 0.12);
-  --ground: #fff; /* the projects' ground */
-  --tile: #efeeeb; /* a picture's place while it loads */
+  /* A dark, warm brown with light text, in light and dark mode alike (the
+     H panel can set another); SMASH yellow round the mark on the landing. */
+  color-scheme: dark;
+  --bg: #1f1915;
+  --ink: #f3efe8;
+  --muted: rgb(243 239 232 / 0.55);
+  --line: rgb(243 239 232 / 0.14);
+  --ground: #1f1915; /* the projects' ground */
+  --tile: #2c241e; /* a picture's place while it loads */
   --accent: #f7be04; /* SMASH yellow */
   --hero-pad: var(--margin); /* round a hero, as round the mark on the landing */
   --radius: 6px; /* a card's corners: the offerings, the projects' thumbnails */
@@ -81,6 +81,32 @@ b, strong { font-weight: inherit; }
 .grid-overlay span { background: rgb(255 0 60 / 0.07); border-inline: 1px solid rgb(255 0 60 / 0.18); }
 .show-grid .grid-overlay { opacity: 1; }
 
+/* ---- grain ----------------------------------------------------------- */
+
+/* A film's grain over the whole site, faint (--grain; H → Colour), shifting
+   a few times a second, still with reduced motion. The street (v3) has its
+   own, in its shader. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: -120px;
+  z-index: 99;
+  pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2' intercept='-0.5'/%3E%3CfeFuncG type='linear' slope='2' intercept='-0.5'/%3E%3CfeFuncB type='linear' slope='2' intercept='-0.5'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E") 0 0 / 240px 240px;
+  opacity: var(--grain, 0.08);
+  animation: grain 0.6s steps(1) infinite;
+}
+.maze-page::after { content: none; }
+@keyframes grain {
+  0% { transform: translate(0, 0); }
+  17% { transform: translate(-61px, 37px); }
+  33% { transform: translate(43px, -89px); }
+  50% { transform: translate(-97px, -23px); }
+  67% { transform: translate(79px, 67px); }
+  83% { transform: translate(-29px, 101px); }
+}
+@media (prefers-reduced-motion: reduce) { body::after { animation: none; } }
+
 /* ---- header ---------------------------------------------------------- */
 
 .site-header {
@@ -136,7 +162,7 @@ b, strong { font-weight: inherit; }
 .home.can-dive { height: auto; overflow: visible; }
 .dive-track { display: none; }
 .home.can-dive .dive-track { display: block; height: calc(100svh * (1 + var(--dive, 2))); }
-/* Reading, the landing is white underneath too, so a fast fling never
+/* Reading, the landing is brown underneath too, so a fast fling never
    flashes its black where the browser has yet to paint. */
 .home.is-reading { background: var(--ground); }
 /* The studio, between the dive and the projects. */
@@ -196,8 +222,8 @@ b, strong { font-weight: inherit; }
 .row.clients { text-align: center; padding-bottom: var(--row-gap); } /* as far from the footer as from the cards */
 .clients-strip { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
 .clients-run { --gap: clamp(48px, 6vw, 120px); display: flex; align-items: center; width: max-content; gap: var(--gap); padding-right: var(--gap); animation: clients 45s linear infinite; }
-/* The logos all in black, whatever their colours. */
-.client img { display: block; width: auto; max-width: 220px; height: clamp(32px, 3.4vw, 56px); object-fit: contain; filter: brightness(0); }
+/* The logos all in the text's light, whatever their colours. */
+.client img { display: block; width: auto; max-width: 220px; height: clamp(32px, 3.4vw, 56px); object-fit: contain; filter: brightness(0) invert(0.95); }
 @keyframes clients { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) {
   .clients-run { flex-wrap: wrap; justify-content: center; width: auto; padding: 0 var(--margin); animation: none; }
@@ -261,7 +287,7 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 .info-mail:focus-visible { outline: 1px solid #fff; outline-offset: 4px; }
 .home.is-diving .info-mail { visibility: hidden; }
 /* S: black round the mark instead of yellow. (A, invert, is drawn into the mask.) */
-.home.light:not(.is-reading) { background: var(--accent); } /* round the mark the landing is SMASH yellow (S: black); the page itself is white */
+.home.light:not(.is-reading) { background: var(--accent); } /* round the mark the landing is SMASH yellow (S: black); the page itself is brown */
 /* H: the tweak panel, above the full-screen link. */
 /* The tweak panel (H) stays put while the page scrolls, and scrolls itself if taller than the screen. */
 .tweak { position: fixed !important; z-index: 100; top: 12px !important; right: 12px !important; width: 280px !important; max-height: calc(100svh - 24px); overflow-y: auto; }
@@ -320,7 +346,7 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 
 /* ---- project page ------------------------------------------------------- */
 
-/* Projects are shown on white, with dark text (--ground). */
+/* Projects are shown on the brown, with light text (--ground). */
 .project-page, .about { --bg: var(--ground); }
 
 /* Every project on the same ground, a line between each (they follow one
