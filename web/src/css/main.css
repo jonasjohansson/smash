@@ -226,14 +226,29 @@ body::after {
   .team-text, .team-list { grid-column: 1 / -1; }
 }
 .row.clients { padding-bottom: var(--row-gap); } /* as far from the footer as from the cards */
-/* The logos standing still, from the left, in as many rows as they need. */
-.clients-run { display: flex; flex-wrap: wrap; align-items: center; gap: clamp(24px, 3.4vw, 56px) clamp(28px, 5vw, 96px); padding-inline: var(--margin); }
+/* Two equal groups run to the left, with soft edges and no gap at the loop. */
+.clients-strip { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.clients-run { display: flex; width: max-content; animation: clients 45s linear infinite; }
+.clients-group { --gap: clamp(48px, 6vw, 120px); display: flex; flex-shrink: 0; align-items: center; justify-content: space-around; min-width: 100vw; gap: var(--gap); padding-right: var(--gap); }
+.client { flex-shrink: 0; }
 /* The logos all in the text's light, whatever their colours; a little
    smaller on a phone. */
 .client img { display: block; width: auto; height: clamp(24px, 3.4vw, 56px); object-fit: contain; filter: brightness(0) invert(0.95); }
 /* The same weight whatever the shape: a square logo a little taller, a long
    one lower, against one three times as wide as it is tall (--ratio, landing.njk). */
 .client img { height: calc(clamp(24px, 3.4vw, 56px) * pow(var(--ratio, 3) / 3, -0.25)); }
+@keyframes clients { to { transform: translateX(-50%); } }
+/* Keyboard navigation shows every original link in a still row. */
+.clients-strip:has(:focus-visible) { -webkit-mask-image: none; mask-image: none; }
+.clients-strip:has(:focus-visible) .clients-run { width: auto; animation: none; }
+.clients-strip:has(:focus-visible) .clients-group { min-width: 0; width: 100%; flex-wrap: wrap; justify-content: flex-start; gap: clamp(24px, 3.4vw, 56px) clamp(28px, 5vw, 96px); padding: 4px var(--margin); }
+.clients-strip:has(:focus-visible) .clients-group[aria-hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .clients-strip { -webkit-mask-image: none; mask-image: none; }
+  .clients-run { width: auto; animation: none; }
+  .clients-group { min-width: 0; width: 100%; flex-wrap: wrap; justify-content: flex-start; gap: clamp(24px, 3.4vw, 56px) clamp(28px, 5vw, 96px); padding: 4px var(--margin); }
+  .clients-group[aria-hidden] { display: none; }
+}
 
 /* The way in (cta.njk), at the foot of the studio and of each offering, as
    on gentilhomme.com: SMASH yellow, an invitation, the address large. */
