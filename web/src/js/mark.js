@@ -28,7 +28,7 @@ export const DEFAULTS = {
   padding: 0, // margin around the block, in px
   invert: false,
   light: false,
-  speed: 75, // ms per image
+  speed: 100, // ms per image
   paused: false,
 };
 
