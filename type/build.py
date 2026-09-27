@@ -64,7 +64,25 @@ G = {
     '9': '###/#.#/#.#/###/..#/..#/###',
     '.': '././././././#', '-': '.../.../.../###/.../.../...', "'": '#/#/././././.', ':': './././#/././#',
     '!': '#/#/#/#/#/./#', '?': '###/#.#/..#/###/#../.../#..',
+    # Signs.
+    ',': '././././././#/#', ';': './././#/././#/#', '"': '#.#/#.#/.../.../.../.../...',
+    '(': '.#/#./#./#./#./#./.#', ')': '#./.#/.#/.#/.#/.#/#.', '[': '##/#./#./#./#./#./##', ']': '##/.#/.#/.#/.#/.#/##',
+    '/': '..#/..#/..#/.#./#../#../#..', '\\': '#../#../#../.#./..#/..#/..#', '|': '#/#/#/#/#/#/#/#',
+    '_': '.../.../.../.../.../.../.../###', '+': '.../.../.#./###/.#./.../...', '=': '.../.../###/.../###/.../...',
+    '&': '###../#.#../.#.../#.#.#/#..#./#.#.#/###.#', '@': '#####/#...#/#.#.#/#.#.#/#.###/#..../#####',
+    '#': '.#.#./.#.#./#####/.#.#./#####/.#.#./.#.#.', '%': '..#/..#/..#/.#./#../#../#..',  # and two round dots
+    '\u2013': '...../...../...../#####/...../...../.....', '\u2014': '......./......./......./#######/......./......./.......',
+    '\u2022': './././#/././.',
 }
+# Letters with a mark over them: the letter lowered as under a T's arm, the
+# mark in the rail above it (a round dot for the ring, square ones for the
+# others, as the full stop is).
+ACCENTS = {'\u00c5': ('A', 'ring'), '\u00c4': ('A', 'dieresis'), '\u00d6': ('O', 'dieresis'),
+           '\u00dc': ('U', 'dieresis'), '\u00c9': ('E', 'acute')}
+# More characters that are the same glyph: curly quotes, the middle dot, minus.
+ALSO = {"'": [0x2018, 0x2019], '"': [0x201C, 0x201D], '\u2022': [0x00B7], '-': [0x2212]}
+# Signs rounded less than the mark's bends, which would round them away.
+SOFT = {'+': 0.25}
 # The wide R, K, V and X that came first, as a stylistic set (ss01).
 ALTS = {
     'R': '###../#.#../#.#../#####/#...#/#...#/#...#', 'K': '#.#../#.#../#.#../#####/#...#/#...#/#...#',
@@ -83,7 +101,12 @@ def _x_cols(slot, pitch):
     return [bar - e, e, slot, e, bar - e]
 
 
-COLS = {'X': _x_cols}
+COLS = {
+    'X': _x_cols,
+    ')': lambda slot, pitch: [slot, pitch - slot], ']': lambda slot, pitch: [slot, pitch - slot],  # mirrored
+    '#': lambda slot, pitch: [slot, pitch - slot, slot, pitch - slot, slot],  # bars down, strips across
+    '+': lambda slot, pitch: [pitch / 2, pitch - slot, pitch / 2],  # a bar-wide upright
+}
 # Where a stroke's end turns in: the grid point at the top of the stroke's
 # inner side (row line, column line), and how far in, in slots.
 SPURS = {'G': ((3, 2), 0.75)}
@@ -91,12 +114,17 @@ SPURS = {'G': ((3, 2), 0.75)}
 # The L and T forms (calt, on unless turned off): the letter after an L
 # stands on its foot, which runs on under it; the letters either side of a T
 # tuck in under its arm, which runs on over them. As the specimen sets them.
-FOOTABLE = [c for c in G if c.isalnum() and c not in 'TQ']  # stands on an L's foot
-TUCKABLE = [c for c in G if (c.isalnum() and c != 'T') or c == "'"]  # tucks under a T's arm
+FOOTABLE = [c for c in G if c.isascii() and c.isalnum() and c not in 'TQ']  # stands on an L's foot
+TUCKABLE = [c for c in G if (c.isascii() and c.isalnum() and c != 'T') or c == "'"]  # tucks under a T's arm
 STEM = '#/#/#/#/#/#/#'
 T_FORMS = {'T.left': '###/#../#../#../#../#../#..', 'T.right': '###/..#/..#/..#/..#/..#/..#', 'T.both': STEM}
 
 NAMES = {'.': 'period', '-': 'hyphen', "'": 'quotesingle', ':': 'colon', '!': 'exclam', '?': 'question',
+         ',': 'comma', ';': 'semicolon', '"': 'quotedbl', '(': 'parenleft', ')': 'parenright', '[': 'bracketleft',
+         ']': 'bracketright', '/': 'slash', '\\': 'backslash', '|': 'bar', '_': 'underscore', '+': 'plus', '=': 'equal',
+         '&': 'ampersand', '@': 'at', '#': 'numbersign', '%': 'percent', '\u2013': 'endash', '\u2014': 'emdash',
+         '\u2022': 'bullet', '\u00c5': 'Aring', '\u00c4': 'Adieresis', '\u00d6': 'Odieresis', '\u00dc': 'Udieresis',
+         '\u00c9': 'Eacute',
          **{d: n for d, n in zip('0123456789', ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'])}}
 
 
@@ -203,8 +231,32 @@ def joins(w, slot, pitch, height, rounding, foot=False, arm=None):
     return out
 
 
+def marks(kind, xs, slot, pitch, rounding, height=H):
+    """An accent in the rail over a lowered letter (mark units, y down,
+    clockwise on screen): two dots over the outer bars, one over the last,
+    or a round one in the middle for the ring; or the round dots of %."""
+    bar, rail = pitch - slot, INSET - slot / 2
+    box = lambda x0, x1: [(x0, 0, 'line'), (x1, 0, 'line'), (x1, rail, 'line'), (x0, rail, 'line')]
+
+    def dot(x0, y0):  # as round as a bar a rail high can be
+        x1, y1 = x0 + bar, y0 + rail
+        r = min(bar, rail) / 2 * rounding
+        k = KAPPA * r
+        return [(x0 + r, y0, 'line'), (x1 - r, y0, 'line'), (x1 - r + k, y0, None), (x1, y0 + r - k, None), (x1, y0 + r, 'curve'),
+                (x1, y1 - r, 'line'), (x1, y1 - r + k, None), (x1 - r + k, y1, None), (x1 - r, y1, 'curve'),
+                (x0 + r, y1, 'line'), (x0 + r - k, y1, None), (x0, y1 - r + k, None), (x0, y1 - r, 'curve'),
+                (x0, y0 + r, 'line'), (x0, y0 + r - k, None), (x0 + r - k, y0, None), (x0 + r, y0, 'curve')]
+    if kind == 'dieresis':
+        return [box(xs[0], xs[1]), box(xs[-2], xs[-1])]
+    if kind == 'acute':
+        return [box(xs[-2], xs[-1])]
+    if kind == 'percent':
+        return [dot(xs[0], 0), dot(xs[-2], height - rail)]
+    return [dot((xs[-1] - bar) / 2, 0)]
+
+
 def glyph_contours(rows, slot, pitch, crossbar, dotted=False, spur=None, cols=None, height=H, rounding=1.0,
-                   tucked=False, on_foot=False, arm=None):
+                   tucked=False, on_foot=False, arm=None, accent=None):
     """Contours in font units (y up), each a list of (x, y, type) points.
     `rounding` scales every rounded corner (0 square, 1 the mark's). Every
     corner has its points in every master, even where two meet on the same
@@ -262,7 +314,7 @@ def glyph_contours(rows, slot, pitch, crossbar, dotted=False, spur=None, cols=No
                         (B[0] - KAPPA * r * fx, B[1] - KAPPA * r * fy, None), (B[0], B[1], 'curve')]
             pts += corner(rad * rounding)
         out.append([(x * K, (height - y) * K, t) for x, y, t in pts])
-    for pts in joins(xs[-1], slot, pitch, height, rounding, on_foot, arm):
+    for pts in joins(xs[-1], slot, pitch, height, rounding, on_foot, arm) + (marks(accent, xs, slot, pitch, rounding, height) if accent else []):
         out.append([(x * K, (height - y) * K, t) for x, y, t in pts])
     return out, xs[-1] * K
 
@@ -329,7 +381,8 @@ def write_master(path, slot, pitch, crossbar, style, height=H, rounding=1.0):
     n = lambda ch: NAMES.get(ch, ch)
     # (character, glyph, cells, form); only the plain ones are typed, the
     # rest are reached through ss01 and calt.
-    glyphs = [(ch, n(ch), table, None) for ch, table in G.items()]
+    glyphs = [(ch, n(ch), table, {'typed': True, 'accent': 'percent'} if ch == '%' else None) for ch, table in G.items()]
+    glyphs += [(ch, n(ch), G[base], dict(tucked=True, accent=kind, typed=True)) for ch, (base, kind) in ACCENTS.items()]
     glyphs += [(ch, f'{ch}.ss01', table, {}) for ch, table in ALTS.items()]
     glyphs += [(ch, f'{n(ch)}.onL', G[ch], dict(on_foot=True)) for ch in FOOTABLE]
     glyphs += [(ch, f'{n(ch)}.onL.beforeT', G[ch], dict(on_foot=True, tucked=True, arm='before')) for ch in FOOTABLE]
@@ -340,12 +393,13 @@ def write_master(path, slot, pitch, crossbar, style, height=H, rounding=1.0):
     for ch, name, table, form in glyphs:
         rows = table.split('/')
         g = ufo.newGlyph(name)
-        if form is None:
-            g.unicodes = [ord(ch), ord(ch.lower())] if ch.isalpha() else [ord(ch)]
-        form = form or {}
-        plain = table == G[ch]  # its own cells, so its own columns and spur
-        contours, width = glyph_contours(rows, slot, pitch, crossbar, ch in DOTTED and plain, SPURS.get(ch) if plain else None,
-                                         COLS.get(ch) if plain else None, height, rounding, **form)
+        form = dict(form) if form is not None else {'typed': True}
+        if form.pop('typed', False):
+            g.unicodes = ([ord(ch), ord(ch.lower())] if ch.isalpha() else [ord(ch)]) + ALSO.get(ch, [])
+        base = ACCENTS.get(ch, (ch,))[0]
+        plain = table == G[base]  # its own cells, so its own columns and spur
+        contours, width = glyph_contours(rows, slot, pitch, crossbar, base in DOTTED and plain, SPURS.get(base) if plain else None,
+                                         COLS.get(base) if plain else None, height, rounding * SOFT.get(ch, 1), **form)
         pen = g.getPointPen()
         for pts in contours:
             pen.beginPath()
