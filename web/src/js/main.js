@@ -168,18 +168,22 @@ if (stage && framesEl) {
   let over = 0; // px scrolled past the dive, into the project
   let under = false; // and the pictures scrolled out of sight: the cut rests
   const intro = document.querySelector('.about-intro-wrap'); // its headline shows the film
+  const introHead = intro?.querySelector('h2');
   const landedLogo = document.querySelector('[data-landed-logo]');
   const view = { t: 0, e: 0, s: 1, x: 0, y: 0, image: 1, fade: 0 };
-  // After the dive, each pixel scrolled brings the logo down by a pixel,
-  // until it reaches its corner. Its position follows scrolling directly.
-  const syncLogo = (end) => {
-    if (!landedLogo) return;
-    const distance = landedLogo.offsetTop + landedLogo.offsetHeight;
-    const progress = Math.min(1, Math.max(0, (scrollY - end) / distance));
+  // Reveal the logo with the About headline: both start at the fold and
+  // finish together. Keep a pinned interval before the page covers it.
+  const syncLogo = () => {
+    if (!landedLogo || !intro) return;
+    const box = intro.getBoundingClientRect();
+    const headlineEnd = introHead ? introHead.getBoundingClientRect().bottom - box.top : box.height;
+    const room = innerHeight - 2 * (landedLogo.offsetTop + landedLogo.offsetHeight);
+    const distance = Math.max(1, Math.min(headlineEnd, room));
+    const progress = Math.min(1, Math.max(0, (innerHeight - box.top) / distance));
     landedLogo.style.setProperty('--logo-progress', progress);
     landedLogo.classList.toggle('is-visible', progress > 0);
     // A covered logo stays behind the page, without a hidden tab stop.
-    landedLogo.inert = progress === 0 || (intro && intro.getBoundingClientRect().top <= landedLogo.offsetTop);
+    landedLogo.inert = progress === 0 || box.top <= landedLogo.offsetTop;
   };
 
   // Where the dive is through: `overlap` screens past the end of the track,
@@ -205,7 +209,7 @@ if (stage && framesEl) {
     // and the header and the studio's line along the bottom go.
     if (stage.inert !== target > 0) stage.inert = target > 0;
     document.body.classList.toggle('is-diving', target > 0);
-    syncLogo(end);
+    syncLogo();
   }
 
   // The mark's zoom and offset for the dive at view.t, and the pictures' zoom.
