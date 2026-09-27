@@ -45,7 +45,13 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
-html.ends-yellow { background: var(--accent); } /* past the page's end, under a phone's bar, when it ends in yellow (main.js); the body keeps its brown */
+/* While the yellow way in at a page's foot covers the bottom of the screen
+   (main.js), a strip of its yellow along the bottom edge, over it and so
+   unseen: Safari tints its bottom bar from a fixed element there, and the
+   ground past the page's end is yellow too. The top keeps the page's brown. */
+html.ends-yellow { background: var(--accent); }
+.foot-tint { position: fixed; inset: auto 0 0; z-index: 2; height: 8px; background: var(--accent); pointer-events: none; }
+html:not(.ends-yellow) .foot-tint { display: none; }
 body {
   margin: 0;
   background: var(--bg);
@@ -165,7 +171,9 @@ body::after {
 .home.can-dive .dive-track { display: block; height: calc(100svh * (1 + var(--dive, 2))); }
 /* Reading, the landing is brown underneath too, so a fast fling never
    flashes its black where the browser has yet to paint. */
-.home.is-reading { background: var(--ground); }
+/* Brown too once the dive is through and the mark gone (main.js), so a
+   phone's bars, tinted from it, turn brown with the page. */
+.home.is-reading, .home.is-through { background: var(--ground); }
 /* The studio, between the dive and the projects. */
 /* No stacking context of its own and no ground under the intro, so the
    headline can blend with the film behind it; the rest has the ground. */
@@ -221,18 +229,13 @@ body::after {
   .team-text, .team-list { grid-column: 1 / -1; }
 }
 .row.clients { text-align: center; padding-bottom: var(--row-gap); } /* as far from the footer as from the cards */
-.clients-strip { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
-.clients-run { --gap: clamp(48px, 6vw, 120px); display: flex; align-items: center; width: max-content; gap: var(--gap); padding-right: var(--gap); animation: clients 45s linear infinite; }
+/* The logos standing still, centred, in as many rows as they need. */
+.clients-run { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: clamp(28px, 3.4vw, 56px) clamp(32px, 5vw, 96px); padding-inline: var(--margin); }
 /* The logos all in the text's light, whatever their colours. */
-.client img { display: block; width: auto; max-width: 220px; height: clamp(32px, 3.4vw, 56px); object-fit: contain; filter: brightness(0) invert(0.95); }
-/* The same weight whatever the shape: a square logo taller, a long one lower,
-   against one three times as wide as it is tall (--ratio, landing.njk). */
-.client img { max-width: none; height: calc(clamp(32px, 3.4vw, 56px) * pow(var(--ratio, 3) / 3, -0.35)); }
-@keyframes clients { to { transform: translateX(-50%); } }
-@media (prefers-reduced-motion: reduce) {
-  .clients-run { flex-wrap: wrap; justify-content: center; width: auto; padding: 0 var(--margin); animation: none; }
-  .clients-run [aria-hidden] { display: none; }
-}
+.client img { display: block; width: auto; height: clamp(32px, 3.4vw, 56px); object-fit: contain; filter: brightness(0) invert(0.95); }
+/* The same weight whatever the shape: a square logo a little taller, a long
+   one lower, against one three times as wide as it is tall (--ratio, landing.njk). */
+.client img { height: calc(clamp(32px, 3.4vw, 56px) * pow(var(--ratio, 3) / 3, -0.25)); }
 
 /* The way in (cta.njk), at the foot of the studio and of each offering, as
    on gentilhomme.com: SMASH yellow, an invitation, the address large. */
@@ -294,7 +297,7 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 .info-mail:focus-visible { outline: 1px solid #fff; outline-offset: 4px; }
 .home.is-diving .info-mail { visibility: hidden; }
 /* S: black round the mark instead of yellow. (A, invert, is drawn into the mask.) */
-.home.light:not(.is-reading) { background: var(--accent); } /* round the mark the landing is SMASH yellow (S: black); the page itself is brown */
+.home.light:not(.is-reading, .is-through) { background: var(--accent); } /* round the mark the landing is SMASH yellow (S: black); the page itself is brown */
 /* H: the tweak panel, above the full-screen link. */
 /* The tweak panel (H) stays put while the page scrolls, and scrolls itself if taller than the screen. */
 .tweak { position: fixed !important; z-index: 100; top: 12px !important; right: 12px !important; width: 280px !important; max-height: calc(100svh - 24px); overflow-y: auto; }

@@ -194,6 +194,7 @@ if (stage && framesEl) {
   // The mark's zoom and offset for the dive at view.t, and the pictures' zoom.
   function frame() {
     const e = (view.e = 0.5 - Math.cos(Math.PI * view.t) / 2);
+    document.body.classList.toggle('is-through', view.t >= 0.999);
     if (slow) { Object.assign(view, { s: 1, x: 0, y: 0, image: 1, fade: e }); return; }
     const W = slide.clientWidth, H = slide.clientHeight;
     const s = Math.exp(e * Math.log(focus.depth));
@@ -680,12 +681,12 @@ document.addEventListener('click', (e) => {
   scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 });
 
-// Where the page ends in the yellow way in (cta.njk), the ground past its end
-// is yellow too while it is in view: what a phone's browser shows under its
-// bar and when the page is pulled up past the bottom.
+// Where the page ends in the yellow way in (cta.njk), a phone's bottom bar is
+// yellow too while it covers the bottom of the screen (main.css).
 {
   const cta = document.querySelector('.cta');
   if (cta && !document.querySelector('.site-footer')) {
+    document.body.append(Object.assign(document.createElement('div'), { className: 'foot-tint', ariaHidden: 'true' }));
     let queued = false;
     const tint = () => {
       queued = false;
