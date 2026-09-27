@@ -221,9 +221,9 @@ body::after {
 @media (max-width: 720px) {
   .team-text, .team-list { grid-column: 1 / -1; }
 }
-.row.clients { text-align: center; padding-bottom: var(--row-gap); } /* as far from the footer as from the cards */
-/* The logos standing still, centred, in as many rows as they need. */
-.clients-run { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: clamp(28px, 3.4vw, 56px) clamp(32px, 5vw, 96px); padding-inline: var(--margin); }
+.row.clients { padding-bottom: var(--row-gap); } /* as far from the footer as from the cards */
+/* The logos standing still, from the left, in as many rows as they need. */
+.clients-run { display: flex; flex-wrap: wrap; align-items: center; gap: clamp(28px, 3.4vw, 56px) clamp(32px, 5vw, 96px); padding-inline: var(--margin); }
 /* The logos all in the text's light, whatever their colours. */
 .client img { display: block; width: auto; height: clamp(32px, 3.4vw, 56px); object-fit: contain; filter: brightness(0) invert(0.95); }
 /* The same weight whatever the shape: a square logo a little taller, a long
