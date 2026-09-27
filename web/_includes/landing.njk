@@ -15,13 +15,15 @@ layout: base.njk
 {# What SMASH does and who it is, in rows of the mask along the top and
    bottom, as on svartljus.se: main.js paints these words there, the pictures
    showing through them. The studio, not its people. Here they are for screen
-   readers, and the email's link lies over its painted letters. #}
+   readers, and the email's link lies over its painted letters, and
+   Instagram's and LinkedIn's over their icons at the end of the bottom row. #}
 <div class="info" data-info>
   <p data-row>A spectacular collision between the real &amp; the imagination</p>
-  <p data-row>Experience design studio Stockholm hello@smash.studio @studio.smash</p>
+  <p data-row data-icons="instagram linkedin">Experience design studio Stockholm hello@smash.studio</p>
 </div>
 <a class="info-mail" href="mailto:hello@smash.studio" data-mail hidden>hello@smash.studio</a>
-<a class="info-mail" href="https://www.instagram.com/studio.smash/" target="_blank" rel="noopener" data-mail hidden>@studio.smash</a>
+<a class="info-mail" href="https://www.instagram.com/studio.smash/" target="_blank" rel="noopener" data-mail data-icon="instagram" hidden>Instagram</a>
+<a class="info-mail" href="https://www.linkedin.com/company/smashstudiosthlm/" target="_blank" rel="noopener" data-mail data-icon="linkedin" hidden>LinkedIn</a>
 <div class="dive-track" data-track></div>
 {# Past the dive, the studio, and the page ends with it: it scrolls up over
    the film, which stays put. The projects run on only from a project's page. #}
@@ -37,7 +39,10 @@ layout: base.njk
       <div class="about-text">
         <p>We make interactive installations, projection mapping, immersive environments and the digital work that carries them further.</p>
         <p>We take projects from the first idea to the last night of the run, designing for the room and for the crew who operates it at seven in the morning.</p>
-        <a class="cta-button about-contact" href="mailto:hello@smash.studio">Contact</a>
+        <p class="about-contact">
+          <a class="cta-button" href="mailto:hello@smash.studio">Reach out</a>
+          <a class="cta-button cta-button-line" href="mailto:hello@smash.studio?subject=Internship">Internships</a>
+        </p>
       </div>
     </div>
   </div>

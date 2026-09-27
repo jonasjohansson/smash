@@ -215,19 +215,41 @@ export function paintMark(ctx, shape, invert) {
 
 export const INFO_FONT = 'Anton';
 
+// Icons that can close a row (paintInfo), drawn on a 24-unit square: they
+// keep their shape however the row's letters are stretched.
+const ICONS = {
+  instagram(ctx) {
+    const frame = new Path2D();
+    frame.roundRect(2, 2, 20, 20, 5.5);
+    frame.moveTo(16.6, 12);
+    frame.arc(12, 12, 4.6, 0, Math.PI * 2);
+    ctx.lineWidth = 2.2;
+    ctx.stroke(frame);
+    ctx.beginPath();
+    ctx.arc(17.6, 6.4, 1.4, 0, Math.PI * 2);
+    ctx.fill();
+  },
+  linkedin(ctx) {
+    ctx.fill(new Path2D('M3 0h18a3 3 0 0 1 3 3v18a3 3 0 0 1-3 3H3a3 3 0 0 1-3-3V3a3 3 0 0 1 3-3zM6.6 4.6a1.75 1.75 0 1 0 0 3.5a1.75 1.75 0 1 0 0-3.5zM5.1 9.5h3v9.4h-3zM10.1 9.5h2.9v1.3c.5-.9 1.6-1.5 3-1.5 2.4 0 3.6 1.5 3.6 4.2v5.4h-3v-4.9c0-1.3-.4-2.1-1.5-2.1s-1.9.8-1.9 2.2v4.8h-3.1z'), 'evenodd');
+  },
+};
+
 /**
  * The rows of text, in the mask: each set in capitals to fill its row from
  * edge to edge, stretched or squeezed sideways (as the mark is), but never
  * squeezed below `least` of its width; then it is set smaller instead,
  * centred in the row. Like the block, the letters show the pictures; inverted,
- * they are cut from them. Returns, per row, what it takes to find a word in
- * it again: { x (its origin), y, h, scale, font, text }.
+ * they are cut from them. A row can close on icons (`icons[i]`, names from
+ * ICONS), square and as tall as its capitals. Returns, per row, what it takes
+ * to find a word in it again: { x (its origin), y, h, scale, font, text },
+ * and where its icons are: icons: [{ name, x, y, w, h }].
  */
-export function paintInfo(ctx, shape, texts, invert, least = 0.8) {
+export function paintInfo(ctx, shape, texts, invert, least = 0.8, icons = []) {
   const out = [];
   shape.rows.forEach((box, i) => {
     const text = (texts[i] || '').toUpperCase();
     if (!text) return;
+    const marks = (icons[i] || []).filter((n) => ICONS[n]);
     // The ink, not the type's box, meets the row's edges on all four sides,
     // so the room around each row is exactly what was asked for.
     const ink = (s) => {
@@ -240,25 +262,42 @@ export function paintInfo(ctx, shape, texts, invert, least = 0.8) {
         height: t.actualBoundingBoxAscent + t.actualBoundingBoxDescent,
       };
     };
+    // The icons after the text, each as wide as the capitals are tall, with
+    // half that between them and before the first.
+    const room = (m) => marks.length * m.height * 1.5;
     let size = (box.h / ink(100).height) * 100;
     let m = ink(size);
-    let scale = box.w / m.width;
+    let scale = (box.w - room(m)) / m.width;
     if (scale < least) {
-      size *= scale / least;
+      size *= box.w / (least * m.width + room(m));
       m = ink(size);
-      scale = box.w / m.width;
+      scale = (box.w - room(m)) / m.width;
     }
     const top = box.y + (box.h - m.height) / 2; // centred, if it had to be set smaller
     const y = top + m.up; // the baseline
     ctx.save();
     ctx.globalCompositeOperation = invert ? 'destination-out' : 'source-over';
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = ctx.strokeStyle = '#fff';
     ctx.textBaseline = 'alphabetic';
+    ctx.save();
     ctx.translate(box.x + m.left * scale, y);
     ctx.scale(scale, 1);
     ctx.fillText(text, 0, 0);
     ctx.restore();
-    out[i] = { x: box.x + m.left * scale, y: top, h: m.height, scale, font: ctx.font, text };
+    const placed = [];
+    let x = box.x + m.width * scale;
+    for (const name of marks) {
+      x += m.height / 2;
+      ctx.save();
+      ctx.translate(x, top);
+      ctx.scale(m.height / 24, m.height / 24);
+      ICONS[name](ctx);
+      ctx.restore();
+      placed.push({ name, x, y: top, w: m.height, h: m.height });
+      x += m.height;
+    }
+    ctx.restore();
+    out[i] = { x: box.x + m.left * scale, y: top, h: m.height, scale, font: `${size}px ${INFO_FONT}`, text, icons: placed };
   });
   return out;
 }

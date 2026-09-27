@@ -117,7 +117,9 @@ if (stage && framesEl) {
   const slow = matchMedia('(prefers-reduced-motion: reduce)').matches;
   // The rows' words are in the page (for screen readers too); the email's link
   // lies over its painted letters.
-  const infoRows = [...document.querySelectorAll('[data-info] [data-row]')].map((p) => p.textContent.trim());
+  const rowEls = [...document.querySelectorAll('[data-info] [data-row]')];
+  const infoRows = rowEls.map((p) => p.textContent.trim());
+  const infoIcons = rowEls.map((p) => (p.dataset.icons || '').split(' ').filter(Boolean)); // drawn after the words
   const mails = [...document.querySelectorAll('[data-mail]')]; // links over their painted words
   let infoReady = false; // the typeface has loaded
   const trackEl = document.querySelector('[data-track]');
@@ -322,7 +324,7 @@ if (stage && framesEl) {
       mctx.setTransform(dpr * view.s, 0, 0, dpr * view.s, dpr * view.x, dpr * view.y);
       paintMark(mctx, shape, params.invert);
       if (params.info && infoReady) {
-        const laid = paintInfo(mctx, shape, infoRows, params.invert);
+        const laid = paintInfo(mctx, shape, infoRows, params.invert, undefined, infoIcons);
         if (view.t === 0) placeMail(laid);
       }
       if (view.fade > 0) {
@@ -338,10 +340,18 @@ if (stage && framesEl) {
     ctx.globalCompositeOperation = 'source-over';
   }
 
-  // The links (the email, Instagram) over their letters, where they lie with
-  // the mark at rest.
+  // The links (the email; Instagram and LinkedIn) over their letters and
+  // icons, where they lie with the mark at rest.
   function placeMail(laid) {
     for (const mail of mails) {
+      if (mail.dataset.icon) {
+        const box = laid.flatMap((r) => r?.icons || []).find((b) => b.name === mail.dataset.icon);
+        mail.hidden = !box;
+        if (!box) continue;
+        const h = Math.max(24, box.h); // big enough to hit
+        Object.assign(mail.style, { left: `${box.x - (h - box.w) / 2}px`, top: `${box.y - (h - box.h) / 2}px`, width: `${h}px`, height: `${h}px` });
+        continue;
+      }
       const address = mail.textContent.trim().toUpperCase();
       const row = laid.find((r) => r?.text.includes(address));
       mail.hidden = !row;
