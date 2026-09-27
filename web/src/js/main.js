@@ -233,7 +233,7 @@ if (stage && framesEl) {
 
   const reel = document.querySelector('[data-reel]'); // SMASH's reel, where the dive lands
   // Fetched at the first scroll (or click), as the dive begins: it has until
-  // the film is due to come in, and no one who only looks is sent its 4 MB.
+  // the film is due to come in, without downloading it for someone who stays at the mark.
   const wantReel = () => { if (reel && reel.preload !== 'auto') { reel.preload = 'auto'; reel.load(); } };
   let onReel = false;
   const decoded = new Map(); // frame index -> ImageBitmap

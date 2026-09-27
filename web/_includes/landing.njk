@@ -8,7 +8,10 @@ layout: base.njk
 <a class="stage"{% if renderer %} data-renderer="{{ renderer }}"{% endif %} href="/{{ poster.slug }}/" data-stage aria-label="SMASH — see the work">
   <div class="slide">
     <img src="{{ poster.src }}" alt="" fetchpriority="high" data-frame>
-    <video class="reel" src="/reel/showreel.mp4" muted loop playsinline preload="none" aria-hidden="true" data-reel></video>
+    <video class="reel" muted loop playsinline preload="none" aria-hidden="true" data-reel>
+      <source src="/reel/showreel-landing-av1.mp4" type='video/mp4; codecs="av01.0.08M.10"'>
+      <source src="/reel/showreel-landing.mp4" type="video/mp4">
+    </video>
   </div>
 </a>
 {% if not renderer %}
