@@ -21,9 +21,10 @@ eleventyComputed:
     </nav>
   </header>
   <div class="grid typeface-axes">
-    {% for a in [["wght", "Weight", 300, 800, 500, 1], ["wdth", "Width", 93, 116, 100, 0.5], ["crsb", "Crossbar", 180, 300, 235.5, 0.5], ["rond", "Roundness", 0, 100, 100, 1], ["hght", "Height", 360, 560, 471, 1]] %}
-    <label class="typeface-axis"><span>{{ a[1] }}</span><input type="range" data-axis="{{ a[0] }}" min="{{ a[2] }}" max="{{ a[3] }}" step="{{ a[5] }}" value="{{ a[4] }}"><output>{{ a[4] }}</output></label>
+    {% for a in [["wght", "Weight", 100, 900, 500], ["wdth", "Width", 70, 175, 100], ["crsb", "Crossbar", 27, 73, 50], ["rond", "Roundness", 0, 100, 100], ["hght", "Height", 300, 720, 471]] %}
+    <label class="typeface-axis"><span>{{ a[1] }}</span><input type="range" data-axis="{{ a[0] }}" min="{{ a[2] }}" max="{{ a[3] }}" step="1" value="{{ a[4] }}"><output>{{ a[4] }}</output></label>
     {% endfor %}
+    <button type="button" class="typeface-reset" data-reset>Reset</button>
   </div>
   <div class="typeface-samples">
   <div class="typeface-sample typeface-tester" contenteditable="true" spellcheck="false" aria-label="Type to try the font">SMASH Originals</div>
@@ -38,11 +39,14 @@ eleventyComputed:
   // the sliders set their axes.
   const root = document.querySelector('[data-typeface]');
   document.fonts.load('100px SMASH').finally(() => root.classList.add('is-set'));
-  for (const input of root.querySelectorAll('[data-axis]')) {
-    const out = input.nextElementSibling;
-    input.addEventListener('input', () => {
-      root.style.setProperty(`--${input.dataset.axis}`, input.value);
-      out.value = input.value;
-    });
-  }
+  const inputs = [...root.querySelectorAll('[data-axis]')];
+  const set = (input) => {
+    root.style.setProperty(`--${input.dataset.axis}`, input.value);
+    input.nextElementSibling.value = input.value;
+  };
+  for (const input of inputs) input.addEventListener('input', () => set(input));
+  // Reset: every axis back to the logo's.
+  root.querySelector('[data-reset]').addEventListener('click', () => {
+    for (const input of inputs) { input.value = input.defaultValue; set(input); }
+  });
 </script>

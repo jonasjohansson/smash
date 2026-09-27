@@ -218,7 +218,7 @@ b, strong { font-weight: inherit; }
 .home:not(.can-dive) .cta { display: none; }
 /* The typeface (typeface.njk): its name set in itself, its files, and the
    font to try, its five axes on sliders. */
-@font-face { font-family: "SMASH"; font-weight: 300 800; font-display: block; src: url(/typeface/SMASH-VF.ttf) format("truetype"); } /* preloaded where it is used (typeface.njk), so the lines never jump */
+@font-face { font-family: "SMASH"; font-weight: 100 900; font-display: block; src: url(/typeface/SMASH-VF.ttf) format("truetype"); } /* preloaded where it is used (typeface.njk), so the lines never jump */
 .typeface { padding-block: clamp(32px, 4vw, 64px) var(--row-gap); }
 .typeface-head { align-items: end; row-gap: 24px; }
 .typeface-title { grid-column: 1 / span 6; margin: 0; font: 400 clamp(96px, 16vw, 280px) / 0.8 "SMASH", var(--display); color: var(--accent); }
@@ -227,9 +227,12 @@ b, strong { font-weight: inherit; }
 .typeface-axis { grid-column: span 4; display: grid; grid-template-columns: 7.5em minmax(0, 1fr) 3.5em; align-items: center; gap: 12px; font-size: var(--t-small); text-transform: uppercase; }
 .typeface-axis input { width: 100%; accent-color: var(--accent); }
 .typeface-axis output { justify-self: end; font-variant-numeric: tabular-nums; }
-.typeface-sample { padding-inline: var(--margin); font-family: "SMASH", var(--display); font-variation-settings: "wght" var(--wght, 500), "wdth" var(--wdth, 100), "CRSB" var(--crsb, 235.5), "ROND" var(--rond, 100), "HGHT" var(--hght, 471); }
-.typeface-tester { margin-top: clamp(32px, 4vw, 64px); font-size: clamp(64px, 12vw, 220px); line-height: 1.1; overflow-wrap: anywhere; outline: none; }
-.typeface-glyphs { display: flex; flex-wrap: wrap; gap: 0.25em 0.45em; margin-top: clamp(32px, 4vw, 64px); font-size: clamp(40px, 5vw, 88px); line-height: 1.15; }
+.typeface-reset { grid-column: span 4; justify-self: start; align-self: center; min-height: 24px; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-size: var(--t-small); text-transform: uppercase; cursor: pointer; }
+.typeface-sample { padding-inline: var(--margin); font-family: "SMASH", var(--display); font-variation-settings: "wght" var(--wght, 500), "wdth" var(--wdth, 100), "CRSB" var(--crsb, 50), "ROND" var(--rond, 100), "HGHT" var(--hght, 471); }
+/* Lines as tall as the letters are (the height axis, 0.7 em at the logo's). */
+.typeface-sample { line-height: calc(0.45 + var(--hght, 471) * 0.7 / 471); }
+.typeface-tester { margin-top: clamp(32px, 4vw, 64px); font-size: clamp(64px, 12vw, 220px); overflow-wrap: anywhere; outline: none; }
+.typeface-glyphs { display: flex; flex-wrap: wrap; gap: 0.25em 0.45em; margin-top: clamp(32px, 4vw, 64px); font-size: clamp(40px, 5vw, 88px); }
 .typeface .typeface-set { margin: clamp(32px, 4vw, 64px) var(--margin) 0; }
 .typeface .typeface-set + .typeface-glyphs { margin-top: clamp(10px, 1vw, 16px); }
 .typeface-alts { font-feature-settings: "ss01"; }
