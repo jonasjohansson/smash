@@ -6,7 +6,7 @@ import { DEFAULTS, buildMark } from '../src/js/mark.js';
 
 /**
  * Share images (og:image), 1200 × 630, made at build time into dist/og/: a
- * picture cropped to fill, or (`mark`) seen through the SMASH mark on black,
+ * picture cropped to fill, or (`mark`) seen through the SMASH mark on yellow,
  * the landing's own shape (mark.js). Each is made once, named by what it is
  * made from, and its address returned.
  */
@@ -15,7 +15,7 @@ const OUT = 'dist/og';
 
 export async function ogImage(src, { mark = false } = {}) {
   const input = await fs.readFile(src);
-  const key = crypto.createHash('sha1').update(input).update(mark ? 'mark40' : 'plain').digest('hex').slice(0, 12);
+  const key = crypto.createHash('sha1').update(input).update(mark ? 'mark-yellow' : 'plain').digest('hex').slice(0, 12);
   const url = `/og/${key}.jpg`;
   const file = path.join(OUT, `${key}.jpg`);
   try {
@@ -29,7 +29,7 @@ export async function ogImage(src, { mark = false } = {}) {
     const shape = Buffer.from(buildMark({ ...DEFAULTS, padding: 40 }, W, H)); // a margin, so the mark reads
     picture = await sharp(picture).ensureAlpha().composite([{ input: shape, blend: 'dest-in' }]).png().toBuffer();
   }
-  await sharp(picture).flatten({ background: '#000' }).jpeg({ quality: 82, progressive: true }).toFile(file);
+  await sharp(picture).flatten({ background: mark ? '#f7be04' : '#000' }).jpeg({ quality: 82, progressive: true }).toFile(file); // round the mark, SMASH yellow, as on the landing
   return url;
 }
 

@@ -10,14 +10,15 @@
 @font-face { font-family: "Season Mix"; font-weight: 400; font-style: italic; font-display: swap; src: url(/fonts/SeasonMix-RegularItalic.woff) format("woff"); }
 
 :root {
-  /* Black, in light and dark mode alike (the H panel can set another). */
-  color-scheme: dark;
-  --bg: #000;
-  --ink: #f3efe8;
-  --muted: rgb(243 239 232 / 0.55);
-  --line: rgb(243 239 232 / 0.14);
-  --ground: #000; /* the projects' ground */
-  --tile: #141414; /* a picture's place while it loads */
+  /* White with black text, in light and dark mode alike (the H panel can
+     set another); SMASH yellow round the mark on the landing. */
+  color-scheme: light;
+  --bg: #fff;
+  --ink: #111;
+  --muted: rgb(17 17 17 / 0.55);
+  --line: rgb(17 17 17 / 0.12);
+  --ground: #fff; /* the projects' ground */
+  --tile: #efeeeb; /* a picture's place while it loads */
   --accent: #f7be04; /* SMASH yellow */
   --hero-pad: var(--margin); /* round a hero, as round the mark on the landing */
   --radius: 6px; /* a card's corners: the offerings, the projects' thumbnails */
@@ -195,8 +196,8 @@ b, strong { font-weight: inherit; }
 .row.clients { text-align: center; }
 .clients-strip { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
 .clients-run { --gap: clamp(48px, 6vw, 120px); display: flex; align-items: center; width: max-content; gap: var(--gap); padding-right: var(--gap); animation: clients 45s linear infinite; }
-/* The logos all in white, whatever their colours. */
-.client img { display: block; width: auto; max-width: 220px; height: clamp(32px, 3.4vw, 56px); object-fit: contain; filter: brightness(0) invert(1); }
+/* The logos all in black, whatever their colours. */
+.client img { display: block; width: auto; max-width: 220px; height: clamp(32px, 3.4vw, 56px); object-fit: contain; filter: brightness(0); }
 @keyframes clients { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) {
   .clients-run { flex-wrap: wrap; justify-content: center; width: auto; padding: 0 var(--margin); animation: none; }
@@ -207,20 +208,20 @@ b, strong { font-weight: inherit; }
    on gentilhomme.com: SMASH yellow, an invitation, the address large. */
 /* The way in, on the page's own ground: the invitation, the address and the
    links in SMASH yellow, the first two in the chunky face. */
-.cta { position: relative; z-index: 1; background: var(--ground); color: var(--accent); padding-block: var(--row-gap) clamp(40px, 5vw, 80px); }
+.cta { position: relative; z-index: 1; background: var(--ground); color: var(--ink); padding-block: var(--row-gap) clamp(40px, 5vw, 80px); }
 .home:not(.can-dive) .cta { display: none; }
 /* The typeface (typeface.njk): its name set in itself, its files, and the
    font to try, its five axes on sliders. */
 @font-face { font-family: "SMASH"; font-weight: 100 900; font-display: block; src: url(/typeface/SMASH-VF.ttf) format("truetype"); } /* preloaded where it is used (typeface.njk), so the lines never jump */
 .typeface { padding-block: clamp(32px, 4vw, 64px) var(--row-gap); }
 .typeface-head { align-items: end; row-gap: 24px; }
-.typeface-title { grid-column: 1 / span 6; margin: 0; font: 400 clamp(96px, 16vw, 280px) / 0.8 "SMASH", var(--display); color: var(--accent); }
-.typeface-files { grid-column: 9 / span 4; display: flex; flex-direction: column; align-items: start; font-size: clamp(13px, 1.04vw, 16px); line-height: 1.6; text-transform: uppercase; color: var(--accent); }
+.typeface-title { grid-column: 1 / span 6; margin: 0; font: 400 clamp(96px, 16vw, 280px) / 0.8 "SMASH", var(--display); }
+.typeface-files { grid-column: 9 / span 4; display: flex; flex-direction: column; align-items: start; font-size: clamp(13px, 1.04vw, 16px); line-height: 1.6; text-transform: uppercase; }
 .typeface-axes { margin-top: clamp(40px, 5vw, 80px); row-gap: 14px; }
 .typeface-axis { grid-column: span 4; display: grid; grid-template-columns: 7.5em minmax(0, 1fr) 3.5em; align-items: center; gap: 12px; font-size: var(--t-small); text-transform: uppercase; }
 .typeface-axis input { width: 100%; accent-color: var(--accent); }
 .typeface-axis output { justify-self: end; font-variant-numeric: tabular-nums; }
-.typeface-reset { grid-column: span 4; justify-self: start; align-self: center; min-height: 24px; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-size: var(--t-small); text-transform: uppercase; cursor: pointer; }
+.typeface-reset { grid-column: span 4; justify-self: start; align-self: center; min-height: 24px; padding: 0; border: 0; background: none; color: inherit; font: inherit; font-size: var(--t-small); text-transform: uppercase; cursor: pointer; }
 .typeface-sample { padding-inline: var(--margin); font-family: "SMASH", var(--display); font-variation-settings: "wght" var(--wght, 500), "wdth" var(--wdth, 100), "CRSB" var(--crsb, 50), "ROND" var(--rond, 100), "HGHT" var(--hght, 471); }
 /* Lines as tall as the letters are (the height axis, 0.7 em at the logo's). */
 .typeface-sample { line-height: calc(0.45 + var(--hght, 471) * 0.7 / 471); }
@@ -259,8 +260,8 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 .info-mail { position: fixed; z-index: 10; color: transparent; overflow: hidden; }
 .info-mail:focus-visible { outline: 1px solid #fff; outline-offset: 4px; }
 .home.is-diving .info-mail { visibility: hidden; }
-/* S: white ground instead of black. (A, invert, is drawn into the mask.) */
-.home.light { background: var(--ground); }
+/* S: black round the mark instead of yellow. (A, invert, is drawn into the mask.) */
+.home.light:not(.is-reading) { background: var(--accent); } /* round the mark the landing is SMASH yellow (S: black); the page itself is white */
 /* H: the tweak panel, above the full-screen link. */
 /* The tweak panel (H) stays put while the page scrolls, and scrolls itself if taller than the screen. */
 .tweak { position: fixed !important; z-index: 100; top: 12px !important; right: 12px !important; width: 280px !important; max-height: calc(100svh - 24px); overflow-y: auto; }
@@ -288,7 +289,7 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 /* Under the hero, the name large, the three offerings beside it, this one
    dark and marked in yellow. */
 .category-head { margin-top: clamp(32px, 4vw, 64px); align-items: start; row-gap: 24px; }
-.category-title { grid-column: 1 / span 6; margin: 0; font: 400 clamp(48px, 7.4vw, 124px) / 0.92 var(--display); text-transform: uppercase; color: var(--accent); } /* as the footer's "Let's work together" */
+.category-title { grid-column: 1 / span 6; margin: 0; font: 400 clamp(48px, 7.4vw, 124px) / 0.92 var(--display); text-transform: uppercase; } /* as the footer's "Let's work together" */
 .category-title span { display: block; }
 .category-nav { grid-column: 7 / span 6; display: flex; flex-direction: column; align-items: start; font: 400 clamp(20px, 2.22vw, 32px) / 1.18 var(--serif); }
 .category-nav a { color: var(--muted); }
