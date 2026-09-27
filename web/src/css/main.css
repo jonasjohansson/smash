@@ -1,5 +1,5 @@
 /* SMASH — one grid, one type scale, nothing else.
-   Press G anywhere to show the 12 columns. */
+   Press G for the shared guides: 36 on desktop, 12 on small screens. */
 
 /* The pairing of gentilhomme.com: Neue Montreal throughout, Season Mix for
    the large texts that tell a project; Anton for the masks (SIL Open Font
@@ -71,6 +71,9 @@ b, strong { font-weight: inherit; }
 [style*="--span"] { grid-column: var(--start) / span var(--span); }
 
 .grid-overlay {
+  /* Three fine tracks per layout column also align with the three portraits
+     inside the team's eight-column span. Layout grids stay at 12 columns. */
+  grid-template-columns: repeat(36, minmax(0, 1fr));
   position: fixed;
   inset: 0;
   z-index: 100;
@@ -78,8 +81,15 @@ b, strong { font-weight: inherit; }
   opacity: 0;
   transition: opacity 0.2s;
 }
-.grid-overlay span { background: rgb(255 0 60 / 0.07); border-inline: 1px solid rgb(255 0 60 / 0.18); }
+.grid-overlay span { background: rgb(255 0 60 / 0.04); border-inline: 1px solid rgb(255 0 60 / 0.1); }
+.grid-overlay span:nth-child(3n + 1) { border-inline-start-color: rgb(255 0 60 / 0.18); }
+.grid-overlay span:nth-child(3n) { border-inline-end-color: rgb(255 0 60 / 0.18); }
 .show-grid .grid-overlay { opacity: 1; }
+@media (max-width: 720px) {
+  .grid-overlay { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+  .grid-overlay span { background: rgb(255 0 60 / 0.07); border-inline-color: rgb(255 0 60 / 0.18); }
+  .grid-overlay span:nth-child(n + 13) { display: none; }
+}
 
 /* ---- grain ----------------------------------------------------------- */
 

@@ -35,6 +35,7 @@ const PARALLEL = 6;
 const HOLD = 3000; // ms per image just before the dive lands
 
 const DIVE_DEFAULTS = {
+  videoFromStart: false, // play the reel behind the mark instead of the opening slideshow
   length: 2, // screens of scrolling from the mark to the pictures
   overlap: 0, // screens the page is already scrolling before the dive is through
   reel: 0.15, // how far into the dive (of its scroll) the reel takes over from the cut
@@ -87,6 +88,7 @@ const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a
 if (stage && framesEl) {
   const slide = stage.querySelector('.slide');
   const poster = slide.querySelector('img');
+  const posterSlug = stage.pathname.split('/').at(-2);
   const canvas = document.createElement('canvas');
   slide.append(canvas);
 
@@ -232,8 +234,8 @@ if (stage && framesEl) {
   }
 
   const reel = document.querySelector('[data-reel]'); // SMASH's reel, where the dive lands
-  // Fetched at the first scroll (or click), as the dive begins: it has until
-  // the film is due to come in, without downloading it for someone who stays at the mark.
+  const videoAtStart = () => dives && reel && params.videoFromStart;
+  // Normally fetched as the dive begins; opening with video requests it at once.
   const wantReel = () => { if (reel && reel.preload !== 'auto') { reel.preload = 'auto'; reel.load(); } };
   let onReel = false;
   const decoded = new Map(); // frame index -> ImageBitmap
@@ -246,6 +248,7 @@ if (stage && framesEl) {
   let sharpened = -1; // the frame last swapped for a bigger size
 
   const load = () => {
+    if (videoAtStart()) return;
     for (let k = 0; k < AHEAD && pending.size < PARALLEL; k++) {
       const i = (next + k) % frames.length;
       if (decoded.has(i) || pending.has(i) || broken.has(i)) continue;
@@ -258,6 +261,7 @@ if (stage && framesEl) {
         .finally(() => { pending.delete(i); load(); });
     }
   };
+  const loadMedia = () => { if (videoAtStart()) wantReel(); else load(); };
 
   function show(picture, i, slug) {
     if (current !== picture) current?.close?.();
@@ -407,7 +411,7 @@ if (stage && framesEl) {
     const landed = dives && params.land && target >= 1;
     const hold = landed ? 1 : dives && params.land ? view.e : 0;
     const every = Math.max(1, Math.round((base * Math.pow(Math.max(1, HOLD / base), hold)) / refresh));
-    if (!document.hidden && !params.paused && !landed && !under && !onReel && ++ticks >= every) {
+    if (!document.hidden && !params.paused && !landed && !under && !onReel && !videoAtStart() && ++ticks >= every) {
       if (broken.has(next)) next = (next + 1) % frames.length;
       const bitmap = decoded.get(next);
       if (bitmap) {
@@ -421,13 +425,22 @@ if (stage && framesEl) {
     }
     if (landed) sharpen();
 
-    // The dive ends on the reel: a little way in, the cut gives way to it, and
-    // it plays on through the rest of the dive and after. It rests out of
-    // sight, and starts over when the cut comes back.
+    // The reel either starts inside the mark or takes over during the dive.
+    // It rests out of sight, and starts over when the slideshow comes back.
     if (reel && !glass) {
-      const want = view.t > params.reel && reel.readyState >= 2;
-      if (want && !onReel) { onReel = true; show(reel, -2, onScreen); }
-      else if (onReel && view.t <= params.reel) { onReel = false; reel.pause(); reel.currentTime = 0; ticks = every; }
+      const want = videoAtStart() || view.t > params.reel;
+      if (want && reel.readyState >= 2 && !onReel) { onReel = true; show(reel, -2, onScreen); }
+      else if (onReel && !want) {
+        onReel = false;
+        reel.pause();
+        reel.currentTime = 0;
+        // Restore a still even when the slideshow is paused or its next image
+        // has not loaded. The poster stays usable after being removed from the DOM.
+        if (poster.complete && poster.naturalWidth) show(poster, -1, posterSlug);
+        else { current = null; shown = -1; dirty = true; }
+        ticks = every;
+        load();
+      }
       const play = onReel && !under && !document.hidden && (!slow || heard);
       if (play && reel.paused) reel.play().catch(() => {});
       else if (!play && !reel.paused) reel.pause();
@@ -443,7 +456,7 @@ if (stage && framesEl) {
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     document.body.classList.add('can-dive');
     addEventListener('scroll', track, { passive: true });
-    poster.decode().then(() => { if (!current) show(poster, -1, stage.pathname.split('/').at(-2)); }).catch(() => {});
+    poster.decode().then(() => { if (!current) show(poster, -1, posterSlug); }).catch(() => {});
     // The rows wait for their typeface rather than flash another.
     typeface(infoRows.join(' ')).then(() => { infoReady = true; dirty = maskDirty = true; });
     // A click at rest dives in by itself, as a scroll through the track would;
@@ -458,7 +471,7 @@ if (stage && framesEl) {
   // On the reel, a click gives it sound (and, with reduced motion, starts it).
   let heard = false;
   document.addEventListener('click', (e) => {
-    if (!onReel || under || e.target.closest?.('a, button, .about, .cta')) return;
+    if (!onReel || under || e.target.closest?.('a, button, .about, .cta, .tweak')) return;
     heard = true;
     reel.muted = !reel.muted;
     if (reel.paused) reel.play().catch(() => {});
@@ -487,7 +500,7 @@ if (stage && framesEl) {
   }
   fit();
   addEventListener('resize', fit);
-  load();
+  loadMedia();
   requestAnimationFrame(tick);
 
   // ---- the tweak panel (H) -------------------------------------------------
@@ -499,14 +512,16 @@ if (stage && framesEl) {
     const { Pane } = await import('https://cdn.jsdelivr.net/npm/tweakpane@4.0.5/dist/tweakpane.min.js');
     pane = new Pane({ title: glass ? 'SMASH v2' : 'SMASH' });
     pane.element.parentElement.classList.add('tweak');
-    const change = () => { drawMark(); save(); };
+    const change = () => { drawMark(); loadMedia(); save(); };
     pane.addButton({ title: 'Reset all settings' }).on('click', () => {
       try { localStorage.removeItem(STORE); } catch {}
       Object.assign(params, BASE);
       pane.refresh();
       paintGround(params);
       drawMark();
+      loadMedia();
     });
+    if (dives) pane.addBinding(params, 'videoFromStart', { label: 'video from start' });
 
     const mark = pane.addFolder({ title: 'Mark' });
     mark.addBinding(params, 'stroke', { label: 'thickness', min: 2, max: 48, step: 0.5 });
