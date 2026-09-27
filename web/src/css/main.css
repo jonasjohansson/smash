@@ -187,7 +187,7 @@ body::after {
 .about-head {
   grid-column: 1 / span 6;
   margin: 0;
-  font: 400 clamp(44px, 6.4vw, 104px) / 0.92 var(--display);
+  font: 400 clamp(44px, 6.4vw, 104px) / 0.966 var(--display); /* 5% more than the display face's 0.92 elsewhere */
   text-transform: uppercase;
 }
 .about-text { grid-column: 7 / span 6; font: 400 clamp(20px, 2.22vw, 34px) / 1.18 var(--serif); }
