@@ -70,11 +70,11 @@ layout: base.njk
       {% endfor %}
     </ul>
   </section>
-  {# Who SMASH has made work for, from the projects' own texts, each leading to
-     the work (_data/clients.json; a logo file replaces a name when it is in). #}
+  {# Who SMASH has made work for, by their logos (_data/clients.json): only
+     those whose logo is in, each leading to the work where it is on the site. #}
   <section class="row clients" aria-label="Clients">
     <div class="clients-strip">
-      <div class="clients-run">{% for pass in [1, 2] %}{% for c in clients %}<a class="client" href="/{{ c.project }}/"{% if pass == 2 %} aria-hidden="true" tabindex="-1"{% endif %}>{% if c.logo %}<img src="/clients/{{ c.logo }}" alt="{{ c.name }}" width="{{ c.width }}" height="{{ c.height }}">{% else %}{{ c.name }}{% endif %}</a>{% endfor %}{% endfor %}</div>
+      <div class="clients-run">{% for pass in [1, 2] %}{% for c in clients %}{% if c.logo %}{% set logo %}<img src="/clients/{{ c.logo }}" alt="{{ c.name }}" width="{{ c.width }}" height="{{ c.height }}">{% endset %}{% if c.project %}<a class="client" href="/{{ c.project }}/"{% if pass == 2 %} aria-hidden="true" tabindex="-1"{% endif %}>{{ logo | safe }}</a>{% else %}<span class="client"{% if pass == 2 %} aria-hidden="true"{% endif %}>{{ logo | safe }}</span>{% endif %}{% endif %}{% endfor %}{% endfor %}</div>
     </div>
   </section>
 </section>

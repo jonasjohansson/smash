@@ -1,5 +1,23 @@
 [
   {
+    "name": "Netflix",
+    "logo": "netflix.svg",
+    "width": 1024,
+    "height": 277
+  },
+  {
+    "name": "HBO",
+    "logo": "hbo.svg",
+    "width": 512,
+    "height": 211
+  },
+  {
+    "name": "Ocean Outdoor",
+    "logo": "ocean-outdoor.svg",
+    "width": 69,
+    "height": 74
+  },
+  {
     "name": "Kanal 5",
     "project": "jagad",
     "logo": "kanal5.svg",
