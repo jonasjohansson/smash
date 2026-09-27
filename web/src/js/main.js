@@ -680,22 +680,3 @@ document.addEventListener('click', (e) => {
   e.preventDefault();
   scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 });
-
-// Where the page ends in the yellow way in (cta.njk), a phone's bottom bar is
-// yellow too while it covers the bottom of the screen (main.css).
-{
-  const cta = document.querySelector('.cta');
-  if (cta && !document.querySelector('.site-footer')) {
-    document.body.append(Object.assign(document.createElement('div'), { className: 'foot-tint', ariaHidden: 'true' }));
-    let queued = false;
-    const tint = () => {
-      queued = false;
-      const box = cta.getBoundingClientRect();
-      document.documentElement.classList.toggle('ends-yellow', box.height > 0 && box.top < innerHeight);
-    };
-    const soon = () => { if (!queued) { queued = true; requestAnimationFrame(tint); } };
-    addEventListener('scroll', soon, { passive: true });
-    addEventListener('resize', soon);
-    tint();
-  }
-}
