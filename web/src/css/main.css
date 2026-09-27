@@ -1,5 +1,5 @@
 /* SMASH — one grid, one type scale, nothing else.
-   Press G for the shared guides: 36 on desktop, 12 on small screens. */
+   Press G for the 12 columns and the team's local three-column guides. */
 
 /* The pairing of gentilhomme.com: Neue Montreal throughout, Season Mix for
    the large texts that tell a project; Anton for the masks (SIL Open Font
@@ -71,9 +71,6 @@ b, strong { font-weight: inherit; }
 [style*="--span"] { grid-column: var(--start) / span var(--span); }
 
 .grid-overlay {
-  /* Three fine tracks per layout column also align with the three portraits
-     inside the team's eight-column span. Layout grids stay at 12 columns. */
-  grid-template-columns: repeat(36, minmax(0, 1fr));
   position: fixed;
   inset: 0;
   z-index: 100;
@@ -81,15 +78,8 @@ b, strong { font-weight: inherit; }
   opacity: 0;
   transition: opacity 0.2s;
 }
-.grid-overlay span { background: rgb(255 0 60 / 0.04); border-inline: 1px solid rgb(255 0 60 / 0.1); }
-.grid-overlay span:nth-child(3n + 1) { border-inline-start-color: rgb(255 0 60 / 0.18); }
-.grid-overlay span:nth-child(3n) { border-inline-end-color: rgb(255 0 60 / 0.18); }
+.grid-overlay span { background: rgb(255 0 60 / 0.07); border-inline: 1px solid rgb(255 0 60 / 0.18); }
 .show-grid .grid-overlay { opacity: 1; }
-@media (max-width: 720px) {
-  .grid-overlay { grid-template-columns: repeat(12, minmax(0, 1fr)); }
-  .grid-overlay span { background: rgb(255 0 60 / 0.07); border-inline-color: rgb(255 0 60 / 0.18); }
-  .grid-overlay span:nth-child(n + 13) { display: none; }
-}
 
 /* ---- grain ----------------------------------------------------------- */
 
@@ -227,6 +217,10 @@ body::after {
 .row.team { align-items: start; row-gap: clamp(24px, 3vw, 48px); }
 .team-text { grid-column: 1 / span 4; margin: 0; max-width: 24ch; font: 400 clamp(20px, 1.9vw, 30px) / 1.18 var(--serif); }
 .team-list { grid-column: 5 / span 8; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(24px, 3vw, 48px) var(--gutter); margin: 0; padding: 0; list-style: none; }
+.team-list > li { position: relative; }
+/* The portraits divide their own span into thirds; cyan guides stay local
+   to those columns while the page's 12-column guides remain red. */
+.show-grid .team-list > li::after { content: ""; position: absolute; inset: 0; z-index: 1; border-inline: 1px solid rgb(60 220 230 / 0.45); pointer-events: none; }
 .person { display: block; }
 .person-picture { position: relative; display: flex; align-items: center; justify-content: center; aspect-ratio: 5 / 7; overflow: hidden; border-radius: var(--radius); background: var(--tile); }
 .person-picture picture { position: absolute; inset: 0; }
