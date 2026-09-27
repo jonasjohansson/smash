@@ -15,6 +15,9 @@ layout: base.njk
   </div>
 </a>
 {% if not renderer %}
+{# The small mark arrives after the dive and stays with the film, below the
+   studio content that scrolls over it. #}
+<a class="landed-logo" href="/" data-top data-landed-logo aria-label="SMASH — back to the start" inert>{% include "logo.svg" %}</a>
 {# What SMASH does and who it is, in rows of the mask along the top and
    bottom, as on svartljus.se: main.js paints these words there, the pictures
    showing through them. The studio, not its people. Here they are for screen
@@ -80,22 +83,17 @@ layout: base.njk
       {% endfor %}
     </ul>
   </section>
-  {# Who SMASH has made work for, by their logos (_data/clients.json): only
-     those whose logo is in, each leading to the work where it is on the site.
-     The second group repeats the first for a seamless loop. #}
+  {# Who SMASH has made work for, each logo once, with a link to the work
+     where it is on the site (_data/clients.json). #}
   <section class="row clients" aria-label="Clients">
-    <div class="clients-strip">
-      <div class="clients-run">
-        {% for pass in [1, 2] %}
-        <div class="clients-group"{% if pass == 2 %} aria-hidden="true"{% endif %}>
-          {% for c in clients %}{% if c.logo %}
-          {% set logo %}<img src="/clients/{{ c.logo }}" alt="{{ c.name }}" width="{{ c.width }}" height="{{ c.height }}" style="--ratio: {{ (c.width / c.height) | round(3) }}">{% endset %}
-          {% if c.project %}<a class="client" href="/{{ c.project }}/"{% if pass == 2 %} tabindex="-1"{% endif %}>{{ logo | safe }}</a>{% else %}<span class="client">{{ logo | safe }}</span>{% endif %}
-          {% endif %}{% endfor %}
-        </div>
-        {% endfor %}
-      </div>
-    </div>
+    <ul class="clients-grid">
+      {% for c in clients %}{% if c.logo %}
+      <li>
+        {% set logo %}<img src="/clients/{{ c.logo }}" alt="{{ c.name }}" width="{{ c.width }}" height="{{ c.height }}" style="--ratio: {{ (c.width / c.height) | round(3) }}">{% endset %}
+        {% if c.project %}<a class="client" href="/{{ c.project }}/">{{ logo | safe }}</a>{% else %}<span class="client">{{ logo | safe }}</span>{% endif %}
+      </li>
+      {% endif %}{% endfor %}
+    </ul>
   </section>
 </section>
 {% include "cta.njk" %}

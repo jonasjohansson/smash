@@ -168,7 +168,12 @@ if (stage && framesEl) {
   let over = 0; // px scrolled past the dive, into the project
   let under = false; // and the pictures scrolled out of sight: the cut rests
   const intro = document.querySelector('.about-intro-wrap'); // its headline shows the film
+  const landedLogo = document.querySelector('[data-landed-logo]');
   const view = { t: 0, e: 0, s: 1, x: 0, y: 0, image: 1, fade: 0 };
+  // A covered logo stays behind the page, but must not remain a hidden tab stop.
+  const syncLogo = () => {
+    if (landedLogo) landedLogo.inert = view.t < 0.999 || (intro && intro.getBoundingClientRect().top <= landedLogo.offsetTop);
+  };
 
   // Where the dive is through: `overlap` screens past the end of the track,
   // so the page below has begun to scroll up while the mark is still passing.
@@ -193,12 +198,14 @@ if (stage && framesEl) {
     // and the header and the studio's line along the bottom go.
     if (stage.inert !== target > 0) stage.inert = target > 0;
     document.body.classList.toggle('is-diving', target > 0);
+    syncLogo();
   }
 
   // The mark's zoom and offset for the dive at view.t, and the pictures' zoom.
   function frame() {
     const e = (view.e = 0.5 - Math.cos(Math.PI * view.t) / 2);
     document.body.classList.toggle('is-through', view.t >= 0.999);
+    syncLogo();
     if (slow) { Object.assign(view, { s: 1, x: 0, y: 0, image: 1, fade: e }); return; }
     const W = slide.clientWidth, H = slide.clientHeight;
     const s = Math.exp(e * Math.log(focus.depth));

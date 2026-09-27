@@ -139,6 +139,25 @@ body::after {
 :is(.project-page, .category-page, .typeface-page) .site-header { display: none; }
 
 .stage { position: fixed; inset: 0; display: block; }
+/* Above the film but before the studio in paint order: the page covers it. */
+.landed-logo {
+  --logo-top: max(16px, var(--margin), env(safe-area-inset-top));
+  position: fixed;
+  top: var(--logo-top);
+  left: max(var(--margin), env(safe-area-inset-left));
+  z-index: 0;
+  width: clamp(56px, 7vw, 108px);
+  color: var(--accent);
+  transform: translateY(calc(-100% - var(--logo-top)));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.6s var(--ease), opacity 0.3s, visibility 0s 0.6s;
+}
+.landed-logo svg { display: block; width: 100%; height: auto; }
+.home.is-through .landed-logo { transform: translateY(0); opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 0s; }
+.landed-logo:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; }
+@media (prefers-reduced-motion: reduce) { .landed-logo { transition: none; } }
 .slide {
   position: absolute;
   inset: 0;
@@ -210,8 +229,6 @@ body::after {
   .pillar:hover { flex-grow: 1.45; }
 }
 .pillar:focus-visible { flex-grow: 1.45; outline: 2px solid var(--accent); outline-offset: 4px; }
-/* Clients, as on gentilhomme.com: a strip that runs on sideways (still for
-   reduced motion), names until their logos are in. */
 /* The people: a few words on the left, and a portrait each in black and
    white, with their email under it. */
 .row.team { align-items: start; row-gap: clamp(24px, 3vw, 48px); }
@@ -230,28 +247,16 @@ body::after {
   .team-text, .team-list { grid-column: 1 / -1; }
 }
 .row.clients { padding-bottom: var(--row-gap); } /* as far from the footer as from the cards */
-/* Two equal groups run to the left, with soft edges and no gap at the loop. */
-.clients-strip { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
-.clients-run { display: flex; width: max-content; animation: clients 45s linear infinite; }
-.clients-group { --gap: clamp(48px, 6vw, 120px); display: flex; flex-shrink: 0; align-items: center; justify-content: space-around; min-width: 100vw; gap: var(--gap); padding-right: var(--gap); }
-.client { flex-shrink: 0; }
-/* The logos all in the text's light, whatever their colours; a little
-   smaller on a phone. */
-.client img { display: block; width: auto; height: clamp(24px, 3.4vw, 56px); object-fit: contain; filter: brightness(0) invert(0.95); }
-/* The same weight whatever the shape: a square logo a little taller, a long
-   one lower, against one three times as wide as it is tall (--ratio, landing.njk). */
-.client img { height: calc(clamp(24px, 3.4vw, 56px) * pow(var(--ratio, 3) / 3, -0.25)); }
-@keyframes clients { to { transform: translateX(-50%); } }
-/* Keyboard navigation shows every original link in a still row. */
-.clients-strip:has(:focus-visible) { -webkit-mask-image: none; mask-image: none; }
-.clients-strip:has(:focus-visible) .clients-run { width: auto; animation: none; }
-.clients-strip:has(:focus-visible) .clients-group { min-width: 0; width: 100%; flex-wrap: wrap; justify-content: flex-start; gap: clamp(24px, 3.4vw, 56px) clamp(28px, 5vw, 96px); padding: 4px var(--margin); }
-.clients-strip:has(:focus-visible) .clients-group[aria-hidden] { display: none; }
-@media (prefers-reduced-motion: reduce) {
-  .clients-strip { -webkit-mask-image: none; mask-image: none; }
-  .clients-run { width: auto; animation: none; }
-  .clients-group { min-width: 0; width: 100%; flex-wrap: wrap; justify-content: flex-start; gap: clamp(24px, 3.4vw, 56px) clamp(28px, 5vw, 96px); padding: 4px var(--margin); }
-  .clients-group[aria-hidden] { display: none; }
+/* A quiet four-column roster, on the same page margins as the studio. */
+.clients-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(40px, 5.5vw, 96px) var(--gutter); margin: 0; padding: 0 var(--margin); list-style: none; }
+.clients-grid > li { display: flex; align-items: center; justify-content: center; min-width: 0; }
+.client { display: flex; align-items: center; justify-content: center; width: 100%; min-height: clamp(100px, 11vw, 176px); }
+.client:focus-visible { outline: 1px solid var(--accent); outline-offset: 8px; }
+/* Balance the visual weight: tall marks get more height than long wordmarks.
+   All remain light on the studio's brown, with room around each logo. */
+.client img { display: block; width: auto; max-width: 78%; height: calc(clamp(32px, 4vw, 64px) * pow(var(--ratio, 3) / 3, -0.35)); object-fit: contain; filter: brightness(0) invert(0.95); }
+@media (max-width: 720px) {
+  .clients-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* The way in (cta.njk), at the foot of the studio and of each offering, as
