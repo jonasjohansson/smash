@@ -35,7 +35,7 @@ const PARALLEL = 6;
 const HOLD = 3000; // ms per image just before the dive lands
 
 const DIVE_DEFAULTS = {
-  videoFromStart: false, // play the reel behind the mark instead of the opening slideshow
+  videoFromStart: true, // play the reel behind the mark instead of the opening slideshow
   length: 2, // screens of scrolling from the mark to the pictures
   overlap: 0, // screens the page is already scrolling before the dive is through
   reel: 0.15, // how far into the dive (of its scroll) the reel takes over from the cut
