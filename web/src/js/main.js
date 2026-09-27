@@ -679,3 +679,22 @@ document.addEventListener('click', (e) => {
   e.preventDefault();
   scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 });
+
+// Where the page ends in the yellow way in (cta.njk), the ground past its end
+// is yellow too while it is in view: what a phone's browser shows under its
+// bar and when the page is pulled up past the bottom.
+{
+  const cta = document.querySelector('.cta');
+  if (cta && !document.querySelector('.site-footer')) {
+    let queued = false;
+    const tint = () => {
+      queued = false;
+      const box = cta.getBoundingClientRect();
+      document.documentElement.classList.toggle('ends-yellow', box.height > 0 && box.top < innerHeight);
+    };
+    const soon = () => { if (!queued) { queued = true; requestAnimationFrame(tint); } };
+    addEventListener('scroll', soon, { passive: true });
+    addEventListener('resize', soon);
+    tint();
+  }
+}
