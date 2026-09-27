@@ -80,21 +80,33 @@ COLS = {'X': lambda slot, pitch: [pitch / 2, pitch / 2 - slot, slot, pitch / 2 -
 # inner side (row line, column line), and how far in, in slots.
 SPURS = {'G': ((3, 2), 0.75)}
 
+# The L and T forms (calt, on unless turned off): the letter after an L
+# stands on its foot, which runs on under it; the letters either side of a T
+# tuck in under its arm, which runs on over them. As the specimen sets them.
+FOOTABLE = [c for c in G if c.isalnum() and c not in 'TQ']  # stands on an L's foot
+TUCKABLE = [c for c in G if (c.isalnum() and c != 'T') or c == "'"]  # tucks under a T's arm
+STEM = '#/#/#/#/#/#/#'
+T_FORMS = {'T.left': '###/#../#../#../#../#../#..', 'T.right': '###/..#/..#/..#/..#/..#/..#', 'T.both': STEM}
+
 NAMES = {'.': 'period', '-': 'hyphen', "'": 'quotesingle', ':': 'colon', '!': 'exclam', '?': 'question',
          **{d: n for d, n in zip('0123456789', ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'])}}
 
 
-def grid(rows, slot, pitch, crossbar, dotted=False, cols=None, height=H):
-    """Column and row edges, in mark units (y down)."""
+def grid(rows, slot, pitch, crossbar, dotted=False, cols=None, height=H, top=0, bottom=None):
+    """Column and row edges, in mark units (y down). `top` and `bottom` move
+    the outer rails in (a letter under a T's arm, or on an L's foot); the
+    middle ones stay level with the line."""
     n = len(rows[0])
     widths = cols(slot, pitch) if cols else [slot if c % 2 else pitch - slot for c in range(n)]
     xs = [0.0]
     for w in widths:
         xs.append(xs[-1] + w)
     up, lo = crossbar - GAP / 2, crossbar + GAP / 2
-    ys = [0, INSET - slot / 2, up - slot / 2, up + slot / 2, lo - slot / 2, lo + slot / 2, height - INSET + slot / 2, height]
+    bottom = height if bottom is None else bottom
+    rail = INSET - slot / 2
+    ys = [top, top + rail, up - slot / 2, up + slot / 2, lo - slot / 2, lo + slot / 2, bottom - rail, bottom]
     if len(rows) > 7:  # a tail under the baseline, a rail deep
-        ys.append(height + INSET - slot / 2)
+        ys.append(bottom + rail)
     if dotted:
         ys[5] = ys[6] - slot
     return xs, ys
@@ -156,12 +168,47 @@ def _near(p, q):
     return abs(p[0] - q[0]) < 1e-6 and abs(p[1] - q[1]) < 1e-6
 
 
-def glyph_contours(rows, slot, pitch, crossbar, dotted=False, spur=None, cols=None, height=H, rounding=1.0):
+def joins(w, slot, pitch, height, rounding, foot=False, arm=None):
+    """What joins a letter to its neighbours, as contours (mark units, y down,
+    clockwise on screen), the letter's ink running from 0 to w: an L's foot
+    run on under it, from the L's stem, rounded into the stem as the mark's
+    bends are; or a T's arm run on over it, from the T's stem on its right
+    (`before`), on its left (`after`), or both (`between`), rounded into it."""
+    bar, rail = pitch - slot, INSET - slot / 2
+    r = slot * rounding
+    k = KAPPA * r
+    o = bar / 2  # how far each join reaches into the stem it meets, so no seam shows between the two
+    out = []
+    if foot:
+        x0, xs, yt, yb = -(bar + slot), -slot, height - rail, height
+        out.append([(x0, yt, 'line'), (xs - o, yt, 'line'), (xs - o, yt - r, 'line'), (xs, yt - r, 'line'), (xs, yt - r + k, None),
+                    (xs + r - k, yt, None), (xs + r, yt, 'curve'), (w, yt, 'line'), (w, yb, 'line'), (x0, yb, 'line')])
+    if arm:
+        left, right = arm in ('after', 'between'), arm in ('before', 'between')
+        x0, x1 = (-slot if left else 0), (w + slot if right else w)
+        pts = [(x0 - o if left else x0, 0, 'line'), (x1 + o if right else x1, 0, 'line')]
+        if right:
+            pts += [(x1 + o, rail + r, 'line'), (x1, rail + r, 'line'), (x1, rail + r - k, None), (x1 - r + k, rail, None), (x1 - r, rail, 'curve')]
+        else:
+            pts += [(x1, rail, 'line')]
+        if left:
+            pts += [(x0 + r, rail, 'line'), (x0 + r - k, rail, None), (x0, rail + r - k, None), (x0, rail + r, 'curve'), (x0 - o, rail + r, 'line')]
+        else:
+            pts += [(x0, rail, 'line')]
+        out.append(pts)
+    return out
+
+
+def glyph_contours(rows, slot, pitch, crossbar, dotted=False, spur=None, cols=None, height=H, rounding=1.0,
+                   tucked=False, on_foot=False, arm=None):
     """Contours in font units (y up), each a list of (x, y, type) points.
     `rounding` scales every rounded corner (0 square, 1 the mark's); which
     points there are is decided at full rounding, so every master has the
     same ones and they interpolate."""
-    xs, ys = grid(rows, slot, pitch, crossbar, dotted, cols, height)
+    rail = INSET - slot / 2
+    top = rail + slot if tucked else 0  # a slot under the arm
+    bottom = height - rail - slot if on_foot else height  # a slot over the foot
+    xs, ys = grid(rows, slot, pitch, crossbar, dotted, cols, height, top, bottom)
     loops, ink = trace(rows)
     out = []
     for loop in loops:
@@ -217,7 +264,57 @@ def glyph_contours(rows, slot, pitch, crossbar, dotted=False, spur=None, cols=No
             pts = pts[1:]
             pts[-1] = (pts[-1][0], pts[-1][1], 'curve')
         out.append([(x * K, (height - y) * K, t) for x, y, t in pts])
+    for pts in joins(xs[-1], slot, pitch, height, rounding, on_foot, arm):
+        out.append([(x * K, (height - y) * K, t) for x, y, t in pts])
     return out, xs[-1] * K
+
+
+def features():
+    """ss01, the first R, K, V and X; calt, the L and T forms."""
+    n = lambda ch: NAMES.get(ch, ch)
+    cls = lambda names: '[' + ' '.join(names) + ']'
+    foot = [n(c) for c in FOOTABLE]
+    tuck = [n(c) for c in TUCKABLE]
+    ss01 = ' '.join(f'sub {c} by {c}.ss01;' for c in ALTS)
+    return f"""feature ss01 {{ {ss01} }} ss01;
+
+@FOOT = {cls(foot)};
+@FOOT_ONL = {cls(f'{g}.onL' for g in foot)};
+@BEFORE = {cls(tuck + [f'{g}.onL' for g in foot])};
+@BEFORE_T = {cls([f'{g}.beforeT' for g in tuck] + [f'{g}.onL.beforeT' for g in foot])};
+@AFTER = {cls(tuck + ['L.stem'])};
+@AFTER_T = {cls([f'{g}.afterT' for g in tuck] + ['L.stem.afterT'])};
+@BETWEEN = {cls(tuck)};
+@BETWEEN_T = {cls(f'{g}.betweenT' for g in tuck)};
+@ARM_LEFT = {cls([f'{g}.beforeT' for g in tuck] + [f'{g}.onL.beforeT' for g in foot] + [f'{g}.betweenT' for g in tuck])};
+@ARM_RIGHT = {cls([f'{g}.afterT' for g in tuck] + ['L.stem.afterT'] + [f'{g}.betweenT' for g in tuck])};
+
+lookup L_STEM {{ sub L by L.stem; }} L_STEM;
+lookup ON_L {{ sub @FOOT by @FOOT_ONL; }} ON_L;
+lookup BEFORE_T {{ sub @BEFORE by @BEFORE_T; }} BEFORE_T;
+lookup AFTER_T {{ sub @AFTER by @AFTER_T; }} AFTER_T;
+lookup BETWEEN_T {{ sub @BETWEEN by @BETWEEN_T; }} BETWEEN_T;
+
+feature calt {{
+    # An L and the letter after it: the L's stem, the letter on its foot.
+    lookup L_FEET {{
+        sub L' lookup L_STEM @FOOT' lookup ON_L;
+    }} L_FEET;
+    # The letters either side of a T, under its arm.
+    lookup T_ARMS {{
+        sub T @BETWEEN' lookup BETWEEN_T T;
+        sub @BEFORE' lookup BEFORE_T T;
+        sub T @AFTER' lookup AFTER_T;
+    }} T_ARMS;
+    # The T itself: only its stem, or its stem and the reach of its arm on
+    # the side with no letter under it.
+    lookup T_STEMS {{
+        sub @ARM_LEFT T' @ARM_RIGHT by T.both;
+        sub @ARM_LEFT T' by T.left;
+        sub T' @ARM_RIGHT by T.right;
+    }} T_STEMS;
+}} calt;
+"""
 
 
 def write_master(path, slot, pitch, crossbar, style, height=H, rounding=1.0):
@@ -231,19 +328,26 @@ def write_master(path, slot, pitch, crossbar, style, height=H, rounding=1.0):
     ufo.info.descender = -200
     ufo.info.copyright = 'SMASH'
     side = slot / 2 * K
-    glyphs = [(ch, NAMES.get(ch, ch), table) for ch, table in G.items()]
-    glyphs += [(ch, f'{ch}.ss01', table) for ch, table in ALTS.items()]
-    for ch, name, table in glyphs:
+    n = lambda ch: NAMES.get(ch, ch)
+    # (character, glyph, cells, form); only the plain ones are typed, the
+    # rest are reached through ss01 and calt.
+    glyphs = [(ch, n(ch), table, None) for ch, table in G.items()]
+    glyphs += [(ch, f'{ch}.ss01', table, {}) for ch, table in ALTS.items()]
+    glyphs += [(ch, f'{n(ch)}.onL', G[ch], dict(on_foot=True)) for ch in FOOTABLE]
+    glyphs += [(ch, f'{n(ch)}.onL.beforeT', G[ch], dict(on_foot=True, tucked=True, arm='before')) for ch in FOOTABLE]
+    for where in ('before', 'after', 'between'):
+        glyphs += [(ch, f'{n(ch)}.{where}T', G[ch], dict(tucked=True, arm=where)) for ch in TUCKABLE]
+    glyphs += [('L', 'L.stem', STEM, {}), ('L', 'L.stem.afterT', STEM, dict(tucked=True, arm='after'))]
+    glyphs += [('T', name, table, {}) for name, table in T_FORMS.items()]
+    for ch, name, table, form in glyphs:
         rows = table.split('/')
         g = ufo.newGlyph(name)
-        if name.endswith('.ss01'):
-            pass  # reached through ss01 only
-        elif ch.isalpha():
-            g.unicodes = [ord(ch), ord(ch.lower())]
-        else:
-            g.unicodes = [ord(ch)]
-        contours, width = glyph_contours(rows, slot, pitch, crossbar, ch in DOTTED, SPURS.get(ch),
-                                         COLS.get(ch) if not name.endswith('.ss01') else None, height, rounding)
+        if form is None:
+            g.unicodes = [ord(ch), ord(ch.lower())] if ch.isalpha() else [ord(ch)]
+        form = form or {}
+        plain = table == G[ch]  # its own cells, so its own columns and spur
+        contours, width = glyph_contours(rows, slot, pitch, crossbar, ch in DOTTED and plain, SPURS.get(ch) if plain else None,
+                                         COLS.get(ch) if plain else None, height, rounding, **form)
         pen = g.getPointPen()
         for pts in contours:
             pen.beginPath()
@@ -256,9 +360,8 @@ def write_master(path, slot, pitch, crossbar, style, height=H, rounding=1.0):
     space.width = round(pitch * K, 2)
     nd = ufo.newGlyph('.notdef')
     nd.width = round(2 * pitch * K, 2)
-    ufo.glyphOrder = ['.notdef', 'space'] + [name for _, name, _ in glyphs]
-    subs = ' '.join(f'sub {ch} by {ch}.ss01;' for ch in ALTS)
-    ufo.features.text = f'feature ss01 {{ {subs} }} ss01;\n'
+    ufo.glyphOrder = ['.notdef', 'space'] + [name for _, name, _, _ in glyphs]
+    ufo.features.text = features()
     ufo.save(path, overwrite=True)
 
 
