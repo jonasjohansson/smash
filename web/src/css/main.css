@@ -236,9 +236,6 @@ b, strong { font-weight: inherit; }
 @media (max-width: 720px) {
   .typeface-title, .typeface-files, .typeface-axis { grid-column: 1 / -1; }
 }
-/* The mark over the links, in yellow, leading home. */
-.cta-logo { display: block; align-self: start; }
-.cta-logo svg { display: block; width: auto; height: calc(0.3 * 2 * 0.92 * clamp(48px, 7.4vw, 124px)); } /* 30% of "Let's work together"'s height */
 .js .project-page .cta:not(.is-end) { display: none; } /* until the feed has been round (feed.js) */
 .cta-inner { position: relative; row-gap: clamp(24px, 3vw, 48px); align-items: start; }
 .cta-title { grid-column: 1 / span 8; margin: 0; font: 400 clamp(48px, 7.4vw, 124px) / 0.92 var(--display); text-transform: uppercase; }
@@ -248,14 +245,13 @@ b, strong { font-weight: inherit; }
 .cta-button { display: inline-block; padding: 0.5em 0.7em 0.45em; border-radius: var(--radius); background: var(--accent); color: #111; font: 400 clamp(14px, 1.2vw, 18px) / 1 var(--font); text-transform: uppercase; }
 .about-contact { margin-top: 1.6em; }
 .pillar ::selection { color: #fff; }
-/* Beside the invitation, small: where else to find SMASH, and where it is. */
-.cta-side { grid-column: 9 / span 4; display: flex; flex-direction: column; gap: 1.6em; font-size: clamp(13px, 1.04vw, 16px); line-height: 1.6; text-transform: uppercase; -webkit-text-stroke: 0.05em currentColor; } /* as 600: only Neue Montreal's Regular is here, and not every browser makes it bold itself */
-.cta-social { display: flex; flex-direction: column; align-items: start; }
-.cta-address { margin: 0; }
+/* Under the address, small and in a row: where else to find SMASH, where
+   it is, and its typeface. */
+.cta-links { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px clamp(24px, 3vw, 56px); font-size: clamp(13px, 1.04vw, 16px); line-height: 1.6; text-transform: uppercase; -webkit-text-stroke: 0.05em currentColor; } /* as 600: only Neue Montreal's Regular is here, and not every browser makes it bold itself */
+.cta-links address { font-style: normal; }
 /* Links in a list, each big enough to hit (24px). */
-.cta-social a, .cta-type, .typeface-files a, .category-nav a { min-height: 24px; }
-.cta-social a, .typeface-files a { display: block; }
-.cta-type { align-self: start; }
+.cta-links > *, .typeface-files a, .category-nav a { min-height: 24px; }
+.typeface-files a { display: block; }
 .cta-mail { grid-column: 1 / -1; font: 400 clamp(32px, 7.4vw, 124px) / 1 var(--display); text-transform: uppercase; white-space: nowrap; }
 
 html:has(.home.can-dive) { scrollbar-width: none; }
@@ -425,7 +421,7 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
   .f-mail, .site-footer .f-mail { grid-column: 7 / span 6; justify-self: end; }
   .f-top { display: none; }
   .page-title, .project-title, .lead, .about-head, .about-text { grid-column: 1 / -1; }
-  .cta-title, .cta-side { grid-column: 1 / -1; }
+  .cta-title { grid-column: 1 / -1; }
   .cta-mail { font-size: 7.4vw; }
   .row.pillars { flex-direction: column; }
   .category-title, .category-nav, .category-projects .tile { grid-column: 1 / -1; }
