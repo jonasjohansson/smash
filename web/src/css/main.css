@@ -148,16 +148,14 @@ body::after {
   z-index: 0;
   width: clamp(56px, 7vw, 108px);
   color: var(--accent);
-  transform: translateY(calc(-100% - var(--logo-top)));
-  opacity: 0;
+  transform: translateY(calc((var(--logo-progress, 0) - 1) * (100% + var(--logo-top))));
   visibility: hidden;
   pointer-events: none;
-  transition: transform 0.6s var(--ease), opacity 0.3s, visibility 0s 0.6s;
 }
 .landed-logo svg { display: block; width: 100%; height: auto; }
-.home.is-through .landed-logo { transform: translateY(0); opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 0s; }
+.landed-logo.is-visible { visibility: visible; pointer-events: auto; }
 .landed-logo:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; }
-@media (prefers-reduced-motion: reduce) { .landed-logo { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .landed-logo { transform: none; } }
 .slide {
   position: absolute;
   inset: 0;

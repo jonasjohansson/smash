@@ -170,9 +170,16 @@ if (stage && framesEl) {
   const intro = document.querySelector('.about-intro-wrap'); // its headline shows the film
   const landedLogo = document.querySelector('[data-landed-logo]');
   const view = { t: 0, e: 0, s: 1, x: 0, y: 0, image: 1, fade: 0 };
-  // A covered logo stays behind the page, but must not remain a hidden tab stop.
-  const syncLogo = () => {
-    if (landedLogo) landedLogo.inert = view.t < 0.999 || (intro && intro.getBoundingClientRect().top <= landedLogo.offsetTop);
+  // After the dive, each pixel scrolled brings the logo down by a pixel,
+  // until it reaches its corner. Its position follows scrolling directly.
+  const syncLogo = (end) => {
+    if (!landedLogo) return;
+    const distance = landedLogo.offsetTop + landedLogo.offsetHeight;
+    const progress = Math.min(1, Math.max(0, (scrollY - end) / distance));
+    landedLogo.style.setProperty('--logo-progress', progress);
+    landedLogo.classList.toggle('is-visible', progress > 0);
+    // A covered logo stays behind the page, without a hidden tab stop.
+    landedLogo.inert = progress === 0 || (intro && intro.getBoundingClientRect().top <= landedLogo.offsetTop);
   };
 
   // Where the dive is through: `overlap` screens past the end of the track,
@@ -198,14 +205,13 @@ if (stage && framesEl) {
     // and the header and the studio's line along the bottom go.
     if (stage.inert !== target > 0) stage.inert = target > 0;
     document.body.classList.toggle('is-diving', target > 0);
-    syncLogo();
+    syncLogo(end);
   }
 
   // The mark's zoom and offset for the dive at view.t, and the pictures' zoom.
   function frame() {
     const e = (view.e = 0.5 - Math.cos(Math.PI * view.t) / 2);
     document.body.classList.toggle('is-through', view.t >= 0.999);
-    syncLogo();
     if (slow) { Object.assign(view, { s: 1, x: 0, y: 0, image: 1, fade: e }); return; }
     const W = slide.clientWidth, H = slide.clientHeight;
     const s = Math.exp(e * Math.log(focus.depth));

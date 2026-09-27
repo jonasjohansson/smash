@@ -168,11 +168,10 @@ export function buildMark(p, W, H) {
   const block = p.invert ? '#000' : '#fff';
   const cut = p.invert ? '#fff' : '#000';
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`
-    + `<defs><clipPath id="b"><rect x="${bx}" y="${by}" width="${bw}" height="${bh}"/></clipPath>`
-    + `<mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}">`
+    + `<defs><mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}">`
     + `<rect width="${W}" height="${H}" fill="${ground}"/>`
     + `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="${block}"/>`
-    + `<g clip-path="url(#b)" fill="${cut}"><path d="${d}" fill="none" stroke="${cut}" stroke-width="${stroke}" stroke-linecap="butt" stroke-linejoin="${join}"/>${caps}</g>`
+    + `<g fill="${cut}"><path d="${d}" fill="none" stroke="${cut}" stroke-width="${stroke}" stroke-linecap="butt" stroke-linejoin="${join}"/>${caps}</g>`
     + `</mask></defs><rect width="${W}" height="${H}" mask="url(#m)"/></svg>`;
 }
 
@@ -195,10 +194,10 @@ export function paintMark(ctx, shape, invert) {
     ctx.fillRect(bx, by, bw, bh);
     ctx.globalCompositeOperation = 'destination-out';
   }
+  // Open slots run through the edge into an already clear (or opaque) ground.
+  // Clipping them to the block again antialiases that shared edge twice,
+  // leaving a hairline where a slot meets the outside of the mark.
   ctx.save();
-  ctx.beginPath();
-  ctx.rect(bx, by, bw, bh);
-  ctx.clip();
   ctx.lineWidth = stroke;
   ctx.lineCap = 'butt';
   ctx.lineJoin = join;
