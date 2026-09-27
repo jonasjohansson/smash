@@ -57,7 +57,7 @@ G = {
     'P': '###/#.#/#.#/###/#../#../#..', 'Q': '###/#.#/#.#/#.#/#.#/#.#/###/..#', 'R': '###/#.#/#.#/##./#.#/#.#/#.#',
     'S': '###/#.#/#../###/..#/#.#/###', 'T': '#####/..#../..#../..#../..#../..#../..#..', 'U': '#.#/#.#/#.#/#.#/#.#/#.#/###',
     'V': '#.#/#.#/#.#/#.#/#.#/#.#/.#.', 'W': '#.#.#/#.#.#/#.#.#/#.#.#/#.#.#/#.#.#/#####',
-    'X': '##.##/##.##/.###./.###./.###./##.##/##.##', 'Y': '#...#/#...#/#...#/#####/..#../..#../..#..', 'Z': '###/..#/..#/###/#../#../###',
+    'X': '##.##/##.##/.###./.###./.###./##.##/##.##', 'Y': '##.##/##.##/##.##/#####/.###./.###./.###.', 'Z': '###/..#/..#/###/#../#../###',
     '0': '##./#.#/#.#/#.#/#.#/#.#/.##', '1': '###/#.#/..#/..#/..#/..#/..#', '2': '###/#.#/..#/###/#../#../###',
     '3': '###/#.#/..#/.##/..#/#.#/###', '4': '#.#/#.#/#.#/###/..#/..#/..#', '5': '###/#../#../###/..#/#.#/###',
     '6': '###/#../#../###/#.#/#.#/###', '7': '###/..#/..#/###/#../#../#..', '8': '###/#.#/#.#/###/#.#/#.#/###',
@@ -83,16 +83,18 @@ ACCENTS = {'\u00c5': ('A', 'ring'), '\u00c4': ('A', 'dieresis'), '\u00d6': ('O',
 ALSO = {"'": [0x2018, 0x2019], '"': [0x201C, 0x201D], '\u2022': [0x00B7], '-': [0x2212]}
 # Signs rounded less than the mark's bends, which would round them away.
 SOFT = {'+': 0.25}
-# The wide R, K, V and X that came first, as a stylistic set (ss01).
+# The wide R, K, V, X and Y that came first, as a stylistic set (ss01).
 ALTS = {
+    'Y': '#...#/#...#/#...#/#####/..#../..#../..#..',
     'R': '###../#.#../#.#../#####/#...#/#...#/#...#', 'K': '#.#../#.#../#.#../#####/#...#/#...#/#...#',
     'V': '#...#/#...#/#...#/#...#/#...#/##.##/.###.', 'X': '#...#/#...#/#####/..#../#####/#...#/#...#',
 }
 # Letters whose dot sits a slot under the stroke: the lower stem row shrinks
 # to that gap, the stroke running down to it.
 DOTTED = {'!', '?'}
-# Letters on columns of their own: X's two bars are each cut in two, so that
-# its waist (the inner halves and the slot between) is as wide as a bar.
+# Letters on columns of their own: X's and Y's two bars are each cut in two,
+# so that X's waist and Y's stem (the inner halves and the slot between) are
+# as wide as a bar, and the letters no wider than the rest.
 # (Where the bars are thinner than the slot, the waist is the slot, and a
 # sliver of each bar.)
 def _x_cols(slot, pitch):
@@ -103,6 +105,7 @@ def _x_cols(slot, pitch):
 
 COLS = {
     'X': _x_cols,
+    'Y': _x_cols,  # its arms bars, its stem as wide as a bar
     ')': lambda slot, pitch: [slot, pitch - slot], ']': lambda slot, pitch: [slot, pitch - slot],  # mirrored
     '#': lambda slot, pitch: [slot, pitch - slot, slot, pitch - slot, slot],  # bars down, strips across
     '+': lambda slot, pitch: [pitch / 2, pitch - slot, pitch / 2],  # a bar-wide upright
