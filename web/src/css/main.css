@@ -180,6 +180,10 @@ body::after {
 .about-knock-ground { background: var(--ground); color: #000; mix-blend-mode: screen; }
 .about-intro-wrap > .about-intro:last-child { position: relative; }
 .about-intro-wrap > .about-intro:last-child .about-head { color: transparent; }
+/* Plain (landing.njk): the headline in the text's light on the ground. */
+.about-intro-wrap.is-plain { background: var(--ground); }
+.is-plain > .about-knock { display: none; }
+.is-plain > .about-intro:last-child .about-head { color: var(--ink); }
 .home:not(.can-dive) .about { display: none; }
 /* The intro, striking: a chunky headline in the mask's capitals, the words
    beside it large. */
