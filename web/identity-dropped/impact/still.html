@@ -1,0 +1,24 @@
+<!doctype html>
+<!-- A still at several widths on both grounds: ?fn=wordmark|symbol|lockup&w=1200,400,200 -->
+<meta charset="utf-8">
+<title>Impact: stills</title>
+<style>
+  body { margin: 0; background: #ecebe6; color: #0b0c0e; }
+  .ink { background: #0b0c0e; color: #ecebe6; }
+  div { padding: 40px; }
+  svg { display: block; }
+</style>
+<body>
+<script type="module">
+  import * as m from '../impact.js';
+  const q = new URLSearchParams(location.search);
+  const fn = q.get('fn') ?? 'wordmark';
+  const widths = (q.get('w') ?? '1200,400,200').split(',').map(Number);
+  for (const g of ['paper', 'ink']) {
+    const d = document.createElement('div');
+    d.className = g;
+    for (const w of widths) d.insertAdjacentHTML('beforeend', m[fn]({ ground: g }).replace('<svg ', `<svg style="width:${w}px;margin-bottom:24px" `));
+    document.body.appendChild(d);
+  }
+  document.documentElement.dataset.ready = '1';
+</script>

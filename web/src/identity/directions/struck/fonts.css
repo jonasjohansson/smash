@@ -1,0 +1,8 @@
+/* Struck: SMASH (the studio's own variable face, drawn from the mark's rules) for
+   display, and Gerstner Programm (Karl Gerstner, 1964-67; Forgotten Shapes) for
+   text. Gerstner Programm is licensed; its files stay out of git. */
+@font-face { font-family: "Struck SMASH"; font-weight: 100 900; font-display: swap; src: url(/typeface/SMASH-VF.ttf) format("truetype"); }
+@font-face { font-family: "Struck Programm"; font-weight: 300; font-display: swap; src: url(./fonts/GerstnerProgramm-Light.otf) format("opentype"); }
+@font-face { font-family: "Struck Programm"; font-weight: 400; font-display: swap; src: url(./fonts/GerstnerProgramm-Regular.otf) format("opentype"); }
+@font-face { font-family: "Struck Programm"; font-weight: 400; font-style: italic; font-display: swap; src: url(./fonts/GerstnerProgramm-RegularItalic.otf) format("opentype"); }
+@font-face { font-family: "Struck Programm"; font-weight: 500; font-display: swap; src: url(./fonts/GerstnerProgramm-Medium.otf) format("opentype"); }

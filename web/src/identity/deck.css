@@ -1,0 +1,114 @@
+/* 1920 × 1080 slides. On screen they are zoomed to the window's width; in
+   print (identity-pdf.py) each is one page at full size. */
+
+@import url(identity.css);
+
+@page { size: 1920px 1080px; margin: 0; }
+html, body { background: #000; }
+#deck { display: grid; gap: 24px; padding: 24px 0; zoom: calc(100vw / 1968px); justify-content: center; }
+@media print {
+  #deck { zoom: 1; gap: 0; padding: 0; }
+  .slide { break-after: page; }
+}
+
+.slide { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--page); color: var(--text); padding: 64px 72px 96px; }
+.slide .lbl { font-size: 15px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); margin: 0 0 8px; }
+.slide .foot { position: absolute; left: 72px; right: 72px; bottom: 40px; display: grid; grid-template-columns: 1fr 1fr 1fr; font-size: 15px; color: var(--dim); }
+.slide .foot span:last-child { text-align: right; }
+.ground-ink .foot, .ground-ink .s-head { color: color-mix(in srgb, var(--d-paper) 55%, transparent); }
+.s-head { display: flex; justify-content: space-between; font-size: 15px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
+.s-h2 { font-size: 120px; line-height: 0.95; letter-spacing: -0.03em; font-weight: 400; margin: 0; }
+.s-idea { font-size: 36px; line-height: 1.2; max-width: 30ch; }
+.fav { display: inline-block; }
+.fav svg { display: block; width: 100%; height: 100%; }
+svg { display: block; }
+
+/* Cover */
+.s-cover h1 { font-size: 300px; line-height: 0.88; letter-spacing: -0.04em; font-weight: 400; margin: 90px 0 20px; }
+.c-grid { position: absolute; left: 72px; right: 72px; bottom: 110px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 16px; }
+.c-item p { font-size: 20px; margin: 10px 0 2px; }
+.c-item .lbl { font-size: 13px; }
+.c-sym { aspect-ratio: 1; display: grid; place-items: center; padding: 22%; }
+.c-sym svg { width: 100%; height: 100%; }
+
+/* Brief */
+.s-brief .s-h2 { margin: 80px 0 110px; max-width: 16ch; }
+.s-brief .cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; font-size: 22px; line-height: 1.35; }
+
+/* A direction's title */
+.s-title { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto 1fr; column-gap: 48px; }
+.s-title .s-head { grid-column: 1 / -1; }
+.s-name { font-size: 150px; line-height: 0.9; letter-spacing: -0.035em; font-weight: 400; margin: 40px 0 0; }
+.s-title .s-idea { align-self: end; }
+.s-wm { grid-column: 1 / -1; display: grid; place-items: center; padding: 40px 180px 20px; min-height: 0; }
+.s-wm svg { width: 100%; max-height: 520px; }
+
+/* The marks */
+.s-marks { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; padding-bottom: 96px; }
+.s-marks .m { position: relative; display: grid; place-items: center; overflow: hidden; }
+.s-marks .m .lbl { position: absolute; left: 20px; bottom: 12px; color: inherit; opacity: 0.55; margin: 0; }
+.s-marks .mk { width: 100%; height: 100%; display: grid; place-items: center; }
+.s-marks .mk svg { width: 100%; height: 100%; }
+.m-wm-ink { grid-column: 1; grid-row: 1; } .m-wm-ink .mk { padding: 12%; }
+.m-wm-paper { grid-column: 1; grid-row: 2; } .m-wm-paper .mk { padding: 12%; }
+.m-sym { grid-column: 2; grid-row: 1 / span 2; } .m-sym .mk { padding: 20%; }
+.m-lock { grid-column: 3; grid-row: 1; } .m-lock .mk { padding: 12%; }
+.m-fav { grid-column: 3; grid-row: 2; }
+.favs { display: flex; align-items: end; gap: 28px; }
+
+/* Motion */
+.s-motion { display: grid; grid-template-columns: 1120px minmax(0, 1fr); grid-template-rows: 630px auto; gap: 24px 48px; }
+.s-motion .big { position: relative; }
+.s-motion .big .live, .s-motion .frame .live { position: absolute; inset: 0; overflow: hidden; }
+.s-motion .side p:not(.lbl) { font-size: 20px; line-height: 1.4; margin: 0 0 28px; color: #d8d3cb; }
+.s-motion .s-story { font-size: 24px !important; color: var(--text) !important; }
+.strip { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
+.frame { position: relative; aspect-ratio: 16 / 9; }
+.frame .t { position: absolute; left: 10px; bottom: 6px; font-size: 13px; opacity: 0.6; }
+
+/* In use */
+.s-app { display: grid; grid-template-columns: 1120px minmax(0, 1fr); gap: 48px; align-items: start; }
+.appbox .live { position: relative; width: 100%; max-height: 860px; overflow: hidden; background: #000; }
+.appbox .lbl { margin-top: 12px; }
+.s-spec { font-size: 64px; line-height: 1; margin: 0 0 24px; }
+.s-body { font-size: 19px; line-height: 1.45; margin: 0 0 16px; color: #d8d3cb; }
+.s-app .two { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 40px; font-size: 17px; line-height: 1.4; color: #d8d3cb; }
+
+/* Side by side */
+.s-compare .s-h2 { font-size: 80px; margin-bottom: 40px; }
+.cgrid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 16px; }
+.cc { display: grid; gap: 10px; }
+.cc > div { display: grid; place-items: center; overflow: hidden; }
+.cc .cw { aspect-ratio: 16 / 9; padding: 10%; }
+.cc .cs { aspect-ratio: 1; padding: 20%; }
+.cc .cf { aspect-ratio: 16 / 9; }
+.cc svg { width: 100%; height: 100%; }
+.cc p { font-size: 18px; }
+
+.s-next .s-idea { margin-top: 60px; }
+
+/* The mark, live (lab.js), frozen */
+.s-lab { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto 1fr; column-gap: 48px; }
+.s-lab .s-head { grid-column: 1 / -1; }
+.s-lab .s-idea { align-self: end; }
+.s-lab .lab-shot { grid-column: 1 / -1; min-height: 0; display: grid; place-items: center; margin-top: 32px; }
+.s-lab .lab-stage { position: relative; height: 100%; aspect-ratio: 16 / 9; background: #000; overflow: hidden; }
+.s-lab .lab-stage img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.s-lab .lab-holder { display: contents; }
+.s-lab3d .lab-pair { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px; min-height: 0; }
+.s-lab3d .lab-stage { width: 100%; height: auto; }
+
+/* The modular mark */
+.s-modular { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto 360px 190px; column-gap: 48px; row-gap: 0; background: #000; }
+.s-modular .s-head { grid-column: 1 / -1; }
+.s-modular .s-idea { align-self: end; }
+.s-modular .mod-word { grid-column: 1 / -1; position: relative; margin-top: 56px; }
+.s-modular .mod-mono { grid-column: 1 / -1; position: relative; margin-top: 44px; }
+.s-modular .mod-word svg, .s-modular .mod-mono svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+/* No fluff: slides show a number, a name and the marks. */
+.slide .s-idea, .slide .s-story, .s-motion .side, .slide .s-head span:last-child { display: none; }
+.s-motion { grid-template-columns: 1fr; }
+.s-motion .big { width: 1120px; justify-self: center; }
+.s-cover { display: grid; place-items: center; }
+.s-cover h1 { margin: 0; font-size: 360px; }

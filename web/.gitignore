@@ -2,3 +2,8 @@ node_modules/
 dist/
 .cache/
 .DS_Store
+.identity-shots/
+
+# Licensed fonts copied from the library for the identity round: kept out of git.
+src/identity/directions/*/fonts/
+identity-dropped/*/fonts/

@@ -257,11 +257,21 @@ export function createGlass(canvas) {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 
-  // The sweep and the ripple move, so the glass renders every frame.
-  const loop = () => { if (!document.hidden) render(); requestAnimationFrame(loop); };
-  requestAnimationFrame(loop);
+  // The sweep and the ripple move, so the glass renders every frame, unless
+  // paused (the identity page pauses it off screen) or let go.
+  let running = true;
+  let raf = 0;
+  const loop = () => { if (!document.hidden) render(); raf = requestAnimationFrame(loop); };
+  raf = requestAnimationFrame(loop);
 
   return {
+    pause() { running = false; cancelAnimationFrame(raf); },
+    resume() { if (!running) { running = true; raf = requestAnimationFrame(loop); } },
+    /** Stop, and give the WebGL context back (a page keeps only about sixteen). */
+    destroy() { this.pause(); gl.getExtension('WEBGL_lose_context')?.loseContext(); },
+    /** The current frame as a PNG data URL: drawn and read in one go, so it works without preserveDrawingBuffer. */
+    snapshot() { render(); return canvas.toDataURL('image/png'); },
+
     /** A decoded frame (ImageBitmap or image). */
     setImage(source) {
       gl.activeTexture(gl.TEXTURE0);

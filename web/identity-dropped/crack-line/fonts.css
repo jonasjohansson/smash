@@ -1,0 +1,6 @@
+/* Crack Line: GT Sectra Display Light for headlines, Theinhardt for text.
+   Copied from Jonas's font library (licensed, kept out of git). */
+@font-face { font-family: "Crack Sectra"; font-weight: 300; font-style: normal; font-display: swap; src: url(fonts/GT-Sectra-Display-Light.ttf) format("truetype"); }
+@font-face { font-family: "Crack Sectra"; font-weight: 300; font-style: italic; font-display: swap; src: url(fonts/GT-Sectra-Display-LightItalic.ttf) format("truetype"); }
+@font-face { font-family: "Crack Theinhardt"; font-weight: 400; font-style: normal; font-display: swap; src: url(fonts/Theinhardt-Regular.otf) format("opentype"); }
+@font-face { font-family: "Crack Theinhardt"; font-weight: 500; font-style: normal; font-display: swap; src: url(fonts/Theinhardt-Medium.otf) format("opentype"); }

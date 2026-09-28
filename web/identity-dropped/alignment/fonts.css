@@ -1,0 +1,7 @@
+/* Alignment (05): type from Jonas's library. The files sit next to this sheet and are kept
+   out of git (licensed). Fakt Pro (OurType) is a licensed copy; ISOCP is the ISO 3098
+   technical-drawing lettering installed with CAD software, used for the measurements. */
+@font-face { font-family: "Alignment Sans"; font-weight: 600; font-style: normal; font-display: block; src: url(./fonts/FaktPro-SemiBold.woff2) format("woff2"); }
+@font-face { font-family: "Alignment Sans"; font-weight: 500; font-style: normal; font-display: block; src: url(./fonts/FaktPro-Medium.woff2) format("woff2"); }
+@font-face { font-family: "Alignment Sans"; font-weight: 400; font-style: normal; font-display: block; src: url(./fonts/FaktPro-Normal.woff2) format("woff2"); }
+@font-face { font-family: "Alignment Drawing"; font-weight: 400; font-style: normal; font-display: block; src: url(./fonts/ISOCP-Regular.woff2) format("woff2"); }

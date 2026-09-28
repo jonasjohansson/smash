@@ -1,0 +1,8 @@
+/* 03 Impact: Scto Grotesk A (Schick Toikka) and System-85 Mono (Colophon), from Jonas's library.
+   Licensed: the files in fonts/ stay out of git. */
+@font-face { font-family: "Scto Grotesk A"; font-weight: 400; font-style: normal; font-display: swap; src: url(fonts/SctoGroteskA-Regular.woff2) format("woff2"); }
+@font-face { font-family: "Scto Grotesk A"; font-weight: 400; font-style: italic; font-display: swap; src: url(fonts/SctoGroteskA-RegularItalic.woff2) format("woff2"); }
+@font-face { font-family: "Scto Grotesk A"; font-weight: 500; font-style: normal; font-display: swap; src: url(fonts/SctoGroteskA-Medium.woff2) format("woff2"); }
+@font-face { font-family: "Scto Grotesk A"; font-weight: 700; font-style: normal; font-display: swap; src: url(fonts/SctoGroteskA-Bold.woff2) format("woff2"); }
+@font-face { font-family: "System85 Mono"; font-weight: 400; font-style: normal; font-display: swap; src: url(fonts/System85MonoPro-Regular.woff2) format("woff2"); }
+@font-face { font-family: "System85 Mono"; font-weight: 500; font-style: normal; font-display: swap; src: url(fonts/System85MonoPro-Medium.woff2) format("woff2"); }

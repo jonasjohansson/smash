@@ -1,0 +1,38 @@
+<!doctype html>
+<!-- The favicons at 64, 32 and 16 px, blown up 6x; ?v=[{...}] tries overrides of the favicon rule; ?only=16&x=12 one size. -->
+<meta charset="utf-8">
+<title>Impact: favicons</title>
+<style>
+  body { margin: 0; background: #1a1816; color: #ecebe6; font: 12px ui-monospace, Menlo, monospace; padding: 20px; }
+  .row { display: flex; gap: 24px; align-items: end; margin-bottom: 24px; }
+  canvas { image-rendering: pixelated; }
+</style>
+<body>
+<script type="module">
+  import { favicon } from '../impact.js';
+  const q = new URLSearchParams(location.search);
+  const variants = JSON.parse(q.get('v') ?? '[{}]');
+  for (const v of variants) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.insertAdjacentHTML('beforeend', `<span style="width:120px">${JSON.stringify(v)}</span>`);
+    const only = q.get('only') ? [+q.get('only')] : [64, 32, 16];
+    const X = +(q.get('x') ?? 6);
+    for (const size of only) {
+      const img = new Image();
+      img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(favicon({ size, ...v }).replace('<svg ', `<svg width="${size}" height="${size}" `));
+      await img.decode();
+      const c = document.createElement('canvas');
+      c.width = size; c.height = size;
+      c.getContext('2d').drawImage(img, 0, 0);
+      c.style.width = size * X + 'px';
+      c.style.height = size * X + 'px';
+      row.appendChild(c);
+      const c1 = document.createElement('canvas');
+      c1.width = size; c1.height = size; c1.getContext('2d').drawImage(img, 0, 0);
+      row.appendChild(c1);
+    }
+    document.body.appendChild(row);
+  }
+  document.documentElement.dataset.ready = '1';
+</script>

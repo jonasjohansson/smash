@@ -1,0 +1,10 @@
+/* Cut: ABC Ginto Plus (Dinamo), one variable file holding Ginto Normal (wdth 100) and
+   Ginto Nord (wdth 200), weights 100 to 900. Trial version: it would need a licence. */
+@font-face {
+  font-family: "Cut Ginto";
+  src: url(./fonts/GintoPlusVariable-Trial.woff2) format("woff2");
+  font-weight: 100 900;
+  font-stretch: 100% 200%;
+  font-style: normal;
+  font-display: block;
+}

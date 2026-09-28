@@ -13,6 +13,11 @@
 // With `info`, a row of text runs along the top and one along the bottom, as
 // on svartljus.se: part of the mask, the pictures showing through the letters,
 // the block drawn between them. paintInfo() sets them.
+//
+// With `letters`, each of the five letters can have its own measures: an array
+// of five objects (S, M, A, S, H), any of LETTER_KEYS in each, overriding the
+// whole mark's for that letter's own slots. The four slots between letters
+// keep the whole mark's. Without it, the mark is drawn exactly as before.
 
 export const UNITS = { w: 550, h: 471 };
 
@@ -32,6 +37,19 @@ export const DEFAULTS = {
   paused: false,
 };
 
+export const LETTERS = ['S', 'M', 'A', 'S', 'H'];
+/** What a letter can set for itself (the M has no crossbar, so crossbar and gap do nothing there). */
+export const LETTER_KEYS = ['stroke', 'corner', 'caps', 'inset', 'crossbar', 'gap'];
+
+/** The measures for letter i: the whole mark's, with the letter's own on top. -1 is a slot between letters. */
+function forLetter(p, i) {
+  const own = i >= 0 ? p.letters?.[i] : null;
+  if (!own) return p;
+  const q = { ...p };
+  for (const k of LETTER_KEYS) if (own[k] !== undefined && own[k] !== null) q[k] = own[k];
+  return q;
+}
+
 const PITCH = 51.78;
 const FIRST = 42; // pixel 32..51 spans 32.0 to 52.0: its centre is 42
 const MID = FIRST + PITCH * 4.5; // the columns spread from here
@@ -43,36 +61,38 @@ const column = (p, i) => MID + (FIRST + PITCH * i - MID) * p.columns;
  * The slot centre lines, in mark units, with what happens at each end:
  * 'end' is a closed slot end (drawn with the chosen caps), 'bar' is flat
  * against a crossbar (the breaks in the A and the H), 'open' runs off the block.
+ * `letter` is the letter a slot belongs to (0–4), or -1 between two letters.
  */
 export function slots(p) {
   const out = UNITS.h * 0.5;
   const c = (i) => column(p, i);
-  const top = p.inset;
-  const bot = UNITS.h - p.inset;
-  const up = p.crossbar - p.gap / 2;
-  const lo = p.crossbar + p.gap / 2;
-  const slot = (pts, start, end) => ({ pts, start, end });
-  const full = (i) => slot([[c(i), -out], [c(i), UNITS.h + out]], 'open', 'open');
+  const at = (i) => {
+    const q = forLetter(p, i);
+    return { top: q.inset, bot: UNITS.h - q.inset, up: q.crossbar - q.gap / 2, lo: q.crossbar + q.gap / 2 };
+  };
+  const slot = (letter, pts, start, end) => ({ pts, start, end, letter });
+  const full = (i) => slot(-1, [[c(i), -out], [c(i), UNITS.h + out]], 'open', 'open');
+  const [s1, m, a, s2, h] = [0, 1, 2, 3, 4].map(at);
   return [
     // S
-    slot([[c(0), top], [c(0), up], [c(1), up]], 'end', 'open'),
-    slot([[c(0) - PITCH * 2, lo], [c(0), lo], [c(0), bot]], 'open', 'end'),
+    slot(0, [[c(0), s1.top], [c(0), s1.up], [c(1), s1.up]], 'end', 'open'),
+    slot(0, [[c(0) - PITCH * 2, s1.lo], [c(0), s1.lo], [c(0), s1.bot]], 'open', 'end'),
     full(1),
     // M
-    slot([[c(2), top], [c(2), UNITS.h + out]], 'end', 'open'),
-    slot([[c(3), top], [c(3), UNITS.h + out]], 'end', 'open'),
+    slot(1, [[c(2), m.top], [c(2), UNITS.h + out]], 'end', 'open'),
+    slot(1, [[c(3), m.top], [c(3), UNITS.h + out]], 'end', 'open'),
     full(4),
     // A
-    slot([[c(5), top], [c(5), up]], 'end', 'bar'),
-    slot([[c(5), lo], [c(5), UNITS.h + out]], 'bar', 'open'),
+    slot(2, [[c(5), a.top], [c(5), a.up]], 'end', 'bar'),
+    slot(2, [[c(5), a.lo], [c(5), UNITS.h + out]], 'bar', 'open'),
     full(6),
     // S
-    slot([[c(7), top], [c(7), up], [c(8), up]], 'end', 'open'),
-    slot([[c(6), lo], [c(7), lo], [c(7), bot]], 'open', 'end'),
+    slot(3, [[c(7), s2.top], [c(7), s2.up], [c(8), s2.up]], 'end', 'open'),
+    slot(3, [[c(6), s2.lo], [c(7), s2.lo], [c(7), s2.bot]], 'open', 'end'),
     full(8),
     // H
-    slot([[c(9), -out], [c(9), up]], 'open', 'bar'),
-    slot([[c(9), lo], [c(9), UNITS.h + out]], 'bar', 'open'),
+    slot(4, [[c(9), -out], [c(9), h.up]], 'open', 'bar'),
+    slot(4, [[c(9), h.lo], [c(9), UNITS.h + out]], 'bar', 'open'),
   ];
 }
 
@@ -110,7 +130,9 @@ function filleted(points, r) {
 /**
  * The mark laid out in a W × H px box: the block, and the slots as one path
  * (`d`) to be drawn `stroke` px wide with flat ends, plus a round cap at each
- * of `dots`.
+ * of `dots`. When letters have their own measures, `parts` holds the slots in
+ * groups of one width and join ({ d, stroke, join }), and each dot carries its
+ * own radius as a third number; without them, `parts` is just [{ d, stroke, join }].
  */
 export function markShape(p, W, H) {
   const pad = p.padding;
@@ -141,18 +163,26 @@ export function markShape(p, W, H) {
   // Work in px so a stretched block keeps round caps round.
   const toPx = (pts) => pts.map(([x, y]) => [bx + x * sx, by + y * sy]);
   const stroke = p.stroke * sx;
-  const corner = p.corner * sx;
+  const join = p.corner > 0 ? 'round' : 'miter';
   // Lines are drawn with flat ends; each end is then finished by kind.
   const dots = [];
-  const d = slots(p).map(({ pts, start, end }) => {
+  const groups = new Map();
+  const d = slots(p).map(({ pts, start, end, letter }) => {
+    const q = forLetter(p, letter);
+    const w = q.stroke * sx;
     let px = toPx(pts);
     for (const [kind, atEnd] of [[start, false], [end, true]]) {
-      if (kind === 'bar' || (kind === 'end' && p.caps === 'square')) px = extend(px, atEnd, stroke / 2);
-      if (kind === 'end' && p.caps === 'round') dots.push(atEnd ? px.at(-1) : px[0]);
+      if (kind === 'bar' || (kind === 'end' && q.caps === 'square')) px = extend(px, atEnd, w / 2);
+      if (kind === 'end' && q.caps === 'round') dots.push([...(atEnd ? px.at(-1) : px[0]), w / 2]);
     }
-    return filleted(px, corner);
+    const path = filleted(px, q.corner * sx);
+    const key = `${w}|${q.corner > 0 ? 'round' : 'miter'}`;
+    if (!groups.has(key)) groups.set(key, { d: '', stroke: w, join: q.corner > 0 ? 'round' : 'miter' });
+    groups.get(key).d += path;
+    return path;
   }).join('');
-  return { W, H, bx, by, bw, bh, sx, sy, stroke, d, dots, join: p.corner > 0 ? 'round' : 'miter', rows };
+  const parts = [...groups.values()];
+  return { W, H, bx, by, bw, bh, sx, sy, stroke, d, dots, join, parts, rows };
 }
 
 /**
@@ -161,8 +191,8 @@ export function markShape(p, W, H) {
  * Inverted: only the slots (and anything outside the block) show it.
  */
 export function buildMark(p, W, H) {
-  const { bx, by, bw, bh, stroke, d, dots, join } = markShape(p, W, H);
-  const caps = dots.map(([x, y]) => `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(stroke / 2).toFixed(2)}"/>`).join('');
+  const { bx, by, bw, bh, stroke, dots, parts } = markShape(p, W, H);
+  const caps = dots.map(([x, y, r = stroke / 2]) => `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${r.toFixed(2)}"/>`).join('');
 
   const ground = p.invert ? '#fff' : '#000';
   const block = p.invert ? '#000' : '#fff';
@@ -171,7 +201,7 @@ export function buildMark(p, W, H) {
     + `<defs><mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}">`
     + `<rect width="${W}" height="${H}" fill="${ground}"/>`
     + `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="${block}"/>`
-    + `<g fill="${cut}"><path d="${d}" fill="none" stroke="${cut}" stroke-width="${stroke}" stroke-linecap="butt" stroke-linejoin="${join}"/>${caps}</g>`
+    + `<g fill="${cut}">${parts.map((g) => `<path d="${g.d}" fill="none" stroke="${cut}" stroke-width="${g.stroke}" stroke-linecap="butt" stroke-linejoin="${g.join}"/>`).join('')}${caps}</g>`
     + `</mask></defs><rect width="${W}" height="${H}" mask="url(#m)"/></svg>`;
 }
 
@@ -182,6 +212,9 @@ export function buildMark(p, W, H) {
 export function paintMark(ctx, shape, invert) {
   const { W, H, bx, by, bw, bh, stroke, dots, join } = shape;
   shape.path ??= new Path2D(shape.d);
+  // Slots of more than one width (letters with their own measures) are stroked group by group.
+  const parts = shape.parts?.length > 1 ? shape.parts : null;
+  if (parts) for (const g of parts) g.path ??= new Path2D(g.d);
   ctx.fillStyle = ctx.strokeStyle = '#fff';
   if (invert) {
     // Outside the block shows the image too. At rest or zoomed in, the screen
@@ -198,14 +231,22 @@ export function paintMark(ctx, shape, invert) {
   // Clipping them to the block again antialiases that shared edge twice,
   // leaving a hairline where a slot meets the outside of the mark.
   ctx.save();
-  ctx.lineWidth = stroke;
   ctx.lineCap = 'butt';
-  ctx.lineJoin = join;
-  ctx.stroke(shape.path);
+  if (parts) {
+    for (const g of parts) {
+      ctx.lineWidth = g.stroke;
+      ctx.lineJoin = g.join;
+      ctx.stroke(g.path);
+    }
+  } else {
+    ctx.lineWidth = stroke;
+    ctx.lineJoin = join;
+    ctx.stroke(shape.path);
+  }
   ctx.beginPath();
-  for (const [x, y] of dots) {
-    ctx.moveTo(x + stroke / 2, y);
-    ctx.arc(x, y, stroke / 2, 0, Math.PI * 2);
+  for (const [x, y, r = stroke / 2] of dots) {
+    ctx.moveTo(x + r, y);
+    ctx.arc(x, y, r, 0, Math.PI * 2);
   }
   ctx.fill();
   ctx.restore();
