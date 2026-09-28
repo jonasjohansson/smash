@@ -1,0 +1,104 @@
+---
+layout: base.njk
+---
+{# Every image of every project, shuffled and cut fast behind the mark.
+   The frame list is built in eleventy.config.js (async shortcodes lose
+   arguments inside layouts). Scrolling dives into the mark, the length of
+   the track, and goes on into the studio (main.js); v2's glass does not. #}
+<a class="stage"{% if renderer %} data-renderer="{{ renderer }}"{% endif %} href="/{{ poster.slug }}/" data-stage aria-label="SMASH — see the work">
+  <div class="slide">
+    <img src="{{ poster.src }}" alt="" fetchpriority="high" data-frame>
+    <video class="reel" muted loop playsinline preload="none" aria-hidden="true" data-reel>
+      <source src="/reel/showreel-landing-av1.mp4" type='video/mp4; codecs="av01.0.08M.10"'>
+      <source src="/reel/showreel-landing.mp4" type="video/mp4">
+    </video>
+  </div>
+</a>
+{% if not renderer %}
+{# The small mark arrives after the dive and stays with the film, below the
+   studio content that scrolls over it. #}
+<a class="landed-logo" href="/" data-top data-landed-logo aria-label="SMASH — back to the start" inert>{% include "logo.svg" %}</a>
+{# What SMASH does and who it is, in rows of the mask along the top and
+   bottom, as on svartljus.se: main.js paints these words there, the pictures
+   showing through them. The studio, not its people. Here they are for screen
+   readers, and the email's link lies over its painted letters, and
+   LinkedIn's and Instagram's over their icons at the end of the bottom row. #}
+<div class="info" data-info>
+  <p data-row>A spectacular collision between the real &amp; the imagination</p>
+  <p data-row data-icons="linkedin instagram">Experience design studio Stockholm hello@smash.studio</p>
+</div>
+<a class="info-mail" href="mailto:hello@smash.studio" data-mail hidden>hello@smash.studio</a>
+<a class="info-mail" href="https://www.linkedin.com/company/smashstudiosthlm/" target="_blank" rel="noopener" data-mail data-icon="linkedin" hidden>LinkedIn</a>
+<a class="info-mail" href="https://www.instagram.com/studio.smash/" target="_blank" rel="noopener" data-mail data-icon="instagram" hidden>Instagram</a>
+<div class="dive-track" data-track></div>
+{# Past the dive, the studio: it scrolls up over the film, which stays put.
+   After it, the footer, and after that the landing again (below). #}
+<section class="about" aria-label="About SMASH">
+  {# The headline is cut out of the ground, the film showing through its
+     letters as it scrolls up over it: the same words twice more beneath,
+     blended (main.css), as a project's title masks its hero. #}
+  {# `is-plain`: tried instead, the headline in SMASH yellow on the
+     ground, no film through it; without it, the knockout is back. #}
+  <div class="about-intro-wrap is-plain">
+    <div class="grid about-intro about-knock" aria-hidden="true"><p class="about-head">SMASH is the experience design studio in Sweden</p></div>
+    <div class="grid about-intro about-knock about-knock-ground" aria-hidden="true"><p class="about-head">SMASH is the experience design studio in Sweden</p></div>
+    <div class="grid about-intro">
+      <h2 class="about-head">SMASH is the experience design studio in Sweden</h2>
+      <div class="about-text">
+        <p>We make interactive installations, projection mapping, immersive environments and the digital work that carries them further.</p>
+        <p>We take projects from the first idea to the last night of the run, designing for the room and for the crew who operates it at seven in the morning.</p>
+        <p class="about-contact">
+          <a class="cta-button" href="mailto:hello@smash.studio">Reach out</a>
+          <a class="cta-button cta-button-line" href="mailto:hello@smash.studio?subject=Internship">Internships</a>
+        </p>
+      </div>
+    </div>
+  </div>
+  {# The studio's offerings (categories/): tall pictures side by side, each
+     named at its foot and leading to its page, as on gentilhomme.com. One
+     hovered widens. #}
+  <div class="row pillars">
+    {% for c in categories %}
+    <a class="pillar" href="/{{ c.slug }}/">
+      {{ c.picture | safe }}
+      <span class="pillar-text">
+        <span class="pillar-name">{% for w in c.words %}<span>{{ w }}</span>{% if not loop.last %} {% endif %}{% endfor %}</span>
+      </span>
+    </a>
+    {% endfor %}
+  </div>
+  {# The people in the studio (team/team.json): a few words about the studio
+     on the left, and a portrait each with their email under it. #}
+  <section class="row grid team" aria-label="The studio">
+    <p class="team-text">The studio on Åsögatan in Stockholm. Every project gets its own lead, with a senior creative and a senior technical lead beside them, and we bring in makers from our network as the work needs. We are looking for interns in production and design.</p>
+    <ul class="team-list">
+      {# The whole card writes to them. #}
+      {% for p in team %}{% set at = p.email.split('@') %}
+      <li><a class="person" href="mailto:{{ p.email }}">
+        <span class="person-picture">
+          {{ p.picture | safe }}
+        </span>
+        <span class="person-mail">{{ at[0] }}<wbr>@{{ at[1] }}</span>
+      </a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {# Who SMASH has made work for, each logo once, with a link to the work
+     where it is on the site (_data/clients.json). #}
+  <section class="row clients" aria-label="Clients">
+    <ul class="clients-grid">
+      {% for c in clients %}{% if c.logo %}
+      <li>
+        {% set logo %}<img src="/clients/{{ c.logo }}" alt="{{ c.name }}" width="{{ c.width }}" height="{{ c.height }}" style="--ratio: {{ (c.width / c.height) | round(3) }}">{% endset %}
+        {% if c.project %}<a class="client" href="/{{ c.project }}/">{{ logo | safe }}</a>{% else %}<span class="client">{{ logo | safe }}</span>{% endif %}
+      </li>
+      {% endif %}{% endfor %}
+    </ul>
+  </section>
+</section>
+{% include "cta.njk" %}
+{# Past the footer the landing starts over (main.js): the footer scrolls up
+   off the mark at rest, and a screen on, the page is back at its top. #}
+<div class="loop-tail" data-loop aria-hidden="true"></div>
+{% endif %}
+<script type="application/json" id="frames">{{ frames | dump | safe }}</script>

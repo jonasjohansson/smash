@@ -1,0 +1,84 @@
+---
+layout: base.njk
+section: work
+bodyClass: project-page
+fullscreen: true
+pagination:
+  data: projects
+  size: 1
+  alias: p
+permalink: "/{{ p.slug }}/"
+eleventyComputed:
+  title: "{{ p.title }}"
+  description: "{{ p.description | safe }}"
+  ogImage: "{{ p.og }}"
+---
+{# Scrolled to its end, the page carries on into the next project of its
+   offering, round all of them, then into the other offerings' projects, the
+   footer and the next one's opening between one offering and the next,
+   without end (feed.js); the
+   "Next project" link is for pages without JavaScript. #}
+{% include "titles.njk" %}
+<article class="project" data-slug="{{ p.slug }}">
+  {# The project opens on its hero picture, its title in the middle of it. #}
+  <header class="project-head{% if p.rows.hero %} has-hero{% endif %}">
+    {% if p.rows.hero %}
+    <figure class="project-hero">
+      {% if p.rows.hero.type == 'video' %}
+      <video src="{{ p.rows.hero.src }}"{% if p.rows.hero.poster %} poster="/{{ p.rows.hero.poster }}"{% endif %} autoplay muted loop playsinline aria-label="{{ p.rows.hero.alt }}"></video>
+      {% else %}
+      {% image p.rows.hero.src, p.rows.hero.alt, "100vw", "eager" %}
+      {% endif %}
+    {# The hero shows through the letters of the title, as the work shows
+       through the mark on the landing: black with the title cut out, laid over
+       it (multiply). feed.js sizes the letters to meet the hero's edges. #}
+    <svg class="title-mask" viewBox="0 -88 {{ (p.title | length) * 41 }} 89" preserveAspectRatio="none" aria-hidden="true"><rect x="-99999" y="-99999" width="199999" height="199999" fill="#000"/><text font-family="Anton" font-size="100" fill="#fff">{{ p.title | upper }}</text></svg>
+    <svg class="title-mask title-ground" viewBox="0 -88 {{ (p.title | length) * 41 }} 89" preserveAspectRatio="none" aria-hidden="true"><rect x="-99999" y="-99999" width="199999" height="199999" fill="#fff"/><text font-family="Anton" font-size="100" fill="#000">{{ p.title | upper }}</text></svg>
+    </figure>
+    {% endif %}
+    <h1 class="project-title">{{ p.title }}</h1>
+  </header>
+
+  {# Over the introduction, where the project was (or who it was for) and when;
+     over each further text, what it is about: small, in capitals. #}
+  {% if p.rows.lead %}
+  <div class="grid project-lead">
+    <div class="lead">
+      {% if p.caption %}<p class="label">{{ p.caption }}, {{ p.year }}</p>{% endif %}
+      <div class="lead-text">{{ p.rows.lead.content | md | safe }}</div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# The first row's pictures come at once (on a phone they can be the
+     largest thing on the first screen); the rest as they near. #}
+  {% for row in p.rows.rows %}{% set first = loop.first %}
+  <div class="row row-{{ row.kind }}{% if row.keeps %} row-keeps{% endif %} grid">
+    {% for c in row.cells %}
+    <div class="cell cell-{{ c.block.type }}" style="{% if c.vw %}--ar: {{ c.block.ar }}{% else %}--start: {{ c.start }}; --span: {{ c.span }}{% endif %}">
+      {% if c.block.type == 'text' %}
+      {% if c.block.label %}<h2 class="label">{{ c.block.label }}</h2>{% endif %}
+      <div class="prose">{{ c.block.content | md | safe }}</div>
+      {% elif c.block.type == 'credits' %}
+      <ul class="credits">{% for line in c.block.credits %}<li>{{ line | mdInline | safe }}</li>{% endfor %}</ul>
+      {% else %}
+      {# Inline, not an include: async shortcodes render nothing inside includes. #}
+      {% if c.block.type == 'video' %}
+      <video src="{{ c.block.src }}"{% if c.block.poster %} poster="/{{ c.block.poster }}"{% endif %} autoplay muted loop playsinline preload="metadata" aria-label="{{ c.block.alt }}" style="aspect-ratio: {{ c.block.ar }}"></video>
+      {% else %}
+      {% image c.block.src, c.block.alt, "(max-width: 720px) 100vw, " + ((c.vw or (c.span / 12 * 100)) | round) + "vw", ("eager" if first else "lazy") %}
+      {% endif %}
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+
+  {% if p.next %}
+  <a class="next grid" href="/{{ p.next.slug }}/">
+    <span class="next-label">Next project</span>
+    <span class="next-title">{{ p.next.title }}</span>
+  </a>
+  {% endif %}
+</article>
+{% include "cta.njk" %}

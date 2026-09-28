@@ -1,0 +1,53 @@
+---
+layout: base.njk
+title: Typeface
+description: SMASH, the typeface drawn from the SMASH mark. A variable font with five axes, to try and to download.
+bodyClass: typeface-page
+fullscreen: true
+permalink: /typeface/
+preload: /typeface/SMASH-VF.ttf
+chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖÉÜ0123456789.,:;!?'\"-–—()[]/\\|_+=&@#%•"
+eleventyComputed:
+  ogImage: "{{ typefaceOg }}"
+---
+{# SMASH, the typeface drawn from the mark (type/): the font to try and to
+   take, and nothing else. type/build.py writes the files to src/typeface/. #}
+<section class="typeface" data-typeface>
+  <header class="grid typeface-head">
+    <h1 class="typeface-title">SMASH</h1>
+    <nav class="typeface-files" aria-label="Files">
+      <a href="/typeface/SMASH-VF.ttf" download>Font (TTF)</a>
+      <a href="/typeface/SMASH.glyphs" download>Glyphs file</a>
+      <a href="/typeface/SMASH-sources.zip" download>Sources (UFO)</a>
+    </nav>
+  </header>
+  <div class="grid typeface-axes">
+    {% for a in [["wght", "Weight", 100, 900, 500], ["wdth", "Width", 70, 175, 100], ["crsb", "Crossbar", 27, 73, 50], ["rond", "Roundness", 0, 100, 100], ["hght", "Height", 300, 720, 471]] %}
+    <label class="typeface-axis"><span>{{ a[1] }}</span><input type="range" data-axis="{{ a[0] }}" min="{{ a[2] }}" max="{{ a[3] }}" step="1" value="{{ a[4] }}"><output>{{ a[4] }}</output></label>
+    {% endfor %}
+    <button type="button" class="typeface-reset" data-reset>Reset</button>
+  </div>
+  <div class="typeface-samples">
+  <div class="typeface-sample typeface-tester" contenteditable="true" spellcheck="false" aria-label="Type to try the font">Let’s work together</div>
+  <div class="typeface-sample typeface-glyphs">{% for ch in chars.split('') %}<span>{{ ch }}</span>{% endfor %}</div>
+  <p class="label typeface-set">Stylistic set 1</p>
+  <div class="typeface-sample typeface-glyphs typeface-alts">{% for ch in "RKVXY".split('') %}<span>{{ ch }}</span>{% endfor %}</div>
+  </div>
+</section>
+{% include "cta.njk" %}
+<script type="module">
+  // The samples show once the font is in, so nothing moves when it comes;
+  // the sliders set their axes.
+  const root = document.querySelector('[data-typeface]');
+  document.fonts.load('100px SMASH').finally(() => root.classList.add('is-set'));
+  const inputs = [...root.querySelectorAll('[data-axis]')];
+  const set = (input) => {
+    root.style.setProperty(`--${input.dataset.axis}`, input.value);
+    input.nextElementSibling.value = input.value;
+  };
+  for (const input of inputs) input.addEventListener('input', () => set(input));
+  // Reset: every axis back to the logo's.
+  root.querySelector('[data-reset]').addEventListener('click', () => {
+    for (const input of inputs) { input.value = input.defaultValue; set(input); }
+  });
+</script>

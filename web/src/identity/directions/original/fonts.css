@@ -1,0 +1,26 @@
+/* Chapter 00, Original: type from Jonas's library, copied here as woff2
+   (fonts/ is kept out of git: these are licensed). None is a trial.
+
+   NOT LOADED in the focus round (2026-09-28): the typeface is undecided and
+   the lockup uses a placeholder (Neue Montreal outlines, outlines.js). Kept
+   for the typography round; link it again from original.js when a face is
+   chosen, or delete it with fonts/. */
+
+/* The recommendation: GT Sectra (Grilli Type). Display for headlines, Book for text. */
+@font-face { font-family: "O Sectra Display"; font-weight: 500; font-style: normal; font-display: block; src: url(fonts/GT-Sectra-Display-Medium.woff2) format("woff2"); }
+@font-face { font-family: "O Sectra Display"; font-weight: 400; font-style: italic; font-display: block; src: url(fonts/GT-Sectra-Display-RegularItalic.woff2) format("woff2"); }
+@font-face { font-family: "O Sectra Display"; font-weight: 900; font-style: italic; font-display: block; src: url(fonts/GT-Sectra-Display-SuperItalic.woff2) format("woff2"); }
+@font-face { font-family: "O Sectra"; font-weight: 400; font-style: normal; font-display: block; src: url(fonts/GT-Sectra-Book.woff2) format("woff2"); }
+@font-face { font-family: "O Sectra"; font-weight: 400; font-style: italic; font-display: block; src: url(fonts/GT-Sectra-BookItalic.woff2) format("woff2"); }
+
+/* Alternative, grotesk: Fakt (OurType), Condensed for display, Normal width for text. */
+@font-face { font-family: "O Fakt Con"; font-weight: 600; font-display: block; src: url(fonts/FaktConPro-SemiBold.woff2) format("woff2"); }
+@font-face { font-family: "O Fakt"; font-weight: 400; font-display: block; src: url(fonts/FaktPro-Normal.woff2) format("woff2"); }
+
+/* Alternative, wide: GT America (Grilli Type), Extended for display, Standard for text. */
+@font-face { font-family: "O America Ext"; font-weight: 700; font-display: block; src: url(fonts/GTAmericaExtended-Bold.woff2) format("woff2"); }
+@font-face { font-family: "O America"; font-weight: 400; font-display: block; src: url(fonts/GTAmerica-Regular.woff2) format("woff2"); }
+
+/* Alternative, mono: Azeret Mono (Displaay). */
+@font-face { font-family: "O Azeret"; font-weight: 300; font-display: block; src: url(fonts/AzeretMono-Light.woff2) format("woff2"); }
+@font-face { font-family: "O Azeret"; font-weight: 700; font-display: block; src: url(fonts/AzeretMono-Bold.woff2) format("woff2"); }

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  {# Brown (main.css), the landing yellow; browsers that tint their bars take the same. #}
+  <meta name="theme-color" content="{{ themeColor or '#1f1915' }}">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="/brand/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="/brand/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
+  <title>{% if title %}{{ title }} — {% endif %}SMASH</title>
+  {# What a page says of itself, and shows when it is shared: its own text and
+     picture where it has them (projects, offerings, the typeface), else the
+     studio's line and the landing's picture through the mark (og.js). #}
+  {% set about = description or 'SMASH is the experience design studio in Sweden. We make interactive installations, projection mapping, immersive environments and the digital work that carries them further.' %}
+  {% set address = site.url + page.url %}
+  <meta name="description" content="{{ about }}">
+  <link rel="canonical" href="{{ address }}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="SMASH">
+  <meta property="og:title" content="{% if title %}{{ title }} — {% endif %}SMASH">
+  <meta property="og:description" content="{{ about }}">
+  <meta property="og:url" content="{{ address }}">
+  <meta property="og:image" content="{{ site.url }}{{ ogImage or poster.og }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  {# With JavaScript, the mark is shown only once main.js has drawn it (as
+     set, or as the viewer tuned it: H), never the static one first. #}
+  <script>document.documentElement.classList.add('js');</script>
+  <link rel="preload" href="/fonts/Anton-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/NeueMontreal-Regular.woff" as="font" type="font/woff" crossorigin>
+  <link rel="preload" href="/fonts/SeasonMix-Regular.woff" as="font" type="font/woff" crossorigin>
+  {% if preload %}<link rel="preload" href="{{ preload }}" as="font" type="font/ttf" crossorigin>{% endif %}
+  <link rel="stylesheet" href="/css/main.css?v={{ build }}" data-info-font>
+  <link rel="modulepreload" href="/js/mark.js?v={{ build }}">
+  <link rel="modulepreload" href="/js/glass.js?v={{ build }}">
+  <link rel="modulepreload" href="/js/feed.js?v={{ build }}">
+  <script src="/js/main.js?v={{ build }}" type="module"></script>
+</head>
+<body class="{{ bodyClass }}">
+  <header class="site-header grid">
+    <a class="logo" href="/">{% include "logo.svg" %}</a>
+  </header>
+  <main>
+{{ content | safe }}
+  </main>
+  {% if not fullscreen %}
+  <footer class="site-footer grid">
+    <span class="f-copy">© SMASH 2026</span>
+    <a class="f-mail" href="mailto:hello@smash.studio">hello@smash.studio</a>
+    <a class="f-top" href="#top" data-top>Back to top</a>
+  </footer>
+  {% endif %}
+  <div class="grid-overlay grid" aria-hidden="true">{% for i in range(0, 12) %}<span></span>{% endfor %}</div>
+</body>
+</html>

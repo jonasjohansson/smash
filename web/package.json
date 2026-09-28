@@ -1,0 +1,20 @@
+{
+  "name": "smash",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "eleventy --serve",
+    "build": "eleventy",
+    "import": "node scripts/import-portfolio.mjs"
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.2",
+    "@11ty/eleventy-img": "^6.0.4",
+    "gray-matter": "^4.0.3",
+    "markdown-it": "^14.1.0",
+    "yaml": "^2.8.1"
+  },
+  "dependencies": {
+    "sharp": "^0.33.5"
+  }
+}

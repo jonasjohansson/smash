@@ -1,0 +1,53 @@
+---
+layout: base.njk
+bodyClass: category-page
+fullscreen: true
+pagination:
+  data: categories
+  size: 1
+  alias: c
+permalink: "/{{ c.slug }}/"
+eleventyComputed:
+  title: "{{ c.name }}"
+  description: "{{ c.description | safe }}"
+  ogImage: "{{ c.og }}"
+---
+{# One of the studio's offerings (categories/<slug>.md): its picture seen
+   through the mark (main.js draws it to size), its name with the others beside
+   it, what it stands for, and its projects, as on gentilhomme.com. Past its
+   footer comes the next offering's page, and the next, round them without
+   end (main.js). #}
+<div class="offering" data-slug="{{ c.slug }}" data-title="{{ c.name }}">
+<div class="project-head has-hero">
+  <figure class="project-hero" data-mark>{% image c.hero.src, c.hero.alt, "100vw", "eager" %}</figure>
+</div>
+
+<header class="grid category-head">
+  <h1 class="category-title">{% for w in c.words %}<span>{{ w }}</span>{% if not loop.last %} {% endif %}{% endfor %}</h1>
+  <nav class="category-nav" aria-label="What we do">
+    {% for o in categories %}<a href="/{{ o.slug }}/"{% if o.slug == c.slug %} aria-current="page"{% endif %}>{{ o.name }}</a>{% endfor %}
+  </nav>
+</header>
+
+<div class="grid project-lead">
+  <div class="lead">
+    {% if c.label %}<p class="label">{{ c.label }}</p>{% endif %}
+    <div class="lead-text">{{ c.intro | md | safe }}</div>
+  </div>
+</div>
+
+<section class="row category-projects" aria-label="Projects">
+  <div class="grid category-tiles">
+  {% for p in c.projects %}
+  <a class="tile" href="/{{ p.slug }}/">
+    <span class="label">{% if p.caption %}{{ p.caption }}, {% endif %}{{ p.year }}</span>
+    <span class="tile-title">{{ p.title }}</span>
+    {# Inline, not an include: async shortcodes render nothing inside includes. #}
+    <span class="tile-media">{% image p.cover.src, p.cover.alt, "(max-width: 720px) 180vw, 55vw" %}</span>
+  </a>
+  {% endfor %}
+  </div>
+</section>
+
+{% include "cta.njk" %}
+</div>
