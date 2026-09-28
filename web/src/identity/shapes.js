@@ -65,12 +65,12 @@ export const HTML = `
 // Fitted: a grid of fixed columns, six on a wide stage and three on a narrow
 // one, so a source's six negatives make one row (two on a phone). True scale:
 // each tile its shape's own box at one scale for all (the tallest shown about
-// 360 px, most of the width on a phone), in rows on a common baseline.
+// 340 px, about 200 on a phone), in rows on a common baseline, well apart.
 const STYLE = `
 #shapes .lab-stage { aspect-ratio: auto; min-height: 240px; padding: clamp(8px, 3vw, 40px); container-type: inline-size; }
 #shapes .block { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @container (min-width: 640px) { #shapes .block { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
-#shapes .block.true-scale { display: flex; flex-wrap: wrap; align-items: flex-end; --top: min(360px, 90cqi); --pad: clamp(10px, 2.4cqi, 22px); }
+#shapes .block.true-scale { display: flex; flex-wrap: wrap; align-items: flex-end; --top: min(340px, 62cqi); --pad: clamp(14px, 4cqi, 36px); }
 /* Negative and positive half a tile apart; a new source a tile. */
 #shapes .block + .block { margin-top: clamp(44px, 8cqi, 96px); }
 #shapes .block + .block.first { margin-top: clamp(88px, 16cqi, 192px); }

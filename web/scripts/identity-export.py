@@ -158,26 +158,32 @@ def modular(page, out):
 
 SHAPES = '''async () => {
   const m = await import('/identity/shapes.js');
-  const cat = await m.catalogue();
-  const blocks = m.blocks(cat, { ...m.SHAPES_DEFAULTS, show: 'both', from: 'all' });
-  const out = {};
-  for (const b of blocks) b.shapes.forEach((s, i) => { out[`${b.source}-${b.kind}-${String(i + 1).padStart(2, '0')}.svg`] = m.shapeSVG(s); });
-  out['all-shapes.svg'] = m.sheetSVG(blocks.map((b) => b.shapes), 'true');
-  out['all-shapes-fitted.svg'] = m.sheetSVG(blocks.map((b) => b.shapes), 'fitted');
-  return out;
+  const cat = await m.catalogue({ live: true });
+  const files = {};
+  for (const [source, kinds] of Object.entries(cat)) {
+    for (const [kind, list] of Object.entries(kinds)) for (const s of list) files[`${source}-${kind}-${String(s.n).padStart(2, '0')}.svg`] = m.shapeSVG(s);
+  }
+  const blocks = m.blocks(cat, { ...m.SHAPES_DEFAULTS, show: 'both', from: 'all' }).map((b) => b.shapes);
+  files['all-shapes.svg'] = m.sheetSVG(blocks, 'true');
+  files['all-shapes-fitted.svg'] = m.sheetSVG(blocks, 'fitted');
+  return { files, data: m.dataModule(cat) };
 }'''
 
 
 def shapes(page, out):
-    """The Shapes section (shapes.js): every distinct shape as true outlines, and all of them on two sheets, in 00-original/shapes/."""
+    """The Shapes section (shapes.js), built live: every source's shapes as true outlines (named as the page
+    names them), the page's default view on two sheets, in 00-original/shapes/; and the catalogue the page
+    reads, web/src/identity/shapes/catalogue-data.js."""
     d = page.evaluate(SHAPES)
     folder = out / 'shapes'
     folder.mkdir(exist_ok=True)
     for old in folder.glob('*.svg'):
         old.unlink()
-    for name, svg in d.items():
+    for name, svg in d['files'].items():
         (folder / name).write_text(svg)
-    print(f'   shapes: wrote {len(d)} files to {folder.relative_to(ROOT)}/')
+    data = ROOT / 'web/src/identity/shapes/catalogue-data.js'
+    data.write_text(d['data'])
+    print(f'   shapes: wrote {len(d["files"])} files to {folder.relative_to(ROOT)}/ and {data.relative_to(ROOT)}')
 
 
 def main():

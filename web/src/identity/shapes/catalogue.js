@@ -254,15 +254,18 @@ const isRect = (s) => s.rings.length === 1 && Math.abs(s.area - s.w * s.h) < 0.0
 const isBar = (s) => Math.abs(Math.min(s.w, s.h) - BAR) < 0.6;
 /**
  * Whether a piece is shown. A plain rectangle only as one of the mark's bars
- * in its own role: a stem or a module square as the letters come apart, or
- * the crossbar itself. Not a stem cut short at the crossbar, and not the
- * square the M's stems make there (the M has no crossbar).
+ * in its own role, once: the module square (a piece of the block as the slots
+ * leave it), a stem (the block's full height) and the crossbar itself. Not a
+ * stem cut short by the extra cuts, and not the square the M's stems make at
+ * the crossbar (the M has none).
  */
 function wanted(s) {
   if (!isRect(s)) return true;
   if (!isBar(s)) return false;
-  if (s.from !== 'bar') return true;
-  return s.band === 1 && Math.max(s.w, s.h) > 1.5 * BAR;
+  const long = Math.max(s.w, s.h);
+  if (s.from === 'block') return true;
+  if (s.from === 'bar') return s.band === 1 && long > 1.5 * BAR;
+  return Math.abs(long - s.tall) < 0.6;
 }
 
 // Same up to a turn or a mirroring: close in size, area and outline length,
@@ -304,7 +307,8 @@ function same(a, b) {
   const k = Math.min(3, 900 / Math.max(a.w, a.h));
   const W = Math.ceil(a.w * k) + 6;
   const H = Math.ceil(a.h * k) + 6;
-  const ref = (a.ref ??= raster(a, TURNS[0], k, W, H));
+  if (a.ref?.k !== k || a.ref.W !== W || a.ref.H !== H) a.ref = { k, W, H, data: raster(a, TURNS[0], k, W, H) };
+  const ref = a.ref.data;
   return TURNS.some((t) => {
     const [bw, bh] = t[0] ? [b.h, b.w] : [b.w, b.h];
     if (!near(bw, a.w, 0.004, 0.6) || !near(bh, a.h, 0.004, 0.6)) return false;
@@ -322,20 +326,29 @@ function same(a, b) {
   });
 }
 
-/** The pieces of one source: { negative, positive }, each in order, repeats kept for now. */
-function cutUp(S, src) {
+const rest = () => new Promise((r) => setTimeout(r, 0)); // a task boundary, so the page stays free
+
+/** The pieces of one source: { negative, positive }, each in order, repeats kept for now. In steps, with a rest between. */
+async function cutUp(S, src) {
+  const step = async () => { await rest(); S.activate(); };
   const P = (x, y) => new S.Point(x, y);
   const box = ([x0, y0, x1, y1]) => new S.Path.Rectangle(P(x0, y0), P(x1, y1));
   const union = (items) => items.reduce((a, b) => (a ? a.unite(b) : b), null);
-  const tag = (list, from, band) => list.map((s) => Object.assign(s, { from, band }));
+  const tag = (list, from, band) => list.map((s) => Object.assign(s, { from, band, tall: src.h }));
   const block = box([0, 0, src.w, src.h]);
   let positive;
   let negative;
   let whole = [];
   if (src.slots) {
     const outlines = src.slots.map((sl) => slotOutline(S, sl));
-    const cut = union(outlines);
+    let cut = null;
+    for (const [i, o] of outlines.entries()) {
+      cut = cut ? cut.unite(o) : o;
+      if (i % 4 === 3) await step();
+    }
+    await step();
     positive = block.subtract(cut);
+    await step();
     negative = block.intersect(cut);
     // A bent slot on its own, whole: the S's hooks and bends, off the block too.
     whole = src.slots.map((sl, i) => (sl.pts.length > 2 ? split(S, outlines[i]) : [])).flat();
@@ -345,19 +358,24 @@ function cutUp(S, src) {
     positive = block.intersect(drawn);
     negative = block.subtract(positive);
   }
+  const out = { negative: [...tag(split(S, negative), 'block'), ...tag(whole, 'whole')] };
+  await step();
+  out.positive = tag(split(S, positive), 'block');
+  await step();
+  const ends = endCuts(src);
+  const opened = ends.length ? positive.subtract(union(ends.map(box))) : positive;
+  out.positive.push(...tag(split(S, opened), 'opened'));
   const far = 4 * Math.max(src.w, src.h);
   const [c0, c1] = src.crossbar;
   const bands = [[-far, -far, far, c0], [-far, c0, far, c1], [-far, c1, far, far]].map(box);
-  const ends = endCuts(src);
-  const opened = ends.length ? positive.subtract(union(ends.map(box))) : positive;
-  const atBar = (item) => bands.flatMap((b, band) => tag(split(S, item.intersect(b)), 'bar', band));
-  return {
-    negative: [...tag(split(S, negative), 'block'), ...tag(whole, 'whole')],
-    positive: [...tag(split(S, positive), 'block'), ...tag(split(S, opened), 'opened'), ...atBar(positive), ...atBar(opened)],
-  };
+  for (const item of [positive, opened]) {
+    for (const [band, b] of bands.entries()) {
+      await step();
+      out.positive.push(...tag(split(S, item.intersect(b)), 'bar', band));
+    }
+  }
+  return out;
 }
-
-const rest = () => new Promise((r) => setTimeout(r, 0)); // a task boundary, so the page stays free
 
 /** Kept once each, in order; the rectangles (bars) last, longest first. Yields now and then. */
 async function distinct(list) {
@@ -382,7 +400,7 @@ async function build() {
     const raw = {};
     for (const key of KEYS) {
       S.activate();
-      raw[key] = cutUp(S, SOURCE_OF[key]());
+      raw[key] = await cutUp(S, SOURCE_OF[key]());
       S.project.clear();
       await rest();
     }
