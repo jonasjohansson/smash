@@ -14,7 +14,10 @@ eleventyComputed:
 ---
 {# One of the studio's offerings (categories/<slug>.md): its picture seen
    through the mark (main.js draws it to size), its name with the others beside
-   it, what it stands for, and its projects, as on gentilhomme.com. #}
+   it, what it stands for, and its projects, as on gentilhomme.com. Past its
+   footer comes the next offering's page, and the next, round them without
+   end (main.js). #}
+<div class="offering" data-slug="{{ c.slug }}" data-title="{{ c.name }}">
 <div class="project-head has-hero">
   <figure class="project-hero" data-mark>{% image c.hero.src, c.hero.alt, "100vw", "eager" %}</figure>
 </div>
@@ -47,3 +50,4 @@ eleventyComputed:
 </section>
 
 {% include "cta.njk" %}
+</div>

@@ -13,8 +13,10 @@
 // back, grow a little less than the mark does. Reduced motion dissolves the
 // mark instead.
 // Landed, scrolling on reads the studio (landing.njk): the picture scrolls
-// away above it, and the page ends with it. The projects run on without end
-// only on a project's own page (below).
+// away above it. Past the footer the landing starts over: the footer scrolls
+// up off the mark at rest, the film playing in it, and scrolling on dives
+// again, without end. An offering's page runs on into the next offering's in
+// the same way, and a project's into the next project (below).
 // (v2's glass stays a single screen.)
 //
 // Keys on the landing page: H opens the tweak panel (the mark is drawn from
@@ -51,12 +53,14 @@ const DIVE_DEFAULTS = {
 // The page's background, from the tweak panel (H): off, it follows the
 // browser's light or dark mode (main.css); on, it is the colour picked there,
 // on every page, the type turning dark or light to suit it. And the film
-// grain over it all.
-const GROUND_DEFAULTS = { ownGround: false, ground: '#1f1915', grain: 0.08 };
+// grain over it all, stronger on the brown than over the landing's mark.
+const GROUND_DEFAULTS = { ownGround: false, ground: '#1f1915', grain: 0.08, grainGround: 0.14 };
 function paintGround(p) {
   const root = document.documentElement.style;
-  if (typeof p?.grain === 'number') root.setProperty('--grain', p.grain);
-  else root.removeProperty('--grain');
+  for (const [k, v] of [['grain', '--grain'], ['grainGround', '--grain-ground']]) {
+    if (typeof p?.[k] === 'number') root.setProperty(v, p[k]);
+    else root.removeProperty(v);
+  }
   const meta = document.querySelectorAll('meta[name="theme-color"]');
   if (!p?.ownGround || !/^#[0-9a-f]{6}$/i.test(p.ground)) {
     for (const k of ['--bg', '--ground', '--ink', '--muted', '--line', '--tile']) root.removeProperty(k);
@@ -125,6 +129,7 @@ if (stage && framesEl) {
   const mails = [...document.querySelectorAll('[data-mail]')]; // links over their painted words
   let infoReady = false; // the typeface has loaded
   const trackEl = document.querySelector('[data-track]');
+  const loopEl = document.querySelector('[data-loop]'); // past the footer, where the landing starts over
 
   // ---- the mark ---------------------------------------------------------
 
@@ -173,8 +178,13 @@ if (stage && framesEl) {
   const view = { t: 0, e: 0, s: 1, x: 0, y: 0, image: 1, fade: 0 };
   // Reveal the logo with the About headline: both start at the fold and
   // finish together. Keep a pinned interval before the page covers it.
-  const syncLogo = () => {
+  const syncLogo = (tail) => {
     if (!landedLogo || !intro) return;
+    if (tail) {
+      landedLogo.classList.remove('is-visible');
+      landedLogo.inert = true;
+      return;
+    }
     const box = intro.getBoundingClientRect();
     const headlineEnd = introHead ? introHead.getBoundingClientRect().bottom - box.top : box.height;
     const room = innerHeight - 2 * (landedLogo.offsetTop + landedLogo.offsetHeight);
@@ -192,24 +202,34 @@ if (stage && framesEl) {
 
   function track() {
     if (!trackEl) return;
+    // A screen past the footer is the top of the page again, the same mark at
+    // rest on the screen: go there, and whatever was scrolled beyond, on into
+    // the dive. (Instant: main.css scrolls smoothly otherwise.)
+    const at = loopEl ? loopEl.getBoundingClientRect().top + scrollY : Infinity;
+    if (scrollY >= at) scrollTo({ top: scrollY - at, behavior: 'instant' });
+    // The footer going up: under it, the mark at rest again, the film in it.
+    // It was still covered a moment ago, so the dive comes back out at once.
+    const tail = scrollY + innerHeight > at;
     const max = trackEl.offsetHeight - innerHeight;
     const end = diveEnd();
     // At fractional zoom innerHeight is rounded, and the real end can fall a
     // pixel short: the last pixel counts as the end.
-    target = end > 0 ? (scrollY >= end - 1 ? 1 : Math.max(0, scrollY / end)) : 0;
+    target = tail || end <= 0 ? 0 : scrollY >= end - 1 ? 1 : Math.max(0, scrollY / end);
+    if (tail && view.t) { view.t = 0; frame(); dirty = maskDirty = true; }
     // Past the track the film stays where it is, and the studio scrolls up
     // over it (main.css), until it covers the screen and the headline, which
     // shows the film through its letters, has gone by.
-    over = Math.max(0, scrollY - max);
+    over = tail ? 0 : Math.max(0, scrollY - max);
     under = over >= innerHeight && !(intro && intro.getBoundingClientRect().bottom > 0); // covered
     stage.style.visibility = under ? 'hidden' : '';
-    if (reel && target > 0) wantReel();
+    if (reel && (target > 0 || tail)) wantReel();
     document.body.classList.toggle('is-reading', under);
-    // Only the mark at rest is a link; once scrolling in, the pictures are not,
-    // and the header and the studio's line along the bottom go.
-    if (stage.inert !== target > 0) stage.inert = target > 0;
+    // Only the mark at rest is a link (not as the footer leaves it); once
+    // scrolling in, the pictures are not, and the header and the studio's
+    // line along the bottom go.
+    if (stage.inert !== (target > 0 || tail)) stage.inert = target > 0 || tail;
     document.body.classList.toggle('is-diving', target > 0);
-    syncLogo();
+    syncLogo(tail);
   }
 
   // The mark's zoom and offset for the dive at view.t, and the pictures' zoom.
@@ -473,6 +493,7 @@ if (stage && framesEl) {
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     document.body.classList.add('can-dive');
     addEventListener('scroll', track, { passive: true });
+    addEventListener('scrollend', track); // a jump back to the top put off while a fling ran
     poster.decode().then(() => { if (!current) show(poster, -1, posterSlug); }).catch(() => {});
     // The rows wait for their typeface rather than flash another.
     typeface(infoRows.join(' ')).then(() => { infoReady = true; dirty = maskDirty = true; });
@@ -585,7 +606,8 @@ if (stage && framesEl) {
     const colour = pane.addFolder({ title: 'Colour' });
     colour.addBinding(params, 'ownGround', { label: 'own background' }).on('change', () => paintGround(params));
     colour.addBinding(params, 'ground', { label: 'background' }).on('change', () => paintGround(params));
-    colour.addBinding(params, 'grain', { min: 0, max: 0.3, step: 0.005 }).on('change', () => paintGround(params));
+    colour.addBinding(params, 'grain', { label: 'grain (mark)', min: 0, max: 0.3, step: 0.005 }).on('change', () => paintGround(params));
+    colour.addBinding(params, 'grainGround', { label: 'grain (brown)', min: 0, max: 0.3, step: 0.005 }).on('change', () => paintGround(params));
 
     const slideshow = pane.addFolder({ title: 'Slideshow' });
     slideshow.addBinding(params, 'speed', { label: 'ms per image', min: 17, max: 1000, step: 1 });
@@ -663,13 +685,72 @@ if (!stage) {
     try { localStorage.setItem(STORE, JSON.stringify(changed)); } catch {}
   };
   const marked = document.querySelector('[data-mark]');
-  const draw = () => {
-    if (!marked) return;
-    marked.style.webkitMaskImage = marked.style.maskImage = toDataUrl(buildMark({ ...params, info: false }, marked.clientWidth, marked.clientHeight));
-    marked.classList.add('is-set');
+  const drawOne = (el) => {
+    el.style.webkitMaskImage = el.style.maskImage = toDataUrl(buildMark({ ...params, info: false }, el.clientWidth, el.clientHeight));
+    el.classList.add('is-set');
   };
+  const draw = () => document.querySelectorAll('[data-mark]').forEach(drawOne);
   draw();
   addEventListener('resize', draw);
+
+  // An offering's page runs on past its footer into the next offering's, in
+  // the order they are named under its title, round them without end, and
+  // the address follows the one being read. Each is fetched once; a copy goes
+  // in each time round.
+  const offering = document.querySelector('main > .offering');
+  if (offering) {
+    const main = offering.parentElement;
+    const order = [...offering.querySelectorAll('.category-nav a')].map((a) => a.pathname.split('/').at(-2));
+    const home = location.pathname;
+    const fetched = new Map();
+    const get = (slug) => {
+      if (!fetched.has(slug)) {
+        fetched.set(slug, fetch(`/${slug}/`)
+          .then((r) => (r.ok ? r.text() : Promise.reject()))
+          .then((html) => new DOMParser().parseFromString(html, 'text/html').querySelector('main > .offering'))
+          .catch(() => { fetched.delete(slug); return null; })); // offline: tried again later
+      }
+      return fetched.get(slug);
+    };
+    const offerings = () => main.querySelectorAll(':scope > .offering');
+    let adding = false;
+    // Keep a couple of screens ahead of the reader.
+    const grow = () => {
+      if (adding || main.getBoundingClientRect().bottom > innerHeight * 3) return;
+      const last = [...offerings()].at(-1).dataset.slug;
+      adding = true;
+      get(order[(order.indexOf(last) + 1) % order.length]).then((el) => {
+        if (!el) return setTimeout(() => { adding = false; soon(); }, 5000);
+        const copy = el.cloneNode(true);
+        main.append(copy);
+        copy.querySelectorAll('[data-mark]').forEach(drawOne);
+        adding = false;
+        soon();
+      });
+    };
+    // The one being read: the last whose top has passed the middle of the screen.
+    const follow = () => {
+      queued = false;
+      grow();
+      let reading = offering;
+      for (const el of offerings()) {
+        if (el.getBoundingClientRect().top > innerHeight / 2) break;
+        reading = el;
+      }
+      const path = `/${reading.dataset.slug}/`;
+      if (location.pathname !== path) {
+        history.replaceState(history.state, '', path + location.search);
+        document.title = `${reading.dataset.title} — SMASH`;
+      }
+      // Moved on to another offering, a reload opens that one from its top.
+      if ('scrollRestoration' in history) history.scrollRestoration = location.pathname === home ? 'auto' : 'manual';
+    };
+    let queued = false;
+    const soon = () => { if (!queued) { queued = true; requestAnimationFrame(follow); } };
+    addEventListener('scroll', soon, { passive: true });
+    addEventListener('resize', soon);
+    soon();
+  }
 
   let pane = null;
   const openPane = async () => {
@@ -686,7 +767,8 @@ if (!stage) {
     const colour = pane.addFolder({ title: 'Colour' });
     colour.addBinding(params, 'ownGround', { label: 'own background' });
     colour.addBinding(params, 'ground', { label: 'background' });
-    colour.addBinding(params, 'grain', { min: 0, max: 0.3, step: 0.005 });
+    colour.addBinding(params, 'grain', { label: 'grain (mark)', min: 0, max: 0.3, step: 0.005 });
+    colour.addBinding(params, 'grainGround', { label: 'grain (brown)', min: 0, max: 0.3, step: 0.005 });
     if (marked) {
       const mark = pane.addFolder({ title: 'Mark' });
       mark.addBinding(params, 'stroke', { label: 'thickness', min: 2, max: 48, step: 0.5 });

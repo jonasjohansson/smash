@@ -83,9 +83,10 @@ b, strong { font-weight: inherit; }
 
 /* ---- grain ----------------------------------------------------------- */
 
-/* A film's grain over the whole site, faint (--grain; H → Colour), shifting
-   a few times a second, still with reduced motion. The street (v3) has its
-   own, in its shader. */
+/* A film's grain over the whole site, shifting a few times a second, still
+   with reduced motion: stronger on the brown (--grain-ground), where the
+   faint one is lost, and faint over the landing's mark and film (--grain;
+   both H → Colour). The street (v3) has its own, in its shader. */
 body::after {
   content: "";
   position: fixed;
@@ -93,9 +94,10 @@ body::after {
   z-index: 99;
   pointer-events: none;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2' intercept='-0.5'/%3E%3CfeFuncG type='linear' slope='2' intercept='-0.5'/%3E%3CfeFuncB type='linear' slope='2' intercept='-0.5'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E") 0 0 / 240px 240px;
-  opacity: var(--grain, 0.08);
+  opacity: var(--grain-ground, 0.14);
   animation: grain 0.6s steps(1) infinite;
 }
+.home:not(.is-reading)::after { opacity: var(--grain, 0.08); }
 .maze-page::after { content: none; }
 @keyframes grain {
   0% { transform: translate(0, 0); }
@@ -179,6 +181,10 @@ body::after {
 .home.can-dive { height: auto; overflow: visible; }
 .dive-track { display: none; }
 .home.can-dive .dive-track { display: block; height: calc(100svh * (1 + var(--dive, 2))); }
+/* Past the footer, the landing starts over (main.js): the footer scrolls up
+   off the mark at rest, and a screen on, the page is back at its top. */
+.loop-tail { display: none; }
+.home.can-dive .loop-tail { display: block; height: 200svh; }
 /* Reading, the landing is brown underneath too, so a fast fling never
    flashes its black where the browser has yet to paint. */
 /* Brown too once the dive is through and the mark gone (main.js), so a

@@ -31,8 +31,8 @@ layout: base.njk
 <a class="info-mail" href="https://www.linkedin.com/company/smashstudiosthlm/" target="_blank" rel="noopener" data-mail data-icon="linkedin" hidden>LinkedIn</a>
 <a class="info-mail" href="https://www.instagram.com/studio.smash/" target="_blank" rel="noopener" data-mail data-icon="instagram" hidden>Instagram</a>
 <div class="dive-track" data-track></div>
-{# Past the dive, the studio, and the page ends with it: it scrolls up over
-   the film, which stays put. The projects run on only from a project's page. #}
+{# Past the dive, the studio: it scrolls up over the film, which stays put.
+   After it, the footer, and after that the landing again (below). #}
 <section class="about" aria-label="About SMASH">
   {# The headline is cut out of the ground, the film showing through its
      letters as it scrolls up over it: the same words twice more beneath,
@@ -97,5 +97,8 @@ layout: base.njk
   </section>
 </section>
 {% include "cta.njk" %}
+{# Past the footer the landing starts over (main.js): the footer scrolls up
+   off the mark at rest, and a screen on, the page is back at its top. #}
+<div class="loop-tail" data-loop aria-hidden="true"></div>
 {% endif %}
 <script type="application/json" id="frames">{{ frames | dump | safe }}</script>
