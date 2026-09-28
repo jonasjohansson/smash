@@ -293,6 +293,9 @@ body::after {
 @media (max-width: 720px) {
   .typeface-title, .typeface-files, .typeface-axis { grid-column: 1 / -1; }
 }
+/* In the feed, an offering's opening before its projects: room below its
+   introduction, as under the tiles on its own page. */
+.project-page .offering { padding-bottom: var(--row-gap); }
 .js .project-page main > .cta:last-child { display: none; } /* the feed never ends; copies come between the offerings (feed.js) */
 .cta-inner { position: relative; row-gap: clamp(24px, 3vw, 48px); align-items: start; }
 .cta-title { grid-column: 1 / span 8; margin: 0; font: 400 clamp(48px, 7.4vw, 124px) / 0.92 var(--display); text-transform: uppercase; }

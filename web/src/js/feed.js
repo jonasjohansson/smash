@@ -1,8 +1,8 @@
 // The feed of projects: after one project's page comes the next one's, round
 // the projects of its offering, then round each other offering's, and on
-// without end; the footer comes between one offering and the next, and the
-// address follows the one being read. A project's own page is the start of
-// one (main.js).
+// without end; the footer and the next offering's opening come between one
+// offering and the next, and the address follows the one being read. A
+// project's own page is the start of one (main.js).
 //
 // Each project's page is fetched once, and only its article is taken; a copy
 // goes into the feed each time round. The order is the #titles list the page
@@ -33,6 +33,25 @@ export function page(slug) {
     .catch(() => { request.retryAt = performance.now() + RETRY; return OFFLINE; });
   pages.set(slug, request);
   return request;
+}
+
+// An offering's opening (category.njk): its picture through the mark, its
+// name and its introduction, without its projects (they follow in the feed)
+// or its footer. Offline or not there, it is simply left out.
+const opening = new Map();
+function offeringHead(slug) {
+  if (!opening.has(slug)) {
+    opening.set(slug, fetch(`/${slug}/`)
+      .then((r) => (r.ok ? r.text() : Promise.reject()))
+      .then((html) => {
+        const head = new DOMParser().parseFromString(html, 'text/html').querySelector('main > .offering');
+        head?.querySelectorAll(':scope > .category-projects, :scope > .cta').forEach((el) => el.remove());
+        if (head) titles[slug] = head.dataset.title;
+        return head || null;
+      })
+      .catch(() => { opening.delete(slug); return null; }));
+  }
+  return opening.get(slug);
 }
 
 // The masks' typeface. Its stylesheet (main.css, data-info-font) has to be in
@@ -100,9 +119,11 @@ const inView = new IntersectionObserver((entries) => {
 const watch = (article) => article.querySelectorAll('video[autoplay]').forEach((v) => inView.observe(v));
 
 // Projects go in before `end`, the page's own footer, which stays hidden
-// (main.css): a copy of it goes in where one offering gives way to the next.
-export function createFeed(container, { end = null } = {}) {
+// (main.css): where one offering gives way to the next, a copy of it goes in,
+// then the next offering's opening (`onInsert` draws its mark).
+export function createFeed(container, { end = null, onInsert } = {}) {
   const articles = () => container.querySelectorAll(':scope > .project');
+  const readable = () => container.querySelectorAll(':scope > .project, :scope > .offering');
   let feed = [...articles()].map((a) => a.dataset.slug);
   articles().forEach(watch);
   articles().forEach(fitTitles);
@@ -129,20 +150,25 @@ export function createFeed(container, { end = null } = {}) {
   function append(slug) {
     const mine = run;
     feeding = true;
-    return page(slug).then((article) => {
+    const before = feed.at(-1);
+    const turn = end && before && offering[before] !== offering[slug];
+    return Promise.all([page(slug), turn ? offeringHead(offering[slug]) : null]).then(([article, head]) => {
       if (mine !== run) return false;
       if (article === OFFLINE) {
         return new Promise((resolve) => setTimeout(resolve, RETRY)).then(() => mine === run && append(slug));
       }
       feeding = false;
-      const before = feed.at(-1);
       feed.push(slug);
       if (!article) return ++missing < order.length;
       missing = 0;
-      if (end && before && offering[before] !== offering[slug]) {
-        const footer = end.cloneNode(true);
-        footer.dataset.between = '';
-        container.insertBefore(footer, end);
+      if (turn) {
+        for (const el of [end, head]) {
+          if (!el) continue;
+          const copy = el.cloneNode(true);
+          copy.dataset.between = '';
+          container.insertBefore(copy, end);
+          onInsert?.(copy);
+        }
       }
       const copy = article.cloneNode(true);
       container.insertBefore(copy, end);
@@ -174,11 +200,11 @@ export function createFeed(container, { end = null } = {}) {
       return append(slug);
     },
 
-    // The project being read: the last one whose top has passed the middle of
-    // the screen ('' before the first).
+    // The project (or offering's opening) being read: the last one whose top
+    // has passed the middle of the screen ('' before the first).
     read() {
       let slug = '';
-      for (const article of articles()) {
+      for (const article of readable()) {
         if (article.getBoundingClientRect().top > innerHeight / 2) break;
         slug = article.dataset.slug;
       }

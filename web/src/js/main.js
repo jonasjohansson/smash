@@ -647,14 +647,16 @@ if (stage && framesEl) {
 
 // A project's own page is the start of the feed: it carries on into the next
 // project of its offering, round all of them, then into the other offerings'
-// projects, the footer between one offering and the next, without end; the
-// address follows the one being read. The link to the next project is for
-// pages without JavaScript.
+// projects, the footer and the next one's opening between one offering and
+// the next, without end; the address follows the one being read. The link to
+// the next project is for pages without JavaScript.
+// Between offerings, the next one's opening, its mark drawn as on its own page.
+let drawMarks = () => {}; // (below)
 const own = !stage && document.querySelector('main > article.project');
 if (own) {
   own.querySelector('.next')?.remove();
   const end = document.querySelector('main > .cta');
-  const feed = createFeed(own.parentElement, { end });
+  const feed = createFeed(own.parentElement, { end, onInsert: (el) => drawMarks(el) });
   const path = location.pathname;
   let queued = false;
   const follow = () => {
@@ -691,6 +693,7 @@ if (!stage) {
     el.classList.add('is-set');
   };
   const draw = () => document.querySelectorAll('[data-mark]').forEach(drawOne);
+  drawMarks = (root) => root.querySelectorAll('[data-mark]').forEach(drawOne);
   draw();
   addEventListener('resize', draw);
 
