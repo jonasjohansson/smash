@@ -1,5 +1,6 @@
-{# The projects of this one's offering, newest first, as [slug, title]: the
-   round the feed of projects goes (feed.js). #}
+{# The round the feed of projects goes from this one (feed.js), as [slug,
+   title, offering]: its offering's projects from it, newest first, then the
+   other offerings' in turn. #}
 <script type="application/json" id="titles">[
-  {%- for q in p.round %}[{{ q.slug | dump | safe }}, {{ q.title | dump | safe }}]{% if not loop.last %},{% endif %}{% endfor -%}
+  {%- for q in p.round %}[{{ q.slug | dump | safe }}, {{ q.title | dump | safe }}, {{ q.category | dump | safe }}]{% if not loop.last %},{% endif %}{% endfor -%}
 ]</script>

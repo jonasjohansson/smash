@@ -1,14 +1,16 @@
-// The feed of projects: after one project's page comes the next one's, once
-// round the projects of its offering, and the address follows the one being
-// read. A project's own page is the start of one (main.js); when every one of
-// the round is in, the feed ends and the footer closes it.
+// The feed of projects: after one project's page comes the next one's, round
+// the projects of its offering, then round each other offering's, and on
+// without end; the footer comes between one offering and the next, and the
+// address follows the one being read. A project's own page is the start of
+// one (main.js).
 //
 // Each project's page is fetched once, and only its article is taken; a copy
-// goes into the feed. The order is its offering's, newest first, from the
-// #titles list the page carries.
+// goes into the feed each time round. The order is the #titles list the page
+// carries.
 
-const list = JSON.parse(document.getElementById('titles')?.textContent || '[]'); // [slug, title]
-export const titles = Object.fromEntries(list);
+const list = JSON.parse(document.getElementById('titles')?.textContent || '[]'); // [slug, title, offering]
+export const titles = Object.fromEntries(list.map(([slug, title]) => [slug, title]));
+const offering = Object.fromEntries(list.map(([slug, , of]) => [slug, of]));
 const order = list.map(([slug]) => slug);
 
 const RETRY = 5000; // ms before trying the network again
@@ -97,15 +99,15 @@ const inView = new IntersectionObserver((entries) => {
 });
 const watch = (article) => article.querySelectorAll('video[autoplay]').forEach((v) => inView.observe(v));
 
-// Projects go in before `end` (the footer), and `onEnd` is called once the
-// round is complete.
-export function createFeed(container, { end = null, onEnd } = {}) {
+// Projects go in before `end`, the page's own footer, which stays hidden
+// (main.css): a copy of it goes in where one offering gives way to the next.
+export function createFeed(container, { end = null } = {}) {
   const articles = () => container.querySelectorAll(':scope > .project');
   let feed = [...articles()].map((a) => a.dataset.slug);
   articles().forEach(watch);
   articles().forEach(fitTitles);
   let feeding = false; // one on its way
-  let ended = false; // every one of the round is in
+  let missing = 0; // in a row without a page: all of them, and the feed stops
   let run = 0; // bumped whenever the feed starts over
   const home = location.pathname;
   const homeTitle = document.title;
@@ -116,9 +118,10 @@ export function createFeed(container, { end = null, onEnd } = {}) {
       a.querySelectorAll('video').forEach((v) => inView.unobserve(v));
       a.remove();
     });
+    container.querySelectorAll(':scope > [data-between]').forEach((f) => f.remove());
     feed = [];
     feeding = false;
-    ended = false;
+    missing = 0;
   }
 
   // Resolves true once `slug` is in (or skipped, if it has no page); offline,
@@ -132,8 +135,15 @@ export function createFeed(container, { end = null, onEnd } = {}) {
         return new Promise((resolve) => setTimeout(resolve, RETRY)).then(() => mine === run && append(slug));
       }
       feeding = false;
+      const before = feed.at(-1);
       feed.push(slug);
-      if (!article) return true;
+      if (!article) return ++missing < order.length;
+      missing = 0;
+      if (end && before && offering[before] !== offering[slug]) {
+        const footer = end.cloneNode(true);
+        footer.dataset.between = '';
+        container.insertBefore(footer, end);
+      }
       const copy = article.cloneNode(true);
       container.insertBefore(copy, end);
       watch(copy);
@@ -142,15 +152,9 @@ export function createFeed(container, { end = null, onEnd } = {}) {
     });
   }
 
-  // Keep a couple of screens of project ahead of the reader, until the round
-  // is complete (a page that is not there counts as shown).
+  // Keep a couple of screens of project ahead of the reader.
   function grow() {
-    if (!feed.length || feeding || ended) return;
-    if (order.every((slug) => feed.includes(slug))) {
-      ended = true;
-      onEnd?.();
-      return;
-    }
+    if (!feed.length || feeding || missing >= order.length) return;
     if (container.getBoundingClientRect().bottom > innerHeight * 3) return;
     const at = order.indexOf(feed.at(-1));
     append(order[(at + 1) % order.length]).then((ok) => ok && grow());

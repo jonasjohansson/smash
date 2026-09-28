@@ -62,14 +62,21 @@ export default function (config) {
   config.addGlobalData('projects', async () => {
     const projects = (await readProjects('projects')).map((p) => ({ ...p, rows: compose(p) }));
     const index = indexLayout(projects);
-    // A project's page goes once round the projects of its offering (feed.js),
-    // newest first; without JavaScript, by the link to the next of them.
-    // Shared, it shows its card's picture and the start of its introduction.
+    // A project's page runs on without end (feed.js): round the projects of
+    // its offering from itself, newest first, then round each offering after
+    // it in turn, and back to itself; without JavaScript, by the link to the
+    // next of them. Shared, it shows its card's picture and the start of its
+    // introduction.
+    const offerings = readCategories('categories').map((c) => c.slug);
+    const of = (slug) => projects.filter((q) => q.category === slug);
+    const from = (list, p) => { const i = list.indexOf(p); return [...list.slice(i), ...list.slice(0, i)]; };
     return Promise.all(projects.map(async (p, i) => {
-      const round = p.category ? projects.filter((q) => q.category === p.category) : projects;
-      const next = round[(round.indexOf(p) + 1) % round.length];
+      const at = offerings.indexOf(p.category);
+      const round = at < 0 ? from(projects, p)
+        : [...from(of(p.category), p), ...[...offerings.slice(at + 1), ...offerings.slice(0, at)].flatMap(of)];
+      const next = round[1] ?? null;
       return {
-        ...p, tile: index[i], round: round.map(({ slug, title }) => ({ slug, title })), next: next === p ? null : next,
+        ...p, tile: index[i], round: round.map(({ slug, title, category }) => ({ slug, title, category })), next,
         description: summary(p.rows.lead?.content), og: await ogImage((p.thumb ?? p.cover).src),
       };
     }));
