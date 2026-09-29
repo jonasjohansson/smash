@@ -96,3 +96,9 @@ frame on the beat is crisp. The `/identity` section stays on the classic sequenc
 Designed on its own after the 2D one: the mark extruded as blocks (three.js, as in
 `extrude.js`), pieces tipping over their edges and restacking, and a camera that re-angles
 on the beat. It reuses the 2D version's beat map and sound.
+
+A one-bar test is in (`/identity/sequence/blocks.html`): the crop as letters tipping off the end of the
+word and falling away, then rising and tipping back.
+
+A third version, at Jonas's word: the 2D one becoming the 3D one partway through. Seen straight on, the
+extruded mark is the flat mark exactly, so the turn into depth can be a hit of its own.
