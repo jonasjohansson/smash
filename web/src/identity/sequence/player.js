@@ -121,7 +121,8 @@ export function mountSequence(root, { engine = classic, t = 0, paused = false, p
     }
   }
 
-  const on = (node, type, fn) => node?.addEventListener(type, fn);
+  const bound = new AbortController(); // the controls' listeners, all let go on destroy, so another player can take them
+  const on = (node, type, fn) => node?.addEventListener(type, fn, { signal: bound.signal });
   on(play, 'click', () => setPaused(!paused));
   on(el, 'click', () => setPaused(!paused));
   on(scrub, 'input', () => { t = (Number(scrub.value) / 1000) * PERIOD; setPaused(true); render(); });
@@ -143,6 +144,6 @@ export function mountSequence(root, { engine = classic, t = 0, paused = false, p
     toggleSound: () => setSound(!soundOn),
     pause() { away = true; cancelAnimationFrame(raf); raf = 0; },
     resume() { away = false; run(); },
-    destroy() { dead = true; cancelAnimationFrame(raf); ro.disconnect(); if (soundOn) sound.stop(); },
+    destroy() { dead = true; cancelAnimationFrame(raf); ro.disconnect(); bound.abort(); if (soundOn) sound.stop(); },
   };
 }

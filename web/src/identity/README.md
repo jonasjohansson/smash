@@ -26,11 +26,12 @@ its marks, with no copy.
   (the drawing, the sound, the MP4), `sequence.js` is its page and `section.js` its section here. On its page, space
   pauses, the arrows step, i inverts, s turns the sound on, p (or `?punchy`) plays the punchier version (`?calm` the
   slow one); `?at=0`–`6` holds a state, `?t=` seeks, `?paper` starts black on white. b (or `?pulse`) plays it on the
-  pulse (`pulse.js`), after a reference of blocks tumbling and restacking: the same story in 21 hits on the beat, each
-  one the mark itself changing (the camera only moves with a change), a whip into it (0.12 s, fastest at the end), a
-  dead stop on it, and a smear through the fast frames (8 to 32 moments across a fortieth of a second, added up, a
+  pulse (`pulse.js`), after a reference of blocks tumbling and restacking: the same story in 23 hits on the beat, each
+  one the mark itself changing (the camera only moves with a change), a whip into it (0.2 s, fastest at the end), a
+  landing on it, a settle a touch past its mark and back (0.28 s), and a smear through the fast frames (8 to 32 moments across a fortieth of a second, added up, a
   blur joining the fastest); a beat with nothing to change holds still. `pulse.js` exports what `engine.js` does, so
-  the player and the MP4 take either one; there `?at=` holds a beat (0–31). Tests: `npm test` in `web/`.
+  the player and the MP4 take either one; there `?at=` holds a beat (0–31). On this page, the section's Pulse button
+  swaps between the two (and its Full screen link follows). Tests: `npm test` in `web/`.
 - MP4s (`video.js`): the chapters' motions and the sequence each have a download button (MP4) that makes one loop of
   it right there: 1600 × 1200 for Dribbble, shift-click for 1920 × 1080, alt-click for 1080 × 1080, or `?size=WxH`;
   the sequence in the version and colours on screen, with its sound. Every frame is drawn at its time (not recorded
