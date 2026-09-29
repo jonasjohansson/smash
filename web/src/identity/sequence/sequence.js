@@ -1,15 +1,15 @@
-// The sequence: the SMASH logo taken down, a step at a time, to a block. The
+// The sequence: the SMASH logo taken down, a step at a time, to a square. The
 // logo, framed like a stamp; the modular mark (the frame gone, the S's slots
 // run off the edges, the A's counter raised, the bands squashed to five); the
-// S M; the S; and the S's block, its slots closed. It plays forward and back,
-// and loops.
+// S M; the S; and the square in the S's bottom left corner, a bar by a bar,
+// the module it is all built from. It plays forward and back, and loops.
 //
 // One drawing all the way: the modular mark's geometry (../modular.js), with
 // its measures between the logo's and its own. With its top and bottom bands
 // tall (199.61) and its closed ends a bar in, it is the logo (mark.js, within
 // a tenth of a unit); the crops are its own (the S M ends on the M's right
-// stem, the S before the slot after it); the block is the S with its slots
-// narrowed to nothing.
+// stem, the S before the slot after it, the square under the S's lower slot
+// and left of its bend).
 //
 // Click or space pauses; the arrows step from one to the next; i inverts.
 // ?t=0.5 seeks (a share of the loop) and pauses; ?at=2 holds one of the five.
@@ -25,13 +25,13 @@ const OUT = PITCH * 2; // how far an open slot runs on past the edge
 const TALL = (471 - 2 * S - B) / 2; // the logo's top and bottom bands (its height is 471): 199.61
 const FRAME = { gap: S, width: S }; // the stamp's outline: a slot off the block, a slot wide
 
-const MODULAR = { stem: M.stem, open: 1, counter: M.counter, w: 10 * S + 11 * B, slot: 1, frame: 0 };
+const MODULAR = { stem: M.stem, open: 1, counter: M.counter, w: 10 * S + 11 * B, top: 0, slot: 1, frame: 0 };
 const STATES = [
   { ...MODULAR, stem: TALL, open: 0, counter: CLOSED, frame: 1 }, // the logo, as a stamp
   MODULAR, // the modular mark
   { ...MODULAR, w: c(4) - S / 2 }, // the S M: 238.9
   { ...MODULAR, w: c(1) - S / 2 }, // the S: 83.56
-  { ...MODULAR, w: c(1) - S / 2, slot: 0 }, // the S's block
+  { ...MODULAR, w: B, top: M.stem + 2 * S + B }, // the square in the S's bottom left corner: 31.78 × 31.78
 ];
 const HOLD = [1.8, 1.4, 1.4, 1.2, 1.8]; // seconds on each
 const MOVE = [1.9, 1.3, 1.1, 1.1]; // seconds from each to the next
@@ -127,10 +127,11 @@ function slots(q) {
   ] };
 }
 
-/** The mark for measures q, as the inside of an SVG: the block less its slots, and the stamp's frame. */
+/** The mark for measures q, as the inside of an SVG: the block (cropped to w across, from top down) less its slots, and the stamp's frame. */
 function draw(q) {
   const { h, list } = slots(q);
   const w = q.w;
+  const top = q.top ?? 0;
   const sw = S * q.slot;
   let cuts = '';
   if (sw > 0.05) {
@@ -141,8 +142,8 @@ function draw(q) {
   }
   const m = OUT + FRAME.gap + FRAME.width;
   let svg = `<defs><mask id="seq-m" maskUnits="userSpaceOnUse" x="${-m}" y="${-m}" width="${f(w + 2 * m)}" height="${f(h + 2 * m)}">`
-    + `<rect width="${f(w)}" height="${f(h)}" fill="#fff"/>${cuts}</mask></defs>`
-    + `<rect width="${f(w)}" height="${f(h)}" fill="currentColor" mask="url(#seq-m)"/>`;
+    + `<rect y="${f(top)}" width="${f(w)}" height="${f(h - top)}" fill="#fff"/>${cuts}</mask></defs>`
+    + `<rect y="${f(top)}" width="${f(w)}" height="${f(h - top)}" fill="currentColor" mask="url(#seq-m)"/>`;
   if (q.frame > 0.005) {
     const fw = FRAME.width * q.frame;
     const o = FRAME.gap + FRAME.width / 2; // the frame's centre line, off the block
@@ -150,7 +151,7 @@ function draw(q) {
   }
   // What the camera frames: the block, and the frame while it is there.
   const reach = (FRAME.gap + FRAME.width) * Math.min(1, q.frame * 3);
-  return { svg, box: [-reach, -reach, w + reach, h + reach] };
+  return { svg, box: [-reach, top - reach, w + reach, h + reach] };
 }
 
 // ---------------------------------------------------------------------------
