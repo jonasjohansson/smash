@@ -201,5 +201,16 @@ KEYS.forEach((k, b) => {
 });
 SEGMENTS.sort((x, y) => x.t0 - y.t0);
 
-export { VERSION, PUNCHY, TEMPO, UNIT, BEAT, WHIP, SAMPLES, KEYS, SEGMENTS, PERIOD, START, EASE, wrap, stateAt, frameAt, draw, svgAt, viewBox };
+/** A beat's sound (sound.js): its move into the beat, the whip's curve, the hit on the beat; the !'s breath until the next beat that is not only the camera. */
+function cueOf(seg) {
+  const { cue } = KEYS[seg.beat];
+  let n = 1;
+  while (n < BEATS && KEYS[(seg.beat + n) % BEATS].cue.kind === 'punch') n++;
+  const columns = cue.columns?.map((col, j) => ({ ...col, at: WHIP + j * 0.018 })); // strummed, left to right, from the beat
+  return { ...cue, d: WHIP, ease: whip, hit: WHIP, pan: cue.pan ?? [0, 0], to: cue.to ?? 0, until: n * BEAT, columns };
+}
+
+const loopSound = loopSoundFor(PERIOD, SEGMENTS, cueOf);
+
+export { VERSION, PUNCHY, TEMPO, UNIT, BEAT, WHIP, SAMPLES, KEYS, SEGMENTS, PERIOD, START, EASE, wrap, stateAt, frameAt, draw, svgAt, viewBox, cueOf, loopSound };
 export { STATES_ON_BEATS as STATES };

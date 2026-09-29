@@ -10,7 +10,9 @@
 // the A, the crops lock a step lower each time the mark gets smaller (A4, G4,
 // F4, then D4 for the square), and the logo writes itself back as a rising
 // arpeggio from that D4, a note for each slot column as it opens, left to
-// right, over a D minor chord with an added ninth. A small room (a synthesised
+// right, over a D minor chord with an added ninth. On the pulse (?pulse) the
+// camera's punches get a rush of air and a soft knock on the beat, and the
+// crops lock a step down each time, from D5. A small room (a synthesised
 // reverb, kept out of the low end), a gentle compressor, drive into a limiter.
 // The compressors look ahead 6 ms each, so every sound is sent that much
 // early; the noise is seeded, so every render sounds the same.
@@ -346,7 +348,7 @@ export function createSound({ context = null } = {}) {
         const u = Math.min(1, ((cue.hit ?? d) + 0.01) / d);
         const cc = curves((v) => ease(v * u) / ease(u));
         whoosh(t0, d * u, cc, key === 'top' ? { lo: 3600, hi: 520, q: 1.6, level: 0.2, pan } : { lo: 520, hi: 3600 + (to - 2) * 300, q: 1.6, level: 0.2, pan });
-        click(hit, { note: LOCK[to] ?? 'D4', level: 0.3, pan: pan[1], bright: 2400 });
+        click(hit, { note: cue.note ?? LOCK[to] ?? 'D4', level: 0.3, pan: pan[1], bright: 2400 });
         thump(hit, { level: to === 5 ? 0.34 : 0.16, pan: pan[1], from: 170, to: 75, len: to === 5 ? 0.24 : 0.16, body: to === 5 ? 1 : 0 }); // the square lands heaviest
         if (to === 5) click(hit, { level: 0.22, pan: 0, bright: 700, send: 0.1 }); // the square's weight, on small speakers too
         if (to === 4) hold(hit + 0.03, Math.max(0.3, (cue.until ?? 2) - (cue.hit ?? 0) - 0.09), { note: 'F4', level: 0.028, pan: pan[1] }); // the !: a held breath until the next move
@@ -355,10 +357,17 @@ export function createSound({ context = null } = {}) {
       case 'follow': // the camera: a soft breath of air, drifting the way it pans: felt more than heard
         whoosh(t0, d, c, { lo: 300, hi: 900, q: 1.2, level: 0.2, pan, send: 0.2, tame: 1800 });
         break;
+      case 'punch': // the camera on the beat (?pulse): air rushing into the beat, and a soft knock on it
+        whoosh(t0, d, c, { lo: 300, hi: 1400, q: 1, level: 0.22, pan, send: 0.15, tame: 2400 });
+        thump(hit, { level: 0.14, pan: pan[1], from: 130, to: 62, len: 0.12 });
+        break;
       case 'reveal': { // the logo appearing through the block: each slot column plucks its note as it opens, over the chord
         const cols = cue.columns ?? [];
-        cols.forEach((col, i) => pluck(t0 + col.at, { note: ARPEGGIO[i], level: i === cols.length - 1 ? 0.13 : 0.11, pan: col.pan, ring: i === cols.length - 1 ? 1.1 : 0.55 }));
-        bloom(t0, d, c, { notes: ['D3', 'A3', 'D4', 'F4', 'A4', 'E5'], level: 0.16, ring: 2.4 });
+        cols.forEach((col, i) => {
+          const last = col.i === undefined ? i === cols.length - 1 : col.i === 9;
+          pluck(t0 + col.at, { note: ARPEGGIO[col.i ?? i], level: last ? 0.13 : 0.11, pan: col.pan, ring: last ? 1.1 : 0.55 });
+        });
+        if (cue.chord !== false) bloom(t0, d, c, { notes: ['D3', 'A3', 'D4', 'F4', 'A4', 'E5'], level: 0.16, ring: 2.4 });
         if (cols.length) thump(t0 + cols[0].at, { level: 0.24, from: 96, to: 49, len: 0.4 });
         break;
       }

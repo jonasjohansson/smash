@@ -67,3 +67,22 @@ test('the smear runs only in the whips, each copy with its own mask', () => {
   assert.match(fast.svg, /mix-blend-mode:plus-lighter/);
   assert.ok(P.svgAt(5 * P.BEAT - 0.01).startsWith('<svg '));
 });
+
+test('every beat has a sound that hits on it', () => {
+  const moves = P.SEGMENTS.filter((s) => s.key);
+  assert.equal(moves.length, 32);
+  for (const s of moves) {
+    const cue = P.cueOf(s);
+    assert.ok(['punch', 'snap', 'land', 'spring', 'sweep', 'reveal'].includes(cue.kind), cue.kind);
+    assert.equal(cue.hit, P.WHIP);
+    assert.equal(cue.d, P.WHIP);
+    const beats = (s.t0 + cue.hit) / P.BEAT;
+    assert.ok(Math.abs(beats - Math.round(beats)) < 1e-9, `hits on a beat: ${s.t0 + cue.hit}`);
+  }
+  const bang = P.cueOf(moves.find((s) => P.KEYS[s.beat].cue.to === 4));
+  assert.equal(bang.until, 4 * P.BEAT); // the !'s breath lasts through its three punches
+  const last = P.cueOf(moves.find((s) => s.beat === 31));
+  assert.deepEqual(last.columns.map((c) => c.i), [9]);
+  assert.equal(last.chord, true);
+  assert.equal(typeof P.loopSound, 'function');
+});
