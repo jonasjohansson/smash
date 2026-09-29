@@ -8,10 +8,9 @@
 //
 // Every hit has the same shape. A whip: the change packed into the last
 // 0.12 s before the beat, slow off and fastest at the end. A snap: it lands
-// on the beat and stops dead. A drift: until the next whip the camera keeps
-// pushing in, slowly, through any holds, so nothing is ever quite still. And
-// a smear: in the whips each frame is the drawing at several moments across
-// a shutter, averaged.
+// on the beat and stops dead, and holds still until the next. And a smear:
+// in the whips each frame is the drawing at several moments across a
+// shutter, averaged.
 //
 // Each beat is a key, or a hold: the measures (engine.js's states, and the
 // steps between them) and a framing (a box in the mark's space) that land on
@@ -22,7 +21,7 @@
 // It exports what engine.js does, so the player, the page and the MP4 take
 // either one.
 
-import { STATES, W, S, B, FOOT, c, draw, lens, between, viewOf, viewBox, loopSoundFor } from './engine.js';
+import { STATES, W, S, B, c, draw, lens, between, viewOf, viewBox, loopSoundFor } from './engine.js';
 
 const VERSION = 'pulse';
 const PUNCHY = false;
@@ -32,8 +31,7 @@ const BEAT = 4 * UNIT; // half a second
 const BEATS = 32; // eight bars
 const PERIOD = BEATS * BEAT;
 const WHIP = 0.12; // how long the move into a beat takes
-const DRIFT = 0.035; // how far the camera pushes in over a beat, as a share of what it shows
-const START = 2 * UNIT; // the MP4 opens here, on a whole frame, in the logo's drift
+const START = 2 * UNIT; // the MP4 opens here, on a whole frame, in the logo's hold
 const SHUTTER = 1 / 40; // the smear: how much time each frame sees, live and in the MP4 alike
 const SAMPLES = 8; // the fewest moments across it drawn (8, 16 or 32: a share that adds up to full ink in 8 bits)
 const MOST = 32; // and the most, for the fastest frames
@@ -59,7 +57,6 @@ const RAISED = { ...BOTH, counter: MODULAR.counter };
 const NO_H = { ...MODULAR, w: c(8) - S / 2 };
 const NO_S = { ...MODULAR, w: c(6) - S / 2 };
 const HALF_M = { ...MODULAR, w: c(3) - S / 2 };
-const SHORT = { ...BANG, top: FOOT / 2 }; // the !, its stem half gone
 const cols = (n) => Array.from({ length: 10 }, (_, i) => (i < n ? 1 : 0));
 const open = (n) => ({ ...BLOCK, cols: cols(n) }); // the block with its first n slot columns open
 
@@ -87,7 +84,7 @@ const punch = (pan = 0) => ({ kind: 'punch', key: 'cam', pan: [pan, pan] });
 const crop = (from, to, note, state) => ({ kind: 'sweep', key: 'w', note, to: state, pan: [across(from, from), across(to, from)] });
 const reveal = (i0, i1, chord = false) => ({ kind: 'reveal', key: 'slot', chord, columns: Array.from({ length: i1 - i0 }, (_, j) => ({ i: i0 + j, pan: across(c(i0 + j)) })) });
 
-const HOLD = null; // a beat with nothing to change: no whip, no sound; the change before drifts on through it
+const HOLD = null; // a beat with nothing to change: no whip, no sound; the change before holds on through it
 const held = (k) => k.as ?? k; // what a key is once it has landed
 
 const SCORE = [
@@ -108,10 +105,9 @@ const SCORE = [
   HOLD,
   { q: BANG, box: whole(BANG), cue: crop(S_ALONE.w, B, 'D4', 4) },
   HOLD,
-  // Bar 5: the !'s stem drops away in two, down to the square; held.
-  { q: SHORT, box: whole(SHORT), cue: { kind: 'sweep', key: 'top', note: 'A3', pan: [0, 0] } },
+  // Bar 5: the !'s stem drops away, down to the square; held.
   { q: SQUARE, box: whole(SQUARE), cue: { kind: 'sweep', key: 'top', note: 'D3', to: 5, pan: [0, 0] } },
-  HOLD, HOLD,
+  HOLD, HOLD, HOLD,
   // Bar 6: the square grows to fill the screen in two hits, where it becomes the logo's block, unseen.
   { q: SQUARE, box: part(SQUARE, [0.15, 0.15, 0.85, 0.85]), cue: punch() },
   HOLD,
@@ -135,7 +131,6 @@ const STATES_ON_BEATS = KEYS.map((k) => held(k).q);
 // ---------------------------------------------------------------------------
 // Time
 
-const drift = (L, s) => ({ ...L, v: L.v * (1 - DRIFT * s) }); // s beats after the hit: pushed in about the middle
 
 /** Measures e of the way from a to b: the bands in proportion (as engine.js), the slot columns each, the rest straight. */
 function mixQ(a, b, e) {
@@ -151,7 +146,7 @@ function mixQ(a, b, e) {
 
 /**
  * The measures and the camera's view at time t (seconds), for a screen of
- * the given aspect: the last change landed, drifting; in the last WHIP
+ * the given aspect: the last change landed, still; in the last WHIP
  * before a beat with a change, the whip from there into it.
  */
 function stateAt(t, aspect = 16 / 9) {
@@ -159,7 +154,7 @@ function stateAt(t, aspect = 16 / 9) {
   const b = Math.min(BEATS - 1, Math.floor(t / BEAT + 1e-9));
   const s = t - b * BEAT;
   const from = held(KEYS[LAST[b]]), to = KEYS[(b + 1) % BEATS];
-  const A = drift(lens(from.box, aspect), (b - LAST[b] + BEATS) % BEATS + s / BEAT); // beats since it landed
+  const A = lens(from.box, aspect);
   const u = (s - (BEAT - WHIP)) / WHIP;
   if (to.hold || u <= 0) return { q: from.q, view: viewOf(A, aspect) };
   const e = whip(u);

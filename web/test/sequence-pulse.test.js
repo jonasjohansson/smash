@@ -1,5 +1,5 @@
 // pulse.js: 32 beats, each a change of the mark landing on it or a hold; a
-// whip into each change, a drift after.
+// whip into each change, still after.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -41,12 +41,10 @@ test('every hit changes the mark; the camera moves on its own only as the square
   assert.ok(changes.length >= 20, `${changes.length} hits`);
 });
 
-test('a hold moves nothing but the drift', () => {
+test('a hold moves nothing', () => {
   P.KEYS.forEach((k, b) => {
     if (!k.hold) return;
-    const a = P.stateAt(b * P.BEAT - 0.05), z = P.stateAt(b * P.BEAT + 0.05);
-    assert.deepEqual(a.q, z.q, `beat ${b}`);
-    assert.ok(z.view[3] < a.view[3] && z.view[3] > a.view[3] * 0.99, `beat ${b} drifts on`);
+    assert.deepEqual(P.stateAt(b * P.BEAT - 0.05), P.stateAt(b * P.BEAT + 0.05), `beat ${b}`);
   });
 });
 
@@ -56,13 +54,17 @@ test('the story passes through every state, and ends on the block', () => {
   assert.equal(P.KEYS.find((k) => k.as).as.q, E.STATES[6]);
 });
 
-test('between the whips only the camera moves, pushing in', () => {
+test('between the whips nothing moves, not even the camera', () => {
   P.KEYS.forEach((k, b) => {
     const a = P.stateAt(b * P.BEAT + 0.02), z = P.stateAt(b * P.BEAT + P.BEAT - P.WHIP - 0.01);
     assert.deepEqual(a.q, held(k).q);
-    assert.deepEqual(z.q, held(k).q);
-    assert.ok(z.view[3] < a.view[3], `beat ${b} drifts in`);
+    assert.deepEqual(z, a, `beat ${b}`);
   });
+});
+
+test('the ! goes to the square in one drop, never through a colon', () => {
+  const tops = P.KEYS.filter((k) => !k.hold).map((k) => held(k).q.top);
+  assert.ok(tops.every((t) => t === 0 || t === E.FOOT), tops.join(' '));
 });
 
 test('the square becomes the block unseen: the screen is all ink either side', () => {
@@ -124,7 +126,7 @@ test('every change has a sound that hits on its beat; a hold has none', () => {
   const bang = P.cueOf(moves.find((s) => P.KEYS[s.beat].cue.to === 4));
   assert.equal(bang.until, 2 * P.BEAT); // the !'s breath lasts through its hold
   const notes = moves.map((s) => P.cueOf(s)).filter((c) => c.kind === 'sweep').map((c) => c.note);
-  assert.deepEqual(notes, ['D5', 'C5', 'A4', 'G4', 'F4', 'D4', 'A3', 'D3']); // a step down each time
+  assert.deepEqual(notes, ['D5', 'C5', 'A4', 'G4', 'F4', 'D4', 'D3']); // a step down each time
   const last = P.cueOf(moves.find((s) => s.beat === 31));
   assert.deepEqual(last.columns.map((c) => c.i), [9]);
   assert.equal(last.chord, true);
