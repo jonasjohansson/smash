@@ -2,7 +2,7 @@
 // its MP4, in any element. The sequence's own page (sequence.js) and its
 // section on /identity (section.js) each mount one, with their own controls.
 
-import { PERIOD, SEGMENTS, HOLDS, UNIT, VERSION, wrap, stateAt, draw, svgAt, viewBox, cueOf, loopSound } from './engine.js';
+import * as classic from './engine.js';
 import { createSound } from './sound.js';
 
 /**
@@ -11,12 +11,14 @@ import { createSound } from './sound.js';
  * .download, .invert. Invert toggles data-paper on root (the colours are the
  * page's CSS). What the controls should show goes out through
  * onState({ paused, sound, paper, busy, progress }).
- * Options: t (seconds into the loop to start at), paused, paper.
+ * Options: engine (the sequence: engine.js by default, or pulse.js), t
+ * (seconds into the loop to start at), paused, paper.
  * Returns { get t, get paused, seek(t), setPaused(p), step(dir), setSound(on),
  * invert(), download(e), pause(), resume(), destroy() }. pause() and resume()
  * are for going off and on screen, apart from the viewer's own pause.
  */
-export function mountSequence(root, { t = 0, paused = false, paper = false, onState = () => {} } = {}) {
+export function mountSequence(root, { engine = classic, t = 0, paused = false, paper = false, onState = () => {} } = {}) {
+  const { PERIOD, SEGMENTS, START, VERSION, wrap, frameAt, svgAt, viewBox, cueOf, loopSound } = engine;
   const el = root.querySelector('.seq-mark');
   const $ = (sel) => root.querySelector(sel);
   const play = $('.play'), scrub = $('.scrub'), speaker = $('.sound'), dl = $('.download'), inv = $('.invert');
@@ -32,9 +34,9 @@ export function mountSequence(root, { t = 0, paused = false, paper = false, onSt
 
   function render() {
     const aspect = el.clientWidth / Math.max(1, el.clientHeight) || 16 / 9;
-    const { q, view } = stateAt(t, aspect);
+    const { view, svg } = frameAt(t, aspect);
     el.setAttribute('viewBox', viewBox(view));
-    el.innerHTML = draw(q).svg;
+    el.innerHTML = svg;
     if (scrub) scrub.value = String(Math.round((wrap(t) / PERIOD) * 1000));
   }
 
@@ -96,8 +98,8 @@ export function mountSequence(root, { t = 0, paused = false, paper = false, onSt
 
   // The download: this version, in these colours, made into an MP4 here and now
   // (../video.js), 1600 × 1200 by default (Dribbble's 4:3); shift for 1920 ×
-  // 1080, alt for 1080 × 1080; or ?size=WxH. The file opens a quarter of a
-  // second before the first move, the logo's hold at its loop point.
+  // 1080, alt for 1080 × 1080; or ?size=WxH. The file opens where the
+  // sequence says (its START, on a whole frame, so every hit lands on one).
   async function download(e) {
     if (busy) return;
     busy = true; progress = 0; tell();
@@ -106,9 +108,8 @@ export function mountSequence(root, { t = 0, paused = false, paper = false, onSt
     try {
       const { renderVideo, svgPainter, sizeOf, save } = await import('../video.js');
       const [width, height] = sizeOf(e);
-      const start = (HOLDS[0] - 3) * UNIT; // on a whole frame, so every hit on the beat lands on a frame
       const blob = await renderVideo({
-        period: PERIOD, start, width, height, sound: loopSound,
+        period: PERIOD, start: START, width, height, sound: loopSound,
         paint: svgPainter((s) => svgAt(s, width / height), { ink, paper }),
         onProgress: (p) => { progress = p; tell(); },
       });
