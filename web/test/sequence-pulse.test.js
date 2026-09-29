@@ -1,5 +1,5 @@
 // pulse.js: 32 beats, each a change of the mark landing on it or a hold; a
-// whip into each change, still after.
+// whip into each change, a settle after it, then still.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -54,9 +54,9 @@ test('the story passes through every state, and ends on the block', () => {
   assert.equal(P.KEYS.find((k) => k.as).as.q, E.STATES[6]);
 });
 
-test('between the whips nothing moves, not even the camera', () => {
+test('between the settle and the next whip nothing moves, not even the camera', () => {
   P.KEYS.forEach((k, b) => {
-    const a = P.stateAt(b * P.BEAT + 0.02), z = P.stateAt(b * P.BEAT + P.BEAT - P.WHIP - 0.01);
+    const a = P.stateAt(b * P.BEAT + P.SETTLE + 0.005), z = P.stateAt(b * P.BEAT + P.BEAT - P.WHIP - 0.005);
     assert.deepEqual(a.q, held(k).q);
     assert.deepEqual(z, a, `beat ${b}`);
   });
@@ -105,7 +105,7 @@ test('each moment of the smear sits where its own camera saw it', () => {
 
 test('the faster the whip, the more moments, and past the most a blur joins them', () => {
   const count = (t) => P.frameAt(t).svg.match(/<mask /g).length;
-  const pullBack = 24 * P.BEAT - 0.01; // out of the ink, back to the block's first column
+  const pullBack = 22 * P.BEAT - 0.01; // out of the ink, back to the block's first column
   assert.equal(count(pullBack), P.MOST);
   assert.match(P.frameAt(pullBack).svg, /feGaussianBlur/);
   assert.ok(count(4 * P.BEAT - 0.1) < P.MOST); // early in a whip, slow off
@@ -140,4 +140,21 @@ test('the view is always a real box, right up to each beat', () => {
       assert.ok(w > 0 && h > 0 && Number.isFinite(w), `t ${t}: ${w} × ${h}`);
     }
   }
+});
+
+test('after a hit the mark carries a touch past its mark and settles back, still by SETTLE', () => {
+  const b = 8; // the crop taking the H: w from the word's end in to the S's
+  const k = P.KEYS[b];
+  const past = P.stateAt(b * P.BEAT + P.SETTLE * 0.25).q.w;
+  assert.ok(past < k.q.w, `${past} past ${k.q.w}`);
+  assert.ok(k.q.w - past < 0.1 * (E.W - k.q.w), 'only a touch');
+  assert.deepEqual(P.stateAt(b * P.BEAT + P.SETTLE + 1e-3).q, k.q);
+});
+
+test('the square and the white each hold a beat; the logo is written back a column a beat', () => {
+  const on = P.KEYS.map((k) => !k.hold);
+  const fill = P.KEYS.findIndex((k) => k.as);
+  assert.deepEqual(on.slice(fill - 4, fill + 2), [true, false, true, false, true, false]); // drop, hold, grow, hold, fill, hold
+  const cols = P.KEYS.slice(fill + 2).map((k) => (k.q.cols ?? Array(10).fill(k.q.slot)).filter((v) => v === 1).length);
+  assert.deepEqual(cols, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 });

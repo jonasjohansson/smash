@@ -30,17 +30,21 @@ const UNIT = 60 / TEMPO / 4; // a sixteenth
 const BEAT = 4 * UNIT; // half a second
 const BEATS = 32; // eight bars
 const PERIOD = BEATS * BEAT;
-const WHIP = 0.12; // how long the move into a beat takes
+const WHIP = 0.2; // how long the move into a beat takes
+const SETTLE = 0.28; // and after it lands, how long it takes to settle: a touch past its mark and back
+const SWING = 0.1; // how far past, at most, as a share of the move (the peak of the settle's curve is 0.4 of it)
 const START = 2 * UNIT; // the MP4 opens here, on a whole frame, in the logo's hold
 const SHUTTER = 1 / 40; // the smear: how much time each frame sees, live and in the MP4 alike
 const SAMPLES = 8; // the fewest moments across it drawn (8, 16 or 32: a share that adds up to full ink in 8 bits)
 const MOST = 32; // and the most, for the fastest frames
 const STEP = 1 / 240; // how far apart on the screen (a share of its height) the moments may be before more are drawn
 
-const K = 5;
-/** The whip: slow off and fastest at the end (an exponential ease-in), stopping dead on 1. */
+const K = 4;
+/** The whip: slow off and fastest at the end (an exponential ease-in), arriving on 1 at speed. */
 const whip = (u) => (u <= 0 ? 0 : u >= 1 ? 1 : (2 ** (K * u) - 1) / (2 ** K - 1));
-const EASE = { whip };
+/** The settle, over x 0 to 1: carried on past the mark by the whip's speed, and back to rest. */
+const settle = (x) => (x <= 0 || x >= 1 ? 0 : Math.sin(Math.PI * x) * (1 - x) ** 2);
+const EASE = { whip, settle };
 
 const f = (n) => +n.toFixed(3);
 const mix = (a, b, v) => a + (b - a) * v;
@@ -105,27 +109,23 @@ const SCORE = [
   HOLD,
   { q: BANG, box: whole(BANG), cue: crop(S_ALONE.w, B, 'D4', 4) },
   HOLD,
-  // Bar 5: the !'s stem drops away, down to the square; held.
+  // Bar 5 and half of 6: the !'s stem drops away, down to the square; a beat to see it, then it grows, and two beats on fills the screen, where it becomes the logo's block, unseen; a beat of white.
   { q: SQUARE, box: whole(SQUARE), cue: { kind: 'sweep', key: 'top', note: 'D3', to: 5, pan: [0, 0] } },
-  HOLD, HOLD, HOLD,
-  // Bar 6: the square grows to fill the screen in two hits, where it becomes the logo's block, unseen.
+  HOLD,
   { q: SQUARE, box: part(SQUARE, [0.15, 0.15, 0.85, 0.85]), cue: punch() },
   HOLD,
   { q: SQUARE, box: part(SQUARE, [0.4, 0.4, 0.6, 0.6]), as: { q: BLOCK, box: part(BLOCK, [0.4, 0.4, 0.6, 0.6]) }, cue: punch() },
   HOLD,
-  // Bars 7 and 8: the logo writes itself back through the block, a column a beat (two at a time at the end), the camera pulling back with it.
-  { q: open(1), box: writing(1), cue: reveal(0, 1) },
-  { q: open(2), box: writing(2), cue: reveal(1, 2) },
-  { q: open(3), box: writing(3), cue: reveal(2, 3) },
-  { q: open(4), box: writing(4), cue: reveal(3, 4) },
-  { q: open(5), box: writing(5), cue: reveal(4, 5) },
-  { q: open(7), box: writing(7), cue: reveal(5, 7) },
-  { q: open(9), box: writing(9), cue: reveal(7, 9) },
+  // The rest of bar 6 to the end: the logo writes itself back through the block, a column a beat, the camera pulling back with it.
+  ...Array.from({ length: 9 }, (_, n) => ({ q: open(n + 1), box: writing(n + 1), cue: reveal(n, n + 1) })),
   { q: LOGO, box: whole(LOGO), cue: reveal(9, 10, true) },
 ];
 // For each beat, the beat of the change that landed last (round the loop); a hold is that change, landed.
 const LAST = SCORE.map((_, b) => { let l = b; while (!SCORE[l]) l = (l + BEATS - 1) % BEATS; return l; });
 const KEYS = SCORE.map((k, b) => k ?? { ...held(SCORE[LAST[b]]), hold: true });
+console.assert(KEYS.length === BEATS, `[pulse] ${KEYS.length} beats, not ${BEATS}`);
+// For each change, where it came from: the change landed before it.
+const FROM = KEYS.map((_, b) => held(KEYS[LAST[(b + BEATS - 1) % BEATS]]));
 const STATES_ON_BEATS = KEYS.map((k) => held(k).q);
 
 // ---------------------------------------------------------------------------
@@ -139,26 +139,33 @@ function mixQ(a, b, e) {
   q.stem = a.stem * (b.stem / a.stem) ** e;
   if (a.cols || b.cols) {
     const ca = a.cols ?? Array(10).fill(a.slot), cb = b.cols ?? Array(10).fill(b.slot);
-    q.cols = ca.map((v, i) => mix(v, cb[i], e));
+    q.cols = ca.map((v, i) => Math.min(1, Math.max(0, mix(v, cb[i], e)))); // a slot never opens wider than a slot, even settling
   }
   return q;
 }
 
 /**
  * The measures and the camera's view at time t (seconds), for a screen of
- * the given aspect: the last change landed, still; in the last WHIP
+ * the given aspect: the last change landed, settling (carried a touch past
+ * its mark by the whip's speed, and back) and then still; in the last WHIP
  * before a beat with a change, the whip from there into it.
  */
 function stateAt(t, aspect = 16 / 9) {
   t = wrap(t);
   const b = Math.min(BEATS - 1, Math.floor(t / BEAT + 1e-9));
   const s = t - b * BEAT;
-  const from = held(KEYS[LAST[b]]), to = KEYS[(b + 1) % BEATS];
-  const A = lens(from.box, aspect);
+  const l = LAST[b], landed = KEYS[l], from = held(landed), to = KEYS[(b + 1) % BEATS];
+  const since = ((b - l + BEATS) % BEATS) * BEAT + s;
+  let q = from.q, A = lens(from.box, aspect);
+  if (!landed.as && since > 0 && since < SETTLE) { // the hidden change lands in a screen of ink: nothing to settle
+    const o = 1 + SWING * settle(since / SETTLE);
+    q = mixQ(FROM[l].q, landed.q, o);
+    A = between(lens(FROM[l].box, aspect), lens(landed.box, aspect), o);
+  }
   const u = (s - (BEAT - WHIP)) / WHIP;
-  if (to.hold || u <= 0) return { q: from.q, view: viewOf(A, aspect) };
+  if (to.hold || u <= 0) return { q, view: viewOf(A, aspect) };
   const e = whip(u);
-  return { q: mixQ(from.q, to.q, e), view: viewOf(between(A, lens(to.box, aspect), e), aspect) };
+  return { q: mixQ(q, to.q, e), view: viewOf(between(A, lens(to.box, aspect), e), aspect) };
 }
 
 /**
@@ -241,5 +248,5 @@ function cueOf(seg) {
 
 const loopSound = loopSoundFor(PERIOD, SEGMENTS, cueOf);
 
-export { VERSION, PUNCHY, TEMPO, UNIT, BEAT, WHIP, SAMPLES, MOST, KEYS, SEGMENTS, PERIOD, START, EASE, wrap, stateAt, frameAt, draw, svgAt, viewBox, cueOf, loopSound };
+export { VERSION, PUNCHY, TEMPO, UNIT, BEAT, WHIP, SETTLE, SAMPLES, MOST, KEYS, SEGMENTS, PERIOD, START, EASE, wrap, stateAt, frameAt, draw, svgAt, viewBox, cueOf, loopSound };
 export { STATES_ON_BEATS as STATES };
