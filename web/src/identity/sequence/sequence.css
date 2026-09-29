@@ -15,3 +15,6 @@ body { overflow: hidden; }
 .play[data-paused] .i-pause { display: none; }
 .scrub { flex: 1; min-width: 0; accent-color: var(--ink); background: none; }
 @media (prefers-reduced-motion: reduce) { .bar { opacity: 1; } }
+.sound .i-waves { display: none; }
+.sound[data-on] .i-waves { display: inline; }
+.sound[data-on] .i-off { display: none; }

@@ -19,7 +19,9 @@ its marks, with no copy.
 - `directions/struck.js`: the mark with its slots leaning.
 - `sequence/`: a page of its own (`/identity/sequence/`): the logo, framed like a stamp, taken down to the
   modular mark, the S M, the S and the square in its bottom left corner (the module), and back. One drawing: the modular mark's geometry between the
-  logo's measures and its own. Space pauses, the arrows step, i inverts; `?at=0`–`4` holds a state, `?t=` seeks.
+  logo's measures and its own. One thing moves at a time, each move with its own easing (a snap, a spring, a
+  sweep, a landing) and its own sound, synthesised from the same curve (`sound.js`). Space pauses, the arrows step,
+  i inverts, s turns the sound on; `?at=0`–`4` holds a state, `?t=` seeks.
 - `deck.html`: the same modules as 1920 × 1080 slides, for a PDF
   (`python3 web/scripts/identity-pdf.py`).
 
