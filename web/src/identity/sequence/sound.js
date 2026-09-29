@@ -11,9 +11,10 @@
 // F4, then D4 for the square), and the logo writes itself back as a rising
 // arpeggio from that D4, a note for each slot column as it opens, left to
 // right, over a D minor chord with an added ninth. On the pulse (?pulse) the
-// camera's punches get a rush of air and a soft knock on the beat, and the
-// crops lock a step down each time, from D5. A small room (a synthesised
-// reverb, kept out of the low end), a gentle compressor, drive into a limiter.
+// square's growing gets a rush of air and a soft knock on the beat, and the
+// crops and drops lock a step down each time, from D5 to D3. A small room (a
+// synthesised reverb, kept out of the low end), a gentle compressor, drive
+// into a limiter.
 // The compressors look ahead 6 ms each, so every sound is sent that much
 // early; the noise is seeded, so every render sounds the same.
 //
