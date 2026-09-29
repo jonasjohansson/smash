@@ -87,17 +87,18 @@ const follow = (k) => { const e = inOut(k); return (u) => e(u ** 0.75); };
 //   land: the counter rising, a touch past its mark and back
 //   spring: the bands squashing: a breath up, then down, giving a little, settling
 //   sweep: a crop, slow off and then decisive, cutting through its last ink at speed
+//   stab: the crop into the !, whose ink runs right to its end: cut shorter still, so it stops dead at speed
 //   follow: the camera, smooth in and out, landing long: the breath after the hit
 //   reveal: each slot column opening through the block
 const FEELS = {
-  calm: { snap: expo(10), land: back(1.6), spring: gather(0.01, 0.22, spring(0.7, 7.6)), sweep: cut(2.5, 0.78), follow: follow(2), reveal: spring(0.78, 7.5) },
-  snappy: { snap: expo(13), land: back(2.2), spring: gather(0.015, 0.2, spring(0.62, 8.6)), sweep: cut(3, 0.8), follow: follow(3), reveal: spring(0.66, 8.3) },
-  punchy: { snap: expo(15), land: back(2.8), spring: gather(0.025, 0.2, spring(0.56, 10)), sweep: cut(4, 0.82), follow: follow(2.5), reveal: spring(0.56, 9.5) },
+  calm: { snap: expo(10), land: back(1.6), spring: gather(0.01, 0.22, spring(0.7, 7.6)), sweep: cut(2.5, 0.78), stab: cut(2.5, 0.6), follow: follow(2), reveal: spring(0.78, 7.5) },
+  snappy: { snap: expo(13), land: back(2.2), spring: gather(0.015, 0.2, spring(0.62, 8.6)), sweep: cut(3, 0.8), stab: cut(3, 0.6), follow: follow(3), reveal: spring(0.66, 8.3) },
+  punchy: { snap: expo(15), land: back(2.8), spring: gather(0.025, 0.2, spring(0.56, 10)), sweep: cut(4, 0.82), stab: cut(4, 0.6), follow: follow(2.5), reveal: spring(0.56, 9.5) },
 };
 const EASE = FEELS[VERSION];
 
 // The score: from each state to the next, one thing at a time, each move
-// [what, sixteenths, feel, the sixteenth its contact lands on]; then how long
+// [what, sixteenths, feel, the sixteenth its contact lands on, its own easing if not its feel's]; then how long
 // each state holds, in sixteenths. Eight bars: 128 sixteenths. The contacts:
 // the first break on the downbeat of bar two, the squash on its third beat
 // (the second break and the counter on the eighths between), the crops on
@@ -108,7 +109,7 @@ const SCORE = [
   [['openTop', 3, 'snap', 16], ['openBot', 2, 'snap', 18], ['counter', 2, 'land', 20], ['stem', 6, 'spring', 24], ['cam', 7, 'follow']],
   [['w', 5, 'sweep', 48], ['cam', 5, 'follow']],
   [['w', 5, 'sweep', 64], ['cam', 5, 'follow']],
-  [['w', 3, 'sweep', 76], ['cam', 5, 'follow']], // into the !: short and sharp
+  [['w', 3, 'sweep', 76, 'stab'], ['cam', 5, 'follow']], // into the !: short and sharp
   [['top', 5, 'sweep', 104], ['cam', 5, 'follow']],
   [], // unseen: the square becomes the logo's block
   [['slot', REVEAL, 'reveal', 120]],
@@ -127,13 +128,13 @@ const reach = (ease, v) => { for (let i = 0; i <= 2000; i++) if (ease(i / 2000) 
  * runs right to the end).
  */
 const HIT = { snap: (CLOSED + S / 2) / (CLOSED + OUT), land: 1, spring: 1, reveal: 0.5 };
-function hitOf(feel, key, from) {
+function hitOf(feel, ease, key, from) {
   if (feel === 'sweep') {
     const a = STATES[from][key], b = STATES[from + 1][key];
     const gap = key === 'top' || from + 1 === 2 || from + 1 === 3 ? S : 0;
-    return reach(EASE.sweep, 1 - gap / Math.abs(b - a));
+    return reach(ease, 1 - gap / Math.abs(b - a));
   }
-  return HIT[feel] === undefined ? null : reach(EASE[feel], HIT[feel]) * (feel === 'reveal' ? 1 - 9 * STAGGER : 1);
+  return HIT[feel] === undefined ? null : reach(ease, HIT[feel]) * (feel === 'reveal' ? 1 - 9 * STAGGER : 1);
 }
 
 // The loop, laid out in time: each move placed so that its contact lands
@@ -143,17 +144,18 @@ function hitOf(feel, key, from) {
 // sixteenth after the crop is done, a follow-through, not a second event; any
 // other camera, and every hold, waits until the move before has settled.
 /** How far into a move it has visibly finished (a snap's or a crop's last stretch happens where nothing shows). */
-const settled = (feel) => (feel === 'snap' || feel === 'sweep' || feel === 'follow' ? reach(EASE[feel], 0.995) : 1);
+const settled = (feel, ease) => (feel === 'snap' || feel === 'sweep' || feel === 'follow' ? reach(ease, 0.995) : 1);
 const SEGMENTS = [];
 let acc = 0;
 let prevEnd = -Infinity; // when the move before has visibly finished
 let prevHit = -Infinity; // when the move before made contact
 STATES.forEach((_, i) => {
   if (HOLDS[i]) { SEGMENTS.push({ hold: i, t0: Math.max(acc, prevEnd) }); acc += HOLDS[i] * UNIT; }
-  SCORE[i].forEach(([key, n, feel, target], k) => {
+  SCORE[i].forEach(([key, n, feel, target, own], k) => {
     const d = n * UNIT;
     const move = d * (key === 'cam' ? 0.96 : MOVING);
-    const hit = hitOf(feel, key, i);
+    const ease = EASE[own ?? feel];
+    const hit = hitOf(feel, ease, key, i);
     let t0 = acc;
     if (hit !== null) {
       t0 = (target ?? Math.round((acc + hit * move) / UNIT)) * UNIT - hit * move;
@@ -162,8 +164,8 @@ STATES.forEach((_, i) => {
       // After a crop: the sixteenth after its contact (all it does after is out of sight); after anything else, once it has settled.
       t0 = SCORE[i][k - 1]?.[2] === 'sweep' ? Math.min(acc, (Math.floor((prevHit + 1e-9) / UNIT) + 1) * UNIT) : Math.max(acc, Math.ceil((prevEnd - 1e-9) / UNIT) * UNIT);
     }
-    SEGMENTS.push({ from: i, k, key, feel, t0, move, hit: hit === null ? null : hit * move });
-    prevEnd = t0 + move * settled(feel);
+    SEGMENTS.push({ from: i, k, key, feel, ease, t0, move, hit: hit === null ? null : hit * move });
+    prevEnd = t0 + move * settled(feel, ease);
     prevHit = hit === null ? prevEnd : t0 + hit * move;
     acc += d;
   });
@@ -219,7 +221,7 @@ function stateAt(t, aspect = 16 / 9) {
   if (s.hold !== undefined) return { q: STATES[s.hold], view: viewOf(lens(fit(STATES[s.hold]), aspect), aspect) };
   const a = STATES[s.from], b = STATES[(s.from + 1) % STATES.length];
   const u = Math.min(1, (t - s.t0) / s.move);
-  const e = EASE[s.feel](u);
+  const e = s.ease(u);
   const v = s.feel === 'sweep' ? Math.min(1, e) : e; // a crop stops dead on its mark
   const q = { ...a };
   if (s.key === 'slot') q.reveal = u; // the slots open one column after another (draw)
@@ -335,7 +337,7 @@ const across = (x, box) => Math.max(-1, Math.min(1, ((x - box[0]) / (box[2] - bo
 function cueOf(s) {
   const a = STATES[s.from], b = STATES[(s.from + 1) % STATES.length];
   const box = fit(a);
-  const ease = s.feel === 'sweep' ? (u) => Math.min(1, EASE.sweep(u)) : EASE[s.feel];
+  const ease = s.feel === 'sweep' ? (u) => Math.min(1, s.ease(u)) : s.ease;
   // Until the next move that is not the camera (a hold's sound lasts through the camera's follow and the hold).
   const next = SEGMENTS.find((x) => x.key && x.key !== 'cam' && x.t0 > s.t0 + 1e-9);
   const cue = { kind: s.feel, key: s.key, d: s.move, ease, hit: s.hit, pan: [0, 0], to: (s.from + 1) % STATES.length, until: (next ? next.t0 : PERIOD + SEGMENTS.find((x) => x.key).t0) - s.t0 };

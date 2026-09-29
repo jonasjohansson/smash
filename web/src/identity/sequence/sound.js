@@ -269,7 +269,7 @@ export function createSound({ context = null } = {}) {
     g.gain.linearRampToValueAtTime(0, t + dur);
     lp.connect(g).connect(o);
     const f0 = hz(NOTE[note]);
-    for (const [cents, mul, v] of [[-6, 1, 0.8], [6, 1, 0.2], [0, 2, 0.12]]) { // unequal, so it shimmers rather than throbs
+    for (const [cents, mul, v] of [[-6, 1, 0.88], [6, 1, 0.12], [0, 2, 0.12]]) { // unequal, so it shimmers rather than throbs
       const osc = ctx.createOscillator();
       osc.frequency.value = f0 * mul;
       osc.detune.value = cents;
@@ -347,7 +347,7 @@ export function createSound({ context = null } = {}) {
         const cc = curves((v) => ease(v * u) / ease(u));
         whoosh(t0, d * u, cc, key === 'top' ? { lo: 3600, hi: 520, q: 1.6, level: 0.2, pan } : { lo: 520, hi: 3600 + (to - 2) * 300, q: 1.6, level: 0.2, pan });
         click(hit, { note: LOCK[to] ?? 'D4', level: 0.3, pan: pan[1], bright: 2400 });
-        thump(hit, { level: to === 5 ? 0.34 : 0.16, pan: pan[1], from: 170, to: 75, len: 0.16, body: to === 5 ? 0.8 : 0 });
+        thump(hit, { level: to === 5 ? 0.34 : 0.16, pan: pan[1], from: 170, to: 75, len: to === 5 ? 0.24 : 0.16, body: to === 5 ? 1 : 0 }); // the square lands heaviest
         if (to === 5) click(hit, { level: 0.22, pan: 0, bright: 700, send: 0.1 }); // the square's weight, on small speakers too
         if (to === 4) hold(hit + 0.03, Math.max(0.3, (cue.until ?? 2) - (cue.hit ?? 0) - 0.09), { note: 'F4', level: 0.028, pan: pan[1] }); // the !: a held breath until the next move
         break;
