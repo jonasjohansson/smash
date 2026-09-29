@@ -77,7 +77,7 @@ export function createSound({ context = null } = {}) {
     vhp.type = 'highpass';
     vhp.frequency.value = 220;
     const drive = ctx.createGain(); // up into the limiter, which holds the peaks
-    drive.gain.value = 1.65;
+    drive.gain.value = 1.85;
     bus.connect(glue);
     room.connect(vhp).connect(verb).connect(wet).connect(glue);
     glue.connect(drive).connect(limit).connect(master).connect(ctx.destination);
@@ -131,7 +131,7 @@ export function createSound({ context = null } = {}) {
     lp.type = 'lowpass'; lp.frequency.value = 9000; lp.Q.value = 0.5;
     const g = ctx.createGain();
     g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(level, t + 0.0015);
+    g.gain.linearRampToValueAtTime(level * 0.6, t + 0.0015); // the noise under the note: present, not the loudest thing in the mix
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
     src.connect(hp).connect(lp).connect(g).connect(o);
     src.start(t, rnd());
@@ -175,8 +175,8 @@ export function createSound({ context = null } = {}) {
     src.stop(t + 0.06);
   }
 
-  /** Noise through a band that follows the move, loud as it moves, travelling left to right with it. */
-  function whoosh(t0, d, c, { lo, hi, q = 1, level, pan = 0, send = 0.1, type = 'bandpass' }) {
+  /** Noise through a band that follows the move, loud as it moves, travelling left to right with it; `tame`, a low-pass over it (a breath, not a hiss). */
+  function whoosh(t0, d, c, { lo, hi, q = 1, level, pan = 0, send = 0.1, type = 'bandpass', tame = null }) {
     const o = out(t0, d, pan, send);
     const src = noiseSource();
     const filter = ctx.createBiquadFilter();
@@ -186,7 +186,9 @@ export function createSound({ context = null } = {}) {
     const g = ctx.createGain();
     g.gain.value = 0;
     g.gain.setValueCurveAtTime(map(c.speed, (v, i) => level * v ** 1.4 * (i === N - 1 ? 0 : 1)), t0, d);
-    src.connect(filter).connect(g).connect(o);
+    let chain = src.connect(filter);
+    if (tame) { const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = tame; lp.Q.value = 0.5; chain = chain.connect(lp); }
+    chain.connect(g).connect(o);
     src.start(t0, rnd());
     src.stop(t0 + d + 0.05);
   }
@@ -234,6 +236,36 @@ export function createSound({ context = null } = {}) {
     }
   }
 
+  /**
+   * A held note: two voices a few cents apart and a quiet octave, through a
+   * soft low-pass; in over 20 ms, settling back a little, swelling again to
+   * the end, and out in 60 ms. The breath under a hold.
+   */
+  function hold(t, dur, { note, level = 0.025, pan = 0, send = 0.4 }) {
+    const o = out(t, dur, pan, send);
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = 1400; lp.Q.value = 0.5;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(level, t + 0.02);
+    g.gain.setTargetAtTime(level * 0.55, t + 0.02, 0.25);
+    g.gain.setValueAtTime(level * 0.55, t + dur * 0.6);
+    g.gain.linearRampToValueAtTime(level * 0.7, t + dur - 0.06);
+    g.gain.linearRampToValueAtTime(0, t + dur);
+    lp.connect(g).connect(o);
+    const f0 = hz(NOTE[note]);
+    for (const [cents, mul, v] of [[-3, 1, 0.5], [3, 1, 0.5], [0, 2, 0.12]]) {
+      const osc = ctx.createOscillator();
+      osc.frequency.value = f0 * mul;
+      osc.detune.value = cents;
+      const vg = ctx.createGain();
+      vg.gain.value = v;
+      osc.connect(vg).connect(lp);
+      osc.start(t);
+      osc.stop(t + dur + 0.02);
+    }
+  }
+
   /** A chord that opens as the move opens: each note a pair of slightly detuned voices, through a filter opening with it, left to ring. */
   function bloom(t0, d, c, { notes, level, send = 0.45, ring = 1.8 }) {
     const o = out(t0, d, 0, send);
@@ -247,6 +279,7 @@ export function createSound({ context = null } = {}) {
     g.gain.setValueCurveAtTime(env, t0, d);
     g.gain.setValueAtTime(env[N - 1], t0 + d + 0.001);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + d + ring);
+    lp.frequency.setTargetAtTime(700, t0 + d + 0.01, 0.5); // the ring darkens as it fades, like the room
     lp.connect(g).connect(o);
     notes.forEach((n, i) => {
       for (const [det, type] of [[-4, 'sine'], [4, 'triangle']]) {
@@ -286,20 +319,23 @@ export function createSound({ context = null } = {}) {
         sing(t0, d, c, { lo: hz(NOTE.D5), hi: hz(NOTE.A5), level: 0.08, pan: pan[0], floor: 0.2, ring: 0.14 });
         click(hit, { note: 'A5', level: 0.14, pan: pan[0], bright: 5000 });
         break;
-      case 'spring': // the bands: a round boing (its upper octave carries it on small speakers), and a thump where they first land
-        sing(t0, d, c, { lo: hz(NOTE.D2), hi: hz(NOTE.D3), level: 0.12, floor: 0.06, send: 0.06, ring: 0.12 });
+      case 'spring': // the bands: a round boing in three octaves (the upper ones carry it on small speakers), a thump and a knock where they first land
+        sing(t0, d, c, { lo: hz(NOTE.D2), hi: hz(NOTE.D3), level: 0.07, floor: 0.06, send: 0.06, ring: 0.12 });
         sing(t0, d, c, { lo: hz(NOTE.D3), hi: hz(NOTE.D4), level: 0.12, type: 'triangle', floor: 0.06, send: 0.12, ring: 0.1 });
-        thump(hit, { level: 0.24, from: 110, to: 52 });
+        sing(t0, d, c, { lo: hz(NOTE.D4), hi: hz(NOTE.D5), level: 0.05, floor: 0.06, send: 0.12, ring: 0.1 });
+        thump(hit, { level: 0.2, from: 110, to: 52 });
+        click(hit, { level: 0.1, pan: 0, bright: 1400, send: 0.1 });
         break;
       case 'sweep': { // a crop: air through a band that travels with the edge (falling when the edge falls), and a lock where it stops
         whoosh(t0, d, c, key === 'top' ? { lo: 3600, hi: 520, q: 1.6, level: 0.2, pan } : { lo: 520, hi: 3600 + (to - 2) * 300, q: 1.6, level: 0.2, pan });
         click(hit, { note: LOCK[to] ?? 'D4', level: 0.3, pan: pan[1], bright: 2400 });
         thump(hit, { level: to === 5 ? 0.34 : 0.16, pan: pan[1], from: 170, to: 75, len: 0.16 });
-        if (to === 4) pluck(hit, { note: 'F4', level: 0.05, pan: pan[1], ring: 1.4, send: 0.5 }); // the !: a held breath
+        if (to === 5) click(hit, { level: 0.1, pan: 0, bright: 1400, send: 0.1 }); // the square's weight, on small speakers too
+        if (to === 4) hold(hit + 0.03, Math.max(0.3, (cue.until ?? 2) - (cue.hit ?? 0) - 0.09), { note: 'F4', level: 0.028, pan: pan[1] }); // the !: a held breath until the next move
         break;
       }
       case 'follow': // the camera: a soft breath of air, drifting the way it pans: felt more than heard
-        whoosh(t0, d, c, { lo: 300, hi: 900, q: 0.8, level: 0.1, pan, send: 0.2 });
+        whoosh(t0, d, c, { lo: 300, hi: 900, q: 1.2, level: 0.2, pan, send: 0.2, tame: 1800 });
         break;
       case 'reveal': { // the logo appearing through the block: each slot column plucks its note as it opens, over the chord
         const cols = cue.columns ?? [];

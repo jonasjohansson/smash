@@ -72,64 +72,97 @@ const spring = (z, w) => {
 };
 /** Lands past its mark and comes back to it (an ease-out-back; k sets how far). */
 const back = (k) => (u) => 1 + (k + 1) * (u - 1) ** 3 + k * (u - 1) ** 2;
-/** Winds up a touch the other way, goes, overshoots a touch (an ease-in-out-back). */
-const windup = (k) => { const k2 = k * 1.525; return (u) => (u < 0.5 ? ((2 * u) ** 2 * ((k2 + 1) * 2 * u - k2)) / 2 : ((2 * u - 2) ** 2 * ((k2 + 1) * (2 * u - 2) + k2) + 2) / 2); };
 /** In and out: slow off, fast through, slow to rest (the power sets how hard). */
 const inOut = (k) => (u) => (u < 0.5 ? 2 ** (k - 1) * u ** k : 1 - (-2 * u + 2) ** k / 2);
 const expo = (k) => (u) => (u <= 0 ? 0 : u >= 1 ? 1 : u < 0.5 ? 2 ** (2 * k * u - k) / 2 : (2 - 2 ** (-2 * k * u + k)) / 2);
 /** A breath the other way first (k of the move, over its first share a), then the spring: a squash with weight. */
 const gather = (k, a, sp) => (u) => (u < a ? -k * Math.sin((Math.PI * u) / a) : sp((u - a) / (1 - a)));
+/** An in-out cut short at s of its way: slow off, and still moving when it gets there, so it ends as a cut, not a settle. */
+const cut = (k, s) => { const e = inOut(k), end = e(s); return (u) => e(s * u) / end; };
+/** The camera: in and out, landing long (it peaks early and settles slowly), a follow-through. */
+const follow = (k) => { const e = inOut(k); return (u) => e(u ** 0.75); };
 
 // The feel of a move, per version: how it gets going and how it lands.
 //   snap: a slot's end breaking out, all but still and then at once
 //   land: the counter rising, a touch past its mark and back
 //   spring: the bands squashing: a breath up, then down, giving a little, settling
-//   sweep: a crop, a breath back first, then decisive; it stops dead on its mark
-//   follow: the camera, smooth in and out, the breath after the hit
+//   sweep: a crop, slow off and then decisive, cutting through its last ink at speed
+//   follow: the camera, smooth in and out, landing long: the breath after the hit
 //   reveal: each slot column opening through the block
 const FEELS = {
-  calm: { snap: expo(10), land: back(1.4), spring: gather(0.02, 0.12, spring(0.7, 7.6)), sweep: windup(0.3), follow: inOut(2), reveal: spring(0.78, 7.5) },
-  snappy: { snap: expo(13), land: back(1.9), spring: gather(0.03, 0.12, spring(0.62, 8.6)), sweep: windup(0.55), follow: inOut(3), reveal: spring(0.66, 8.3) },
-  punchy: { snap: expo(15), land: back(2.6), spring: gather(0.045, 0.12, spring(0.56, 10)), sweep: windup(0.9), follow: inOut(2.5), reveal: spring(0.56, 9.5) },
+  calm: { snap: expo(10), land: back(1.6), spring: gather(0.01, 0.22, spring(0.7, 7.6)), sweep: cut(2.5, 0.78), follow: follow(2), reveal: spring(0.78, 7.5) },
+  snappy: { snap: expo(13), land: back(2.2), spring: gather(0.015, 0.2, spring(0.62, 8.6)), sweep: cut(3, 0.8), follow: follow(3), reveal: spring(0.66, 8.3) },
+  punchy: { snap: expo(15), land: back(2.8), spring: gather(0.025, 0.2, spring(0.56, 10)), sweep: cut(4, 0.82), follow: follow(2.5), reveal: spring(0.56, 9.5) },
 };
 const EASE = FEELS[VERSION];
 
 // The score: from each state to the next, one thing at a time, each move
-// [what, sixteenths, feel]; then how long each state holds, in sixteenths.
-// Eight bars: 128 sixteenths.
+// [what, sixteenths, feel, the sixteenth its contact lands on]; then how long
+// each state holds, in sixteenths. Eight bars: 128 sixteenths. The contacts:
+// the first break on the downbeat of bar two, the squash on its third beat
+// (the second break and the counter on the eighths between), the crops on
+// the downbeats of bars four and five, into the ! a beat early (76), the drop
+// to the square on bar seven's third beat, the logo back on bar eight's.
 const REVEAL = 9;
 const SCORE = [
-  [['openTop', 3, 'snap'], ['openBot', 3, 'snap'], ['counter', 1, 'land'], ['stem', 6, 'spring'], ['cam', 7, 'follow']],
-  [['w', 5, 'sweep'], ['cam', 5, 'follow']],
-  [['w', 5, 'sweep'], ['cam', 5, 'follow']],
-  [['w', 5, 'sweep'], ['cam', 5, 'follow']],
-  [['top', 5, 'sweep'], ['cam', 5, 'follow']],
+  [['openTop', 3, 'snap', 16], ['openBot', 2, 'snap', 18], ['counter', 2, 'land', 20], ['stem', 6, 'spring', 24], ['cam', 7, 'follow']],
+  [['w', 5, 'sweep', 48], ['cam', 5, 'follow']],
+  [['w', 5, 'sweep', 64], ['cam', 5, 'follow']],
+  [['w', 5, 'sweep', 76], ['cam', 5, 'follow']],
+  [['top', 5, 'sweep', 104], ['cam', 5, 'follow']],
   [], // unseen: the square becomes the logo's block
-  [['slot', REVEAL, 'reveal']],
+  [['slot', REVEAL, 'reveal', 120]],
 ];
-const HOLDS = [15, 10, 6, 6, 14, 8, 0]; // the logo, the modular mark, the S M, the S, the !, the square
+const HOLDS = [15, 10, 6, 2, 18, 8, 0]; // the logo, the modular mark, the S M, the S (quick, into the !), the ! (held), the square
 const MOVING = 0.86; // of its sixteenths, how much a move takes; the rest is a breath before the next
 const STAGGER = 0.5 / (REVEAL * MOVING); // the reveal: each slot column opens a thirty-second after the one before
 
 /** The first u (0 to 1) where an easing reaches v, or 1. */
 const reach = (ease, v) => { for (let i = 0; i <= 2000; i++) if (ease(i / 2000) >= v) return i / 2000; return 1; };
-/** Where in its move a move makes contact, as a value of its easing: a slot's end fully through the edge, a landing, a lock. */
-const HIT = { snap: (CLOSED + S / 2) / (CLOSED + OUT), land: 1, spring: 1, sweep: 1, reveal: 1 };
-const hitOf = (feel) => (HIT[feel] === undefined ? null : reach(EASE[feel], HIT[feel]) * (feel === 'reveal' ? 1 - 9 * STAGGER : 1));
+/**
+ * Where in its move a move makes contact, as a value of its easing: a slot's
+ * end fully through the edge; a landing; a column half open; and for a crop,
+ * where the last ink it takes goes (after that the edge only runs on through
+ * a slot, unseen: a slot's width before the end, but for the !, whose ink
+ * runs right to the end).
+ */
+const HIT = { snap: (CLOSED + S / 2) / (CLOSED + OUT), land: 1, spring: 1, reveal: 0.5 };
+function hitOf(feel, key, from) {
+  if (feel === 'sweep') {
+    const a = STATES[from][key], b = STATES[from + 1][key];
+    const gap = key === 'top' || from + 1 === 2 || from + 1 === 3 ? S : 0;
+    return reach(EASE.sweep, 1 - gap / Math.abs(b - a));
+  }
+  return HIT[feel] === undefined ? null : reach(EASE[feel], HIT[feel]) * (feel === 'reveal' ? 1 - 9 * STAGGER : 1);
+}
 
-// The loop, laid out in time: each move on the grid, then started a little
-// early, just enough that its contact lands exactly on a sixteenth (the hit on
-// the beat, the move leading into it), taken out of the breath before it.
+// The loop, laid out in time: each move placed so that its contact lands
+// exactly on its sixteenth (the hit on the beat, the move leading into it),
+// never starting before the move before it has visibly settled (then its hit
+// goes a sixteenth later). A camera after a crop starts on the first
+// sixteenth after the crop is done, a follow-through, not a second event; any
+// other camera, and every hold, waits until the move before has settled.
+/** How far into a move it has visibly finished (a snap's or a crop's last stretch happens where nothing shows). */
+const settled = (feel) => (feel === 'snap' || feel === 'sweep' || feel === 'follow' ? reach(EASE[feel], 0.995) : 1);
 const SEGMENTS = [];
 let acc = 0;
+let prevEnd = -Infinity; // when the move before has visibly finished
 STATES.forEach((_, i) => {
-  if (HOLDS[i]) { SEGMENTS.push({ hold: i, t0: acc }); acc += HOLDS[i] * UNIT; }
-  SCORE[i].forEach(([key, n, feel], k) => {
+  if (HOLDS[i]) { SEGMENTS.push({ hold: i, t0: Math.max(acc, prevEnd) }); acc += HOLDS[i] * UNIT; }
+  SCORE[i].forEach(([key, n, feel, target], k) => {
     const d = n * UNIT;
     const move = d * (key === 'cam' ? 0.96 : MOVING);
-    const hit = hitOf(feel);
-    const lead = hit === null ? 0 : (hit * move) % UNIT;
-    SEGMENTS.push({ from: i, k, key, feel, t0: acc - (lead > 1e-6 && UNIT - lead > 1e-6 ? lead : 0), move, hit: hit === null ? null : hit * move });
+    const hit = hitOf(feel, key, i);
+    let t0 = acc;
+    if (hit !== null) {
+      t0 = (target ?? Math.round((acc + hit * move) / UNIT)) * UNIT - hit * move;
+      while (t0 < prevEnd - 1e-9) t0 += UNIT;
+    } else if (key === 'cam') {
+      const next = Math.ceil((prevEnd - 1e-9) / UNIT) * UNIT;
+      t0 = SCORE[i][k - 1]?.[2] === 'sweep' ? Math.min(acc, next) : Math.max(acc, next);
+    }
+    SEGMENTS.push({ from: i, k, key, feel, t0, move, hit: hit === null ? null : hit * move });
+    prevEnd = t0 + move * settled(feel);
     acc += d;
   });
 });
@@ -237,7 +270,7 @@ function slots(q) {
   const bot = h - CLOSED + (OUT + CLOSED) * q.openBot; // its lower one, off the bottom
   const full = (i) => ({ pts: [[c(i), -OUT], [c(i), h + OUT]], col: i });
   return { h, list: [
-    { pts: [[c(0), top], [c(0), up], [c(1), up]], a: true, b: true, col: 0 }, // S
+    { pts: [[c(0), top], [c(0), up], [c(1) - S / 2, up]], a: true, b: true, col: 0 }, // S
     { pts: [[-OUT, lo], [c(0), lo], [c(0), bot]], b: true, col: 0 },
     full(1),
     { pts: [[c(2), CLOSED], [c(2), h + OUT]], a: true, col: 2 }, // M
@@ -246,7 +279,7 @@ function slots(q) {
     { pts: [[c(5), Math.min(q.counter, y2 - S / 2)], [c(5), y2]], a: true, col: 5 }, // A: the counter, stopping on the crossbar
     { pts: [[c(5), y3], [c(5), h + OUT]], col: 5 },
     full(6),
-    { pts: [[c(7), top], [c(7), up], [c(8), up]], a: true, b: true, col: 7 }, // S
+    { pts: [[c(7), top], [c(7), up], [c(8) - S / 2, up]], a: true, b: true, col: 7 }, // S
     { pts: [[c(6), lo], [c(7), lo], [c(7), bot]], b: true, col: 7 },
     full(8),
     { pts: [[c(9), -OUT], [c(9), y2]], col: 9 }, // H
@@ -271,7 +304,7 @@ function draw(q) {
     const sw = widthOf(sl.col);
     if (sw <= 0.05) continue;
     const xs = sl.pts.map((p) => p[0]), ys = sl.pts.map((p) => p[1]);
-    if (Math.min(...xs) - sw / 2 > w || Math.max(...xs) + sw / 2 < 0 || Math.max(...ys) + sw / 2 < top || Math.min(...ys) - sw / 2 > h) continue; // outside the crop
+    if (Math.min(...xs) - sw / 2 >= w - 1e-6 || Math.max(...xs) + sw / 2 <= 1e-6 || Math.max(...ys) + sw / 2 <= top + 1e-6 || Math.min(...ys) - sw / 2 >= h - 1e-6) continue; // outside the crop (touching counts as outside)
     cuts += `<path d="${filleted(sl.pts, M.bend)}" fill="none" stroke="#000" stroke-width="${f(sw)}" stroke-linecap="butt" stroke-linejoin="round"/>`;
     for (const [x, y] of [sl.a && sl.pts[0], sl.b && sl.pts.at(-1)].filter(Boolean)) cuts += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(sw / 2)}" fill="#000"/>`;
   }
@@ -301,14 +334,16 @@ function cueOf(s) {
   const a = STATES[s.from], b = STATES[(s.from + 1) % STATES.length];
   const box = fit(a);
   const ease = s.feel === 'sweep' ? (u) => Math.min(1, EASE.sweep(u)) : EASE[s.feel];
-  const cue = { kind: s.feel, key: s.key, d: s.move, ease, hit: s.hit, pan: [0, 0], to: (s.from + 1) % STATES.length };
+  // Until the next move that is not the camera (a hold's sound lasts through the camera's follow and the hold).
+  const next = SEGMENTS.find((x) => x.key && x.key !== 'cam' && x.t0 > s.t0 + 1e-9);
+  const cue = { kind: s.feel, key: s.key, d: s.move, ease, hit: s.hit, pan: [0, 0], to: (s.from + 1) % STATES.length, until: (next ? next.t0 : PERIOD + SEGMENTS.find((x) => x.key).t0) - s.t0 };
   if (s.key === 'w') cue.pan = [across(a.w, box), across(b.w, box)];
   else if (s.key === 'openTop' || s.key === 'openBot') cue.pan = [across(c(0), box), across(c(7), box)]; // the two S's
   else if (s.key === 'counter') cue.pan = [across(c(5), box), across(c(5), box)];
   else if (s.key === 'cam') { const B2 = fit(b); const mid = (bx) => (bx[0] + bx[2]) / 2; cue.pan = [0, Math.max(-1, Math.min(1, ((mid(B2) - mid(box)) / (box[2] - box[0])) * 2))]; }
   else if (s.key === 'slot') {
     // Each slot column: when it opens (its own arrival) and where it is, left to right.
-    const first = reach(EASE.reveal, 1) * (1 - 9 * STAGGER);
+    const first = reach(EASE.reveal, HIT.reveal) * (1 - 9 * STAGGER);
     cue.columns = Array.from({ length: 10 }, (_, i) => ({ at: (i * STAGGER + first) * s.move, pan: across(c(i), fit(b)) }));
   }
   return cue;
@@ -366,11 +401,11 @@ function listen() {
     if (!seg.key) continue;
     let dt = seg.t0 - now;
     if (dt < -PERIOD / 2) dt += PERIOD;
-    if (dt < -0.02 || dt > 0.15) continue;
+    if (dt < -0.02 || dt > 0.15 + sound.latency()) continue;
     const id = Math.round((t + dt) * 1000);
     if (scheduled.has(id)) continue;
     scheduled.add(id);
-    sound.play(cueOf(seg), sound.now() + Math.max(0, dt - sound.latency()));
+    sound.play(cueOf(seg), sound.now() + Math.max(0, dt + 1 / 60 - sound.latency()));
   }
   if (scheduled.size > 64) [...scheduled].slice(0, 32).forEach((x) => scheduled.delete(x));
 }
@@ -420,7 +455,7 @@ dl.addEventListener('click', async (e) => {
   const [ink, paper] = paperOn ? ['#000', '#fff'] : ['#fff', '#000'];
   const asked = /^(\d+)x(\d+)$/.exec(query.get('size') ?? '');
   const [width, height] = asked ? [+asked[1], +asked[2]] : e.shiftKey ? [1920, 1080] : e.altKey ? [1080, 1080] : [1600, 1200];
-  const start = HOLDS[0] * UNIT - 2 * UNIT;
+  const start = (HOLDS[0] - 3) * UNIT; // on a whole frame, so every hit on the beat lands on a frame
   try {
     const { renderVideo } = await import('./export.js');
     const blob = await renderVideo({ period: PERIOD, start, svgAt: (s) => svgAt(s, width / height), sound: loopSound, ink, paper, width, height, onProgress: (p) => ring.setAttribute('stroke-dasharray', `${Math.round(p * 100)} 100`) });

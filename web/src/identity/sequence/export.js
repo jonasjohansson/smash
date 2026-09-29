@@ -66,11 +66,13 @@ export async function renderVideo({ period, start = 0, svgAt, sound, ink, paper,
     const aenc = new AudioEncoder({ output: (chunk, meta) => muxer.addAudioChunk(chunk, meta), error: (e) => { failed = e; } });
     aenc.configure(audio);
     const n = buffer.length;
-    const shift = Math.round(start * rate) + (audio.codec.startsWith('mp4a') ? AAC_PRIMING : 0);
+    const priming = audio.codec.startsWith('mp4a') ? AAC_PRIMING : 0;
+    const shift = Math.round(start * rate) + priming;
     const chans = Array.from({ length: channels }, (_, c) => buffer.getChannelData(c));
     const block = 4096;
-    for (let i = 0; i < n; i += block) {
-      const m = Math.min(block, n - i);
+    const feed = n - priming; // with the priming, exactly the loop's length: the sound track ends with the picture
+    for (let i = 0; i < feed; i += block) {
+      const m = Math.min(block, feed - i);
       const data = new Float32Array(m * channels);
       chans.forEach((ch, c) => { for (let j = 0; j < m; j++) data[c * m + j] = ch[(((i + j + shift) % n) + n) % n]; });
       aenc.encode(new AudioData({ format: 'f32-planar', sampleRate: rate, numberOfFrames: m, numberOfChannels: channels, timestamp: Math.round((i / rate) * 1e6), data }));
@@ -82,17 +84,22 @@ export async function renderVideo({ period, start = 0, svgAt, sound, ink, paper,
   // Then every frame: the SVG drawn onto a canvas over the ground.
   const canvas = new OffscreenCanvas(width, height);
   const ctx = canvas.getContext('2d');
+  // Each frame drawn at twice the size and scaled down, so edges are smoothed once, evenly, wherever they fall.
+  const big = new OffscreenCanvas(width * 2, height * 2);
+  const bctx = big.getContext('2d');
   const frames = Math.round(period * fps);
   const constant = video.bitrateMode === 'quantizer';
   for (let i = 0; i < frames; i++) {
     if (failed) throw failed;
-    const svg = svgAt(start + i / fps).replace('<svg ', `<svg width="${width}" height="${height}" color="${ink}" `);
+    const svg = svgAt(start + i / fps).replace('<svg ', `<svg width="${width * 2}" height="${height * 2}" color="${ink}" `);
     const img = new Image();
     img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
     await img.decode();
-    ctx.fillStyle = paper;
-    ctx.fillRect(0, 0, width, height);
-    ctx.drawImage(img, 0, 0, width, height);
+    bctx.fillStyle = paper;
+    bctx.fillRect(0, 0, width * 2, height * 2);
+    bctx.drawImage(img, 0, 0, width * 2, height * 2);
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(big, 0, 0, width, height);
     const frame = new VideoFrame(canvas, { timestamp: Math.round((i / fps) * 1e6), duration: Math.round(1e6 / fps) });
     venc.encode(frame, { keyFrame: i % (fps * 2) === 0, ...(constant ? { avc: { quantizer: 10 } } : {}) });
     frame.close();
