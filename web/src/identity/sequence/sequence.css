@@ -22,5 +22,6 @@ body { overflow: hidden; }
 .download[data-busy] .i-ring { display: inline; }
 .download[data-busy] .i-arrow { display: none; }
 .download[data-busy] { cursor: progress; }
-@media (pointer: coarse) { .bar button { width: 44px; height: 44px; padding: 14px; } }
+@media (pointer: coarse) { .bar button { width: 44px; height: 44px; padding: 14px; } .scrub { height: 44px; } }
+@media (max-width: 359px) { .bar { gap: 4px; padding: 0 8px 8px; } }
 .bar :focus-visible { outline: 1px solid var(--ink); outline-offset: 2px; }

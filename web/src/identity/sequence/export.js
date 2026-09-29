@@ -51,6 +51,8 @@ export async function renderVideo({ period, start = 0, svgAt, sound, ink, paper,
     { codec: 'opus', sampleRate: rate, numberOfChannels: channels, bitrate: 192000 },
   ]) : null;
 
+  const frames = Math.round(period * fps);
+  const endUs = (frames / fps) * 1e6; // where the picture ends: the sound ends there too
   const muxer = new Muxer({
     target: new ArrayBufferTarget(),
     video: { codec: 'avc', width, height, frameRate: fps },
@@ -63,14 +65,14 @@ export async function renderVideo({ period, start = 0, svgAt, sound, ink, paper,
 
   // The sound first: the loop turned round to the file's start, and ahead by the encoder's priming.
   if (audio) {
-    const aenc = new AudioEncoder({ output: (chunk, meta) => muxer.addAudioChunk(chunk, meta), error: (e) => { failed = e; } });
+    const aenc = new AudioEncoder({ output: (chunk, meta) => { if (chunk.timestamp < endUs - 1) muxer.addAudioChunk(chunk, meta); }, error: (e) => { failed = e; } });
     aenc.configure(audio);
     const n = buffer.length;
     const priming = audio.codec.startsWith('mp4a') ? AAC_PRIMING : 0;
     const shift = Math.round(start * rate) + priming;
     const chans = Array.from({ length: channels }, (_, c) => buffer.getChannelData(c));
     const block = 4096;
-    const feed = n - priming; // with the priming, exactly the loop's length: the sound track ends with the picture
+    const feed = Math.min(n, Math.round((frames / fps) * rate)) - priming; // with the priming, exactly the picture's length
     for (let i = 0; i < feed; i += block) {
       const m = Math.min(block, feed - i);
       const data = new Float32Array(m * channels);
@@ -87,7 +89,6 @@ export async function renderVideo({ period, start = 0, svgAt, sound, ink, paper,
   // Each frame drawn at twice the size and scaled down, so edges are smoothed once, evenly, wherever they fall.
   const big = new OffscreenCanvas(width * 2, height * 2);
   const bctx = big.getContext('2d');
-  const frames = Math.round(period * fps);
   const constant = video.bitrateMode === 'quantizer';
   for (let i = 0; i < frames; i++) {
     if (failed) throw failed;

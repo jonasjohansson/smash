@@ -108,12 +108,12 @@ const SCORE = [
   [['openTop', 3, 'snap', 16], ['openBot', 2, 'snap', 18], ['counter', 2, 'land', 20], ['stem', 6, 'spring', 24], ['cam', 7, 'follow']],
   [['w', 5, 'sweep', 48], ['cam', 5, 'follow']],
   [['w', 5, 'sweep', 64], ['cam', 5, 'follow']],
-  [['w', 5, 'sweep', 76], ['cam', 5, 'follow']],
+  [['w', 3, 'sweep', 76], ['cam', 5, 'follow']], // into the !: short and sharp
   [['top', 5, 'sweep', 104], ['cam', 5, 'follow']],
   [], // unseen: the square becomes the logo's block
   [['slot', REVEAL, 'reveal', 120]],
 ];
-const HOLDS = [15, 10, 6, 2, 18, 8, 0]; // the logo, the modular mark, the S M, the S (quick, into the !), the ! (held), the square
+const HOLDS = [15, 10, 6, 4, 18, 8, 0]; // the logo, the modular mark, the S M, the S (brief, into the !), the ! (held), the square
 const MOVING = 0.86; // of its sixteenths, how much a move takes; the rest is a breath before the next
 const STAGGER = 0.5 / (REVEAL * MOVING); // the reveal: each slot column opens a thirty-second after the one before
 
@@ -147,6 +147,7 @@ const settled = (feel) => (feel === 'snap' || feel === 'sweep' || feel === 'foll
 const SEGMENTS = [];
 let acc = 0;
 let prevEnd = -Infinity; // when the move before has visibly finished
+let prevHit = -Infinity; // when the move before made contact
 STATES.forEach((_, i) => {
   if (HOLDS[i]) { SEGMENTS.push({ hold: i, t0: Math.max(acc, prevEnd) }); acc += HOLDS[i] * UNIT; }
   SCORE[i].forEach(([key, n, feel, target], k) => {
@@ -158,11 +159,12 @@ STATES.forEach((_, i) => {
       t0 = (target ?? Math.round((acc + hit * move) / UNIT)) * UNIT - hit * move;
       while (t0 < prevEnd - 1e-9) t0 += UNIT;
     } else if (key === 'cam') {
-      const next = Math.ceil((prevEnd - 1e-9) / UNIT) * UNIT;
-      t0 = SCORE[i][k - 1]?.[2] === 'sweep' ? Math.min(acc, next) : Math.max(acc, next);
+      // After a crop: the sixteenth after its contact (all it does after is out of sight); after anything else, once it has settled.
+      t0 = SCORE[i][k - 1]?.[2] === 'sweep' ? Math.min(acc, (Math.floor((prevHit + 1e-9) / UNIT) + 1) * UNIT) : Math.max(acc, Math.ceil((prevEnd - 1e-9) / UNIT) * UNIT);
     }
     SEGMENTS.push({ from: i, k, key, feel, t0, move, hit: hit === null ? null : hit * move });
     prevEnd = t0 + move * settled(feel);
+    prevHit = hit === null ? prevEnd : t0 + hit * move;
     acc += d;
   });
 });
@@ -471,6 +473,7 @@ dl.addEventListener('click', async (e) => {
 });
 addEventListener('keydown', (e) => {
   if (e.target.closest?.('input')) return;
+  if (e.key === ' ' && e.target.closest?.('button')) return; // a focused button takes its own space
   if (e.metaKey || e.ctrlKey || e.altKey) return; // the browser's own shortcuts
   if (e.key === ' ') { e.preventDefault(); setPaused(!paused); }
   else if (e.key === 'ArrowRight') step(1);

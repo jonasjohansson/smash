@@ -151,7 +151,7 @@ export function createSound({ context = null } = {}) {
   }
 
   /** A thump: a low sine falling in pitch, and a soft knock, the weight of something landing. */
-  function thump(t, { level = 0.5, pan = 0, from = 92, to = 44, len = 0.26 }) {
+  function thump(t, { level = 0.5, pan = 0, from = 92, to = 44, len = 0.26, body = 0 }) {
     const o = out(t, 0, pan, 0.06);
     const osc = ctx.createOscillator();
     osc.frequency.setValueAtTime(from, t);
@@ -161,6 +161,21 @@ export function createSound({ context = null } = {}) {
     g.gain.linearRampToValueAtTime(level, t + 0.004);
     g.gain.exponentialRampToValueAtTime(0.0001, t + len);
     osc.connect(g).connect(o);
+    if (body) {
+      // Its body: the same sine driven into soft saturation, only the harmonics kept (420 Hz to 2.4 kHz), so a phone or a laptop hears the weight too.
+      const pre = ctx.createGain();
+      pre.gain.value = 4;
+      const ws = ctx.createWaveShaper();
+      ws.curve = Float32Array.from({ length: 2048 }, (_, i) => Math.tanh(3 * (i / 1023.5 - 1)));
+      ws.oversample = '4x';
+      const hp = ctx.createBiquadFilter();
+      hp.type = 'highpass'; hp.frequency.value = 420; hp.Q.value = 0.7;
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass'; lp.frequency.value = 2400;
+      const bg = ctx.createGain();
+      bg.gain.value = body;
+      osc.connect(pre).connect(ws).connect(hp).connect(lp).connect(bg).connect(g);
+    }
     osc.start(t);
     osc.stop(t + len + 0.02);
     const src = noiseSource();
@@ -254,7 +269,7 @@ export function createSound({ context = null } = {}) {
     g.gain.linearRampToValueAtTime(0, t + dur);
     lp.connect(g).connect(o);
     const f0 = hz(NOTE[note]);
-    for (const [cents, mul, v] of [[-3, 1, 0.5], [3, 1, 0.5], [0, 2, 0.12]]) {
+    for (const [cents, mul, v] of [[-6, 1, 0.8], [6, 1, 0.2], [0, 2, 0.12]]) { // unequal, so it shimmers rather than throbs
       const osc = ctx.createOscillator();
       osc.frequency.value = f0 * mul;
       osc.detune.value = cents;
@@ -278,8 +293,8 @@ export function createSound({ context = null } = {}) {
     const env = map(c.pos, (p, i) => level * Math.max(0, Math.min(1.08, p)) * Math.min(1, (i / (N - 1)) * 12));
     g.gain.setValueCurveAtTime(env, t0, d);
     g.gain.setValueAtTime(env[N - 1], t0 + d + 0.001);
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + d + ring);
-    lp.frequency.setTargetAtTime(700, t0 + d + 0.01, 0.5); // the ring darkens as it fades, like the room
+    g.gain.setTargetAtTime(0, t0 + d + 0.002, 0.45); // rings on over the logo's hold
+    lp.frequency.setTargetAtTime(700, t0 + d + 0.01, 0.5); // and darkens as it fades, like the room
     lp.connect(g).connect(o);
     notes.forEach((n, i) => {
       for (const [det, type] of [[-4, 'sine'], [4, 'triangle']]) {
@@ -322,15 +337,18 @@ export function createSound({ context = null } = {}) {
       case 'spring': // the bands: a round boing in three octaves (the upper ones carry it on small speakers), a thump and a knock where they first land
         sing(t0, d, c, { lo: hz(NOTE.D2), hi: hz(NOTE.D3), level: 0.07, floor: 0.06, send: 0.06, ring: 0.12 });
         sing(t0, d, c, { lo: hz(NOTE.D3), hi: hz(NOTE.D4), level: 0.12, type: 'triangle', floor: 0.06, send: 0.12, ring: 0.1 });
-        sing(t0, d, c, { lo: hz(NOTE.D4), hi: hz(NOTE.D5), level: 0.05, floor: 0.06, send: 0.12, ring: 0.1 });
-        thump(hit, { level: 0.2, from: 110, to: 52 });
-        click(hit, { level: 0.1, pan: 0, bright: 1400, send: 0.1 });
+        sing(t0, d, c, { lo: hz(NOTE.D4), hi: hz(NOTE.D5), level: 0.08, floor: 0.06, send: 0.12, ring: 0.1 });
+        thump(hit, { level: 0.2, from: 110, to: 52, body: 1 });
+        click(hit, { level: 0.24, pan: 0, bright: 700, send: 0.1 });
         break;
       case 'sweep': { // a crop: air through a band that travels with the edge (falling when the edge falls), and a lock where it stops
-        whoosh(t0, d, c, key === 'top' ? { lo: 3600, hi: 520, q: 1.6, level: 0.2, pan } : { lo: 520, hi: 3600 + (to - 2) * 300, q: 1.6, level: 0.2, pan });
+        // The air stops at the lock: after it the edge only runs on through a slot, unseen.
+        const u = Math.min(1, ((cue.hit ?? d) + 0.01) / d);
+        const cc = curves((v) => ease(v * u) / ease(u));
+        whoosh(t0, d * u, cc, key === 'top' ? { lo: 3600, hi: 520, q: 1.6, level: 0.2, pan } : { lo: 520, hi: 3600 + (to - 2) * 300, q: 1.6, level: 0.2, pan });
         click(hit, { note: LOCK[to] ?? 'D4', level: 0.3, pan: pan[1], bright: 2400 });
-        thump(hit, { level: to === 5 ? 0.34 : 0.16, pan: pan[1], from: 170, to: 75, len: 0.16 });
-        if (to === 5) click(hit, { level: 0.1, pan: 0, bright: 1400, send: 0.1 }); // the square's weight, on small speakers too
+        thump(hit, { level: to === 5 ? 0.34 : 0.16, pan: pan[1], from: 170, to: 75, len: 0.16, body: to === 5 ? 0.8 : 0 });
+        if (to === 5) click(hit, { level: 0.22, pan: 0, bright: 700, send: 0.1 }); // the square's weight, on small speakers too
         if (to === 4) hold(hit + 0.03, Math.max(0.3, (cue.until ?? 2) - (cue.hit ?? 0) - 0.09), { note: 'F4', level: 0.028, pan: pan[1] }); // the !: a held breath until the next move
         break;
       }
@@ -340,7 +358,7 @@ export function createSound({ context = null } = {}) {
       case 'reveal': { // the logo appearing through the block: each slot column plucks its note as it opens, over the chord
         const cols = cue.columns ?? [];
         cols.forEach((col, i) => pluck(t0 + col.at, { note: ARPEGGIO[i], level: i === cols.length - 1 ? 0.13 : 0.11, pan: col.pan, ring: i === cols.length - 1 ? 1.1 : 0.55 }));
-        bloom(t0, d, c, { notes: ['D3', 'A3', 'D4', 'F4', 'A4', 'E5'], level: 0.16, ring: 2 });
+        bloom(t0, d, c, { notes: ['D3', 'A3', 'D4', 'F4', 'A4', 'E5'], level: 0.16, ring: 2.4 });
         if (cols.length) thump(t0 + cols[0].at, { level: 0.24, from: 96, to: 49, len: 0.4 });
         break;
       }
