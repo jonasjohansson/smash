@@ -12,7 +12,8 @@
 // and left of its bend).
 //
 // Click or space pauses; the arrows step from one to the next; i inverts; s
-// (or the speaker) turns the sound on, each move's own (sound.js).
+// (or the speaker) turns the sound on, each move's own (sound.js); p switches
+// to the punchy version and back (?punchy).
 // ?t=0.5 seeks (a share of the loop) and pauses; ?at=2 holds one of the five.
 
 import { MODULAR_DEFAULTS as M } from '../modular.js';
@@ -35,35 +36,54 @@ const STATES = [
   { ...MODULAR, w: c(1) - S / 2 }, // the S: 83.56
   { ...MODULAR, w: B, top: M.stem + 2 * S + B }, // the square in the S's bottom left corner: 31.78 × 31.78
 ];
-const HOLD = [1.7, 1.2, 1.2, 1.1, 1.5]; // seconds on each
-const BEAT = 0.12; // a breath after each move, before the next
+// Two versions: calm (the default) and punchy (?punchy, or p): shorter moves,
+// sharper snaps, bigger overshoots, bouncier springs, a snappier camera.
+const PUNCHY = new URLSearchParams(location.search).has('punchy');
+
+/** A damped spring from 0 to 1: damping z, stiffness w (per the move's length). */
+const spring = (z, w) => (u) => { const r = Math.sqrt(1 - z * z); return 1 - Math.exp(-z * w * u) * (Math.cos(w * r * u) + (z / r) * Math.sin(w * r * u)); };
+/** Lands past its mark by about `over` and comes back to it (an ease-out-back). */
+const back = (c) => (u) => 1 + (c + 1) * (u - 1) ** 3 + c * (u - 1) ** 2;
+const expo = (k) => (u) => (u <= 0 ? 0 : u >= 1 ? 1 : u < 0.5 ? 2 ** (2 * k * u - k) / 2 : (2 - 2 ** (-2 * k * u + k)) / 2);
 
 // The feel of a move: how it gets going and how it lands.
 const EASE = {
-  // Smooth in and out: a thing that fades away.
-  smooth: (u) => (u < 0.5 ? 4 * u ** 3 : 1 - (-2 * u + 2) ** 3 / 2),
+  // Drawn: the stamp's outline, erased along itself (and drawn back on).
+  draw: (u) => (u < 0.5 ? 4 * u ** 3 : 1 - (-2 * u + 2) ** 3 / 2),
   // A decisive sweep: slow off the mark, fast through, gentle to rest.
   sweep: (u) => (u < 0.5 ? 8 * u ** 4 : 1 - (-2 * u + 2) ** 4 / 2),
   // A snap: all but still, then at once.
-  snap: (u) => (u <= 0 ? 0 : u >= 1 ? 1 : u < 0.5 ? 2 ** (20 * u - 10) / 2 : (2 - 2 ** (-20 * u + 10)) / 2),
+  snap: expo(10),
   // Lands a touch past its mark, and comes back to it.
-  land: (u) => 1 + 2.4 * (u - 1) ** 3 + 1.4 * (u - 1) ** 2,
-  // A spring: gets there, gives a little, settles (damping 0.7).
-  spring: (u) => { const z = 0.7, w = 11, r = Math.sqrt(1 - z * z); return 1 - Math.exp(-z * w * u) * (Math.cos(w * r * u) + (z / r) * Math.sin(w * r * u)); },
+  land: back(1.4),
+  // A spring: gets there, gives a little, settles.
+  spring: spring(0.7, 11),
   // The camera: a softer spring, a long tail.
-  follow: (u) => { const z = 0.82, w = 9, r = Math.sqrt(1 - z * z); return 1 - Math.exp(-z * w * u) * (Math.cos(w * r * u) + (z / r) * Math.sin(w * r * u)); },
+  follow: spring(0.82, 9),
+  // Punchy: the same moves, harder.
+  drawP: (u) => 1 - (1 - u) ** 5, // off at once, a long tail
+  sweepP: (u) => (u < 0.5 ? 16 * u ** 5 : 1 - (-2 * u + 2) ** 5 / 2),
+  snapP: expo(14),
+  landP: back(2.6),
+  springP: spring(0.6, 15), // about a tenth past: the bands never squash thinner than a slot
+  followP: spring(0.6, 13),
 };
 
 // From each to the next, one thing at a time, each its own move: [what, seconds, feel, the breath after it].
-// The frame thins away; the S's slots break out at the top, then at the bottom;
+// The outline is erased; the S's slots break out at the top, then at the bottom;
 // the counter rises; the bands squash about the middle; a crop across, then down;
 // and only then the camera, to frame what is left.
-const STEPS = [
-  [['frame', 1.6, 'smooth', 0.45], ['openTop', 0.5, 'snap'], ['openBot', 0.5, 'snap'], ['counter', 0.6, 'land'], ['stem', 1.2, 'spring'], ['cam', 1.1, 'follow']],
+const CALM = [
+  [['frame', 1.6, 'draw', 0.45], ['openTop', 0.5, 'snap'], ['openBot', 0.5, 'snap'], ['counter', 0.6, 'land'], ['stem', 1.2, 'spring'], ['cam', 1.1, 'follow']],
   [['w', 1, 'sweep'], ['cam', 1.1, 'follow']],
   [['w', 0.85, 'sweep'], ['cam', 1.1, 'follow']],
   [['w', 0.7, 'sweep'], ['top', 0.7, 'sweep'], ['cam', 1.2, 'follow']],
 ];
+const STEPS = PUNCHY
+  ? CALM.map((steps) => steps.map(([key, d, feel, beat]) => [key, +(d * (key === 'frame' ? 0.7 : 0.6)).toFixed(2), `${feel}P`, beat === undefined ? 0.06 : beat * 0.6]))
+  : CALM;
+const HOLD = PUNCHY ? [1.4, 0.9, 0.9, 0.8, 1.2] : [1.7, 1.2, 1.2, 1.1, 1.5]; // seconds on each
+const BEAT = PUNCHY ? 0.06 : 0.12; // a breath after each move, before the next
 
 const f = (n) => +n.toFixed(2);
 const mix = (a, b, v) => a + (b - a) * v;
@@ -77,7 +97,8 @@ function fit(q) {
 
 // The loop: forward from the logo to the square, a step at a time, and back the same way.
 const SEGMENTS = [];
-const move = (i, k, dir) => { const [key, d, feel, beat = BEAT] = STEPS[i][k]; return { from: i, k, key, dir, move: d, feel, d: d + beat }; };
+// A move: its easing (feel), and the kind of move it is, for its sound (kind: the calm name).
+const move = (i, k, dir) => { const [key, d, feel, beat = BEAT] = STEPS[i][k]; return { from: i, k, key, dir, move: d, feel, kind: feel.replace(/P$/, ''), d: d + beat }; };
 for (let i = 0; i < STATES.length; i++) {
   SEGMENTS.push({ hold: i, d: HOLD[i] });
   if (i < STEPS.length) STEPS[i].forEach((_, k) => SEGMENTS.push(move(i, k, 1)));
@@ -90,6 +111,12 @@ let acc = 0;
 for (const s of SEGMENTS) { s.t0 = acc; acc += s.d; }
 const PERIOD = acc;
 
+/** The segment (a hold or a move) at time t. */
+function segmentAt(t) {
+  t = ((t % PERIOD) + PERIOD) % PERIOD;
+  return SEGMENTS.findLast((x) => x.t0 <= t) ?? SEGMENTS[0];
+}
+
 /**
  * The measures and the camera at time t (seconds). In a move from state i to
  * the next, the steps before this one are done, this one is under way, and
@@ -97,12 +124,6 @@ const PERIOD = acc;
  * until its own step. Backwards, a step lands with the same feel as it does
  * going forwards (a spring settles on the way back too).
  */
-/** The segment (a hold or a move) at time t. */
-function segmentAt(t) {
-  t = ((t % PERIOD) + PERIOD) % PERIOD;
-  return SEGMENTS.findLast((x) => x.t0 <= t) ?? SEGMENTS[0];
-}
-
 function stateAt(t) {
   t = ((t % PERIOD) + PERIOD) % PERIOD;
   const s = segmentAt(t);
@@ -193,10 +214,12 @@ function draw(q) {
   let svg = `<defs><mask id="seq-m" maskUnits="userSpaceOnUse" x="${-m}" y="${-m}" width="${f(w + 2 * m)}" height="${f(h + 2 * m)}">`
     + `<rect y="${f(top)}" width="${f(w)}" height="${f(h - top)}" fill="#fff"/>${cuts}</mask></defs>`
     + `<rect y="${f(top)}" width="${f(w)}" height="${f(h - top)}" fill="currentColor" mask="url(#seq-m)"/>`;
-  if (q.frame > 0.005) {
-    const fw = FRAME.width * q.frame;
-    const o = FRAME.gap + FRAME.width / 2; // the frame's centre line, off the block
-    svg += `<rect x="${f(-o)}" y="${f(-o)}" width="${f(w + 2 * o)}" height="${f(h + 2 * o)}" fill="none" stroke="currentColor" stroke-width="${f(fw)}"/>`;
+  if (q.frame > 0.001) {
+    // The stamp's outline, drawn from its top left corner round clockwise: erased back along itself as frame falls.
+    const o = FRAME.gap + FRAME.width / 2; // its centre line, off the block
+    const L = 2 * (w + 2 * o) + 2 * (h + 2 * o);
+    const drawn = Math.min(1, Math.max(0, q.frame)) * L;
+    svg += `<path d="M${f(-o)} ${f(-o)}H${f(w + o)}V${f(h + o)}H${f(-o)}Z" fill="none" stroke="currentColor" stroke-width="${f(FRAME.width)}" stroke-linejoin="miter" stroke-dasharray="${f(drawn)} ${f(L)}"/>`;
   }
   // What the camera frames: the block, and the frame while it is there.
   const reach = (FRAME.gap + FRAME.width) * Math.min(1, q.frame * 3);
@@ -234,7 +257,7 @@ function listen() {
   if (seg === current) return;
   current = seg;
   const into = (((t % PERIOD) + PERIOD) % PERIOD) - seg.t0;
-  if (!paused && soundOn && seg.key && into < 0.1) sound.play({ feel: seg.feel, ease: EASE[seg.feel], d: seg.move, dir: seg.dir, key: seg.key });
+  if (!paused && soundOn && seg.key && into < 0.1) sound.play({ feel: seg.kind, ease: EASE[seg.feel], d: seg.move, dir: seg.dir, key: seg.key });
 }
 function setSound(on) {
   soundOn = on;
@@ -268,6 +291,8 @@ el.addEventListener('click', () => setPaused(!paused));
 scrub.addEventListener('input', () => { t = (Number(scrub.value) / 1000) * PERIOD; setPaused(true); });
 document.querySelector('.invert').addEventListener('click', () => document.documentElement.toggleAttribute('data-paper'));
 speaker.addEventListener('click', () => setSound(!soundOn));
+// The download: this version's video, rendered by web/scripts/identity-sequence-video.py.
+document.querySelector('.download').href = `video/smash-sequence${PUNCHY ? '-punchy' : ''}.mp4`;
 addEventListener('keydown', (e) => {
   if (e.target.closest?.('input')) return;
   if (e.key === ' ') { e.preventDefault(); setPaused(!paused); }
@@ -275,6 +300,7 @@ addEventListener('keydown', (e) => {
   else if (e.key === 'ArrowLeft') step(-1);
   else if (e.key === 'i') document.documentElement.toggleAttribute('data-paper');
   else if (e.key === 's') setSound(!soundOn);
+  else if (e.key === 'p') { const u = new URL(location.href); if (PUNCHY) u.searchParams.delete('punchy'); else u.searchParams.set('punchy', ''); location.href = u.href; }
 });
 if (params.has('paper')) document.documentElement.setAttribute('data-paper', '');
 
@@ -284,4 +310,33 @@ requestAnimationFrame(frame);
 document.documentElement.dataset.ready = '1';
 
 // For scripts: the measures and the drawing at any state or time.
-window.__sequence = { STATES, PERIOD, SEGMENTS, stateAt, draw, seek(s) { t = s; setPaused(true); render(); } };
+window.__sequence = {
+  STATES, PERIOD, SEGMENTS, EASE, stateAt, draw,
+  seek(s) { t = s; setPaused(true); render(); },
+  /** One loop's sound, rendered offline: a WAV file's bytes, base64 (for identity-sequence-video.py). */
+  async soundtrack(rate = 48000) {
+    const ctx = new OfflineAudioContext(2, Math.ceil(PERIOD * rate), rate);
+    const s = createSound({ context: ctx });
+    await s.start();
+    for (const seg of SEGMENTS) if (seg.key) s.play({ feel: seg.kind, ease: EASE[seg.feel], d: seg.move, dir: seg.dir, key: seg.key }, seg.t0);
+    const buf = await ctx.startRendering();
+    return wavBase64(buf);
+  },
+};
+
+/** An AudioBuffer as a 16-bit WAV file, base64. */
+function wavBase64(buf) {
+  const ch = buf.numberOfChannels, n = buf.length, rate = buf.sampleRate;
+  const data = new DataView(new ArrayBuffer(44 + n * ch * 2));
+  const str = (o, s) => [...s].forEach((c, i) => data.setUint8(o + i, c.charCodeAt(0)));
+  str(0, 'RIFF'); data.setUint32(4, 36 + n * ch * 2, true); str(8, 'WAVE'); str(12, 'fmt ');
+  data.setUint32(16, 16, true); data.setUint16(20, 1, true); data.setUint16(22, ch, true); data.setUint32(24, rate, true);
+  data.setUint32(28, rate * ch * 2, true); data.setUint16(32, ch * 2, true); data.setUint16(34, 16, true); str(36, 'data'); data.setUint32(40, n * ch * 2, true);
+  const chans = Array.from({ length: ch }, (_, c) => buf.getChannelData(c));
+  let o = 44;
+  for (let i = 0; i < n; i++) for (let c = 0; c < ch; c++) { data.setInt16(o, Math.max(-1, Math.min(1, chans[c][i])) * 0x7fff, true); o += 2; }
+  let bin = '';
+  const bytes = new Uint8Array(data.buffer);
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}

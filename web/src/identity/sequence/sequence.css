@@ -8,8 +8,8 @@ body { overflow: hidden; }
 .mark { width: 100%; height: 100%; display: block; }
 .bar { display: flex; align-items: center; gap: 16px; padding: 0 16px 16px; opacity: 0.55; transition: opacity 0.3s; }
 .bar:hover, .bar:focus-within { opacity: 1; }
-.bar button { flex: none; width: 28px; height: 28px; padding: 6px; border: 0; background: none; color: inherit; cursor: pointer; }
-.bar button svg { width: 100%; height: 100%; display: block; fill: currentColor; }
+.bar button, .bar a { flex: none; width: 28px; height: 28px; padding: 6px; border: 0; background: none; color: inherit; cursor: pointer; }
+.bar button svg, .bar a svg { width: 100%; height: 100%; display: block; fill: currentColor; }
 .play .i-play { display: none; }
 .play[data-paused] .i-play { display: inline; }
 .play[data-paused] .i-pause { display: none; }

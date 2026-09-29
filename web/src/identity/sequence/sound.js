@@ -5,7 +5,9 @@
 // wobbles, an overshoot lands and a sweep sweeps. Going back, the position
 // runs the other way, and so does the sound.
 //
-// Off until asked for: a browser plays sound only after a click.
+// Off until asked for: a browser plays sound only after a click. Given a
+// context (an OfflineAudioContext), it writes the sound of a whole loop
+// instead, each move at its own time, for the video (identity-sequence-video.py).
 
 const N = 96; // points on each curve
 
@@ -27,14 +29,14 @@ function curves(ease, dir) {
 }
 const map = (arr, fn) => Float32Array.from(arr, fn);
 
-export function createSound() {
+export function createSound({ context = null } = {}) {
   let ctx = null;
   let out = null;
   let noise = null;
 
   function start() {
     if (ctx) return ctx.resume();
-    ctx = new AudioContext();
+    ctx = context ?? new AudioContext();
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -18;
     comp.ratio.value = 4;
@@ -45,7 +47,7 @@ export function createSound() {
     noise = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
     const d = noise.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-    return ctx.resume();
+    return context ? Promise.resolve() : ctx.resume();
   }
 
   const noiseSource = () => { const s = ctx.createBufferSource(); s.buffer = noise; s.loop = true; return s; };
@@ -105,15 +107,17 @@ export function createSound() {
 
   /**
    * The sound of one move: `feel` (its easing's name), its easing, how long,
-   * which way (dir), and what moves (key).
+   * which way (dir), and what moves (key); now, or at a given time (seconds,
+   * on the context's clock).
    */
-  function play({ feel, ease, d, dir, key }) {
-    if (!ctx || ctx.state !== 'running') return;
-    const t0 = ctx.currentTime + 0.01;
+  function play({ feel, ease, d, dir, key }, when = null) {
+    if (!ctx || (!context && ctx.state !== 'running')) return;
+    const t0 = when ?? ctx.currentTime + 0.01;
     const c = curves(ease, dir);
     switch (feel) {
-      case 'smooth': // the stamp's frame thinning away: soft air, falling
-        whoosh(t0, d, c, { lo: 2600, hi: 700, q: 0.9, level: 0.28 });
+      case 'draw': // the stamp's outline, erased or drawn: a pen's scratch, running along it
+        whoosh(t0, d, c, { lo: 1400, hi: 3200, q: 3.5, level: 0.24 });
+        whoosh(t0, d, c, { lo: 5200, hi: 7400, q: 6, level: 0.06 });
         break;
       case 'snap': // the slots breaking out: a click as they go, a lighter one going back
         click(t0 + d * 0.5, { level: dir > 0 ? 0.55 : 0.35, pitch: key === 'openTop' ? 2600 : 2100 });
