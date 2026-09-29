@@ -1,11 +1,19 @@
 // The sequence as an MP4, made in the browser when it is asked for: one whole
 // loop, each frame drawn at its exact time (not recorded off the screen, so
 // none is dropped and it runs faster than real time), encoded as H.264 by the
-// browser (WebCodecs), with the loop's sound rendered offline from the same
-// moves and encoded as AAC (or Opus where AAC is not offered), put together in
-// an MP4 by mp4-muxer. Loaded only when the download button is pressed.
+// browser (WebCodecs) at a constant quality (so even the first frames are
+// sharp), with the loop's sound rendered offline from the same moves and
+// encoded as AAC (or Opus where AAC is not offered), put together in an MP4 by
+// mp4-muxer. Loaded only when the download button is pressed.
+//
+// The file can open anywhere in the loop (`start`): picture and sound are both
+// turned round by the same amount, so it still loops without a seam. The AAC
+// encoder puts 2112 samples of silence in front of the sound (its priming),
+// which mp4-muxer has no way to mark as skipped, so the sound is fed that much
+// ahead, and lands on its picture to the sample.
 
 const MUXER = 'https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.1/+esm';
+const AAC_PRIMING = 2112; // samples, Chrome's AAC encoder (AudioToolbox, 48 kHz)
 
 /** The first of these configurations the browser can encode, or null. */
 async function supported(Encoder, configs) {
@@ -19,24 +27,28 @@ async function supported(Encoder, configs) {
 const drain = (enc, n) => new Promise((r) => { const go = () => (enc.encodeQueueSize > n ? setTimeout(go, 1) : r()); go(); });
 
 /**
- * One loop as an MP4 Blob. `svgAt(t)` gives the whole frame at time t as an
- * SVG string (its own viewBox, no ground); `sound()` the loop's sound as an
- * AudioBuffer. onProgress(0 to 1) as it goes.
+ * One loop as an MP4 Blob, from `start` seconds into it. `svgAt(t)` gives the
+ * whole frame at time t as an SVG string (its own viewBox, no ground);
+ * `sound()` the loop's sound as an AudioBuffer. onProgress(0 to 1) as it goes.
  */
-export async function renderVideo({ period, svgAt, sound, ink, paper, width = 1920, height = 1080, fps = 60, onProgress = () => {} }) {
+export async function renderVideo({ period, start = 0, svgAt, sound, ink, paper, width = 1600, height = 1200, fps = 60, onProgress = () => {} }) {
   if (!('VideoEncoder' in window)) throw new Error('this browser cannot encode video (no WebCodecs)');
   const { Muxer, ArrayBufferTarget } = await import(MUXER);
+  const base = { width, height, framerate: fps };
   const video = await supported(VideoEncoder, [
-    { codec: 'avc1.64002A', width, height, bitrate: 12e6, framerate: fps }, // High, level 4.2: 1080p at 60
-    { codec: 'avc1.4D002A', width, height, bitrate: 12e6, framerate: fps },
-    { codec: 'avc1.42002A', width, height, bitrate: 12e6, framerate: fps },
+    { ...base, codec: 'avc1.640033', bitrateMode: 'quantizer' }, // High, level 5.1, constant quality
+    { ...base, codec: 'avc1.64002A', bitrateMode: 'quantizer' },
+    { ...base, codec: 'avc1.640033', bitrate: 16e6 },
+    { ...base, codec: 'avc1.64002A', bitrate: 12e6 },
+    { ...base, codec: 'avc1.4D002A', bitrate: 12e6 },
+    { ...base, codec: 'avc1.42002A', bitrate: 12e6 },
   ]);
   if (!video) throw new Error('this browser cannot encode H.264 at this size');
   const buffer = await sound();
   const rate = buffer.sampleRate, channels = buffer.numberOfChannels;
   const audio = 'AudioEncoder' in window ? await supported(AudioEncoder, [
-    { codec: 'mp4a.40.2', sampleRate: rate, numberOfChannels: channels, bitrate: 192000 },
-    { codec: 'opus', sampleRate: rate, numberOfChannels: channels, bitrate: 160000 },
+    { codec: 'mp4a.40.2', sampleRate: rate, numberOfChannels: channels, bitrate: 256000 },
+    { codec: 'opus', sampleRate: rate, numberOfChannels: channels, bitrate: 192000 },
   ]) : null;
 
   const muxer = new Muxer({
@@ -49,17 +61,19 @@ export async function renderVideo({ period, svgAt, sound, ink, paper, width = 19
   const venc = new VideoEncoder({ output: (chunk, meta) => muxer.addVideoChunk(chunk, meta), error: (e) => { failed = e; } });
   venc.configure(video);
 
-  // The sound first: short, and done at once.
+  // The sound first: the loop turned round to the file's start, and ahead by the encoder's priming.
   if (audio) {
     const aenc = new AudioEncoder({ output: (chunk, meta) => muxer.addAudioChunk(chunk, meta), error: (e) => { failed = e; } });
     aenc.configure(audio);
-    const block = 4096;
+    const n = buffer.length;
+    const shift = Math.round(start * rate) + (audio.codec.startsWith('mp4a') ? AAC_PRIMING : 0);
     const chans = Array.from({ length: channels }, (_, c) => buffer.getChannelData(c));
-    for (let i = 0; i < buffer.length; i += block) {
-      const n = Math.min(block, buffer.length - i);
-      const data = new Float32Array(n * channels);
-      chans.forEach((ch, c) => data.set(ch.subarray(i, i + n), c * n));
-      aenc.encode(new AudioData({ format: 'f32-planar', sampleRate: rate, numberOfFrames: n, numberOfChannels: channels, timestamp: Math.round((i / rate) * 1e6), data }));
+    const block = 4096;
+    for (let i = 0; i < n; i += block) {
+      const m = Math.min(block, n - i);
+      const data = new Float32Array(m * channels);
+      chans.forEach((ch, c) => { for (let j = 0; j < m; j++) data[c * m + j] = ch[(((i + j + shift) % n) + n) % n]; });
+      aenc.encode(new AudioData({ format: 'f32-planar', sampleRate: rate, numberOfFrames: m, numberOfChannels: channels, timestamp: Math.round((i / rate) * 1e6), data }));
     }
     await aenc.flush();
     aenc.close();
@@ -69,9 +83,10 @@ export async function renderVideo({ period, svgAt, sound, ink, paper, width = 19
   const canvas = new OffscreenCanvas(width, height);
   const ctx = canvas.getContext('2d');
   const frames = Math.round(period * fps);
+  const constant = video.bitrateMode === 'quantizer';
   for (let i = 0; i < frames; i++) {
     if (failed) throw failed;
-    const svg = svgAt(i / fps).replace('<svg ', `<svg width="${width}" height="${height}" color="${ink}" `);
+    const svg = svgAt(start + i / fps).replace('<svg ', `<svg width="${width}" height="${height}" color="${ink}" `);
     const img = new Image();
     img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
     await img.decode();
@@ -79,7 +94,7 @@ export async function renderVideo({ period, svgAt, sound, ink, paper, width = 19
     ctx.fillRect(0, 0, width, height);
     ctx.drawImage(img, 0, 0, width, height);
     const frame = new VideoFrame(canvas, { timestamp: Math.round((i / fps) * 1e6), duration: Math.round(1e6 / fps) });
-    venc.encode(frame, { keyFrame: i % (fps * 2) === 0 });
+    venc.encode(frame, { keyFrame: i % (fps * 2) === 0, ...(constant ? { avc: { quantizer: 10 } } : {}) });
     frame.close();
     await drain(venc, 8);
     if (i % 10 === 0) onProgress(i / frames);

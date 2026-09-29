@@ -6,20 +6,26 @@
 // then; and each sits where it happens, left to right.
 //
 // One key for all of it, D minor pentatonic, so the notes agree: the slots
-// break out high (A5, F5), the counter lands on the A, the crops lock a step
-// lower each time the mark gets smaller (A4, G4, F4, then D4 for the square),
-// and the logo opens as a rising arpeggio, a note for each slot column as it
-// opens, left to right, over a D minor chord with an added ninth. A small room (a
-// synthesised reverb), a gentle compressor and a limiter hold it together.
+// break out high (A5 and D6, F5 and A5, one on each S), the counter lands on
+// the A, the crops lock a step lower each time the mark gets smaller (A4, G4,
+// F4, then D4 for the square), and the logo writes itself back as a rising
+// arpeggio from that D4, a note for each slot column as it opens, left to
+// right, over a D minor chord with an added ninth. A small room (a synthesised
+// reverb, kept out of the low end), a gentle compressor, drive into a limiter.
+// The compressors look ahead 6 ms each, so every sound is sent that much
+// early; the noise is seeded, so every render sounds the same.
 //
 // Off until asked for: a browser plays sound only after a click. Given a
 // context (an OfflineAudioContext), it writes the sound of a whole loop
 // instead, each move at its own time, for the video (export.js).
 
 const N = 128; // points on each curve
+const LAG = 0.012; // the two compressors' look-ahead, 6 ms each: sounds are sent this much early
 const hz = (midi) => 440 * 2 ** ((midi - 69) / 12);
-const NOTE = { D2: 38, D3: 50, F3: 53, G3: 55, A3: 57, C4: 60, D4: 62, F4: 65, G4: 67, A4: 69, D5: 74, E5: 76, F5: 77, A5: 81, D6: 86 };
-const ARPEGGIO = ['D3', 'F3', 'G3', 'A3', 'C4', 'D4', 'F4', 'G4', 'A4', 'D5']; // the reveal: one for each slot column, left to right
+const NOTE = { D2: 38, D3: 50, F3: 53, G3: 55, A3: 57, C4: 60, D4: 62, F4: 65, G4: 67, A4: 69, C5: 72, D5: 74, E5: 76, F5: 77, G5: 79, A5: 81, D6: 86 };
+const ARPEGGIO = ['D4', 'F4', 'G4', 'A4', 'C5', 'D5', 'F5', 'G5', 'A5', 'D6']; // the reveal: one for each slot column, left to right
+let seed = 0x5a5a;
+const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 const LOCK = { 2: 'A4', 3: 'G4', 4: 'F4', 5: 'D4' }; // the note a crop locks on, by the state it lands in
 
 /** A move's position (0 to 1) and speed (0 to 1) along its easing, as N points. */
@@ -52,6 +58,7 @@ export function createSound({ context = null } = {}) {
 
   function start() {
     if (ctx) return context ? Promise.resolve() : ctx.resume();
+    seed = 0x5a5a;
     ctx = context ?? new AudioContext();
     // Master: the mix and the room, a gentle compressor, a limiter.
     const glue = ctx.createDynamicsCompressor();
@@ -66,13 +73,18 @@ export function createSound({ context = null } = {}) {
     verb.buffer = impulse(1.6);
     const wet = ctx.createGain();
     wet.gain.value = 0.9;
+    const vhp = ctx.createBiquadFilter(); // the room gets no low end: it would only muddy the holds
+    vhp.type = 'highpass';
+    vhp.frequency.value = 220;
+    const drive = ctx.createGain(); // up into the limiter, which holds the peaks
+    drive.gain.value = 1.65;
     bus.connect(glue);
-    room.connect(verb).connect(wet).connect(glue);
-    glue.connect(limit).connect(master).connect(ctx.destination);
+    room.connect(vhp).connect(verb).connect(wet).connect(glue);
+    glue.connect(drive).connect(limit).connect(master).connect(ctx.destination);
     // Two seconds of white noise, for the air and the clicks.
     noise = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
     const d = noise.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    for (let i = 0; i < d.length; i++) d[i] = rnd() * 2 - 1;
     return context ? Promise.resolve() : ctx.resume();
   }
 
@@ -87,7 +99,7 @@ export function createSound({ context = null } = {}) {
       for (let i = 0; i < n; i++) {
         const t = i / rate;
         const k = Math.min(0.9, 0.25 + t * 0.9); // the longer it rings, the darker
-        lp = lp * k + (Math.random() * 2 - 1) * (1 - k);
+        lp = lp * k + (rnd() * 2 - 1) * (1 - k);
         d[i] = lp * Math.exp(-t * 4.2) * (t < 0.012 ? t / 0.012 : 1);
       }
     }
@@ -109,19 +121,22 @@ export function createSound({ context = null } = {}) {
   }
   const noiseSource = () => { const s = ctx.createBufferSource(); s.buffer = noise; s.loop = true; return s; };
 
-  /** A click: a hair of bright noise and a pitched blip, gone in 40 ms. */
-  function click(t, { note, level = 0.4, pan = 0, send = 0.18, bright = 3200 }) {
+  /** A click: a hair of bright noise (kept under 9 kHz, not brittle) and, with a note, a pitched blip; gone in 40 ms. */
+  function click(t, { note = null, level = 0.4, pan = 0, send = 0.18, bright = 3200 }) {
     const o = out(t, 0, pan, send);
     const src = noiseSource();
     const hp = ctx.createBiquadFilter();
     hp.type = 'highpass'; hp.frequency.value = bright;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = 9000; lp.Q.value = 0.5;
     const g = ctx.createGain();
     g.gain.setValueAtTime(0, t);
     g.gain.linearRampToValueAtTime(level, t + 0.0015);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
-    src.connect(hp).connect(g).connect(o);
-    src.start(t, Math.random());
+    src.connect(hp).connect(lp).connect(g).connect(o);
+    src.start(t, rnd());
     src.stop(t + 0.05);
+    if (!note) return;
     const osc = ctx.createOscillator();
     const f0 = hz(NOTE[note]);
     osc.frequency.setValueAtTime(f0, t);
@@ -156,7 +171,7 @@ export function createSound({ context = null } = {}) {
     ng.gain.linearRampToValueAtTime(level * 0.35, t + 0.002);
     ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
     src.connect(lp).connect(ng).connect(o);
-    src.start(t, Math.random());
+    src.start(t, rnd());
     src.stop(t + 0.06);
   }
 
@@ -172,7 +187,7 @@ export function createSound({ context = null } = {}) {
     g.gain.value = 0;
     g.gain.setValueCurveAtTime(map(c.speed, (v, i) => level * v ** 1.4 * (i === N - 1 ? 0 : 1)), t0, d);
     src.connect(filter).connect(g).connect(o);
-    src.start(t0, Math.random());
+    src.start(t0, rnd());
     src.stop(t0 + d + 0.05);
   }
 
@@ -255,41 +270,42 @@ export function createSound({ context = null } = {}) {
    */
   function play(cue, at = null) {
     if (!ctx || (!context && ctx.state !== 'running')) return;
-    const t0 = at ?? ctx.currentTime + 0.02;
+    const t0 = (at ?? ctx.currentTime + 0.02) - LAG;
     const { kind, key, d, ease, pan, to } = cue;
+    const hit = t0 + (cue.hit ?? d); // the moment of contact, as sequence.js placed it on the grid
     const c = curves(ease);
     switch (kind) {
-      case 'snap': { // a slot's end through the edge: a click on each S, left and right, the top ones higher
-        const hit = t0 + when(ease, 0.5) * d;
-        const note = key === 'openTop' ? 'A5' : 'F5';
-        click(hit, { note, level: 0.36, pan: pan[0] });
-        click(hit + 0.011, { note, level: 0.3, pan: pan[1] });
+      case 'snap': { // a slot's end through the edge: a click on each S, left and right, the top ones higher; two notes, never one
+        const [n1, n2] = key === 'openTop' ? ['A5', 'D6'] : ['F5', 'A5'];
+        click(hit, { note: n1, level: 0.36, pan: pan[0] });
+        click(hit + 0.011, { note: n2, level: 0.28, pan: pan[1] });
         whoosh(t0, d, c, { lo: 2400, hi: 6800, q: 1.2, level: 0.05, pan: 0 });
         break;
       }
-      case 'land': // the counter: a small tone rising to the A, past it and back
-        sing(t0, d, c, { lo: hz(NOTE.D5), hi: hz(NOTE.A5), level: 0.1, pan: pan[0], floor: 0.2, ring: 0.18 });
+      case 'land': // the counter: a small tone rising to the A, past it and back, and a light tick as it lands
+        sing(t0, d, c, { lo: hz(NOTE.D5), hi: hz(NOTE.A5), level: 0.08, pan: pan[0], floor: 0.2, ring: 0.14 });
+        click(hit, { note: 'A5', level: 0.14, pan: pan[0], bright: 5000 });
         break;
-      case 'spring': // the bands: a low, round boing (an octave above it too, for small speakers), and a thump where they first land
-        sing(t0, d, c, { lo: hz(NOTE.D2), hi: hz(NOTE.D3), level: 0.34, floor: 0.06, send: 0.08, ring: 0.12 });
-        sing(t0, d, c, { lo: hz(NOTE.D3), hi: hz(NOTE.D4), level: 0.08, floor: 0.06, send: 0.12, ring: 0.1 });
-        thump(t0 + when(ease, 1) * d, { level: 0.5 });
+      case 'spring': // the bands: a round boing (its upper octave carries it on small speakers), and a thump where they first land
+        sing(t0, d, c, { lo: hz(NOTE.D2), hi: hz(NOTE.D3), level: 0.12, floor: 0.06, send: 0.06, ring: 0.12 });
+        sing(t0, d, c, { lo: hz(NOTE.D3), hi: hz(NOTE.D4), level: 0.12, type: 'triangle', floor: 0.06, send: 0.12, ring: 0.1 });
+        thump(hit, { level: 0.24, from: 110, to: 52 });
         break;
-      case 'sweep': { // a crop: air through a band that travels with the edge, and a lock where it comes to rest
-        whoosh(t0, d, c, { lo: 520, hi: 3600, q: 1.6, level: 0.2, pan });
-        const lock = t0 + when(ease, 0.992) * d;
-        click(lock, { note: LOCK[to] ?? 'D4', level: 0.3, pan: pan[1], bright: 2400 });
-        thump(lock, { level: to === 5 ? 0.34 : 0.16, pan: pan[1], from: 120, to: 60, len: 0.16 });
+      case 'sweep': { // a crop: air through a band that travels with the edge (falling when the edge falls), and a lock where it stops
+        whoosh(t0, d, c, key === 'top' ? { lo: 3600, hi: 520, q: 1.6, level: 0.2, pan } : { lo: 520, hi: 3600 + (to - 2) * 300, q: 1.6, level: 0.2, pan });
+        click(hit, { note: LOCK[to] ?? 'D4', level: 0.3, pan: pan[1], bright: 2400 });
+        thump(hit, { level: to === 5 ? 0.34 : 0.16, pan: pan[1], from: 170, to: 75, len: 0.16 });
+        if (to === 4) pluck(hit, { note: 'F4', level: 0.05, pan: pan[1], ring: 1.4, send: 0.5 }); // the !: a held breath
         break;
       }
-      case 'follow': // the camera: a breath of low air, drifting the way it pans
-        whoosh(t0, d, c, { lo: 140, hi: 420, q: 0.6, level: 0.05, pan, type: 'lowpass', send: 0.2 });
+      case 'follow': // the camera: a soft breath of air, drifting the way it pans: felt more than heard
+        whoosh(t0, d, c, { lo: 300, hi: 900, q: 0.8, level: 0.1, pan, send: 0.2 });
         break;
       case 'reveal': { // the logo appearing through the block: each slot column plucks its note as it opens, over the chord
         const cols = cue.columns ?? [];
-        cols.forEach((col, i) => pluck(t0 + col.at, { note: ARPEGGIO[i], level: i === cols.length - 1 ? 0.16 : 0.11, pan: col.pan, ring: i === cols.length - 1 ? 1.1 : 0.55 }));
+        cols.forEach((col, i) => pluck(t0 + col.at, { note: ARPEGGIO[i], level: i === cols.length - 1 ? 0.13 : 0.11, pan: col.pan, ring: i === cols.length - 1 ? 1.1 : 0.55 }));
         bloom(t0, d, c, { notes: ['D3', 'A3', 'D4', 'F4', 'A4', 'E5'], level: 0.16, ring: 2 });
-        if (cols.length) thump(t0 + cols[0].at, { level: 0.24, from: 70, to: 38, len: 0.4 });
+        if (cols.length) thump(t0 + cols[0].at, { level: 0.24, from: 96, to: 49, len: 0.4 });
         break;
       }
     }
@@ -299,5 +315,8 @@ export function createSound({ context = null } = {}) {
     start,
     stop() { if (!context) ctx?.suspend(); },
     play,
+    /** The sound's clock, and how long its output takes to be heard. */
+    now: () => ctx?.currentTime ?? 0,
+    latency: () => (ctx ? ctx.outputLatency || ctx.baseLatency || 0 : 0),
   };
 }

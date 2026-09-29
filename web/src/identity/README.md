@@ -24,8 +24,9 @@ its marks, with no copy.
   (`sound.js`: synthesised, one key, a room, a compressor and a limiter; the reveal plays a rising arpeggio, a note
   per slot column). Space pauses, the arrows step, i inverts, s turns the sound on, p (or `?punchy`) plays the
   punchier version (`?calm` the slow one); `?at=0`–`6` holds a state, `?t=` seeks. The download button makes an MP4
-  of the loop right there, in the version and colours on screen (`export.js`: every frame drawn at its time, H.264
-  through WebCodecs, the sound rendered offline and folded so it loops without a seam, mp4-muxer).
+  of the loop right there, in the version and colours on screen: 1600 × 1200 for Dribbble, shift for 1920 × 1080, alt
+  for 1080 × 1080, or `?size=WxH` (`export.js`: every frame drawn at its time, H.264 at a constant quality through
+  WebCodecs, the sound rendered offline, folded so it loops without a seam and placed to the sample, mp4-muxer).
 - `deck.html`: the same modules as 1920 × 1080 slides, for a PDF
   (`python3 web/scripts/identity-pdf.py`).
 
