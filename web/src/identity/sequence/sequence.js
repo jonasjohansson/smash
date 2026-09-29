@@ -237,6 +237,23 @@ function draw(q) {
   return { svg: `<g transform="translate(0 ${f(dy)})">${svg}</g>`, box: [-reach, top + dy - reach, w + reach, h + dy + reach] };
 }
 
+const viewBox = ([x0, y0, x1, y1]) => `${f(x0)} ${f(y0)} ${f(x1 - x0)} ${f(y1 - y0)}`;
+
+/** The whole frame at time t as an SVG string: the camera's view of the mark, in currentColor, no ground. */
+function svgAt(t) {
+  const { q, box } = stateAt(t);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox(box)}" preserveAspectRatio="xMidYMid meet">${draw(q).svg}</svg>`;
+}
+
+/** One loop's sound, rendered offline: an AudioBuffer, each move's sound at its own time. */
+async function loopSound(rate = 48000) {
+  const ctx = new OfflineAudioContext(2, Math.ceil(PERIOD * rate), rate);
+  const s = createSound({ context: ctx });
+  await s.start();
+  for (const seg of SEGMENTS) if (seg.key) s.play({ feel: seg.kind, ease: EASE[seg.feel], d: seg.move, dir: seg.dir, key: seg.key }, seg.t0);
+  return ctx.startRendering();
+}
+
 // ---------------------------------------------------------------------------
 // The page
 
@@ -251,8 +268,7 @@ let last = null;
 
 function render() {
   const { q, box } = stateAt(t);
-  const [x0, y0, x1, y1] = box;
-  el.setAttribute('viewBox', `${f(x0)} ${f(y0)} ${f(x1 - x0)} ${f(y1 - y0)}`);
+  el.setAttribute('viewBox', viewBox(box));
   el.innerHTML = draw(q).svg;
   scrub.value = String(Math.round((((t % PERIOD) + PERIOD) % PERIOD) / PERIOD * 1000));
 }
@@ -301,8 +317,27 @@ el.addEventListener('click', () => setPaused(!paused));
 scrub.addEventListener('input', () => { t = (Number(scrub.value) / 1000) * PERIOD; setPaused(true); });
 document.querySelector('.invert').addEventListener('click', () => document.documentElement.toggleAttribute('data-paper'));
 speaker.addEventListener('click', () => setSound(!soundOn));
-// The download: this version's video, rendered by web/scripts/identity-sequence-video.py.
-document.querySelector('.download').href = `video/smash-sequence${PUNCHY ? '-punchy' : ''}.mp4`;
+// The download: this version, in these colours, made into an MP4 here and now (export.js), a ring filling as it goes.
+const dl = document.querySelector('.download');
+const ring = dl.querySelector('.i-ring');
+dl.addEventListener('click', async () => {
+  if (dl.hasAttribute('data-busy')) return;
+  dl.setAttribute('data-busy', '');
+  const paperOn = document.documentElement.hasAttribute('data-paper');
+  const [ink, paper] = paperOn ? ['#000', '#fff'] : ['#fff', '#000'];
+  try {
+    const { renderVideo } = await import('./export.js');
+    const blob = await renderVideo({ period: PERIOD, svgAt, sound: loopSound, ink, paper, onProgress: (p) => ring.setAttribute('stroke-dasharray', `${Math.round(p * 100)} 100`) });
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: `smash-sequence${VERSION === 'snappy' ? '' : `-${VERSION}`}${paperOn ? '-paper' : ''}.mp4` });
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  } catch (e) {
+    console.error('[sequence] the video could not be made', e);
+  } finally {
+    dl.removeAttribute('data-busy');
+    ring.setAttribute('stroke-dasharray', '0 100');
+  }
+});
 addEventListener('keydown', (e) => {
   if (e.target.closest?.('input')) return;
   if (e.key === ' ') { e.preventDefault(); setPaused(!paused); }
@@ -320,33 +355,4 @@ requestAnimationFrame(frame);
 document.documentElement.dataset.ready = '1';
 
 // For scripts: the measures and the drawing at any state or time.
-window.__sequence = {
-  STATES, PERIOD, SEGMENTS, EASE, stateAt, draw,
-  seek(s) { t = s; setPaused(true); render(); },
-  /** One loop's sound, rendered offline: a WAV file's bytes, base64 (for identity-sequence-video.py). */
-  async soundtrack(rate = 48000) {
-    const ctx = new OfflineAudioContext(2, Math.ceil(PERIOD * rate), rate);
-    const s = createSound({ context: ctx });
-    await s.start();
-    for (const seg of SEGMENTS) if (seg.key) s.play({ feel: seg.kind, ease: EASE[seg.feel], d: seg.move, dir: seg.dir, key: seg.key }, seg.t0);
-    const buf = await ctx.startRendering();
-    return wavBase64(buf);
-  },
-};
-
-/** An AudioBuffer as a 16-bit WAV file, base64. */
-function wavBase64(buf) {
-  const ch = buf.numberOfChannels, n = buf.length, rate = buf.sampleRate;
-  const data = new DataView(new ArrayBuffer(44 + n * ch * 2));
-  const str = (o, s) => [...s].forEach((c, i) => data.setUint8(o + i, c.charCodeAt(0)));
-  str(0, 'RIFF'); data.setUint32(4, 36 + n * ch * 2, true); str(8, 'WAVE'); str(12, 'fmt ');
-  data.setUint32(16, 16, true); data.setUint16(20, 1, true); data.setUint16(22, ch, true); data.setUint32(24, rate, true);
-  data.setUint32(28, rate * ch * 2, true); data.setUint16(32, ch * 2, true); data.setUint16(34, 16, true); str(36, 'data'); data.setUint32(40, n * ch * 2, true);
-  const chans = Array.from({ length: ch }, (_, c) => buf.getChannelData(c));
-  let o = 44;
-  for (let i = 0; i < n; i++) for (let c = 0; c < ch; c++) { data.setInt16(o, Math.max(-1, Math.min(1, chans[c][i])) * 0x7fff, true); o += 2; }
-  let bin = '';
-  const bytes = new Uint8Array(data.buffer);
-  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-  return btoa(bin);
-}
+window.__sequence = { STATES, PERIOD, SEGMENTS, EASE, stateAt, draw, seek(s) { t = s; setPaused(true); render(); } };

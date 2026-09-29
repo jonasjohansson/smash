@@ -7,7 +7,7 @@
 //
 // Off until asked for: a browser plays sound only after a click. Given a
 // context (an OfflineAudioContext), it writes the sound of a whole loop
-// instead, each move at its own time, for the video (identity-sequence-video.py).
+// instead, each move at its own time, for the video (export.js).
 
 const N = 96; // points on each curve
 

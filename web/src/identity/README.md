@@ -23,8 +23,8 @@ its marks, with no copy.
   logo's measures and its own. One thing moves at a time, each move with its own easing (a snap, a spring, a
   sweep, a landing) and its own sound, synthesised from the same curve (`sound.js`). Space pauses, the arrows step,
   i inverts, s turns the sound on, p (or `?punchy`) plays the punchier version (`?calm` the slow one); `?at=0`–`4` holds a state, `?t=`
-  seeks. The download button gives the MP4 in `video/`, rendered frame by frame with its sound by
-  `python3 web/scripts/identity-sequence-video.py [--punchy] [--paper] [--size=1920x1080]`.
+  seeks. The download button makes an MP4 of the loop right there, in the version and colours on screen
+  (`export.js`: every frame drawn at its time, H.264 through WebCodecs, the sound rendered offline, mp4-muxer).
 - `deck.html`: the same modules as 1920 × 1080 slides, for a PDF
   (`python3 web/scripts/identity-pdf.py`).
 
