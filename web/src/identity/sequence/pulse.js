@@ -31,7 +31,9 @@ const WHIP = 0.12; // how long the move into a beat takes
 const DRIFT = 0.035; // how far the camera pushes in over a beat, as a share of what it shows
 const START = 2 * UNIT; // the MP4 opens here, on a whole frame, in the logo's drift
 const SHUTTER = 1 / 40; // the smear: how much time each frame sees, live and in the MP4 alike
-const SAMPLES = 8; // and how many moments across it are drawn
+const SAMPLES = 8; // the fewest moments across it drawn
+const MOST = 32; // and the most, for the fastest frames
+const STEP = 1 / 240; // how far apart on the screen (a share of its height) the moments may be before more are drawn
 
 /** The whip: slow off and fastest at the end (an exponential ease-in), stopping dead on 1. */
 const K = 5;
@@ -167,21 +169,44 @@ function moving(t) {
 }
 
 /**
+ * How far the picture moves across the shutter at t, as a share of the
+ * screen's height: the camera's edges, and the mark's own moves (its crop,
+ * its drop, its bands, its slots breaking out, its columns opening), added.
+ */
+function travel(t, aspect) {
+  const a = stateAt(t - SHUTTER / 2, aspect), z = stateAt(t + SHUTTER / 2, aspect);
+  const cam = Math.max(...a.view.map((v, i) => Math.abs(v - z.view[i])));
+  const d = (k) => Math.abs(a.q[k] - z.q[k]);
+  const cols = a.q.cols && z.q.cols ? Math.max(...a.q.cols.map((v, i) => Math.abs(v - z.q.cols[i]))) : 0;
+  // A slot's end breaking out runs from a bar in to past the edge: c(2) (a bar and a half-slot, and two pitches).
+  const mark = Math.max(d('w'), d('top'), 2 * d('stem'), d('counter'), (d('openTop') + d('openBot')) * c(2), cols * S);
+  return (cam + mark) / Math.min(a.view[3], z.view[3]);
+}
+
+/**
  * The frame at time t: the camera's view, and the drawing inside it. In a
- * whip, the drawing is SAMPLES moments across the shutter, each placed as its
- * own camera saw it, added up at 1/SAMPLES each (plus-lighter, in a group of
+ * whip, the drawing is moments across the shutter, each placed as its own
+ * camera saw it, added up at an equal share each (plus-lighter, in a group of
  * its own) so they make the true average: motion blur, on paper or on ink.
+ * The faster it moves, the more moments (SAMPLES to MOST, STEP apart); where
+ * even MOST are further apart than that, a blur as wide as the gap joins them
+ * into one smear.
  */
 function frameAt(t, aspect = 16 / 9) {
   const base = stateAt(t, aspect);
   if (!moving(t)) return { view: base.view, svg: draw(base.q).svg };
-  const [x, y, , h] = base.view;
+  const [x, y, w, h] = base.view;
+  const far = travel(t, aspect);
+  const n = Math.max(SAMPLES, Math.min(MOST, Math.ceil(far / STEP)));
   let svg = '';
-  for (let i = 0; i < SAMPLES; i++) {
-    const { q, view } = stateAt(t + ((i + 0.5) / SAMPLES - 0.5) * SHUTTER, aspect);
-    svg += `<g style="mix-blend-mode:plus-lighter" opacity="${f(1 / SAMPLES)}" transform="translate(${f(x)} ${f(y)}) scale(${+(h / view[3]).toFixed(6)}) translate(${f(-view[0])} ${f(-view[1])})">${draw(q, `seq-m${i}`).svg}</g>`;
+  for (let i = 0; i < n; i++) {
+    const { q, view } = stateAt(t + ((i + 0.5) / n - 0.5) * SHUTTER, aspect);
+    svg += `<g style="mix-blend-mode:plus-lighter" opacity="${+(1 / n).toFixed(5)}" transform="translate(${f(x)} ${f(y)}) scale(${+(h / view[3]).toFixed(6)}) translate(${f(-view[0])} ${f(-view[1])})">${draw(q, `seq-m${i}`).svg}</g>`;
   }
-  return { view: base.view, svg: `<g style="isolation:isolate">${svg}</g>` };
+  const gap = (far / n) * h; // how far apart the moments are, in the view's units
+  if (gap <= STEP * h) return { view: base.view, svg: `<g style="isolation:isolate">${svg}</g>` };
+  const blur = `<defs><filter id="seq-blur" filterUnits="userSpaceOnUse" x="${f(x - w)}" y="${f(y - h)}" width="${f(3 * w)}" height="${f(3 * h)}"><feGaussianBlur stdDeviation="${f(gap * 0.6)}"/></filter></defs>`;
+  return { view: base.view, svg: `${blur}<g style="isolation:isolate" filter="url(#seq-blur)">${svg}</g>` };
 }
 
 /** The whole frame at time t as an SVG string for a screen of the given aspect. */
@@ -212,5 +237,5 @@ function cueOf(seg) {
 
 const loopSound = loopSoundFor(PERIOD, SEGMENTS, cueOf);
 
-export { VERSION, PUNCHY, TEMPO, UNIT, BEAT, WHIP, SAMPLES, KEYS, SEGMENTS, PERIOD, START, EASE, wrap, stateAt, frameAt, draw, svgAt, viewBox, cueOf, loopSound };
+export { VERSION, PUNCHY, TEMPO, UNIT, BEAT, WHIP, SAMPLES, MOST, KEYS, SEGMENTS, PERIOD, START, EASE, wrap, stateAt, frameAt, draw, svgAt, viewBox, cueOf, loopSound };
 export { STATES_ON_BEATS as STATES };

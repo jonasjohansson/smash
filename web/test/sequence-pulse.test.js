@@ -61,8 +61,8 @@ test('the smear runs only in the whips, each copy with its own mask', () => {
   assert.equal(still.svg.match(/<mask /g).length, 1);
   const fast = P.frameAt(5 * P.BEAT - 0.01);
   const ids = [...fast.svg.matchAll(/<mask id="([^"]+)"/g)].map((m) => m[1]);
-  assert.equal(ids.length, P.SAMPLES);
-  assert.equal(new Set(ids).size, P.SAMPLES);
+  assert.ok(ids.length >= P.SAMPLES && ids.length <= P.MOST, `${ids.length} moments`);
+  assert.equal(new Set(ids).size, ids.length);
   assert.match(fast.svg, /isolation:isolate/);
   assert.match(fast.svg, /mix-blend-mode:plus-lighter/);
   assert.ok(P.svgAt(5 * P.BEAT - 0.01).startsWith('<svg '));
@@ -85,4 +85,12 @@ test('every beat has a sound that hits on it', () => {
   assert.deepEqual(last.columns.map((c) => c.i), [9]);
   assert.equal(last.chord, true);
   assert.equal(typeof P.loopSound, 'function');
+});
+
+test('the faster the whip, the more moments, and past the most a blur joins them', () => {
+  const count = (t) => P.frameAt(t).svg.match(/<mask /g).length;
+  const zoom = 2 * P.BEAT - 0.01; // the camera flung from the whole logo in to the S M
+  assert.equal(count(zoom), P.MOST);
+  assert.match(P.frameAt(zoom).svg, /feGaussianBlur/);
+  assert.ok(count(4 * P.BEAT - 0.1) < P.MOST); // early in a whip, slow off
 });
