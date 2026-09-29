@@ -17,6 +17,9 @@ its marks, with no copy.
 - `mapping.js`: a mapping grid for warping the mark.
 - `sculpture.js`: one object that reads SMASH from the front and the S from the side.
 - `directions/struck.js`: the mark with its slots leaning.
+- `sequence/`: a page of its own (`/identity/sequence/`): the logo, framed like a stamp, taken down to the
+  modular mark, the S M, the S and the S's block, and back. One drawing: the modular mark's geometry between the
+  logo's measures and its own. Space pauses, the arrows step, i inverts; `?at=0`–`4` holds a state, `?t=` seeks.
 - `deck.html`: the same modules as 1920 × 1080 slides, for a PDF
   (`python3 web/scripts/identity-pdf.py`).
 

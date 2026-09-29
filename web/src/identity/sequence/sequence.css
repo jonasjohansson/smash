@@ -1,0 +1,17 @@
+/* The sequence: the mark alone, full screen, in black and white. */
+:root { --ink: #fff; --paper: #000; }
+:root[data-paper] { --ink: #000; --paper: #fff; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--paper); color: var(--ink); }
+body { overflow: hidden; }
+.seq { position: fixed; inset: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
+.mark { width: 100%; height: 100%; display: block; }
+.bar { display: flex; align-items: center; gap: 16px; padding: 0 16px 16px; opacity: 0.55; transition: opacity 0.3s; }
+.bar:hover, .bar:focus-within { opacity: 1; }
+.bar button { flex: none; width: 28px; height: 28px; padding: 6px; border: 0; background: none; color: inherit; cursor: pointer; }
+.bar button svg { width: 100%; height: 100%; display: block; fill: currentColor; }
+.play .i-play { display: none; }
+.play[data-paused] .i-play { display: inline; }
+.play[data-paused] .i-pause { display: none; }
+.scrub { flex: 1; min-width: 0; accent-color: var(--ink); background: none; }
+@media (prefers-reduced-motion: reduce) { .bar { opacity: 1; } }
