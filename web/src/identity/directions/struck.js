@@ -172,6 +172,23 @@ function place(w, h, fit = 0.72) {
   return { x: (w - bw) / 2, y: (h - bh) / 2, w: bw, h: bh, s: bw / G.W };
 }
 
+/** The mark leaning towards (ix, iy), each column kcol of the way, on a w × h canvas. */
+function paint(ctx, w, h, { bg, fg, ix, iy, kcol }) {
+  const box = place(w, h);
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, w, h);
+  const T2 = (x, y) => [box.x + x * box.s, box.y + y * box.s];
+  ctx.fillStyle = fg;
+  ctx.fill(new Path2D(G.markPath({ ...G.CANON, ix, iy, kcol }, G.MARK, T2, box.s)), 'evenodd');
+}
+
+/** The loop at t (0 to 1) on any canvas, w × h in its current units, with no pointer: for the MP4. */
+export function frame(ctx, w, h, t, { ground = 'ink' } = {}) {
+  const [bg, fg] = ground === 'paper' ? [WHITE, BLACK] : [BLACK, WHITE];
+  paint(ctx, w, h, { bg, fg, ix: CANON_I[0], iy: CANON_I[1], kcol: leanAt(t) });
+}
+export const duration = DUR;
+
 export function motion(el, { ground = 'ink' } = {}) {
   const stage = canvasStage(el);
   stage.canvas.style.touchAction = 'pan-y';
@@ -211,11 +228,7 @@ export function motion(el, { ground = 'ink' } = {}) {
     const ix = lerp(CANON_I[0], live.ax, wgt);
     const iy = lerp(CANON_I[1], live.ay, wgt);
     const kcol = leanAt(t).map((k) => lerp(k, 1, wgt));
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, w, h);
-    const T2 = (x, y) => [box.x + x * box.s, box.y + y * box.s];
-    ctx.fillStyle = fg;
-    ctx.fill(new Path2D(G.markPath({ ...G.CANON, ix, iy, kcol }, G.MARK, T2, box.s)), 'evenodd');
+    paint(ctx, w, h, { bg, fg, ix, iy, kcol });
   };
 
   const tl = timeline({ duration: DUR, render });

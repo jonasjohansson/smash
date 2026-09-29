@@ -17,22 +17,27 @@ its marks, with no copy.
 - `mapping.js`: a mapping grid for warping the mark.
 - `sculpture.js`: one object that reads SMASH from the front and the S from the side.
 - `directions/struck.js`: the mark with its slots leaning.
-- `sequence/`: a page of its own (`/identity/sequence/`): the logo, square, taken down one move at a time to
-  the modular mark, the S M, the S, the ! (the S's stem over its corner square) and that square (the module); then,
-  that square being the logo's block seen close, the logo writes itself back through it as its slots open, left to
-  right. Eight bars at 120 a minute; every move lands its hit on a sixteenth, with its own easing and its own sound
-  (`sound.js`: synthesised, one key, a room, a compressor and a limiter; the reveal plays a rising arpeggio, a note
-  per slot column). Space pauses, the arrows step, i inverts, s turns the sound on, p (or `?punchy`) plays the
-  punchier version (`?calm` the slow one); `?at=0`–`6` holds a state, `?t=` seeks. The download button makes an MP4
-  of the loop right there, in the version and colours on screen: 1600 × 1200 for Dribbble, shift for 1920 × 1080, alt
-  for 1080 × 1080, or `?size=WxH` (`export.js`: every frame drawn at its time, H.264 at a constant quality through
-  WebCodecs, the sound rendered offline, folded so it loops without a seam and placed to the sample, mp4-muxer).
+- `sequence/`: a page of its own (`/identity/sequence/`), and a section on this page: the logo, square, taken down
+  one move at a time to the modular mark, the S M, the S, the ! (the S's stem over its corner square) and that square
+  (the module); then, that square being the logo's block seen close, the logo writes itself back through it as its
+  slots open, left to right. Eight bars at 120 a minute; every move lands its hit on a sixteenth, with its own easing
+  and its own sound (`sound.js`: synthesised, one key, a room, a compressor and a limiter; the reveal plays a rising
+  arpeggio, a note per slot column). `engine.js` is the sequence itself, `player.js` keeps it in time on a screen
+  (the drawing, the sound, the MP4), `sequence.js` is its page and `section.js` its section here. On its page, space
+  pauses, the arrows step, i inverts, s turns the sound on, p (or `?punchy`) plays the punchier version (`?calm` the
+  slow one); `?at=0`–`6` holds a state, `?t=` seeks, `?paper` starts black on white.
+- MP4s (`video.js`): the chapters' motions and the sequence each have a download button (MP4) that makes one loop of
+  it right there: 1600 × 1200 for Dribbble, shift-click for 1920 × 1080, alt-click for 1080 × 1080, or `?size=WxH`;
+  the sequence in the version and colours on screen, with its sound. Every frame is drawn at its time (not recorded
+  off the screen), H.264 at a constant quality through WebCodecs, the sound rendered offline, folded so it loops
+  without a seam and placed to the sample, mp4-muxer.
 - `deck.html`: the same modules as 1920 × 1080 slides, for a PDF
   (`python3 web/scripts/identity-pdf.py`).
 
 The module contract: a chapter exports `info`, plus `wordmark`, `symbol`, `lockup` and `favicon`
 (SVG strings in `currentColor`, plain vector), and `motion(el)`, which returns a timeline whose
-`seek(t)` depends on t alone. A tool exports its HTML and `mount(section, { panel, settings })`,
+`seek(t)` depends on t alone; for its MP4, `frame(ctx, w, h, t)` draws the motion at t on any canvas, and
+`duration` is its loop in seconds. A tool exports its HTML and `mount(section, { panel, settings })`,
 which returns `{ ready, pause, resume, destroy, snapshot }`.
 
 Licensed fonts are kept out of git (`web/.gitignore`).

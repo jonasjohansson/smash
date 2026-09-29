@@ -1,11 +1,11 @@
 /* The sequence: the mark alone, full screen, in black and white. */
-:root { --ink: #fff; --paper: #000; }
-:root[data-paper] { --ink: #000; --paper: #fff; }
+.seq { --ink: #fff; --paper: #000; background: var(--paper); color: var(--ink); }
+.seq[data-paper] { --ink: #000; --paper: #fff; }
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; background: var(--paper); color: var(--ink); }
+html, body { margin: 0; height: 100%; background: #000; }
 body { overflow: hidden; }
 .seq { position: fixed; inset: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; grid-template-columns: minmax(0, 1fr); }
-.mark { width: 100%; height: 100%; display: block; }
+.seq-mark { width: 100%; height: 100%; display: block; }
 .bar { display: flex; align-items: center; gap: 16px; padding: 0 16px 16px; opacity: 0.55; transition: opacity 0.3s; }
 .bar:hover, .bar:focus-within { opacity: 1; }
 .bar button, .bar a { flex: none; width: 28px; height: 28px; padding: 6px; border: 0; background: none; color: inherit; cursor: pointer; }

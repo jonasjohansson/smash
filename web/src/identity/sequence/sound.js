@@ -17,7 +17,7 @@
 //
 // Off until asked for: a browser plays sound only after a click. Given a
 // context (an OfflineAudioContext), it writes the sound of a whole loop
-// instead, each move at its own time, for the video (export.js).
+// instead, each move at its own time, for the video (../video.js).
 
 const N = 128; // points on each curve
 const LAG = 0.012; // the two compressors' look-ahead, 6 ms each: sounds are sent this much early

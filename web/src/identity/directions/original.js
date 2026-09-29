@@ -161,23 +161,28 @@ function markAt(s) {
   return [0, 1, 2, 3, 4].map((i) => letterPaths({ ...REST, stroke, crossbar: i === 1 ? REST.crossbar : crossbarAt(i, s) })[i]).join('');
 }
 
+/** The motion at t (0 to 1) on any canvas, w × h in its current units: the ground and the mark. For the stage and the MP4. */
+export function frame(ctx, w, h, t) {
+  const s = (t % 1) * DURATION; // t 1 draws the same frame as t 0
+  ctx.fillStyle = BLACK;
+  ctx.fillRect(0, 0, w, h);
+  const k = Math.min((h * 0.64) / H, (w * 0.8) / W);
+  ctx.save();
+  ctx.translate((w - W * k) / 2, (h - H * k) / 2);
+  ctx.scale(k, k);
+  ctx.fillStyle = WHITE;
+  ctx.fill(new Path2D(markAt(s)), 'evenodd');
+  ctx.restore();
+}
+export const duration = DURATION;
+
 export function motion(el) {
   const stage = canvasStage(el);
   let dead = false;
 
   const render = (t) => {
     if (dead) return;
-    const { ctx, width: w, height: h } = stage;
-    const s = (t % 1) * DURATION; // t 1 draws the same frame as t 0
-    ctx.fillStyle = BLACK;
-    ctx.fillRect(0, 0, w, h);
-    const k = Math.min((h * 0.64) / H, (w * 0.8) / W);
-    ctx.save();
-    ctx.translate((w - W * k) / 2, (h - H * k) / 2);
-    ctx.scale(k, k);
-    ctx.fillStyle = WHITE;
-    ctx.fill(new Path2D(markAt(s)), 'evenodd');
-    ctx.restore();
+    frame(stage.ctx, stage.width, stage.height, t);
   };
 
   const tl = timeline({ duration: DURATION, render });

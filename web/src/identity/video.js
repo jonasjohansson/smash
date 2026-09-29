@@ -1,10 +1,11 @@
-// The sequence as an MP4, made in the browser when it is asked for: one whole
-// loop, each frame drawn at its exact time (not recorded off the screen, so
-// none is dropped and it runs faster than real time), encoded as H.264 by the
-// browser (WebCodecs) at a constant quality (so even the first frames are
-// sharp), with the loop's sound rendered offline from the same moves and
-// encoded as AAC (or Opus where AAC is not offered), put together in an MP4 by
-// mp4-muxer. Loaded only when the download button is pressed.
+// A loop as an MP4, made in the browser when it is asked for: each frame drawn
+// at its exact time (not recorded off the screen, so none is dropped and it
+// runs faster than real time), encoded as H.264 by the browser (WebCodecs) at
+// a constant quality (so even the first frames are sharp), with the loop's
+// sound, if it has one, encoded as AAC (or Opus where AAC is not offered), put
+// together in an MP4 by mp4-muxer. Used by every download on /identity: the
+// chapters' motions and the sequence (its own page too). Loaded only when a
+// download button is pressed.
 //
 // The file can open anywhere in the loop (`start`): picture and sound are both
 // turned round by the same amount, so it still loops without a seam. The AAC
@@ -27,11 +28,45 @@ async function supported(Encoder, configs) {
 const drain = (enc, n) => new Promise((r) => { const go = () => (enc.encodeQueueSize > n ? setTimeout(go, 1) : r()); go(); });
 
 /**
- * One loop as an MP4 Blob, from `start` seconds into it. `svgAt(t)` gives the
- * whole frame at time t as an SVG string (its own viewBox, no ground);
- * `sound()` the loop's sound as an AudioBuffer. onProgress(0 to 1) as it goes.
+ * The size a download is made at: 1600 × 1200 (Dribbble's 4:3); shift for
+ * 1920 × 1080, alt for 1080 × 1080; ?size=WxH in the page's address over all.
  */
-export async function renderVideo({ period, start = 0, svgAt, sound, ink, paper, width = 1600, height = 1200, fps = 60, onProgress = () => {} }) {
+export function sizeOf(e = {}) {
+  const asked = /^(\d+)x(\d+)$/.exec(new URLSearchParams(location.search).get('size') ?? '');
+  if (asked) return [+asked[1], +asked[2]];
+  return e.shiftKey ? [1920, 1080] : e.altKey ? [1080, 1080] : [1600, 1200];
+}
+export const SIZES_HINT = 'MP4, 1600 × 1200; shift-click for 1920 × 1080, alt-click for 1080 × 1080';
+
+/** Hand a Blob to the viewer as a file. */
+export function save(blob, name) {
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: name });
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+}
+
+/**
+ * A painter for renderVideo from `svgAt(t)`, which gives the whole frame at
+ * time t as an SVG string (its own viewBox, in currentColor, no ground).
+ */
+export function svgPainter(svgAt, { ink, paper }) {
+  return async (ctx, w, h, t) => {
+    const img = new Image();
+    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgAt(t).replace('<svg ', `<svg width="${w}" height="${h}" color="${ink}" `))}`;
+    await img.decode();
+    ctx.fillStyle = paper;
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
+  };
+}
+
+/**
+ * One loop as an MP4 Blob, from `start` seconds into it. `paint(ctx, w, h, t)`
+ * draws the whole frame at time t (seconds), ground and all, on a w × h
+ * canvas (it may return a promise); `sound()`, if given, the loop's sound as
+ * an AudioBuffer. onProgress(0 to 1) as it goes.
+ */
+export async function renderVideo({ period, start = 0, paint, sound = null, width = 1600, height = 1200, fps = 60, onProgress = () => {} }) {
   if (!('VideoEncoder' in window)) throw new Error('this browser cannot encode video (no WebCodecs)');
   const { Muxer, ArrayBufferTarget } = await import(MUXER);
   const base = { width, height, framerate: fps };
@@ -44,9 +79,9 @@ export async function renderVideo({ period, start = 0, svgAt, sound, ink, paper,
     { ...base, codec: 'avc1.42002A', bitrate: 12e6 },
   ]);
   if (!video) throw new Error('this browser cannot encode H.264 at this size');
-  const buffer = await sound();
-  const rate = buffer.sampleRate, channels = buffer.numberOfChannels;
-  const audio = 'AudioEncoder' in window ? await supported(AudioEncoder, [
+  const buffer = sound ? await sound() : null;
+  const rate = buffer?.sampleRate, channels = buffer?.numberOfChannels;
+  const audio = buffer && 'AudioEncoder' in window ? await supported(AudioEncoder, [
     { codec: 'mp4a.40.2', sampleRate: rate, numberOfChannels: channels, bitrate: 256000 },
     { codec: 'opus', sampleRate: rate, numberOfChannels: channels, bitrate: 192000 },
   ]) : null;
@@ -83,22 +118,16 @@ export async function renderVideo({ period, start = 0, svgAt, sound, ink, paper,
     aenc.close();
   }
 
-  // Then every frame: the SVG drawn onto a canvas over the ground.
+  // Then every frame, painted at twice the size and scaled down, so edges are smoothed once, evenly, wherever they fall.
   const canvas = new OffscreenCanvas(width, height);
   const ctx = canvas.getContext('2d');
-  // Each frame drawn at twice the size and scaled down, so edges are smoothed once, evenly, wherever they fall.
   const big = new OffscreenCanvas(width * 2, height * 2);
   const bctx = big.getContext('2d');
   const constant = video.bitrateMode === 'quantizer';
   for (let i = 0; i < frames; i++) {
     if (failed) throw failed;
-    const svg = svgAt(start + i / fps).replace('<svg ', `<svg width="${width * 2}" height="${height * 2}" color="${ink}" `);
-    const img = new Image();
-    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-    await img.decode();
-    bctx.fillStyle = paper;
-    bctx.fillRect(0, 0, width * 2, height * 2);
-    bctx.drawImage(img, 0, 0, width * 2, height * 2);
+    bctx.setTransform(1, 0, 0, 1, 0, 0);
+    await paint(bctx, width * 2, height * 2, start + i / fps);
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(big, 0, 0, width, height);
     const frame = new VideoFrame(canvas, { timestamp: Math.round((i / fps) * 1e6), duration: Math.round(1e6 / fps) });

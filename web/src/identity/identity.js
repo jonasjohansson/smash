@@ -3,6 +3,7 @@
 
 import { IMAGES } from './lib.js';
 import { loadDirections, attempt, errorHTML, loadFonts, settle, pad } from './directions.js';
+import { SIZES_HINT } from './video.js';
 
 const params = new URLSearchParams(location.search);
 const ONLY = params.get('d');
@@ -47,6 +48,7 @@ function chapter(d) {
         <figcaption class="controls">
           <button type="button" class="play" aria-label="Play or pause">Pause</button>
           <input type="range" class="scrub" min="0" max="1000" value="0" aria-label="Scrub the motion">
+          ${typeof d.mod.frame === 'function' ? `<button type="button" class="download" title="${SIZES_HINT}">MP4</button>` : ''}
         </figcaption>
       </figure>
       <div class="row two">
@@ -95,6 +97,7 @@ function live(d, section) {
         motion = r.value;
         if (FIXED_T !== null) motion.seek?.(FIXED_T);
         else motion.seek?.(0);
+        if (visible && !userPaused) motion.play?.(); // already on screen: the visibility check may have come first
       }
     }
     if (!app && appEl) {
@@ -119,6 +122,30 @@ function live(d, section) {
   });
   scrub.addEventListener('input', () => { if (!motion) return; userPaused = true; motion.pause(); motion.seek(scrub.value / 1000); });
 
+  // The download: one loop of the motion as an MP4, drawn frame by frame at its
+  // exact time (the module's frame(), ../video.js), whatever the stage is doing.
+  const dl = $('.download', section);
+  dl?.addEventListener('click', async (e) => {
+    if (dl.hasAttribute('data-busy')) return;
+    dl.setAttribute('data-busy', '');
+    try {
+      const { renderVideo, sizeOf, save } = await import('./video.js');
+      const [width, height] = sizeOf(e);
+      const period = d.mod.duration;
+      const blob = await renderVideo({
+        period, width, height,
+        paint: (ctx, w, h, s) => d.mod.frame(ctx, w, h, s / period),
+        onProgress: (p) => { dl.textContent = `${Math.round(p * 100)}%`; },
+      });
+      save(blob, `smash-${d.slug}-motion-${width}x${height}.mp4`);
+    } catch (err) {
+      console.error(`[identity] ${d.slug}: the video could not be made`, err);
+    } finally {
+      dl.removeAttribute('data-busy');
+      dl.textContent = 'MP4';
+    }
+  });
+
   new IntersectionObserver(([e]) => { if (e.isIntersecting) mount(); else unmount(); }, { rootMargin: '100% 0px' }).observe(section);
   new IntersectionObserver(([e]) => {
     visible = e.isIntersecting;
@@ -139,6 +166,7 @@ function live(d, section) {
  */
 const EXTRAS = [
   { id: 'modular', name: 'The modular mark', load: async () => { const m = await import('./modular.js'); return { html: m.HTML, mount: m.mount }; } },
+  { id: 'sequence', name: 'Sequence', load: async () => { const m = await import('./sequence/section.js'); return { html: m.HTML, mount: m.mount }; } },
   { id: 'shapes', name: 'Shapes', load: async () => { const m = await import('./shapes.js'); return { html: m.HTML, mount: m.mount }; } },
   { id: 'lab', name: 'The live mark', load: async () => { const m = await import('./lab.js'); return { html: m.LAB_HTML, mount: m.mountLab }; } },
   { id: 'mapping', name: 'Mapping', load: async () => { const m = await import('./mapping.js'); return { html: m.HTML, mount: m.mount }; } },
