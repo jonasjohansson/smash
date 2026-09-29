@@ -54,6 +54,14 @@ Changing the angle is left to the 3D version.
 | 7 | 25–28 | The square is the logo's block: close-ups of it that drift, slow and tense. |
 | 8 | 29–32 | The reveal in four hits: slot columns open in groups (S, M, A S, H); back to beat 1. |
 
+**As built (after Jonas saw it):** the camera-only beats read as moving the logo around without doing
+anything to it, the constant drift as a zoom, and the ! with half its stem as a colon. So every hit is now
+the mark itself changing, with the camera moving only with a change; a beat with nothing to change holds
+dead still; the ! drops to the square in one. 21 hits: the logo held for bar 1; the breaks and the squash;
+the crop taking the H, the S, the A, the M in two; the !; the drop; the square growing to fill the screen
+in two hits; the logo written back a column a beat. The smear's shutter looks ahead from each frame, so the
+frame on the beat is crisp. The `/identity` section stays on the classic sequence for now.
+
 ### How it's built
 
 - `sequence/pulse.js`: the new sequence. It exports the same things as `engine.js`
