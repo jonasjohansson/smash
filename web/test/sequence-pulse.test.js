@@ -130,3 +130,12 @@ test('every change has a sound that hits on its beat; a hold has none', () => {
   assert.equal(last.chord, true);
   assert.equal(typeof P.loopSound, 'function');
 });
+
+test('the view is always a real box, right up to each beat', () => {
+  for (let b = 0; b < 32; b++) {
+    for (const t of [b * P.BEAT - 1e-12, b * P.BEAT - 1e-10, b * P.BEAT, b * P.BEAT + 1e-10]) {
+      const [, , w, h] = P.stateAt(t).view;
+      assert.ok(w > 0 && h > 0 && Number.isFinite(w), `t ${t}: ${w} × ${h}`);
+    }
+  }
+});

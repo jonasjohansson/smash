@@ -159,7 +159,7 @@ function stateAt(t, aspect = 16 / 9) {
   const b = Math.min(BEATS - 1, Math.floor(t / BEAT + 1e-9));
   const s = t - b * BEAT;
   const from = held(KEYS[LAST[b]]), to = KEYS[(b + 1) % BEATS];
-  const A = drift(lens(from.box, aspect), wrap(t - LAST[b] * BEAT) / BEAT);
+  const A = drift(lens(from.box, aspect), (b - LAST[b] + BEATS) % BEATS + s / BEAT); // beats since it landed
   const u = (s - (BEAT - WHIP)) / WHIP;
   if (to.hold || u <= 0) return { q: from.q, view: viewOf(A, aspect) };
   const e = whip(u);
