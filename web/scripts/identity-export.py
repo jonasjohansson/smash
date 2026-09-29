@@ -158,32 +158,31 @@ def modular(page, out):
 
 SHAPES = '''async () => {
   const m = await import('/identity/shapes.js');
-  const cat = await m.catalogue({ live: true });
-  const files = {};
-  for (const [source, kinds] of Object.entries(cat)) {
-    for (const [kind, list] of Object.entries(kinds)) for (const s of list) files[`${source}-${kind}-${String(s.n).padStart(2, '0')}.svg`] = m.shapeSVG(s);
-  }
-  const blocks = m.blocks(cat, { ...m.SHAPES_DEFAULTS, show: 'both', from: 'all' }).map((b) => b.shapes);
-  files['all-shapes.svg'] = m.sheetSVG(blocks, 'true');
-  files['all-shapes-fitted.svg'] = m.sheetSVG(blocks, 'fitted');
-  return { files, data: m.dataModule(cat) };
+  return await m.exportFiles();
 }'''
 
 
 def shapes(page, out):
-    """The Shapes section (shapes.js), built live: every source's shapes as true outlines (named as the page
-    names them), the page's default view on two sheets, in 00-original/shapes/; and the catalogue the page
-    reads, web/src/identity/shapes/catalogue-data.js."""
-    d = page.evaluate(SHAPES)
+    """The Shapes section (shapes.js) as true outlines, in 00-original/shapes/: kit/ (the six pieces), symbols/
+    (the default gallery, one file each and all of them on one sheet) and patterns/ (each pattern's seamless
+    tile). Every file is one filled path, fill-rule evenodd, with a width and height. Whatever was there
+    before is cleared first."""
+    files = page.evaluate(SHAPES)
     folder = out / 'shapes'
     folder.mkdir(exist_ok=True)
-    for old in folder.glob('*.svg'):
+    for old in sorted(folder.rglob('*.svg')):
         old.unlink()
-    for name, svg in d['files'].items():
-        (folder / name).write_text(svg)
-    data = ROOT / 'web/src/identity/shapes/catalogue-data.js'
-    data.write_text(d['data'])
-    print(f'   shapes: wrote {len(d["files"])} files to {folder.relative_to(ROOT)}/ and {data.relative_to(ROOT)}')
+    for sub in sorted(folder.glob('*/'), reverse=True):
+        if sub.is_dir() and not any(sub.iterdir()):
+            sub.rmdir()
+    for name, svg in files.items():
+        path = folder / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        for needle, why in RISKY.items():
+            if needle in svg:
+                print(f'   warning: shapes/{name}: {why}')
+        path.write_text(svg)
+    print(f'   shapes: wrote {len(files)} files to {folder.relative_to(ROOT)}/')
 
 
 def main():
