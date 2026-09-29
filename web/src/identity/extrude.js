@@ -12,7 +12,7 @@ export { EXTRUDE_DEFAULTS };
 const COLORS = { white: '#f2f2f2', black: '#161616', dark: '#2a221c', cream: '#efe9df', yellow: '#f7be04', glass: '#ffffff', chrome: '#d9d9d9' };
 
 /** SVG path data (M L H V C Q Z, absolute or relative) into a THREE.ShapePath, points mapped by map(x, y). */
-function parsePath(d, map) {
+export function parsePath(d, map) {
   const sp = new THREE.ShapePath();
   const tokens = d.match(/[a-zA-Z]|-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?/g) ?? [];
   let i = 0;
@@ -57,7 +57,7 @@ function parsePath(d, map) {
 }
 
 /** Outlines into shapes with holes, by nesting: a contour inside an odd number of others is a hole. */
-function toShapes(shapePath) {
+export function toShapes(shapePath) {
   const contours = shapePath.subPaths.map((p) => {
     const pts = p.getPoints(10);
     return { pts, area: Math.abs(THREE.ShapeUtils.area(pts)) };
