@@ -18,10 +18,11 @@ its marks, with no copy.
 - `sculpture.js`: one object that reads SMASH from the front and the S from the side.
 - `directions/struck.js`: the mark with its slots leaning.
 - `sequence/`: a page of its own (`/identity/sequence/`): the logo, framed like a stamp, taken down to the
-  modular mark, the S M, the S and the square in its bottom left corner (the module), and back. One drawing: the modular mark's geometry between the
+  modular mark, the S M, the S, the ! (the S's left stem over its corner square) and that square (the module), then round again: along
+  the bottom into the mark's bottom strip, up onto the tall logo, the S's slots closed, the outline drawn back on. One drawing: the modular mark's geometry between the
   logo's measures and its own. One thing moves at a time, each move with its own easing (a snap, a spring, a
   sweep, a landing) and its own sound, synthesised from the same curve (`sound.js`). Space pauses, the arrows step,
-  i inverts, s turns the sound on, p (or `?punchy`) plays the punchier version; `?at=0`–`4` holds a state, `?t=`
+  i inverts, s turns the sound on, p (or `?punchy`) plays the punchier version (`?calm` the slow one); `?at=0`–`4` holds a state, `?t=`
   seeks. The download button gives the MP4 in `video/`, rendered frame by frame with its sound by
   `python3 web/scripts/identity-sequence-video.py [--punchy] [--paper] [--size=1920x1080]`.
 - `deck.html`: the same modules as 1920 × 1080 slides, for a PDF

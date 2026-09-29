@@ -16,7 +16,7 @@ export const MODULAR_DEFAULTS = {
   stem: 31.78, // the height of the top and the bottom band; a bar for five even bands, more for taller letters
   bend: 10, // the radius of a bend, on the slot's centre line, as the mark's
   ends: 'round', // round | square: the closed slot ends
-  counter: 17.5, // where the A's counter starts, from the top
+  counter: 30, // where the A's counter starts (its round end's centre), from the top: a slot clear of the ceiling
   view: 'board', // board | wordmark | monogram
   symbol: 'S M', // S M | S: the symbol, and the favicons with it
   turn: 0, // 0 | 90 | 180 | 270: the symbol turned, in degrees
