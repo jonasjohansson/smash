@@ -18,8 +18,8 @@ its marks, with no copy.
 - `sculpture.js`: one object that reads SMASH from the front and the S from the side.
 - `directions/struck.js`: the mark with its slots leaning.
 - `sequence/`: a page of its own (`/identity/sequence/`): the logo, framed like a stamp, taken down to the
-  modular mark, the S M, the S, the ! (the S's left stem over its corner square) and that square (the module), then round again: along
-  the bottom into the mark's bottom strip, up onto the tall logo, the S's slots closed, the outline drawn back on. One drawing: the modular mark's geometry between the
+  modular mark, the S M, the S, the ! (the S's left stem over its corner square) and that square (the module), then round again: the
+  square widens to the logo's block, the logo appears through it as its slots open, and the outline is drawn back on. One drawing: the modular mark's geometry between the
   logo's measures and its own. One thing moves at a time, each move with its own easing (a snap, a spring, a
   sweep, a landing) and its own sound, synthesised from the same curve (`sound.js`). Space pauses, the arrows step,
   i inverts, s turns the sound on, p (or `?punchy`) plays the punchier version (`?calm` the slow one); `?at=0`–`4` holds a state, `?t=`

@@ -2,10 +2,10 @@
 // round again. The logo, framed like a stamp; the modular mark (the outline
 // erased, the S's slots run off the edges, the A's counter raised, the bands
 // squashed to five); the S M; the S; the square in the S's bottom left corner,
-// a bar by a bar, the module it is all built from. Then round: the square runs
-// out along the bottom into the mark's bottom strip, every slot crossing it;
-// that strip, now the foot of the tall logo, opens up to show it whole; the
-// S's slots close, and the outline is drawn back on. A loop, one way round.
+// a bar by a bar, the module it is all built from. Then round: the square is
+// the logo's block, seen close (filling the screen they are the same height);
+// it widens to the logo's proportions, the logo appears through it as its
+// slots open, and the outline is drawn back on. A loop, one way round.
 //
 // One drawing all the way: the modular mark's geometry (../modular.js), with
 // its measures between the logo's and its own. With its top and bottom bands
@@ -40,11 +40,11 @@ const STATES = [
   { ...MODULAR, w: c(1) - S / 2 }, // the S: 83.56
   { ...MODULAR, w: B }, // the S's left stem over its corner square, a slot between: an exclamation mark
   { ...MODULAR, w: B, top: FOOT }, // the square in the S's bottom left corner: 31.78 × 31.78
-  { ...MODULAR, top: FOOT }, // the bottom strip, the slots crossing it
-  // The same strip as the foot of the tall logo: it looks just the same (the crop shows only the slots crossing it),
-  // so the bands and the counter change here unseen, and the strip opens up onto the logo.
-  { ...MODULAR, stem: TALL, counter: CLOSED, top: TALL + 2 * S + B },
-  { ...MODULAR, stem: TALL, counter: CLOSED }, // the tall logo, its S's slots still open
+  // The same square, as the logo's block cropped square with its slots closed (471 × 471): filling the screen,
+  // it looks just the same, so the change is unseen, and the logo can grow out of it.
+  { ...MODULAR, stem: TALL, counter: CLOSED, openTop: 0, openBot: 0, w: 471, slot: 0 },
+  { ...MODULAR, stem: TALL, counter: CLOSED, openTop: 0, openBot: 0, slot: 0 }, // the logo's block, solid
+  { ...MODULAR, stem: TALL, counter: CLOSED, openTop: 0, openBot: 0 }, // the logo, its slots open, no outline yet
 ];
 
 // Three versions: snappy (the default); punchy (?punchy, or p), the same with
@@ -78,20 +78,21 @@ const EASE = FEELS[VERSION];
 // From each to the next, one thing at a time, each its own move: [what, seconds (calm), feel, the breath after it].
 // The outline is erased; the S's slots break out at the top, then at the bottom;
 // the counter rises; the bands squash about the middle; a crop across, then down;
-// and only then the camera, to frame what is left. Round again: out along the
-// bottom, up onto the tall logo, the S's slots closed, the outline drawn on.
+// and only then the camera, to frame what is left. Round again: the square
+// widens to the logo's block, its slots open through it, the camera makes room
+// and the outline is drawn on.
 const CALM = [
   [['frame', 1.6, 'draw', 0.45], ['openTop', 0.5, 'snap'], ['openBot', 0.5, 'snap'], ['counter', 0.6, 'land'], ['stem', 1.2, 'spring'], ['cam', 1.1, 'follow']],
   [['w', 1, 'sweep'], ['cam', 1.1, 'follow']],
   [['w', 0.85, 'sweep'], ['cam', 1.1, 'follow']],
   [['w', 0.7, 'sweep'], ['cam', 1.1, 'follow']],
   [['top', 0.7, 'sweep'], ['cam', 1.1, 'follow']],
-  [['w', 1.1, 'sweep'], ['cam', 1.1, 'follow']],
-  [], // unseen: the strip becomes the tall logo's foot
-  [['top', 1.2, 'sweep'], ['cam', 1.2, 'follow']],
-  [['openBot', 0.5, 'snap'], ['openTop', 0.5, 'snap'], ['frame', 1.6, 'draw', 0.3], ['cam', 1, 'follow']],
+  [], // unseen: the square becomes the logo's block
+  [['w', 0.9, 'sweep'], ['cam', 1.1, 'follow']],
+  [['slot', 1.1, 'sweep']],
+  [['cam', 1, 'follow'], ['frame', 1.6, 'draw', 0.3]],
 ];
-const CALM_HOLD = [1.7, 1.2, 1.2, 1.1, 1.6, 1.3, 0.9, 0, 0.5]; // seconds on each; the ! a little longer
+const CALM_HOLD = [1.7, 1.2, 1.2, 1.1, 1.6, 1.3, 0, 0.5, 0.7]; // seconds on each; the ! a little longer
 // How much quicker each version is than calm: [moves, the outline, holds, breaths].
 const PACE = { calm: [1, 1, 1, 1], snappy: [0.5, 0.6, 0.72, 0.55], punchy: [0.42, 0.55, 0.62, 0.45] }[VERSION];
 const STEPS = CALM.map((steps) => steps.map(([key, d, feel, beat]) => [key, +(d * PACE[key === 'frame' ? 1 : 0]).toFixed(3), feel, beat === undefined ? undefined : beat * PACE[3]]));
