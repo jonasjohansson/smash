@@ -55,3 +55,15 @@ test('the square becomes the block unseen: the screen is all ink either side', (
     }
   }
 });
+
+test('the smear runs only in the whips, each copy with its own mask', () => {
+  const still = P.frameAt(4 * P.BEAT + 0.2);
+  assert.equal(still.svg.match(/<mask /g).length, 1);
+  const fast = P.frameAt(5 * P.BEAT - 0.01);
+  const ids = [...fast.svg.matchAll(/<mask id="([^"]+)"/g)].map((m) => m[1]);
+  assert.equal(ids.length, P.SAMPLES);
+  assert.equal(new Set(ids).size, P.SAMPLES);
+  assert.match(fast.svg, /isolation:isolate/);
+  assert.match(fast.svg, /mix-blend-mode:plus-lighter/);
+  assert.ok(P.svgAt(5 * P.BEAT - 0.01).startsWith('<svg '));
+});

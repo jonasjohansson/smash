@@ -30,6 +30,8 @@ const PERIOD = BEATS * BEAT;
 const WHIP = 0.12; // how long the move into a beat takes
 const DRIFT = 0.035; // how far the camera pushes in over a beat, as a share of what it shows
 const START = 2 * UNIT; // the MP4 opens here, on a whole frame, in the logo's drift
+const SHUTTER = 1 / 40; // the smear: how much time each frame sees, live and in the MP4 alike
+const SAMPLES = 8; // and how many moments across it are drawn
 
 /** The whip: slow off and fastest at the end (an exponential ease-in), stopping dead on 1. */
 const K = 5;
@@ -158,6 +160,36 @@ function stateAt(t, aspect = 16 / 9) {
   return { q: mixQ(from.q, to.q, e), view: viewOf(between(A, lens(to.box, aspect), e), aspect) };
 }
 
+/** Whether the shutter at t reaches into a whip, where the smear is drawn. */
+function moving(t) {
+  const s = wrap(t) % BEAT;
+  return s > BEAT - WHIP - SHUTTER / 2 || s < SHUTTER / 2;
+}
+
+/**
+ * The frame at time t: the camera's view, and the drawing inside it. In a
+ * whip, the drawing is SAMPLES moments across the shutter, each placed as its
+ * own camera saw it, added up at 1/SAMPLES each (plus-lighter, in a group of
+ * its own) so they make the true average: motion blur, on paper or on ink.
+ */
+function frameAt(t, aspect = 16 / 9) {
+  const base = stateAt(t, aspect);
+  if (!moving(t)) return { view: base.view, svg: draw(base.q).svg };
+  const [x, y, , h] = base.view;
+  let svg = '';
+  for (let i = 0; i < SAMPLES; i++) {
+    const { q, view } = stateAt(t + ((i + 0.5) / SAMPLES - 0.5) * SHUTTER, aspect);
+    svg += `<g style="mix-blend-mode:plus-lighter" opacity="${f(1 / SAMPLES)}" transform="translate(${f(x)} ${f(y)}) scale(${+(h / view[3]).toFixed(6)}) translate(${f(-view[0])} ${f(-view[1])})">${draw(q, `seq-m${i}`).svg}</g>`;
+  }
+  return { view: base.view, svg: `<g style="isolation:isolate">${svg}</g>` };
+}
+
+/** The whole frame at time t as an SVG string for a screen of the given aspect. */
+function svgAt(t, aspect = 16 / 9) {
+  const { view, svg } = frameAt(t, aspect);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox(view)}" preserveAspectRatio="xMidYMid meet">${svg}</svg>`;
+}
+
 // ---------------------------------------------------------------------------
 // The score, for the player: a hold on each beat (where the arrows step to),
 // and each beat's move with its sound, starting WHIP before it.
@@ -169,5 +201,5 @@ KEYS.forEach((k, b) => {
 });
 SEGMENTS.sort((x, y) => x.t0 - y.t0);
 
-export { VERSION, PUNCHY, TEMPO, UNIT, BEAT, WHIP, KEYS, SEGMENTS, PERIOD, START, EASE, wrap, stateAt, draw, viewBox };
+export { VERSION, PUNCHY, TEMPO, UNIT, BEAT, WHIP, SAMPLES, KEYS, SEGMENTS, PERIOD, START, EASE, wrap, stateAt, frameAt, draw, svgAt, viewBox };
 export { STATES_ON_BEATS as STATES };
