@@ -91,8 +91,10 @@ frame on the beat is crisp. The `/identity` section stays on the classic sequenc
   frame difference per frame): peaks exactly every 0.5 s, and never zero in between.
 - Loop seam: the last beat lands on the first with no jump, in picture or sound.
 
-## The 3D version: later
+## The 3D version: tried, and dropped
 
-Designed on its own after the 2D one: the mark extruded as blocks (three.js, as in
-`extrude.js`), pieces tipping over their edges and restacking, and a camera that re-angles
-on the beat. It reuses the 2D version's beat map and sound.
+A test was made (on the branch `sequence-blocks`, not merged): the modular mark extruded into its five
+letters, first tipping off the end of the word, then with the reference's range of moves (tipping over
+any edge, rolling, turning, sliding in depth, hopping onto each other and home, the camera turning with
+them). Jonas, on seeing it: not interested in the 3D; the 2D is the one. The ideas of a full 3D version
+and of one where the 2D turns 3D are dropped with it.
