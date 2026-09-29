@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "eleventy --serve",
+    "test": "node --test test/*.test.js",
     "build": "eleventy",
     "import": "node scripts/import-portfolio.mjs"
   },

@@ -170,6 +170,7 @@ STATES.forEach((_, i) => {
   });
 });
 const PERIOD = acc;
+const START = (HOLDS[0] - 3) * UNIT; // the MP4 opens here: on a whole frame, a quarter of a second before the first move
 SEGMENTS.forEach((s, i) => { s.d = (SEGMENTS[i + 1]?.t0 ?? PERIOD) - s.t0; });
 
 const f = (n) => +n.toFixed(3);
@@ -291,17 +292,18 @@ function slots(q) {
 }
 
 /**
- * The mark for measures q, as the inside of an SVG: the block (cropped to w
- * across, from top down) less its slots; its middle held at y 0, so the bands
- * squash about it. The crop is the filled rectangle alone (the mask is open
- * everywhere else), so its edges are anti-aliased once. Returns { svg, box }.
+ * The mark for measures q, as the inside of an SVG, its mask named id: the
+ * block (cropped to w across, from top down) less its slots; its middle held
+ * at y 0, so the bands squash about it. The crop is the filled rectangle alone
+ * (the mask is open everywhere else), so its edges are anti-aliased once.
+ * Returns { svg, box }.
  */
-function draw(q) {
+function draw(q, id = 'seq-m') {
   const { h, list } = slots(q);
   const w = Math.min(W, Math.max(0.5, q.w)); // a crop's wind-up never runs past the block
   const top = Math.min(h - 0.5, Math.max(0, q.top));
-  // Each slot's width: all as one, or, as the logo writes itself, each column opening a thirty-second after the one before.
-  const widthOf = (col) => (q.reveal === undefined ? S * q.slot : S * Math.max(0, EASE.reveal(Math.max(0, Math.min(1, (q.reveal - col * STAGGER) / (1 - 9 * STAGGER))))));
+  // Each slot's width: by column where given (the pulse's reveal), all as one, or, as the logo writes itself, each column opening a thirty-second after the one before.
+  const widthOf = (col) => (q.cols ? S * q.cols[col] : q.reveal === undefined ? S * q.slot : S * Math.max(0, EASE.reveal(Math.max(0, Math.min(1, (q.reveal - col * STAGGER) / (1 - 9 * STAGGER))))));
   let cuts = '';
   for (const sl of list) {
     const sw = widthOf(sl.col);
@@ -312,19 +314,25 @@ function draw(q) {
     for (const [x, y] of [sl.a && sl.pts[0], sl.b && sl.pts.at(-1)].filter(Boolean)) cuts += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(sw / 2)}" fill="#000"/>`;
   }
   const m = OUT * 2;
-  const svg = `<defs><mask id="seq-m" maskUnits="userSpaceOnUse" x="${-m}" y="${-m}" width="${f(W + 2 * m)}" height="${f(h + 2 * m)}">`
+  const svg = `<defs><mask id="${id}" maskUnits="userSpaceOnUse" x="${-m}" y="${-m}" width="${f(W + 2 * m)}" height="${f(h + 2 * m)}">`
     + `<rect x="${-m}" y="${-m}" width="${f(W + 2 * m)}" height="${f(h + 2 * m)}" fill="#fff"/>${cuts}</mask></defs>`
-    + `<rect y="${f(top)}" width="${f(w)}" height="${f(h - top)}" fill="currentColor" mask="url(#seq-m)"/>`;
+    + `<rect y="${f(top)}" width="${f(w)}" height="${f(h - top)}" fill="currentColor" mask="url(#${id})"/>`;
   const dy = -h / 2;
   return { svg: `<g transform="translate(0 ${f(dy)})">${svg}</g>`, box: [0, top + dy, w, h + dy] };
 }
 
 const viewBox = ([x, y, w, h]) => `${f(x)} ${f(y)} ${f(w)} ${f(h)}`;
 
+/** The frame at time t for a screen of the given aspect: the camera's view, and the drawing inside it. */
+function frameAt(t, aspect = 16 / 9) {
+  const { q, view } = stateAt(t, aspect);
+  return { view, svg: draw(q).svg };
+}
+
 /** The whole frame at time t as an SVG string for a screen of the given aspect: the camera's view of the mark, in currentColor, no ground. */
 function svgAt(t, aspect = 16 / 9) {
-  const { q, view } = stateAt(t, aspect);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox(view)}" preserveAspectRatio="xMidYMid meet">${draw(q).svg}</svg>`;
+  const { view, svg } = frameAt(t, aspect);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox(view)}" preserveAspectRatio="xMidYMid meet">${svg}</svg>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -352,23 +360,26 @@ function cueOf(s) {
   return cue;
 }
 
-/** One loop's sound, rendered offline: an AudioBuffer, each move's sound at its own time, the tail folded onto the start. */
-async function loopSound(rate = 48000) {
-  const tail = 2.5;
-  const ctx = new OfflineAudioContext(2, Math.ceil((PERIOD + tail) * rate), rate);
-  const s = createSound({ context: ctx });
-  await s.start();
-  for (const seg of SEGMENTS) if (seg.key) s.play(cueOf(seg), seg.t0);
-  const buf = await ctx.startRendering();
-  const n = Math.round(PERIOD * rate);
-  const out = new AudioBuffer({ numberOfChannels: 2, length: n, sampleRate: rate });
-  for (let ch = 0; ch < 2; ch++) {
-    const src = buf.getChannelData(ch);
-    const dst = out.getChannelData(ch);
-    dst.set(src.subarray(0, n));
-    for (let i = n; i < src.length; i++) dst[i - n] += src[i]; // the tail over the loop's start, so it loops without a seam
-  }
-  return out;
+/** One loop's sound for a sequence, rendered offline: an AudioBuffer, each cue at its own time, the tail folded onto the start. */
+function loopSoundFor(period, segments, cueOf) {
+  return async (rate = 48000) => {
+    const tail = 2.5;
+    const ctx = new OfflineAudioContext(2, Math.ceil((period + tail) * rate), rate);
+    const s = createSound({ context: ctx });
+    await s.start();
+    for (const seg of segments) if (seg.key) s.play(cueOf(seg), seg.t0);
+    const buf = await ctx.startRendering();
+    const n = Math.round(period * rate);
+    const out = new AudioBuffer({ numberOfChannels: 2, length: n, sampleRate: rate });
+    for (let ch = 0; ch < 2; ch++) {
+      const src = buf.getChannelData(ch);
+      const dst = out.getChannelData(ch);
+      dst.set(src.subarray(0, n));
+      for (let i = n; i < src.length; i++) dst[i - n] += src[i]; // the tail over the loop's start, so it loops without a seam
+    }
+    return out;
+  };
 }
+const loopSound = loopSoundFor(PERIOD, SEGMENTS, cueOf);
 
-export { VERSION, PUNCHY, TEMPO, UNIT, STATES, SCORE, HOLDS, SEGMENTS, PERIOD, EASE, wrap, stateAt, draw, svgAt, viewBox, cueOf, loopSound };
+export { VERSION, PUNCHY, TEMPO, UNIT, STATES, SCORE, HOLDS, SEGMENTS, PERIOD, START, EASE, W, S, B, FOOT, c, wrap, lens, between, viewOf, stateAt, frameAt, draw, svgAt, viewBox, cueOf, loopSound, loopSoundFor };
