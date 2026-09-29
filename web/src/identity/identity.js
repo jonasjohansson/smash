@@ -160,17 +160,18 @@ function live(d, section) {
  * The original, live: tools after chapter 00, each its own module with its
  * own panel. lab.js is the landing's v2 (glass, flat, 3D); mapping.js warps
  * the mark through mapping points; sculpture.js is the mark as an object whose
- * side, or shadow, is something else. ?d=<id> shows one alone.
+ * side, or shadow, is something else; one marked last (the sequence) comes
+ * after every chapter instead. ?d=<id> shows one alone.
  * Each is mounted once (one WebGL context) and paused while off screen, and
  * loaded on its own, so a failure leaves the rest of the page standing.
  */
 const EXTRAS = [
   { id: 'modular', name: 'The modular mark', load: async () => { const m = await import('./modular.js'); return { html: m.HTML, mount: m.mount }; } },
-  { id: 'sequence', name: 'Sequence', load: async () => { const m = await import('./sequence/section.js'); return { html: m.HTML, mount: m.mount }; } },
-  { id: 'shapes', name: 'Shapes', load: async () => { const m = await import('./shapes.js'); return { html: m.HTML, mount: m.mount }; } },
   { id: 'lab', name: 'The live mark', load: async () => { const m = await import('./lab.js'); return { html: m.LAB_HTML, mount: m.mountLab }; } },
   { id: 'mapping', name: 'Mapping', load: async () => { const m = await import('./mapping.js'); return { html: m.HTML, mount: m.mount }; } },
   { id: 'sculpture', name: 'Sculpture', load: async () => { const m = await import('./sculpture.js'); return { html: m.HTML, mount: m.mount }; } },
+  // At the end of the page, after every chapter (Jonas, 2026-09-29).
+  { id: 'sequence', name: 'Sequence', last: true, load: async () => { const m = await import('./sequence/section.js'); return { html: m.HTML, mount: m.mount }; } },
 ];
 const extras = {};
 async function addExtra(page, x) {
@@ -201,8 +202,9 @@ async function main() {
     const section = chapter(d);
     page.appendChild(section);
     lives.push(bySlug[d.slug] = live(d, section));
-    if (d.slug === 'original' && !ONLY) for (const x of EXTRAS) await addExtra(page, x);
+    if (d.slug === 'original' && !ONLY) for (const x of EXTRAS.filter((x) => !x.last)) await addExtra(page, x);
   }
+  if (!ONLY) for (const x of EXTRAS.filter((x) => x.last)) await addExtra(page, x);
   for (const x of EXTRAS.filter((x) => x.id === ONLY)) await addExtra(page, x);
   // For the screenshot tool (web/scripts/identity-shoot.py).
   window.__identity = {
