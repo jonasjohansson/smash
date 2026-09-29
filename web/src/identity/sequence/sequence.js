@@ -54,12 +54,12 @@ const EASE = {
   follow: (u) => { const z = 0.82, w = 9, r = Math.sqrt(1 - z * z); return 1 - Math.exp(-z * w * u) * (Math.cos(w * r * u) + (z / r) * Math.sin(w * r * u)); },
 };
 
-// From each to the next, one thing at a time, each its own move: [what, seconds, feel].
+// From each to the next, one thing at a time, each its own move: [what, seconds, feel, the breath after it].
 // The frame thins away; the S's slots break out at the top, then at the bottom;
 // the counter rises; the bands squash about the middle; a crop across, then down;
 // and only then the camera, to frame what is left.
 const STEPS = [
-  [['frame', 0.8, 'smooth'], ['openTop', 0.5, 'snap'], ['openBot', 0.5, 'snap'], ['counter', 0.6, 'land'], ['stem', 1.2, 'spring'], ['cam', 1.1, 'follow']],
+  [['frame', 1.6, 'smooth', 0.45], ['openTop', 0.5, 'snap'], ['openBot', 0.5, 'snap'], ['counter', 0.6, 'land'], ['stem', 1.2, 'spring'], ['cam', 1.1, 'follow']],
   [['w', 1, 'sweep'], ['cam', 1.1, 'follow']],
   [['w', 0.85, 'sweep'], ['cam', 1.1, 'follow']],
   [['w', 0.7, 'sweep'], ['top', 0.7, 'sweep'], ['cam', 1.2, 'follow']],
@@ -77,7 +77,7 @@ function fit(q) {
 
 // The loop: forward from the logo to the square, a step at a time, and back the same way.
 const SEGMENTS = [];
-const move = (i, k, dir) => { const [key, d, feel] = STEPS[i][k]; return { from: i, k, key, dir, move: d, feel, d: d + BEAT }; };
+const move = (i, k, dir) => { const [key, d, feel, beat = BEAT] = STEPS[i][k]; return { from: i, k, key, dir, move: d, feel, d: d + beat }; };
 for (let i = 0; i < STATES.length; i++) {
   SEGMENTS.push({ hold: i, d: HOLD[i] });
   if (i < STEPS.length) STEPS[i].forEach((_, k) => SEGMENTS.push(move(i, k, 1)));
