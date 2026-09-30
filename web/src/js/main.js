@@ -62,7 +62,7 @@ const DIVE_DEFAULTS = {
 const GROUND_DEFAULTS = { ownGround: false, ground: '#1f1915', grain: 0.08, grainGround: 0.14, whiteAccent: false };
 function paintGround(p) {
   const root = document.documentElement.style;
-  if (p?.whiteAccent) root.setProperty('--accent', '#fff');
+  if (p?.whiteAccent) root.setProperty('--accent', '#f3efe8'); // the type's off-white
   else root.removeProperty('--accent');
   for (const [k, v] of [['grain', '--grain'], ['grainGround', '--grain-ground']]) {
     if (typeof p?.[k] === 'number') root.setProperty(v, p[k]);
