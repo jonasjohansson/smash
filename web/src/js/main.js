@@ -21,7 +21,8 @@
 //
 // Keys on the landing page: H opens the tweak panel (the mark is drawn from
 // parameters, see mark.js), A inverts the mask, S swaps black for white.
-// Anywhere: G shows the grid, D turns the accent from SMASH yellow to white.
+// Anywhere: G shows the grid, C steps through the colour palettes, D puts
+// the type's colour in the accent's place.
 
 // The modules come from the same build as this script: its address carries
 // the build's stamp (base.njk), and so do theirs.
@@ -54,38 +55,132 @@ const DIVE_DEFAULTS = {
   infoGap: 0.012, // between the rows and the mark
 };
 
-// The page's background, from the tweak panel (H): off, it follows the
-// browser's light or dark mode (main.css); on, it is the colour picked there,
-// on every page, the type turning dark or light to suit it. And the film
-// grain over it all, stronger on the brown than over the landing's mark.
-// And the accent: SMASH yellow, or white (D).
-const GROUND_DEFAULTS = { ownGround: false, ground: '#1f1915', grain: 0.08, grainGround: 0.14, whiteAccent: false };
+// The page's colours, from the tweak panel (H): a palette of a ground (the
+// page's background), the type on it and an accent, on every page. SMASH's
+// own is main.css's; the others are to try. D puts the type's colour in the
+// accent's place; C steps through the palettes, those kept in the panel too.
+// And the film grain over it all, stronger on the ground than over the mark.
+const SMASH_COLOURS = { ground: '#1f1915', ink: '#f3efe8', accent: '#f7be04' };
+const PALETTES = {
+  smash: { name: 'SMASH', ...SMASH_COLOURS },
+  night: { name: 'Night', ground: '#0e0e0e', ink: '#f3efe8', accent: '#f7be04' },
+  signal: { name: 'Signal', ground: '#141211', ink: '#f3efe8', accent: '#ff4d2e' },
+  acid: { name: 'Acid', ground: '#1b1f17', ink: '#ece9dc', accent: '#c8f000' },
+  ultramarine: { name: 'Ultramarine', ground: '#0f1633', ink: '#eef0f7', accent: '#f7be04' },
+  plum: { name: 'Plum', ground: '#221520', ink: '#f5ece6', accent: '#ff8fb1' },
+  paper: { name: 'Paper', ground: '#f3efe8', ink: '#1a1715', accent: '#e2462c' },
+  concrete: { name: 'Concrete', ground: '#d9d6cf', ink: '#161616', accent: '#1f3cff' },
+  mono: { name: 'Mono', ground: '#000000', ink: '#ffffff', accent: '#ffffff' },
+};
+const GROUND_DEFAULTS = { palette: 'smash', ...SMASH_COLOURS, kept: [], whiteAccent: false, grain: 0.08, grainGround: 0.14 };
+
+const isHex = (c) => /^#[0-9a-f]{6}$/i.test(c ?? '');
+const rgb = (c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16)).join(' ');
+const isLight = (c) => {
+  const [r, g, b] = rgb(c).split(' ').map((v) => v / 255);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.5;
+};
+
+// The palettes to pick from: the ones above, then those kept in the panel.
+const paletteList = (p) => [
+  ...Object.entries(PALETTES).map(([value, c]) => ({ value, ...c })),
+  ...(p.kept || []).map((c, i) => ({ value: `kept-${i}`, name: `kept ${i + 1}`, ...c })),
+];
+function usePalette(p, value) {
+  const it = paletteList(p).find((x) => x.value === value);
+  if (it) Object.assign(p, { palette: value, ground: it.ground, ink: it.ink, accent: it.accent });
+}
+function stepPalette(p, dir) {
+  const list = paletteList(p);
+  const i = list.findIndex((x) => x.value === p.palette);
+  usePalette(p, list[i < 0 ? (dir > 0 ? 0 : list.length - 1) : (i + dir + list.length) % list.length].value);
+}
+
 function paintGround(p) {
   const root = document.documentElement.style;
-  if (p?.whiteAccent) root.setProperty('--accent', '#f3efe8'); // the type's off-white
-  else root.removeProperty('--accent');
   for (const [k, v] of [['grain', '--grain'], ['grainGround', '--grain-ground']]) {
     if (typeof p?.[k] === 'number') root.setProperty(v, p[k]);
     else root.removeProperty(v);
   }
+  const [ground, ink, accent] = ['ground', 'ink', 'accent'].map((k) => (isHex(p?.[k]) ? p[k].toLowerCase() : SMASH_COLOURS[k]));
+  const shown = p?.whiteAccent ? ink : accent;
   const meta = document.querySelectorAll('meta[name="theme-color"]');
-  if (!p?.ownGround || !/^#[0-9a-f]{6}$/i.test(p.ground)) {
-    for (const k of ['--bg', '--ground', '--ink', '--muted', '--line', '--tile']) root.removeProperty(k);
+  if (ground === SMASH_COLOURS.ground && ink === SMASH_COLOURS.ink && shown === SMASH_COLOURS.accent) {
+    for (const k of ['--bg', '--ground', '--ink', '--muted', '--line', '--tile', '--accent', '--on-accent']) root.removeProperty(k);
     meta.forEach((m) => m.content = m.dataset.content ?? m.content);
     return;
   }
-  const [r, g, b] = [1, 3, 5].map((i) => parseInt(p.ground.slice(i, i + 2), 16) / 255);
-  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  const ink = lum > 0.5 ? '17 17 17' : '243 239 232';
-  root.setProperty('--bg', p.ground);
-  root.setProperty('--ground', p.ground);
-  root.setProperty('--ink', `rgb(${ink})`);
-  root.setProperty('--muted', `rgb(${ink} / 0.55)`);
-  root.setProperty('--line', `rgb(${ink} / 0.14)`);
-  root.setProperty('--tile', `color-mix(in oklab, ${p.ground}, rgb(${ink}) 8%)`);
-  meta.forEach((m) => { m.dataset.content ??= m.content; m.content = p.ground; });
+  root.setProperty('--bg', ground);
+  root.setProperty('--ground', ground);
+  root.setProperty('--ink', ink);
+  root.setProperty('--muted', `rgb(${rgb(ink)} / 0.55)`);
+  root.setProperty('--line', `rgb(${rgb(ink)} / 0.14)`);
+  root.setProperty('--tile', `color-mix(in oklab, ${ground}, ${ink} 8%)`);
+  root.setProperty('--accent', shown);
+  root.setProperty('--on-accent', isLight(shown) ? '#111' : '#fff');
+  meta.forEach((m) => { m.dataset.content ??= m.content; m.content = ground; });
 }
-try { paintGround(JSON.parse(localStorage.getItem('smash-mark') || '{}')); } catch {}
+
+// Settings as stored: only what differs from the defaults. Before palettes, a
+// background of one's own was a switch and a colour, the type turning dark or
+// light to suit it.
+function stored(key) {
+  try {
+    const s = JSON.parse(localStorage.getItem(key) || '{}');
+    if ('ownGround' in s) {
+      if (s.ownGround && isHex(s.ground)) Object.assign(s, { palette: 'custom', ink: isLight(s.ground) ? '#111111' : SMASH_COLOURS.ink });
+      else delete s.ground;
+      delete s.ownGround;
+    }
+    return s;
+  } catch { return {}; }
+}
+paintGround(stored('smash-mark'));
+
+// The Palette folder, in both panels: a palette picked from the list sets the
+// three colours, and changing one of them makes them the viewer's own
+// ('custom'), which Keep adds to the list. `changed` paints and saves.
+function addPalette(pane, params, changed) {
+  const f = pane.addFolder({ title: 'Palette' });
+  let quiet = false; // the panel catching up, not the viewer
+  const sync = () => { quiet = true; pane.refresh(); quiet = false; };
+  let list = null;
+  const addList = () => {
+    list?.dispose();
+    const options = Object.fromEntries([...paletteList(params).map((x) => [x.name, x.value]), ['custom', 'custom']]);
+    list = f.addBinding(params, 'palette', { label: 'palette (C)', options, index: 0 });
+    list.on('change', (e) => {
+      if (quiet || e.value === 'custom') return;
+      usePalette(params, e.value);
+      sync();
+      changed();
+    });
+  };
+  addList();
+  for (const [k, label] of [['ground', 'background'], ['ink', 'text'], ['accent', 'accent']]) {
+    f.addBinding(params, k, { label }).on('change', () => {
+      if (quiet) return;
+      if (params.palette !== 'custom') { params.palette = 'custom'; sync(); }
+      changed();
+    });
+  }
+  f.addBinding(params, 'whiteAccent', { label: 'accent is text (D)' }).on('change', changed);
+  f.addButton({ title: 'Keep palette' }).on('click', () => {
+    params.kept = [...(params.kept || []), { ground: params.ground, ink: params.ink, accent: params.accent }];
+    params.palette = `kept-${params.kept.length - 1}`;
+    addList();
+    changed();
+  });
+  f.addButton({ title: 'Forget kept palettes' }).on('click', () => {
+    if (params.palette.startsWith('kept-')) params.palette = 'custom';
+    params.kept = [];
+    addList();
+    changed();
+  });
+  f.addButton({ title: 'Copy palette' }).on('click', () => navigator.clipboard?.writeText(JSON.stringify({ ground: params.ground, ink: params.ink, accent: params.accent }, null, 2)));
+  return addList; // after a reset, the list again
+}
+
 
 // The tweak panel stays open from page to page, once opened (for this tab).
 const paneWasOpen = () => { try { return sessionStorage.getItem('smash-pane') === '1'; } catch { return false; } };
@@ -118,8 +213,7 @@ if (stage && framesEl) {
   const BASE = glass ? { ...MARK_DEFAULTS, ...GLASS_DEFAULTS, ...GROUND_DEFAULTS } : { ...MARK_DEFAULTS, ...DIVE_DEFAULTS, ...GROUND_DEFAULTS };
 
   // Settings are a per-viewer convenience; the page works without them.
-  const params = { ...BASE };
-  try { Object.assign(params, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch {}
+  const params = { ...BASE, ...stored(STORE) };
   // Only what differs from the defaults is kept, so a default changed later
   // still reaches whoever has not touched that setting.
   const save = () => {
@@ -578,9 +672,11 @@ if (stage && framesEl) {
     pane = new Pane({ title: glass ? 'SMASH v2' : 'SMASH' });
     pane.element.parentElement.classList.add('tweak');
     const change = () => { drawMark(); loadMedia(); save(); };
+    let relist = () => {};
     pane.addButton({ title: 'Reset all settings' }).on('click', () => {
       try { localStorage.removeItem(STORE); } catch {}
       Object.assign(params, BASE);
+      relist();
       pane.refresh();
       paintGround(params);
       drawMark();
@@ -630,12 +726,10 @@ if (stage && framesEl) {
       info.addBinding(params, 'infoGap', { label: 'gap to the mark', min: 0, max: 0.05, step: 0.001 });
     }
 
-    const colour = pane.addFolder({ title: 'Colour' });
-    colour.addBinding(params, 'ownGround', { label: 'own background' }).on('change', () => paintGround(params));
-    colour.addBinding(params, 'ground', { label: 'background' }).on('change', () => paintGround(params));
-    colour.addBinding(params, 'whiteAccent', { label: 'white accent (D)' }).on('change', () => paintGround(params));
-    colour.addBinding(params, 'grain', { label: 'grain (mark)', min: 0, max: 0.3, step: 0.005 }).on('change', () => paintGround(params));
-    colour.addBinding(params, 'grainGround', { label: 'grain (brown)', min: 0, max: 0.3, step: 0.005 }).on('change', () => paintGround(params));
+    relist = addPalette(pane, params, () => { paintGround(params); save(); });
+    const grain = pane.addFolder({ title: 'Grain' });
+    grain.addBinding(params, 'grain', { label: 'grain (mark)', min: 0, max: 0.3, step: 0.005 }).on('change', () => paintGround(params));
+    grain.addBinding(params, 'grainGround', { label: 'grain (ground)', min: 0, max: 0.3, step: 0.005 }).on('change', () => paintGround(params));
 
     const slideshow = pane.addFolder({ title: 'Slideshow' });
     slideshow.addBinding(params, 'speed', { label: 'ms per image', min: 17, max: 1000, step: 1 });
@@ -670,8 +764,9 @@ if (stage && framesEl) {
       drawMark();
       save();
     }
-    if (key === 'd') {
-      params.whiteAccent = !params.whiteAccent;
+    if (key === 'd' || key === 'c') {
+      if (key === 'd') params.whiteAccent = !params.whiteAccent;
+      if (key === 'c') stepPalette(params, e.shiftKey ? -1 : 1);
       pane?.refresh();
       paintGround(params);
       save();
@@ -715,8 +810,7 @@ if (own) {
 if (!stage) {
   const STORE = 'smash-mark';
   const BASE = { ...MARK_DEFAULTS, ...DIVE_DEFAULTS, ...GROUND_DEFAULTS };
-  const params = { ...BASE };
-  try { Object.assign(params, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch {}
+  const params = { ...BASE, ...stored(STORE) };
   const save = () => {
     const changed = Object.fromEntries(Object.entries(params).filter(([k, v]) => v !== BASE[k]));
     try { localStorage.setItem(STORE, JSON.stringify(changed)); } catch {}
@@ -795,19 +889,19 @@ if (!stage) {
     const { Pane } = await import('https://cdn.jsdelivr.net/npm/tweakpane@4.0.5/dist/tweakpane.min.js');
     pane = new Pane({ title: 'SMASH' });
     pane.element.parentElement.classList.add('tweak');
+    let relist = () => {};
     pane.addButton({ title: 'Reset all settings' }).on('click', () => {
       try { localStorage.removeItem(STORE); } catch {}
       Object.assign(params, BASE);
+      relist();
       pane.refresh();
       paintGround(params);
       draw();
     });
-    const colour = pane.addFolder({ title: 'Colour' });
-    colour.addBinding(params, 'ownGround', { label: 'own background' });
-    colour.addBinding(params, 'ground', { label: 'background' });
-    colour.addBinding(params, 'whiteAccent', { label: 'white accent (D)' });
-    colour.addBinding(params, 'grain', { label: 'grain (mark)', min: 0, max: 0.3, step: 0.005 });
-    colour.addBinding(params, 'grainGround', { label: 'grain (brown)', min: 0, max: 0.3, step: 0.005 });
+    relist = addPalette(pane, params, () => { paintGround(params); save(); });
+    const grain = pane.addFolder({ title: 'Grain' });
+    grain.addBinding(params, 'grain', { label: 'grain (mark)', min: 0, max: 0.3, step: 0.005 });
+    grain.addBinding(params, 'grainGround', { label: 'grain (ground)', min: 0, max: 0.3, step: 0.005 });
     if (marked) {
       const mark = pane.addFolder({ title: 'Mark' });
       mark.addBinding(params, 'stroke', { label: 'thickness', min: 2, max: 48, step: 0.5 });
@@ -826,8 +920,9 @@ if (!stage) {
     if (e.metaKey || e.ctrlKey || e.altKey || typing(e)) return;
     const key = e.key.toLowerCase();
     // (v3's labyrinth walks on WASD.)
-    if (key === 'd' && !document.body.classList.contains('maze-page')) {
-      params.whiteAccent = !params.whiteAccent;
+    if ((key === 'd' || key === 'c') && !document.body.classList.contains('maze-page')) {
+      if (key === 'd') params.whiteAccent = !params.whiteAccent;
+      if (key === 'c') stepPalette(params, e.shiftKey ? -1 : 1);
       pane?.refresh();
       paintGround(params);
       save();

@@ -20,6 +20,7 @@
   --ground: #1f1915; /* the projects' ground */
   --tile: #2c241e; /* a picture's place while it loads */
   --accent: #f7be04; /* SMASH yellow */
+  --on-accent: #111; /* type on the accent */
   --hero-pad: var(--margin); /* round a hero, as round the mark on the landing */
   --radius: 6px; /* a card's corners: the offerings, the projects' thumbnails */
 
@@ -267,7 +268,7 @@ body::after {
    on gentilhomme.com: SMASH yellow, an invitation, the address large. */
 /* The way in, on the page's own ground: the invitation, the address and the
    links in SMASH yellow, the first two in the chunky face. */
-.cta { position: relative; z-index: 1; background: var(--accent); color: #111; padding-block: clamp(40px, 5vw, 80px); } /* SMASH yellow, black on it */
+.cta { position: relative; z-index: 1; background: var(--accent); color: var(--on-accent); padding-block: clamp(40px, 5vw, 80px); } /* SMASH yellow, black on it */
 .home:not(.can-dive) .cta { display: none; }
 /* The typeface (typeface.njk): its name set in itself, its files, and the
    font to try, its five axes on sliders. */
@@ -302,7 +303,7 @@ body::after {
 .cta-title > span { display: block; }
 /* Rounded as the cards are. Nothing on the site changes colour under the
    pointer. */
-.cta-button { display: inline-block; padding: 0.5em 0.7em 0.45em; border-radius: var(--radius); background: var(--accent); color: #111; font: 400 clamp(14px, 1.2vw, 18px) / 1 var(--font); text-transform: uppercase; -webkit-text-stroke: 0.05em currentColor; } /* as heavy as the footer's links */
+.cta-button { display: inline-block; padding: 0.5em 0.7em 0.45em; border-radius: var(--radius); background: var(--accent); color: var(--on-accent); font: 400 clamp(14px, 1.2vw, 18px) / 1 var(--font); text-transform: uppercase; -webkit-text-stroke: 0.05em currentColor; } /* as heavy as the footer's links */
 .about-contact { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 1.6em; }
 /* Beside it, the quieter one: its yellow as a line, for internship requests. */
 .cta-button-line { background: none; color: var(--accent); box-shadow: inset 0 0 0 1.5px currentColor; }
