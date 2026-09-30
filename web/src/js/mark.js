@@ -1,10 +1,13 @@
 // The SMASH mark, drawn from parameters instead of traced.
 //
 // The mark is a solid block with slots cut into it. Measured from the
-// original (550 × 471 units): ten slot columns on a 51.78 pitch, slots 20
-// wide; closed slot ends stop 42 from the edge; two crossbars at 209.5 and
-// 261.5 make the S bends and the breaks in the A and the H; bends are
-// filleted at 10 (half a slot). Every one of those is a parameter here.
+// original and set on a grid of 4 (2026-09-30, Jonas: every version on one
+// grid): a block 552 × 472; ten slot columns on a 52 pitch, slots 20 wide and
+// every bar 32 (8 : 5); closed slot ends stop 42 from the edge (their round
+// ends' centres one pitch in, at 52); two crossbars at 210 and 262 (one pitch
+// apart around the exact middle, 236) make the S bends and the breaks in the
+// A and the H; bends are filleted at 10 (half a slot). (The trace measured
+// 550 × 471, a 51.78 pitch and stems of 31.78.) Every one is a parameter here.
 //
 // buildMark() returns an SVG sized to the box it will mask, so strokes keep a
 // true width however far the mark is stretched. paintMark() draws the same
@@ -19,14 +22,14 @@
 // whole mark's for that letter's own slots. The four slots between letters
 // keep the whole mark's. Without it, the mark is drawn exactly as before.
 
-export const UNITS = { w: 550, h: 471 };
+export const UNITS = { w: 552, h: 472 };
 
 export const DEFAULTS = {
   stroke: 20, // slot width
   corner: 10, // radius of the bends, on the slot's centre line
   caps: 'round', // round | square | butt
   inset: 42, // where closed slot ends stop, from top and bottom
-  crossbar: 235.5, // centre between the two crossbars
+  crossbar: 236, // centre between the two crossbars: the block's middle
   gap: 52, // distance between the crossbars
   columns: 1, // spread of the columns across the block (1 = original)
   fit: 'stretch', // stretch (edge to edge) | contain
@@ -50,9 +53,9 @@ function forLetter(p, i) {
   return q;
 }
 
-const PITCH = 51.78;
-const FIRST = 42; // pixel 32..51 spans 32.0 to 52.0: its centre is 42
-const MID = FIRST + PITCH * 4.5; // the columns spread from here
+const PITCH = 52; // a bar (32) and a slot (20)
+const FIRST = 42; // the first slot's centre: a bar and half a slot in
+const MID = FIRST + PITCH * 4.5; // the columns spread from here: 276, the block's middle
 
 /** The centre line of slot column i, in mark units. */
 const column = (p, i) => MID + (FIRST + PITCH * i - MID) * p.columns;

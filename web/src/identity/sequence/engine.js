@@ -9,7 +9,7 @@
 //
 // One drawing all the way: the modular mark's geometry (../modular.js), with
 // its measures between the logo's and its own. With its top and bottom bands
-// tall (238.9) and its closed ends a bar in, it is the logo, drawn square
+// tall (240) and its closed ends a bar in, it is the logo, drawn square
 // (549.58 × 549.58) so that it and the square are one shape; the crops are
 // the modular mark's own (the S M ends on the M's right stem, the S before the
 // slot after it, the square under the S's lower slot and left of its bend).
@@ -30,14 +30,14 @@
 import { MODULAR_DEFAULTS as M } from '../modular.js';
 import { createSound } from './sound.js';
 
-const B = M.bar; // 31.78
+const B = M.bar; // 32
 const S = M.slot; // 20
-const PITCH = B + S; // 51.78
+const PITCH = B + S; // 52
 const W = 10 * S + 11 * B; // the word's width: 549.58
 const c = (i) => B + S / 2 + i * PITCH; // a slot column's centre
 const CLOSED = B + S / 2; // a closed end's centre: a bar in from the edge (41.78), the logo's and the M's
 const OUT = PITCH * 2; // how far an open slot runs on past the edge
-const SQUARE = (W - 2 * S - B) / 2; // the logo's top and bottom bands, drawn square: 238.9
+const SQUARE = (W - 2 * S - B) / 2; // the logo's top and bottom bands, drawn square: 240
 const FOOT = M.stem + 2 * S + B; // where the modular mark's bottom band starts: 103.56
 
 const LOGO = { stem: SQUARE, openTop: 0, openBot: 0, counter: CLOSED, w: W, top: 0, slot: 1 };
@@ -45,10 +45,10 @@ const MODULAR = { ...LOGO, stem: M.stem, openTop: 1, openBot: 1, counter: M.coun
 const STATES = [
   LOGO, // the logo
   MODULAR, // the modular mark
-  { ...MODULAR, w: c(4) - S / 2 }, // the S M: 238.9
+  { ...MODULAR, w: c(4) - S / 2 }, // the S M: 240
   { ...MODULAR, w: c(1) - S / 2 }, // the S: 83.56
   { ...MODULAR, w: B }, // the S's stem over its corner square, a slot between: an exclamation mark
-  { ...MODULAR, w: B, top: FOOT }, // the square in the S's bottom left corner: 31.78 × 31.78
+  { ...MODULAR, w: B, top: FOOT }, // the square in the S's bottom left corner: 32 × 32
   // The same square, as the logo's block with its slots closed: filling the screen it looks just the same, so the
   // change is unseen, and the logo writes itself back through it.
   { ...LOGO, slot: 0 },

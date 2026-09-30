@@ -3,29 +3,30 @@
 // measures as web/src/js/mark.js (its DEFAULTS are the original), so the
 // still and the moving mark are one drawing.
 //
-// Units are the mark's own: 550 × 471. Slots sit on a 51.78 pitch, 20 wide,
-// so every stem is 31.78 and both outer edges 32. The closed slot ends are
-// round and stop 42 from the edge; the two crossbars (the S bends, the breaks
-// in the A and the H) sit 52 apart around the mark's exact middle, 235.5.
+// Units are the mark's own, on a grid of 4 (2026-09-30): 552 × 472. Slots
+// sit on a 52 pitch, 20 wide, so every bar is 32 (8 : 5). The closed slot ends
+// are round and stop 42 from the edge (their centres one pitch in); the two
+// crossbars (the S bends, the breaks in the A and the H) sit a pitch apart
+// around the mark's exact middle, 236.
 //
 // The symbol, the S M, is read from the modular mark (modular.js), so the two
 // are one drawing: see smMeasures() below.
 
 import { geometry as modularGeometry, MODULAR_DEFAULTS } from '../../modular.js';
 
-export const W = 550;
-export const H = 471;
-export const PITCH = 51.78;
+export const W = 552;
+export const H = 472;
+export const PITCH = 52;
 const FIRST = 42;
 const MID = FIRST + PITCH * 4.5;
 
-export const REST = { stroke: 20, corner: 10, inset: 42, crossbar: 235.5, gap: 52, columns: 1 };
+export const REST = { stroke: 20, corner: 10, inset: 42, crossbar: 236, gap: 52, columns: 1 };
 
 // The symbol: the S M, Jonas's crop through the whole M (sketch A), exactly
 // as the modular mark draws it (modular.js: markSVG(MODULAR_DEFAULTS, 1)).
-// 9 columns by 5 rows of its bars and slots. Across: bar 31.78, then slot 20
-// and bar 31.78 in turn, ending on the M's right stem at 238.9. Down: bar,
-// slot, bar, slot, bar: 135.34. The S's two slots run out of the top and the
+// 9 columns by 5 rows of its bars and slots. Across: bar 32, then slot 20
+// and bar 32 in turn, ending on the M's right stem at 240. Down: bar, slot,
+// bar, slot, bar: 136. The S's two slots run out of the top and the
 // bottom and turn through its bends (sharp inside, radius 20 outside); the
 // slot between the S and the M runs right through; the M's two slots hang
 // from its top bar with round ends.
@@ -47,8 +48,8 @@ export function smMeasures(p = MODULAR_DEFAULTS) {
 const SM = smMeasures();
 export const SYM_COLS = SM.cols;
 export const SYM_ROWS = SM.rows;
-export const SYM_W = SYM_COLS.reduce((a, b) => a + b); // 238.9
-export const SYM_H = SYM_ROWS.reduce((a, b) => a + b); // 135.34
+export const SYM_W = SYM_COLS.reduce((a, b) => a + b); // 240
+export const SYM_H = SYM_ROWS.reduce((a, b) => a + b); // 136
 
 const edges = (sizes, o) => sizes.reduce((a, n) => [...a, a.at(-1) + n], [o]);
 

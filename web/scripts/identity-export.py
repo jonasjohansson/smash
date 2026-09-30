@@ -58,14 +58,21 @@ def viewbox(svg):
     return tuple(float(v) for v in m.groups()) if m else None
 
 
+CLEAR = 52  # the grid's margin (web/src/identity/grid.js): one pitch round a mark on its ground
+
+
 def prepare(svg, color, ground=None, size=None):
-    """currentColor → color; width and height from the viewBox (or size); the ground as a first rectangle."""
+    """currentColor → color; width and height from the viewBox (or size); the ground as a first rectangle,
+    a pitch round the mark on every side (the masters, without a ground, stay tight)."""
     svg = svg.replace('currentColor', color).replace('currentcolor', color)
     vb = viewbox(svg)
     head = re.match(r'<svg\b[^>]*>', svg)
     if not head or not vb:
         return svg
     tag = head.group(0)
+    if ground and not size:
+        vb = (vb[0] - CLEAR, vb[1] - CLEAR, vb[2] + 2 * CLEAR, vb[3] + 2 * CLEAR)
+        tag = re.sub(r'viewBox="[^"]*"', 'viewBox="%s %s %s %s"' % tuple(round(v, 2) for v in vb), tag)
     tag = re.sub(r'\s(width|height)="[^"]*"', '', tag)
     w, h = (size, size) if size else (round(vb[2], 2), round(vb[3], 2))
     tag = tag[:-1].rstrip('/') + f' width="{w}" height="{h}">'

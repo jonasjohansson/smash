@@ -4,6 +4,7 @@
 import { IMAGES } from './lib.js';
 import { loadDirections, attempt, errorHTML, loadFonts, settle, pad } from './directions.js';
 import { SIZES_HINT } from './video.js';
+import { placed, layoutGrid, BANDS, BANDS5 } from './grid.js';
 
 const params = new URLSearchParams(location.search);
 const ONLY = params.get('d');
@@ -29,13 +30,15 @@ function palette() {
 function favicons(d) {
   const at = (size) => `<span class="fav" style="width:${size}px;height:${size}px">${still(d, 'favicon', { size })}</span>`;
   const tab = (theme) => `<div class="tab ${theme}"><span class="fav" style="width:16px;height:16px">${still(d, 'favicon', { size: 16 })}</span><span>SMASH</span><i>×</i></div>`;
-  return `<div class="favicons"><div class="sizes">${at(64)}${at(32)}${at(16)}</div><div class="tabs">${tab('light')}${tab('dark')}</div></div>`;
+  return `<div class="favicons"><div class="tabs">${tab('light')}${tab('dark')}</div><div class="sizes">${at(64)}${at(32)}${at(16)}</div></div>`;
 }
-
 
 function chapter(d) {
   const { info } = d;
   const n = pad(info.n);
+  // Every still on the grid (grid.js): one scale, a pitch in from the left and the bottom; the bands its lines show.
+  const bandsOf = { wordmark: BANDS, lockup: BANDS, symbol: BANDS5, lockupSM: BANDS5 };
+  const panel = (ground, fn, label, arg = {}) => `<figure class="gpanel ground-${ground}">${placed(still(d, fn, { ground, ...arg }), bandsOf[fn])}<figcaption class="label">${label}</figcaption></figure>`;
   const el = h(`
     <section class="chapter" id="${d.slug}" style="${palette(info)}">
       <header class="ch-head">
@@ -51,19 +54,11 @@ function chapter(d) {
           ${typeof d.mod.frame === 'function' ? `<button type="button" class="download" title="${SIZES_HINT}">MP4</button>` : ''}
         </figcaption>
       </figure>
-      <div class="row two">
-        <figure class="panel ground-ink"><div class="mark wm">${still(d, 'wordmark', { ground: 'ink' })}</div><figcaption class="label">Wordmark</figcaption></figure>
-        <figure class="panel ground-paper"><div class="mark wm">${still(d, 'wordmark', { ground: 'paper' })}</div><figcaption class="label">Wordmark</figcaption></figure>
-      </div>
-      <div class="row three">
-        <figure class="panel ground-ink square"><div class="mark sym">${still(d, 'symbol', { ground: 'ink' })}</div><figcaption class="label">Symbol</figcaption></figure>
-        <figure class="panel ground-mid square">${favicons(d)}<figcaption class="label">Favicon 64 · 32 · 16</figcaption></figure>
-        <figure class="panel ground-paper square"><div class="mark lock">${still(d, 'lockup', { ground: 'paper' })}</div><figcaption class="label">Lockup</figcaption></figure>
-      </div>
-      ${typeof d.mod.lockupSM === 'function' ? `<div class="row two">
-        <figure class="panel ground-ink"><div class="mark lock-sm">${still(d, 'lockupSM', { ground: 'ink' })}</div><figcaption class="label">Lockup, S M</figcaption></figure>
-        <figure class="panel ground-paper"><div class="mark lock-sm">${still(d, 'lockupSM', { ground: 'paper' })}</div><figcaption class="label">Lockup, S M</figcaption></figure>
-      </div>` : ''}
+      <div class="grow two">${panel('ink', 'wordmark', 'Wordmark')}${panel('paper', 'wordmark', 'Wordmark')}</div>
+      <div class="grow three">${panel('ink', 'symbol', 'Symbol')}<figure class="gpanel ground-mid">${favicons(d)}<figcaption class="label">Favicon 64 · 32 · 16</figcaption></figure>${panel('paper', 'symbol', 'Symbol')}</div>
+      <div class="grow one">${panel('ink', 'lockup', 'Lockup')}</div>
+      <div class="grow one">${panel('paper', 'lockup', 'Lockup')}</div>
+      ${typeof d.mod.lockupSM === 'function' ? `<div class="grow two">${panel('ink', 'lockupSM', 'Lockup, S M')}${panel('paper', 'lockupSM', 'Lockup, S M')}</div>` : ''}
     </section>`);
   return el;
 }
@@ -208,6 +203,14 @@ async function main() {
   }
   if (!ONLY) for (const x of EXTRAS.filter((x) => x.last)) await addExtra(page, x);
   for (const x of EXTRAS.filter((x) => x.id === ONLY)) await addExtra(page, x);
+  // The grid: its scale from the page's width, again as it changes; G shows its lines.
+  layoutGrid();
+  new ResizeObserver(() => layoutGrid()).observe(page);
+  document.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() !== 'g' || e.metaKey || e.ctrlKey || e.altKey || e.target.closest?.('input, select, textarea, [contenteditable]')) return;
+    document.body.classList.toggle('show-grid');
+    lives.forEach((l) => l.motion?.redraw?.());
+  });
   // For the screenshot tool (web/scripts/identity-shoot.py).
   window.__identity = {
     seek(slug, t) { const m = bySlug[slug]?.motion; m?.pause?.(); m?.seek?.(t); return !!m; },

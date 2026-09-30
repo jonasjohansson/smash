@@ -8,8 +8,8 @@ const E = await import('../src/identity/sequence/engine.js');
 
 test('the geometry and the camera are exported', () => {
   for (const name of ['W', 'S', 'B', 'FOOT', 'c', 'lens', 'between', 'viewOf', 'frameAt', 'loopSoundFor', 'START']) assert.ok(name in E, name);
-  assert.equal(+E.W.toFixed(2), 549.58);
-  assert.equal(+E.FOOT.toFixed(2), 103.56);
+  assert.equal(+E.W.toFixed(2), 552); // on the grid of 4: 11 bars of 32, 10 slots of 20
+  assert.equal(+E.FOOT.toFixed(2), 104);
 });
 
 test('draw takes its own mask id', () => {

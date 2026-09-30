@@ -5,15 +5,17 @@
 // the H broken by the middle bar. The S M is its symbol. Drawn in 2D as SVG;
 // Export SVG gives true outlines (the slots cut from the block with paper.js).
 
+import { sheet, layoutGrid, G, BANDS5 } from './grid.js';
+
 const STORE = 'smash-identity-modular';
 const COLORS = {
   'white on black': ['#fff', '#000'],
   'black on white': ['#000', '#fff'],
 };
 export const MODULAR_DEFAULTS = {
-  bar: 31.78, // a bar, as the mark's (its stems and rails)
+  bar: 32, // a bar, as the mark's (its stems and rails): 8 of the grid's 4s
   slot: 20, // a slot, as the mark's
-  stem: 31.78, // the height of the top and the bottom band; a bar for five even bands, more for taller letters
+  stem: 32, // the height of the top and the bottom band; a bar for five even bands, more for taller letters
   bend: 10, // the radius of a bend, on the slot's centre line, as the mark's
   ends: 'round', // round | square: the closed slot ends
   counter: 30, // where the A's counter starts (its round end's centre), from the top: a slot clear of the ceiling
@@ -299,17 +301,13 @@ export const HTML = `
   </section>`;
 
 const STYLE = `
-#modular .board { position: absolute; inset: 0; display: grid; grid-template-rows: minmax(0, 1.2fr) minmax(0, 1fr); gap: 7%; padding: 6% 7%; }
-#modular .board.single { grid-template-rows: minmax(0, 1fr); padding: 10%; }
-#modular .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6%; min-height: 0; }
-#modular .row > div:last-child { align-self: center; }
-/* Each mark fills its cell, scaled to fit (a percentage height inside a grid cell would not resolve). */
-#modular .board .word, #modular .board .mono { position: relative; min-height: 0; }
-#modular .board svg.mk { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: visible; }
+#modular .modular-stage { aspect-ratio: auto; height: calc(var(--row, 360px) * 2); }
+#modular .modular-stage > svg.placed { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#modular .favs-at { position: absolute; bottom: var(--m, 32px); display: grid; gap: 8px; justify-items: start; }
 #modular .favs { display: flex; gap: 18px; align-items: end; }
 #modular .favs span { display: block; }
 #modular .favs svg { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
-#modular .cap { font: 11px/1.3 ui-monospace, Menlo, monospace; opacity: 0.55; margin-top: 8px; text-align: center; }
+#modular .cap { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.55; margin: 0; }
 `;
 
 /** Mount the tool. Returns { ready, snapshot(), pause(), resume(), destroy() }. */
@@ -326,20 +324,30 @@ export function mount(section, { panel = true, settings = null } = {}) {
   let destroyed = false;
 
   const withGrid = (svg, upTo, color) => (params.grid ? svg.replace('</svg>', `${gridSVG(params, upTo, color)}</svg>`) : svg);
-  const mk = (upTo, color, id, align = 'xMidYMid', turn = 0) => turned(withGrid(markSVG(params, upTo, color, id), upTo, color), turn).replace('<svg ', `<svg class="mk" preserveAspectRatio="${align} meet" `);
 
+  // On the page's grid (grid.js), as the original's motion: the stage two rows
+  // tall, the marks at twice the page's scale, a pitch in from the left; the
+  // wordmark on the top margin, the symbol on the bottom one, the favicons a
+  // pitch after it.
   function draw() {
     if (destroyed) return;
     const [fg, bg] = COLORS[params.colors] ?? COLORS['white on black'];
     stage.style.background = bg;
     stage.style.color = fg;
-    const favs = [64, 32, 16].map((n) => `<span style="width:${n}px;height:${n}px">${faviconSVG(params, n, [fg, bg])}</span>`).join('');
-    if (params.view === 'wordmark') stage.innerHTML = `<div class="board single"><div class="word">${mk(4, fg, 'mw')}</div></div>`;
-    else if (params.view === 'monogram') stage.innerHTML = `<div class="board single"><div class="mono">${mk(symbolUpTo(params), fg, 'mm', 'xMidYMid', params.turn)}</div></div>`;
+    const up = symbolUpTo(params);
+    const word = withGrid(markSVG(params, 4, fg, 'mw'), 4, fg);
+    const sym = turned(withGrid(markSVG(params, up, fg, 'mm'), up, fg), params.turn);
+    const bands = params.turn ? null : BANDS5;
+    if (params.view === 'wordmark') stage.innerHTML = sheet([{ svg: word, k: 2, bands: BANDS5 }], { rows: 2, k: 2 });
+    else if (params.view === 'monogram') stage.innerHTML = sheet([{ svg: sym, k: 2, bands }], { rows: 2, k: 2 });
     else {
-      stage.innerHTML = `<div class="board"><div class="word">${mk(4, fg, 'bw')}</div>`
-        + `<div class="row"><div class="mono">${mk(symbolUpTo(params), fg, 'bm', 'xMinYMid', params.turn)}</div><div><div class="favs">${favs}</div><p class="cap">64 · 32 · 16</p></div></div></div>`;
+      const g = geometry(params, up);
+      const symW = params.turn % 180 ? g.h : g.w;
+      const favs = [64, 32, 16].map((n) => `<span style="width:${n}px;height:${n}px">${faviconSVG(params, n, [fg, bg])}</span>`).join('');
+      stage.innerHTML = sheet([{ svg: word, k: 2, y: G.m, bands: BANDS5 }, { svg: sym, k: 2, bands }], { rows: 2, k: 2 })
+        + `<div class="favs-at" style="left:calc(var(--m) + var(--s) * ${+((symW + G.pitch) * 2).toFixed(2)}px)"><div class="favs">${favs}</div><p class="cap">64 · 32 · 16</p></div>`;
     }
+    layoutGrid();
   }
   draw();
   const ready = Promise.resolve().then(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));

@@ -6,7 +6,7 @@
 
 export const SOURCES = [
   // The impact point of chapter 01 (the crossbar of the A): column 5 of the mark, at its crossbar.
-  { id: 'original', name: 'original', url: '/brand/smash-logo.svg', impact: [(42 + 51.78 * 5) / 550, 235.5 / 471] },
+  { id: 'original', name: 'original', url: '/brand/smash-logo.svg', impact: [(42 + 52 * 5) / 552, 236 / 472] },
 ];
 
 const cache = new Map();

@@ -24,10 +24,10 @@
   --radius: 6px; /* a card's corners: the offerings, the projects' thumbnails */
 
   --cols: 12;
-  /* The margin is half the mark's stem: half a slot, 10 of its 550 units,
+  /* The margin is half the mark's stem: half a slot, 10 of its 552 units,
      round a mark that spans the rest of the width. Round the marks and the
      heroes, and at the sides of the page, the room is the same. */
-  --margin: calc(100vw * 10 / 570);
+  --margin: calc(100vw * 10 / 572);
   --gutter: clamp(12px, 1.4vw, 24px);
   --row-gap: clamp(56px, 9vw, 168px);
   --header: 72px;

@@ -38,18 +38,14 @@ export const info = {
 const MARK = letters(REST);
 const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${rule}" d="${d}"/>`;
 
-// The wordmark's clear space: half the mark's width on either side. (The page
-// sizes a still by its width: identity.css's `.mark svg { height: 100% }`
-// does not resolve inside the aspect-ratio panels, so a tight 550 × 471
-// artboard overflows the 16 : 9 wordmark panels. The artboard has to carry
-// the width; the height is the mark's own. A tight artboard needs that CSS
-// fixed first.)
-const CLEAR = W / 2;
+// The wordmark on its own artboard, nothing round it: the page sets every
+// still on one grid (identity.js), at one scale, a pitch in from the panel's
+// left and bottom edges, so the clear space is the page's, not the drawing's.
 export function wordmark() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-CLEAR} 0 ${W + 2 * CLEAR} ${H}">${path(MARK)}</svg>`;
+  return svg(W, H, path(MARK));
 }
 
-// The symbol: the S M, 238.9 × 135.34, exactly the modular mark's
+// The symbol: the S M, 240 × 136, exactly the modular mark's
 // (geometry.js reads it from modular.js). It keeps what Jonas liked in his
 // crop: the S's slots running out through its two bends, and the M's slots
 // with round ends. On its own artboard, nothing around it.
@@ -71,10 +67,10 @@ function lockPaths(lines, cap, x) {
   return { d, width: +(x + Math.max(...lines.map(([key]) => OUTLINES[key].advance)) * k).toFixed(2) };
 }
 
-// The lockup: the mark, one slot pitch (51.78), then three lines whose
-// capitals exactly fill the mark's three solid bands: the top bar (0 to 32),
-// the crossbar (219.5 to 251.5) and the bottom bar (439 to 471). The type is
-// a placeholder.
+// The lockup: the mark, one pitch (52), then three lines whose capitals
+// exactly fill the mark's three solid bands: the top bar (0 to 32), the
+// crossbar (220 to 252) and the bottom bar (440 to 472). Set in Neue Montreal,
+// the site's own (Jonas kept the site's pairing, Anton and Neue Montreal).
 const CAP = 32;
 const FOOT = REST.crossbar + REST.gap / 2 - REST.stroke / 2; // 251.5: the crossbar's foot
 const LOCK = lockPaths([['studio', CAP], ['middle', FOOT], ['stockholm', H]], CAP, W + PITCH);
@@ -84,8 +80,8 @@ export function lockup() {
 
 // The S M's lockup, for where the mark is too tall: the same rule on the
 // symbol's three bars, the name in the top one.
-const SM_BARS = [SYM_ROWS[0], SYM_ROWS[0] + SYM_ROWS[1] + SYM_ROWS[2], SYM_H]; // 31.78, 83.56, 135.34
-const SM_PITCH = SYM_COLS[1] + SYM_COLS[2]; // a slot and a bar: 51.78
+const SM_BARS = [SYM_ROWS[0], SYM_ROWS[0] + SYM_ROWS[1] + SYM_ROWS[2], SYM_H]; // 32, 84, 136
+const SM_PITCH = SYM_COLS[1] + SYM_COLS[2]; // a slot and a bar: 52
 const LOCK_SM = lockPaths([['name', SM_BARS[0]], ['studio', SM_BARS[1]], ['stockholm', SM_BARS[2]]], SYM_ROWS[0], SYM_W + SM_PITCH);
 export function lockupSM() {
   return svg(LOCK_SM.width, SYM_H, path(SYM) + path(LOCK_SM.d, 'nonzero'));
@@ -128,7 +124,7 @@ export function favicon({ size = 32 } = {}) {
 //   8.4    at rest again until the loop; t 1 draws the same frame as t 0
 
 const DURATION = 10; // seconds
-const REACH = 72; // mark units, either way of the middle (235.5)
+const REACH = 72; // mark units, either way of the middle (236)
 const LAG = 0.12; // seconds, from one letter to the next (by position, so the M is a rest)
 const OPEN = 4; // how much wider the slots get at full speed, from 20
 const MOVES = [ // [start, duration] in seconds, from and to in reaches (−1 high, 1 low)
@@ -161,14 +157,34 @@ function markAt(s) {
   return [0, 1, 2, 3, 4].map((i) => letterPaths({ ...REST, stroke, crossbar: i === 1 ? REST.crossbar : crossbarAt(i, s) })[i]).join('');
 }
 
-/** The motion at t (0 to 1) on any canvas, w × h in its current units: the ground and the mark. For the stage and the MP4. */
-export function frame(ctx, w, h, t) {
+/**
+ * The motion at t (0 to 1) on any canvas, w × h in its current units: the
+ * ground and the mark. For the stage and the MP4. Centred (the MP4), or where
+ * `at` puts it: { k, x, y }, its scale and its top left (the page's grid, with
+ * `grid` its lines: the slots' centres, the bands, the margins).
+ */
+export function frame(ctx, w, h, t, { at = null, grid = false } = {}) {
   const s = (t % 1) * DURATION; // t 1 draws the same frame as t 0
   ctx.fillStyle = BLACK;
   ctx.fillRect(0, 0, w, h);
-  const k = Math.min((h * 0.64) / H, (w * 0.8) / W);
+  const k = at?.k ?? Math.min((h * 0.64) / H, (w * 0.8) / W);
+  const x = at?.x ?? (w - W * k) / 2;
+  const y = at?.y ?? (h - H * k) / 2;
+  if (grid) {
+    // The grid, in the mark's units at its scale: its rhythm on across the stage (a slot after every bar), its three bands, the margin.
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 41, 184, 0.16)';
+    for (let cx = x + 32 * k; cx < w; cx += PITCH * k) ctx.fillRect(cx, 0, 20 * k, h);
+    ctx.strokeStyle = 'rgba(255, 41, 184, 0.9)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (const by of [0, 32, 220, 252, 440, 472]) { const yy = Math.round(y + by * k) + 0.5; ctx.moveTo(0, yy); ctx.lineTo(w, yy); }
+    ctx.moveTo(Math.round(x) + 0.5, 0); ctx.lineTo(Math.round(x) + 0.5, h);
+    ctx.stroke();
+    ctx.restore();
+  }
   ctx.save();
-  ctx.translate((w - W * k) / 2, (h - H * k) / 2);
+  ctx.translate(x, y);
   ctx.scale(k, k);
   ctx.fillStyle = WHITE;
   ctx.fill(new Path2D(markAt(s)), 'evenodd');
@@ -180,9 +196,18 @@ export function motion(el) {
   const stage = canvasStage(el);
   let dead = false;
 
+  // On the page's grid (identity.js sets --s, its scale, and --m, its margin,
+  // on the page): the mark at twice the scale of every other still, as far in
+  // from the left and the bottom as they are; centred where there is no grid.
+  const place = () => {
+    const cs = getComputedStyle(el);
+    const k = 2 * parseFloat(cs.getPropertyValue('--s'));
+    const m = parseFloat(cs.getPropertyValue('--m'));
+    return Number.isFinite(k) && k > 0 && Number.isFinite(m) ? { k, x: m, y: stage.height - m - H * k } : null;
+  };
   const render = (t) => {
     if (dead) return;
-    frame(stage.ctx, stage.width, stage.height, t);
+    frame(stage.ctx, stage.width, stage.height, t, { at: place(), grid: document.body.classList.contains('show-grid') });
   };
 
   const tl = timeline({ duration: DURATION, render });
