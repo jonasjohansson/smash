@@ -5,7 +5,7 @@
 Renders each piece of /identity's Typography section (web/src/identity/type.js: the specimens, the
 compositions and the type in use) on its own, in
 each treatment asked for (black and white, or an accent: acid, yellow, orange, red, pink, violet,
-sky), the long texts in Season Mix as the site has them and the marks round, and writes to
+sky), the titles in the SMASH face and the marks round, and writes to
 web/src/identity/samples/, which the site serves at /identity/samples/ and the section links:
 
   <treatment>/NN-<sample>.jpg            one picture per sample
@@ -33,16 +33,22 @@ OUT = ROOT / 'web' / 'src' / 'identity' / 'samples'
 WIDE, POSTER = 1600, 1000  # CSS px across, drawn at twice the pixels
 slug = lambda s: re.sub(r'[^a-z0-9]+', '-', s.lower()).strip('-')
 
-# Every sample drawn alone, top left of the window, at its width; each picture waited for.
+# The pieces the section shows (the other face's are hidden by its switch), numbered.
+SHOWN = '''() => {
+  const figs = [...document.querySelectorAll('#type .ty-fig')].filter((f) => f.getClientRects().length);
+  figs.forEach((f, i) => { f.dataset.shot = i; });
+  return figs.length;
+}'''
+# Every piece drawn alone, top left of the window, at its width; each picture waited for.
 ALONE = '''async ([i, w]) => {
-  const fig = document.querySelectorAll('#type .ty-fig')[i];
+  const fig = document.querySelector(`#type .ty-fig[data-shot="${i}"]`);
   fig.dataset.style = fig.getAttribute('style') ?? '';
   fig.style.cssText = `position:fixed;left:0;top:0;margin:0;width:${w}px;z-index:99999`;
   await Promise.all([...fig.querySelectorAll('img')].map((im) => { im.loading = 'eager'; return im.decode().catch(() => {}); }));
   await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
   return fig.querySelector('figcaption').textContent;
 }'''
-BACK = '''(i) => { const fig = document.querySelectorAll('#type .ty-fig')[i]; fig.setAttribute('style', fig.dataset.style); }'''
+BACK = '''(i) => { const fig = document.querySelector(`#type .ty-fig[data-shot="${i}"]`); fig.setAttribute('style', fig.dataset.style); }'''
 
 
 def main():
@@ -59,18 +65,19 @@ def main():
         page.add_style_tag(content='.view-tools { display: none !important; }')
         page.evaluate("document.querySelectorAll('#type details').forEach((d) => { d.open = true; })")  # the type in use, folded on the page
         page.evaluate('document.fonts.ready.then(() => true)')
-        count = page.locator('#type .ty-fig').count()
+        count = page.evaluate(SHOWN)
         for t in treatments:
-            page.evaluate('(t) => window.__identity.extra("type").set({ treat: t, long: "serif" })', t)
+            page.evaluate('(t) => window.__identity.extra("type").set({ treat: t })', t)
             folder = OUT / slug(t)
             folder.mkdir(parents=True, exist_ok=True)
             for old in folder.glob('*.jpg'):
                 old.unlink()
             pages = []
             for i in range(count):
-                poster = page.locator('#type .ty-fig').nth(i).locator('.ty-poster').count() > 0
+                fig = page.locator(f'#type .ty-fig[data-shot="{i}"]')
+                poster = fig.locator('.ty-poster').count() > 0
                 caption = page.evaluate(ALONE, [i, POSTER if poster else WIDE])
-                art = page.locator('#type .ty-fig').nth(i).locator('.ty-art').first
+                art = fig.locator('.ty-art').first
                 box = art.bounding_box()
                 png = art.screenshot()
                 page.evaluate(BACK, i)
