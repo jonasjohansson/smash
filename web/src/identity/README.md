@@ -44,12 +44,16 @@ also draws the favicons, on whole pixels). The stills, the motion and its MP4, a
   motion and the stereogram stay fine, as they need to. One WebGL context draws every tile in turn (`gl.js`); the mark
   comes in as its signed distance (`field.js`); the shaders are `techniques.js`. The bar swaps in the modular mark
   and inverts; a click shows a tile wide; each has its MP4.
-- `type.js` (after the sequence, before the colour): the typography chosen, the site's own pair (Jonas,
-  2026-09-30): Anton for titles, always in capitals, and Neue Montreal for everything else, one weight each. The
-  two faces, then the pair at work with the marks, in the studio's own words and pictures (the projects' pages):
-  a project's page, three posters (with a picture, the wordmark, the square S), business cards, a profile picture
-  and a post, a slide and a film's end card. Each is sized in its own width (container units), so it scales as a
-  picture.
+- `type.js` (after the sequence, before the colour): the site's own type (Jonas, 2026-09-30): Anton for titles,
+  always in capitals, Neue Montreal for everything else, and Season Mix where the site tells a project at length (its
+  lead and its story). The faces, then the type at work with the marks, in the studio's own words and pictures (the
+  projects' pages): a project's page, three posters (with a picture, the wordmark, the square S), business cards, a
+  profile picture and a post, a slide and a film's end card. Each is sized in its own width (container units), so it
+  scales as a picture. Two switches: the colour (black and white, or an accent on the earth ground, as the Colour
+  section) and the long texts (Season Mix or Neue Montreal); kept in this browser. Its PDFs are made by
+  `python3 web/scripts/identity-samples.py [treatment ...]`: each sample as a JPEG and all of them as a PDF, in black
+  and white and in yellow by default, in `samples/` (served at `/identity/samples/`, and linked from the section; a
+  direct link to a file skips the site's password).
 - `colour.js` (at the very bottom, after the sequence): the one section in colour, on Jonas's idea of hyper colours,
   raised, on a grounded, earthed ground. Hyper: seven accents round the wheel (Acid, Yellow, Orange, Red, Pink,
   Violet, Sky), each with three darker steps (the hue kept, the lightness at 80, 62 and 44 % of the base in OKLCH).
