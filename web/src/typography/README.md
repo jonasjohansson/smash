@@ -9,7 +9,7 @@ alternative.
   alternative (a css2 family spec, and any axis setting it needs to match), and flags: `trial` (not to ship),
   `current` (on the site now), `googleOnly`.
 - `index.html`, `typography.css`, `typography.js`: the page. The pairing: SMASH's typeface as the display, with
-  the chosen heading, body and detail faces, in real project copy, on the palette's earth (or black, or paper)
+  the chosen heading, body and detail faces, in SMASH's own copy (the studio statement, and its projects Heroes, Resonance and Jagad, as the site tells them), on the palette's earth (or black, or paper)
   with a hyper accent (the colours are `/identity/colour.js`'s). Below it every candidate as a card; a click puts
   it in the pairing. The bar switches every font between the library and its Google alternative, or shows both
   side by side. The state is in the address (`?h=&b=&d=&src=&g=&a=`), so a pairing can be sent.

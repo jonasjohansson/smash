@@ -87,22 +87,22 @@ function stage(from, tag) {
       ${tag ? `<p class="tag">${tag}</p>` : ''}
       <p class="meta" style="${f.detail.css}">SMASH · Immersive experience studio · Stockholm</p>
       <nav class="nav" style="${f.heading.css}"><span>Work</span><span>Studio</span><span>Contact</span></nav>
-      <h1 class="display">Balena Voladora</h1>
-      <h2 style="${f.heading.css}">A flying whale in the desert.</h2>
+      <h1 class="display">Heroes</h1>
+      <h2 style="${f.heading.css}">Real-life statues, drone-scanned architecture, projected onto Stockholm's Great Synagogue.</h2>
       <div class="cols">
         <div class="body" style="${f.body.css}">
-          <p>Pulling a lever sets its wooden skeleton in motion, swimming above the sand. I see a bit of <em>Moby-Dick</em> in it, but also a fossil, or one of the whale skeletons hanging in a natural history museum. The ribs are open and you can see the wooden joints and metal mechanism doing the work.</p>
-          <p>For the lighting, I followed the skeleton. The LEDs trace the ribs, spine, fins and tail, drawing the whale against the sky after dark. <strong>The twelve ribs, spine, tail and two fins</strong> have separate LED runs, and colour can travel along a single bone or move through the whole body. <a href="#">See the 3D lighting study</a>.</p>
+          <p>Heroes was a projection mapped piece on the facade of Stockholms Stora Synagoga in 2022. It honoured <em>Raoul Wallenberg</em>, who saved thousands of Jews in Budapest during the Holocaust, and <em>Dag Hammarskjöld</em>, 1961 Nobel Peace Prize laureate and UN Secretary-General.</p>
+          <p>Real-life statues of both men were 3D scanned and the synagogue was captured by drone, <strong>giving precise geometry to work with</strong>. <a href="#">See the project</a>.</p>
         </div>
         <div class="body" style="${f.body.css}">
-          <h3 style="${f.heading.css}">Light, space and movement</h3>
-          <p>From large public installations to intimate museum rooms, in Stockholm, Göteborg and Malmö, and further: we build the idea, the room and the moment people step into it.</p>
-          <p class="credits" style="${f.detail.css}">Design — Erik Schmitz, Selim<br>Lighting and software — Jonas Johansson<br>Hardware — Nouled · 2026</p>
+          <h3 style="${f.heading.css}">Resonance</h3>
+          <p>Interactive projection mapping on Uppsala Town Hall, where the public could paint the facade in colour.</p>
+          <p class="credits" style="${f.detail.css}">Heroes — Stockholm, 2022<br>Music — Joseph Wilkinson<br>Nobel Week Lights</p>
         </div>
       </div>
       <hr>
       <h2 style="${f.heading.css}">Smash ultimately wants to make people feel.</h2>
-      <p class="lede" style="${f.body.css}">An immersive experience studio creating physical and digital experiences that make people feel: art, technology, storytelling and space, made into moments people remember.</p>
+      <p class="lede" style="${f.body.css}">We turn spaces into living experiences: interactive installations, projection mapping and immersive environments that invite people in.</p>
       <p class="note">${esc(names)}</p>
     </article>`;
 }
@@ -117,9 +117,9 @@ function renderStage() {
 // The galleries --------------------------------------------------------------
 
 const SAMPLE = {
-  heading: () => `<p class="h-big">Turning spaces into living experiences</p><p class="h-small">Balena Voladora — Åre, Södermalm, 2026</p>`,
-  body: () => `<p class="b-text">A flying whale in the desert. Pulling a lever sets its wooden skeleton in motion, swimming above the sand. You can see the <em>wooden joints</em> and <strong>metal mechanism</strong> doing the work: ljus, rum och rörelse.</p>`,
-  detail: () => `<p class="d-num">2026 · 12 ribs · 01–24</p><p class="d-text">Lighting — Jonas Johansson<br>Hardware — Nouled · Stockholm</p>`,
+  heading: () => `<p class="h-big">Turning spaces into living experiences</p><p class="h-small">Heroes · Jagad · Sala Hjärtslag</p>`,
+  body: () => `<p class="b-text">Smash is an immersive experience studio creating physical and digital experiences that make people feel, combining <em>art, technology and storytelling</em> with <strong>space</strong>: ljus, rum och rörelse.</p>`,
+  detail: () => `<p class="d-num">2022 · 5 storeys · 01–24</p><p class="d-text">Heroes — Stockholms Stora Synagoga<br>Jagad — Stockholm · Kanal 5</p>`,
 };
 
 function spec(c, role, from, label) {
