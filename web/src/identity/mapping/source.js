@@ -1,12 +1,12 @@
-// What is mapped: the original SMASH mark (the traced logo, brand/smash-logo.svg),
-// or chapter 01's wordmark (the other chapters were dropped). Each becomes
+// What is mapped: the original SMASH mark (the traced logo, brand/smash-logo.svg).
+// A chapter's wordmark can be a source too ({ slug }); the struck lean was one
+// until it came off /identity (2026-09-30). Each becomes
 // outlines (for the SVG export and the 3D walls) and a mask picture about
 // 4000 px wide (for the screen).
 
 export const SOURCES = [
   // The impact point of chapter 01 (the crossbar of the A): column 5 of the mark, at its crossbar.
   { id: 'original', name: 'original', url: '/brand/smash-logo.svg', impact: [(42 + 51.78 * 5) / 550, 235.5 / 471] },
-  { id: 'struck', name: '01 struck', slug: 'struck', impact: [0.547, 0.5] },
 ];
 
 const cache = new Map();

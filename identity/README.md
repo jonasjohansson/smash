@@ -5,7 +5,7 @@ The marks from `/identity/` (`web/src/identity/`), exported for Illustrator, in 
 - `00-original/`: the mark, the S M symbol, the favicons, the lockups (the type is a placeholder)
   and the motion. `modular/` holds the modular mark; `shapes/` the building blocks (`kit/`), the symbols
   built from them (`symbols/`, with all of them on one sheet) and the patterns' seamless tiles (`patterns/`).
-- `01-struck/`: Struck's lean.
+- `01-struck/`: Struck's lean (off /identity since 2026-09-30; kept).
 
 In each folder:
 

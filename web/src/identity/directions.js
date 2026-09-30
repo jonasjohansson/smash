@@ -2,9 +2,10 @@
 // fails to load, or a function that throws, becomes an error on the page
 // instead of taking the page down with it.
 
-// The focus round (2026-09-28): the original and the struck lean. Reassembled, Impact, Cut,
+// The focus round (2026-09-28): the original and the struck lean; the struck lean came off
+// too on 2026-09-30 (Jonas). Reassembled, Impact, Cut,
 // Alignment and Crack Line were set aside; their modules stay in directions/ for the record.
-export const SLUGS = ['original', 'struck'];
+export const SLUGS = ['original'];
 
 export async function loadDirections(only) {
   const slugs = only ? SLUGS.filter((s) => s === only) : SLUGS;

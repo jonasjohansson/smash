@@ -30,10 +30,10 @@ its marks, with no copy.
   raised, on a grounded, earthed ground. Hyper: seven accents round the wheel (Acid, Yellow, Orange, Red, Pink,
   Violet, Sky), each with three darker steps (the hue kept, the lightness at 80, 62 and 44 % of the base in OKLCH).
   Earth: the brown ground, black and the type. Every swatch has its WCAG contrast (white and black type on it, it on
-  the ground, worked out from the hex). Then the four marks (original, modular, struck, S M) in black and white; the
-  dark steps as grounds under white; and each mark but Struck (black and white only) in every accent: on the ground (the original on its Dark 3 too),
+  the ground, worked out from the hex). Then the three marks (original, modular, S M) in black and white; the
+  dark steps as grounds under white; and each mark in every accent: on the ground (the original on its Dark 3 too),
   and in ground or type on the accent.
-- `directions/struck.js`: the mark with its slots leaning.
+- `directions/struck.js` (off the page since 2026-09-30, at Jonas's word; kept, with its export in `identity/01-struck/`): the mark with its slots leaning.
 - `sequence/`: a page of its own (`/identity/sequence/`), and a section on this page: the logo, square, taken down
   one move at a time to the modular mark, the S M, the S, the ! (the S's stem over its corner square) and that square
   (the module); then, that square being the logo's block seen close, the logo writes itself back through it as its
