@@ -14,8 +14,8 @@ The exports never carry it. The Pixel button beside it, or P (Shift P back), dra
 instead of round (Jonas, 2026-09-30): pixels of 4, the grid itself, where every point of the mark falls on the grid,
 the closed ends step in once and the bends take three steps; or pixels of 10, half a slot: square ends and one pixel
 off each bend. Each curve is sampled at its pixels' centres (`pixelate` in `directions/original/geometry.js`, which
-also draws the favicons, on whole pixels). The stills, the motion and its MP4 follow it; the grid then shows the
-circles the pixels were sampled from.
+also draws the favicons, on whole pixels). The stills, the motion and its MP4, and the marks in Typography and Colour
+(all but the modular one) follow it; the grid then shows the circles the pixels were sampled from.
 
 - `index.html` and `identity.js`: the page. Chapters come from `directions/<slug>.js` (the
   slugs are listed in `directions.js`), and the tools come from the `EXTRAS` list in
@@ -44,11 +44,18 @@ circles the pixels were sampled from.
   motion and the stereogram stay fine, as they need to. One WebGL context draws every tile in turn (`gl.js`); the mark
   comes in as its signed distance (`field.js`); the shaders are `techniques.js`. The bar swaps in the modular mark
   and inverts; a click shows a tile wide; each has its MP4.
+- `type.js` (after the sequence, before the colour): the typography chosen, the site's own pair (Jonas,
+  2026-09-30): Anton for titles, always in capitals, and Neue Montreal for everything else, one weight each. The
+  two faces, then the pair at work with the marks, in the studio's own words and pictures (the projects' pages):
+  a project's page, three posters (with a picture, the wordmark, the square S), business cards, a profile picture
+  and a post, a slide and a film's end card. Each is sized in its own width (container units), so it scales as a
+  picture.
 - `colour.js` (at the very bottom, after the sequence): the one section in colour, on Jonas's idea of hyper colours,
   raised, on a grounded, earthed ground. Hyper: seven accents round the wheel (Acid, Yellow, Orange, Red, Pink,
   Violet, Sky), each with three darker steps (the hue kept, the lightness at 80, 62 and 44 % of the base in OKLCH).
   Earth: the brown ground, black and the type. Every swatch has its WCAG contrast (white and black type on it, it on
-  the ground, worked out from the hex). Then the three marks (original, modular, S M) in black and white; the
+  the ground, worked out from the hex). Then the marks (original, modular, S M, and the S alone three ways, on one
+  scale) in black and white; the
   dark steps as grounds under white; and each mark in every accent: on the ground (the original on its Dark 3 too),
   and in ground or type on the accent.
 - `directions/struck.js` (off the page since 2026-09-30, at Jonas's word; kept, with its export in `identity/01-struck/`): the mark with its slots leaning.

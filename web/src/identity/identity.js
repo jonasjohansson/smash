@@ -92,8 +92,8 @@ function chapter(d) {
       </div>
       ${typeof d.mod.s === 'function' ? `<div class="row three">
         <figure class="panel ground-ink square">${markHTML(d, 's', 'ink', 'sym')}<figcaption class="label">S</figcaption></figure>
-        <figure class="panel ground-ink square">${markHTML(d, 'sTurned', 'ink', 'sym')}<figcaption class="label">S, on its side</figcaption></figure>
-        <figure class="panel ground-ink square">${markHTML(d, 'sSquare', 'ink', 'sym')}<figcaption class="label">S, square</figcaption></figure>
+        <figure class="panel ground-ink square">${markHTML(d, 'sTurned', 'ink', 'sym')}<figcaption class="label">S on its side</figcaption></figure>
+        <figure class="panel ground-ink square">${markHTML(d, 'sSquare', 'ink', 'sym')}<figcaption class="label">Square S</figcaption></figure>
       </div>` : ''}
       ${typeof d.mod.lockupSM === 'function' ? `<div class="row two">
         <figure class="panel ground-ink">${markHTML(d, 'lockupSM', 'ink', 'lock-sm')}<figcaption class="label">Lockup, S M</figcaption></figure>
@@ -205,6 +205,8 @@ const EXTRAS = [
   { id: 'lab', name: 'The live mark', load: async () => { const m = await import('./lab.js'); return { html: m.LAB_HTML, mount: m.mountLab }; } },
   // At the end of the page, after every chapter (Jonas, 2026-09-29).
   { id: 'sequence', name: 'Sequence', last: true, load: async () => { const m = await import('./sequence/section.js'); return { html: m.HTML, mount: m.mount }; } },
+  // The type chosen, Anton and Neue Montreal, and the pair at work with the marks (Jonas, 2026-09-30).
+  { id: 'type', name: 'Typography', last: true, load: async () => { const m = await import('./type.js'); return { html: m.HTML, mount: m.mount }; } },
   // The palette at the very bottom, after the sequence (Jonas, 2026-09-30).
   { id: 'colour', name: 'Colour', last: true, load: async () => { const m = await import('./colour.js'); return { html: m.HTML, mount: m.mount }; } },
   // Folded, under the colour (Jonas, 2026-09-30: not so important any more): a line each, loaded when opened.
@@ -279,6 +281,7 @@ async function main() {
     try { localStorage.setItem(PIXEL, pixel ? String(pixel) : ''); } catch {}
     for (const d of directions) for (const el of document.querySelectorAll(`#${d.slug} [data-still]`)) el.innerHTML = drawn(d, el.dataset.still, el.dataset.ground);
     lives.forEach((l) => l.motion?.redraw?.());
+    document.dispatchEvent(new Event('identity-pixel')); // for the sections that draw marks of their own (colour.js, type.js)
   };
   const stepPixel = (by) => setPixel(PIXELS[(PIXELS.indexOf(pixel) + by + PIXELS.length) % PIXELS.length]);
   pxButton.addEventListener('click', () => stepPixel(1));

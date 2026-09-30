@@ -3,12 +3,13 @@
 // taken to 80, 62 and 44 % of the base in OKLCH, as much chroma kept as a
 // screen can show), the earth they sit on (the brown ground, black, the type),
 // the marks in black and white, the dark steps as grounds under white, and
-// the original, the modular and the S M in every accent. Every swatch carries its hex and its WCAG contrast: white
+// every mark in every accent: the original, the modular, the S M and the S
+// alone three ways. Every swatch carries its hex and its WCAG contrast: white
 // and black type on it, and it on the brown ground; the figures are worked out
 // here from the hex, not written in. The page is otherwise black and white;
-// this is the one place with colour.
+// this is the one place with colour. The marks follow the page's Pixel switch
+// (identity.js), all but the modular one.
 
-import { letters, REST, W, H } from './directions/original/geometry.js';
 import { markSVG, MODULAR_DEFAULTS } from './modular.js';
 import * as original from './directions/original.js';
 
@@ -51,13 +52,22 @@ const fmt = (n) => n.toFixed(1);
 /** White or black, whichever reads better on hex. */
 const typeOn = (hex) => (contrast(hex, '#ffffff') >= contrast(hex, '#000000') ? '#ffffff' : '#000000');
 
-// The marks, each in currentColor: the original, the modular mark and the S M symbol.
+/** A still on a square artboard as big as its longer side, centred: the three S's then share one scale. */
+const onSquare = (svg) => svg.replace(/viewBox="0 0 ([\d.]+) ([\d.]+)"/, (m, w, h) => {
+  const n = Math.max(+w, +h);
+  return `viewBox="${(w - n) / 2} ${(h - n) / 2} ${n} ${n}"`;
+});
+
+// The marks, each in currentColor, round or in pixels of `pixel`: the original, the modular mark (always
+// round), the S M symbol, and the S alone (Jonas, 2026-09-30: "can we see these also with the color treatment?").
 let masks = 0;
-const MARK = letters(REST);
 export const MARKS = [
-  { name: 'Original', svg: () => `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="${MARK}"/></svg>` },
-  { name: 'Modular', svg: () => markSVG(MODULAR_DEFAULTS, 4, 'currentColor', `col-m${masks++}`) },
-  { name: 'S M', svg: () => original.symbol() },
+  { name: 'Original', svg: (pixel) => original.wordmark({ pixel }) },
+  { name: 'Modular', svg: () => markSVG(MODULAR_DEFAULTS, 4, 'currentColor', `col-m${masks++}`), round: true },
+  { name: 'S M', svg: (pixel) => original.symbol({ pixel }) },
+  { name: 'S', svg: (pixel) => onSquare(original.s({ pixel })) },
+  { name: 'S on its side', svg: (pixel) => onSquare(original.sTurned({ pixel })) },
+  { name: 'Square S', svg: (pixel) => onSquare(original.sSquare({ pixel })) },
 ];
 
 function swatch(name, hex) {
@@ -74,7 +84,8 @@ function swatch(name, hex) {
 
 /** A mark (from MARKS) in fill on ground, labelled with its contrast. */
 function panel(m, ground, fill, label) {
-  return `<figure class="panel col-panel" style="background:${ground};color:${typeOn(ground)}"><div class="col-mark" style="color:${fill}">${m.svg()}</div><figcaption class="label">${label} · ${fmt(contrast(fill, ground))}</figcaption></figure>`;
+  const i = m.round ? '' : ` data-mark="${MARKS.indexOf(m)}"`; // drawn again when the Pixel switch changes
+  return `<figure class="panel col-panel" style="background:${ground};color:${typeOn(ground)}"><div class="col-mark"${i} style="color:${fill}">${m.svg(0)}</div><figcaption class="label">${label} · ${fmt(contrast(fill, ground))}</figcaption></figure>`;
 }
 /** Ground or type, whichever the accent takes (the ground on the light ones). */
 const onAccent = (hex) => (typeOn(hex) === BLACK ? GROUND : TYPE);
@@ -130,7 +141,13 @@ export const HTML = `
     ${row(ACCENTS.map((a) => panel(m, a.steps[0], onAccent(a.steps[0]), a.name)))}`).join('')}
   </section>`;
 
-/** Nothing moves here (the style comes with the section's HTML). */
-export function mount() {
-  return { ready: Promise.resolve(), pause() {}, resume() {}, destroy() {} };
+/** Nothing moves here (the style comes with the section's HTML); the marks follow the Pixel switch. */
+export function mount(section) {
+  const draw = () => {
+    const pixel = Number(document.body.dataset.pixel) || 0;
+    for (const el of section.querySelectorAll('.col-mark[data-mark]')) el.innerHTML = MARKS[el.dataset.mark].svg(pixel);
+  };
+  if (Number(document.body.dataset.pixel)) draw();
+  document.addEventListener('identity-pixel', draw);
+  return { ready: Promise.resolve(), pause() {}, resume() {}, destroy() { document.removeEventListener('identity-pixel', draw); } };
 }
