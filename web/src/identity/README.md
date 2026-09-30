@@ -46,14 +46,18 @@ also draws the favicons, on whole pixels). The stills, the motion and its MP4, a
   and inverts; a click shows a tile wide; each has its MP4.
 - `type.js` (after the sequence, before the colour): the site's own type (Jonas, 2026-09-30): Anton for titles,
   always in capitals, Neue Montreal for everything else, and Season Mix where the site tells a project at length (its
-  lead and its story). The faces, then the type at work with the marks, in the studio's own words and pictures (the
-  projects' pages): a project's page, three posters (with a picture, the wordmark, the square S), business cards, a
-  profile picture and a post, a slide and a film's end card. Each is sized in its own width (container units), so it
-  scales as a picture. Two switches: the colour (black and white, or an accent on the earth ground, as the Colour
-  section) and the long texts (Season Mix or Neue Montreal); kept in this browser. Its PDFs are made by
-  `python3 web/scripts/identity-samples.py [treatment ...]`: each sample as a JPEG and all of them as a PDF, in black
-  and white and in yellow by default, in `samples/` (served at `/identity/samples/`, and linked from the section; a
-  direct link to a file skips the site's password).
+  lead and its story). As Jonas asked, type specimens and then compositions with the marks: a specimen sheet per face
+  (a word with its measures drawn across it, read from the font files; its characters; who made it and its licence)
+  and one of the scale they make on the site; seven compositions, each with another version of the mark (the
+  wordmark beside its block in words, the work as a list with the S M, a number with the S on its side, three words
+  with the square S, a lead with the modular mark, the wordmark in pixels of 10, a spread with the S alone); and,
+  folded, the type in use (a project's page, posters, business cards, a profile picture and a post, a slide, an end
+  card). Only SMASH's own work, the projects the site lists (`smash: true`), in their own words. Each piece is sized
+  in its own width (container units), so it scales as a picture. Two switches: the colour (black and white, or an
+  accent on the earth ground, as the Colour section) and the long texts (Season Mix or Neue Montreal); kept in this
+  browser. `python3 web/scripts/identity-samples.py [treatment ...]` renders every piece as a JPEG and all of them as
+  a PDF, black and white and yellow by default, in `samples/` (served at `/identity/samples/` and linked from the
+  section; a direct link to a file skips the site's password).
 - `colour.js` (at the very bottom, after the sequence): the one section in colour, on Jonas's idea of hyper colours,
   raised, on a grounded, earthed ground. Hyper: seven accents round the wheel (Acid, Yellow, Orange, Red, Pink,
   Violet, Sky), each with three darker steps (the hue kept, the lightness at 80, 62 and 44 % of the base in OKLCH).

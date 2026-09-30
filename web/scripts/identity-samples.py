@@ -1,8 +1,9 @@
-"""The Typography section's samples as pictures and PDFs, to share.
+"""The Typography section's pieces as pictures and PDFs, to share.
 
   python3 web/scripts/identity-samples.py [treatment ...]    (default: "black and white" and yellow)
 
-Renders each sample of /identity's Typography section (web/src/identity/type.js) on its own, in
+Renders each piece of /identity's Typography section (web/src/identity/type.js: the specimens, the
+compositions and the type in use) on its own, in
 each treatment asked for (black and white, or an accent: acid, yellow, orange, red, pink, violet,
 sky), the long texts in Season Mix as the site has them and the marks round, and writes to
 web/src/identity/samples/, which the site serves at /identity/samples/ and the section links:
@@ -27,7 +28,8 @@ from importlib import import_module
 
 shoot = import_module('identity-shoot')
 
-OUT = Path(__file__).resolve().parent.parent / 'src' / 'identity' / 'samples'
+ROOT = Path(__file__).resolve().parent.parent.parent
+OUT = ROOT / 'web' / 'src' / 'identity' / 'samples'
 WIDE, POSTER = 1600, 1000  # CSS px across, drawn at twice the pixels
 slug = lambda s: re.sub(r'[^a-z0-9]+', '-', s.lower()).strip('-')
 
@@ -55,6 +57,7 @@ def main():
         page.wait_for_function('document.documentElement.dataset.ready === "1"', timeout=60000)
         page.wait_for_function('window.__identity?.extra("type")', timeout=30000)
         page.add_style_tag(content='.view-tools { display: none !important; }')
+        page.evaluate("document.querySelectorAll('#type details').forEach((d) => { d.open = true; })")  # the type in use, folded on the page
         page.evaluate('document.fonts.ready.then(() => true)')
         count = page.locator('#type .ty-fig').count()
         for t in treatments:
@@ -79,7 +82,7 @@ def main():
                 pages.append(im)
             pdf = OUT / f'SMASH-typography-{slug(t)}.pdf'
             pages[0].save(pdf, 'PDF', save_all=True, append_images=pages[1:], resolution=144, quality=90)
-            print(f'{t}: {count} samples in {folder.relative_to(OUT.parent.parent.parent.parent)}/, {pdf.name} ({pdf.stat().st_size / 1e6:.1f} MB)')
+            print(f'{t}: {count} samples, {pdf.name} ({pdf.stat().st_size / 1e6:.1f} MB), in {OUT.relative_to(ROOT)}/')
         b.close()
     for line in log:
         print('  ', line)
