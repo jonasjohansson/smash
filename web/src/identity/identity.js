@@ -167,6 +167,7 @@ function live(d, section) {
  */
 const EXTRAS = [
   { id: 'modular', name: 'The modular mark', load: async () => { const m = await import('./modular.js'); return { html: m.HTML, mount: m.mount }; } },
+  { id: 'constructed', name: 'Constructed', load: async () => { const m = await import('./constructed.js'); return { html: m.HTML, mount: m.mount }; } },
   { id: 'lab', name: 'The live mark', load: async () => { const m = await import('./lab.js'); return { html: m.LAB_HTML, mount: m.mountLab }; } },
   { id: 'mapping', name: 'Mapping', load: async () => { const m = await import('./mapping.js'); return { html: m.HTML, mount: m.mount }; } },
   { id: 'sculpture', name: 'Sculpture', load: async () => { const m = await import('./sculpture.js'); return { html: m.HTML, mount: m.mount }; } },
