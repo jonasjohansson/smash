@@ -216,7 +216,8 @@ async function main() {
   }
   if (!ONLY) for (const x of EXTRAS.filter((x) => x.last)) await addExtra(page, x);
   for (const x of EXTRAS.filter((x) => x.id === ONLY)) await addExtra(page, x);
-  // The grid, previewed on the marks (grid.js): a button, and G; kept in this browser.
+  // The grid, previewed on the marks (grid.js): a button, and G; kept in this browser. Its lines one device pixel wide.
+  document.documentElement.style.setProperty('--hair', `${1 / (window.devicePixelRatio || 1)}px`);
   const GRID = 'smash-identity-grid';
   const button = h('<button type="button" class="grid-toggle" aria-pressed="false" title="Show the grid (G)">Grid</button>');
   document.body.appendChild(button);

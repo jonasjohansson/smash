@@ -149,7 +149,7 @@ function gridSVG(p, upTo, color) {
   }
   const lines = [...g.y.map((y) => `<line x1="-12" x2="${f(g.w + 12)}" y1="${f(y)}" y2="${f(y)}"/>`),
     ...[0, ...xs.filter((x) => x < g.w), g.w].map((x) => `<line y1="-12" y2="${f(g.h + 12)}" x1="${f(x)}" x2="${f(x)}"/>`)];
-  return `<g stroke="${color}" stroke-width="0.6" opacity="0.7" fill="none">${lines.join('')}</g>${circlesSVG(p, g, '#ff29b8')}`; // the circles in pink, seen on black and on white
+  return `<g class="mk-hair" stroke="${color}" stroke-width="0.6" opacity="0.7" fill="none">${lines.join('')}</g>${circlesSVG(p, g, '#ff29b8')}`; // the circles in pink, seen on black and on white
 }
 
 /**
@@ -175,8 +175,8 @@ function circlesSVG(p, g, color) {
   if (p.ends === 'round') for (const [x, y] of cuts(p, g).dots) rings.push([[x, y], [half]]);
   const circles = rings.flatMap(([[x, y], rs]) => rs.filter((r) => r > 0.01).map((r) => `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}"/>`));
   const crosses = rings.map(([[x, y]]) => `M${f(x - 3)} ${f(y)}H${f(x + 3)}M${f(x)} ${f(y - 3)}V${f(y + 3)}`).join('');
-  return `<g stroke="${color}" stroke-width="0.6" fill="none" stroke-dasharray="2 1.5" opacity="0.9">${circles.join('')}</g>`
-    + `<path d="${crosses}" stroke="${color}" stroke-width="0.6" fill="none"/>`;
+  return `<g class="mk-hair" stroke="${color}" stroke-width="0.6" fill="none" stroke-dasharray="2 1.5" opacity="0.9">${circles.join('')}</g>`
+    + `<path class="mk-hair" d="${crosses}" stroke="${color}" stroke-width="0.6" fill="none"/>`;
 }
 
 /**

@@ -191,6 +191,7 @@ h1, h2 { font-weight: 400; margin: 0; }
 /* The grid, previewed on the marks (grid.js): hidden until the Grid button or G shows it. */
 .mk-grid { display: none; }
 .show-grid .mk-grid { display: inline; }
-.mk-grid * { vector-effect: non-scaling-stroke; }
+/* Every line of a grid one device pixel wide, whatever the mark's scale (--hair: identity.js). */
+.mk-grid *, .mk-hair, .mk-hair * { vector-effect: non-scaling-stroke; stroke-width: var(--hair, 1px); }
 .grid-toggle { position: fixed; left: 12px; bottom: 12px; z-index: 60; padding: 6px 12px; background: #000; color: var(--dim); border: 1px solid var(--line); font: 400 12px/1 "Neue Montreal", "Helvetica Neue", Arial, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
 .grid-toggle:hover, .grid-toggle[aria-pressed="true"] { color: #ff29b8; border-color: #ff29b8; }

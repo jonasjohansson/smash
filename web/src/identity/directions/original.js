@@ -174,7 +174,7 @@ export function frame(ctx, w, h, t, { grid = false } = {}) {
     ctx.fillStyle = 'rgba(255, 41, 184, 0.16)';
     for (let cx = x + (32 - PITCH * Math.ceil(x / (PITCH * k))) * k; cx < w; cx += PITCH * k) ctx.fillRect(cx, 0, 20 * k, h);
     ctx.strokeStyle = 'rgba(255, 41, 184, 0.9)';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1 / (ctx.getTransform?.().a || 1); // one device pixel
     ctx.beginPath();
     for (const by of [0, 32, 220, 252, 440, 472]) { const yy = Math.round(y + by * k) + 0.5; ctx.moveTo(0, yy); ctx.lineTo(w, yy); }
     ctx.rect(Math.round(x) + 0.5, Math.round(y) + 0.5, Math.round(W * k), Math.round(H * k));
