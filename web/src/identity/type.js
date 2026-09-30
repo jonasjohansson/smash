@@ -1,22 +1,21 @@
-// Typography: two faces (Jonas, 2026-09-30: "isnt it very ai-esque to have
-// almost 3 fonts?"). SMASH's own typeface for titles, always in capitals: the
-// variable face drawn from the mark (web/src/typeface/), its defaults the
-// mark's own letters ("what about our own custom typeface, maybe it can be
-// presented too"); and Neue Montreal for everything else, the site's. Anton,
-// the site's titles until SMASH has its own (css/main.css says as much), is a
-// switch away: Titles in SMASH, or in Anton. Then, as Jonas asked ("more like
-// type specimens and then some typography compositions ... with various
-// versions of the logo and wordmark"): specimens (each face, the SMASH face's
-// five axes, the scale), compositions, each with another version of the mark
-// (the S on its side, the square S, the modular mark, the wordmark in pixels,
-// the S alone), and, folded, the type in use. Only SMASH's own work (the
-// projects the site lists), in its own words.
+// Typography: two faces in use (Jonas, 2026-09-30: "isnt it very ai-esque to
+// have almost 3 fonts?"): Anton for titles, always in capitals, and Neue
+// Montreal for everything else, the site's own pair ("i quite liked the
+// current pairing"). SMASH's own typeface, for very special occasions ("we
+// wont use it primiarly"), has a section of its own (typeface.js), which
+// borrows this one's pieces and styles. Then, as Jonas asked ("more like type
+// specimens and then some typography compositions ... with various versions
+// of the logo and wordmark"): specimens (each face, the scale), compositions,
+// each with another version of
+// the mark (the S on its side, the square S, the modular mark, the wordmark in
+// pixels, the S alone), and, folded, the type in use. Only SMASH's own work
+// (the projects the site lists), in its own words.
 //
-// Two switches: the colour (black and white, or an accent on the earth
-// ground, as the Colour section has it) and the titles' face. The marks follow
-// the page's Pixel switch (identity.js), but for the composition that is
-// about pixels. web/scripts/identity-samples.py renders the pieces as pictures
-// and PDFs, which the section links.
+// The colour switch: black and white, or an accent on the earth ground, as
+// the Colour section has it. The marks follow the page's Pixel switch
+// (identity.js), but for the composition that is about pixels.
+// web/scripts/identity-samples.py renders the pieces as pictures and PDFs,
+// which the section links.
 
 import * as original from './directions/original.js';
 import { markSVG as modularSVG, MODULAR_DEFAULTS } from './modular.js';
@@ -61,7 +60,7 @@ function markSVG(kind, pixel = 0) {
   const [name, fixed] = kind.split(':'); // "wordmark:10": always in pixels of 10
   return original[STILLS[name]]({ pixel: fixed ? Number(fixed) : pixel });
 }
-const mark = (kind, cls = '') => `<span class="ty-mk ${cls}" data-mk="${kind}">${markSVG(kind)}</span>`;
+export const mark = (kind, cls = '') => `<span class="ty-mk ${cls}" data-mk="${kind}">${markSVG(kind)}</span>`;
 
 // Resonance's own words, for the scale and the slide.
 const RESONANCE = 'Interactive projection mapping on Uppsala Town Hall, where the public could paint the facade in colour.';
@@ -70,14 +69,13 @@ const HOW = 'Four weatherproofed touch pads with embedded lighting were placed i
 // The faces ------------------------------------------------------------------
 
 // Their vertical measures per em (the fonts' OS/2 and hhea tables): cap height, x-height, descent.
-const METRICS = {
+export const METRICS = {
   anton: { cap: 1760 / 2048, x: 1500 / 2048, desc: 674 / 2048 },
   nm: { cap: 0.715, x: 0.51, desc: 0.225 },
   smash: { cap: 0.7, x: 0.7, desc: 0.2 }, // at its defaults: its height 471 (the mark's) draws the letters 700 high
 };
 // The advance widths, per em, of the words set to a measure (read from the fonts with fontTools).
-const EM = { 400: 1.4824, JAGAD: 2.415, Uppsala: 3.465, Resonance: 1.386 };
-const EM_WIDEST = { 400: 0.807 }; // the SMASH face at its widest (width 175)
+export const EM = { 400: 1.4824, JAGAD: 2.415, Uppsala: 3.465, Resonance: 1.386 };
 const FAMILY = { anton: 'Anton', nm: 'Neue Montreal', smash: 'SMASH' };
 const per1000 = (v) => Math.round(v * 1000);
 
@@ -86,7 +84,7 @@ const per1000 = (v) => Math.round(v * 1000);
  * across it (cap height, x-height, baseline, descent), labelled at the right:
  * an SVG 1000 wide, the word 740 of it.
  */
-function measured(face, word, { lines = ['cap', 'x', 'base', 'desc'], labels = {}, settings = '' } = {}) {
+export function measured(face, word, { lines = ['cap', 'x', 'base', 'desc'], labels = {}, settings = '' } = {}) {
   const m = METRICS[face];
   const size = 740 / EM[word];
   const top = face === 'anton' ? 40 : 60; // room over the cap height for the ascenders
@@ -98,16 +96,16 @@ function measured(face, word, { lines = ['cap', 'x', 'base', 'desc'], labels = {
   return `<svg class="ty-measured" viewBox="0 0 1000 ${h}" aria-label="${word}">${rules}`
     + `<text x="0" y="${f(base)}" font-family="${FAMILY[face]}" font-size="${f(size)}"${settings ? ` style="font-variation-settings:${settings}"` : ''} fill="currentColor">${word}</text></svg>`;
 }
-const f = (n) => +n.toFixed(2);
+export const f = (n) => +n.toFixed(2);
 
-const CAPS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖ';
+export const CAPS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖ';
 const LOWER = 'abcdefghijklmnopqrstuvwxyzåäö';
-const FIGURES = '0123456789';
-const MARKS_ = '&?!.,:;–()';
+export const FIGURES = '0123456789';
+export const MARKS_ = '&?!.,:;–()';
 const MORE = '@%'; // the text faces' table filled to whole rows
 const glyphs = (set, cls = '') => `<div class="ty-glyphs ${cls}">${[...set].map((g) => `<span>${g === '&' ? '&amp;' : g}</span>`).join('')}</div>`;
 
-function sheet({ name, face, by, role, word, set, cols, measure = {}, extra = '' }) {
+export function sheet({ name, face, by, role, word, set, cols, measure = {}, extra = '' }) {
   return `<div class="ty-art ty-sheet">
     <div class="ty-sheet-head"><p class="ty-meta">${name}</p><p class="ty-meta">${by}</p><p class="ty-meta">${role}</p></div>
     <div class="ty-sheet-body">
@@ -118,38 +116,21 @@ function sheet({ name, face, by, role, word, set, cols, measure = {}, extra = ''
 }
 
 // The SMASH face's axes, each at its least, its default (the mark's) and its most.
-const SMASH_DEFAULTS = { wght: 500, wdth: 100, CRSB: 50, ROND: 100, HGHT: 471 };
-const AXES = [
+export const SMASH_DEFAULTS = { wght: 500, wdth: 100, CRSB: 50, ROND: 100, HGHT: 471 };
+export const AXES = [
   ['Weight', 'wght', [100, 500, 900]],
   ['Width', 'wdth', [70, 100, 175]],
   ['Crossbar', 'CRSB', [27, 50, 73]],
   ['Roundness', 'ROND', [0, 50, 100]],
   ['Height', 'HGHT', [300, 471, 720]],
 ];
-const settings = (o) => Object.entries(o).map(([k, v]) => `'${k}' ${v}`).join(', ');
-const AXES_HTML = `<div class="ty-art ty-axes">${AXES.map(([name, tag, vals]) => `
-        <p class="ty-meta ty-axes-name">${name}<br><span>${tag} · ${vals[0]} to ${vals.at(-1)}</span></p>
-        ${vals.map((v) => `<div class="ty-axes-cell"><p class="ty-smash ty-hi" style="font-variation-settings:${settings({ ...SMASH_DEFAULTS, [tag]: v })}">Stockholm</p><p class="ty-meta">${v}${v === SMASH_DEFAULTS[tag] ? ' · the mark' : ''}</p></div>`).join('')}`).join('')}
-      </div>`;
-
+export const settings = (o) => Object.entries(o).map(([k, v]) => `'${k}' ${v}`).join(', ');
 const SPECIMENS = `
     <div class="ty-row">
       ${fig(sheet({
-        name: 'SMASH', face: 'smash', word: 'Resonance', cols: 7,
-        measure: { lines: ['cap', 'base', 'desc'], labels: { cap: 'Cap height 700 · one case' }, settings: settings(SMASH_DEFAULTS) },
-        by: 'Our own, drawn from the mark · variable: weight, width, crossbar, roundness, height · version 0.000',
-        role: 'Titles, at its widest · always in capitals · its defaults the mark\'s',
-        set: CAPS + FIGURES + MARKS_,
-      }), 'Specimen · SMASH, our own')}
-    </div>
-    <div class="ty-row">
-      ${fig(AXES_HTML, 'Specimen · SMASH, its five axes')}
-    </div>
-    <div class="ty-row ty-only-anton">
-      ${fig(sheet({
         name: 'Anton', face: 'anton', word: 'JAGAD', cols: 7, measure: { lines: ['cap', 'base', 'desc'] },
         by: 'Vernon Adams · Google Fonts · free, SIL Open Font License',
-        role: 'Titles on the site until SMASH has its own · capitals · line height 0.92',
+        role: 'Titles · always in capitals · line height 0.92',
         set: CAPS + FIGURES + MARKS_,
       }), 'Specimen · Anton')}
     </div>
@@ -165,24 +146,23 @@ const SPECIMENS = `
       ${fig(`<div class="ty-art ty-scale">
         <p class="ty-meta ty-scale-spec">Label<br><span>Neue Montreal 12 · capitals · tracked 6 %</span></p>
         <p class="ty-meta ty-scale-label">Uppsala Town Hall · 2024</p>
-        <p class="ty-meta ty-scale-spec">Title<br><span class="ty-only-smash">SMASH 156 · width 175 · line height 0.8 · capitals</span><span class="ty-only-anton">Anton 104 · line height 0.97 · capitals</span></p>
+        <p class="ty-meta ty-scale-spec">Title<br><span>Anton 104 · line height 0.97 · capitals</span></p>
         <h3 class="ty-title ty-scale-title">Resonance</h3>
         <p class="ty-meta ty-scale-spec">Lead<br><span>Neue Montreal 36 · line height 1.2</span></p>
         <p class="ty-text ty-scale-lead">${RESONANCE}</p>
         <p class="ty-meta ty-scale-spec">Text<br><span>Neue Montreal 16 · line height 1.5</span></p>
         <p class="ty-text ty-scale-text">${HOW}</p>
       </div>`, 'Specimen · the scale, at 1440 px')}
-    </div>`;
+    </div>
+`;
 
 // Compositions ----------------------------------------------------------------
 
-/** One number as wide as the measure (860 of 1000), in Anton or in the SMASH face at its widest. */
+/** One number as wide as the measure (860 of 1000). */
 function number(n) {
-  const a = 860 / EM[n];
-  const b = 860 / EM_WIDEST[n];
-  const svg = (cls, size, cap, family, style = '') => `<svg class="ty-number ${cls}" viewBox="0 0 860 ${f(cap)}" aria-label="${n}"><text x="0" y="${f(cap)}" font-family="${family}" font-size="${f(size)}"${style} textLength="860" lengthAdjust="spacing" fill="currentColor">${n}</text></svg>`;
-  return svg('ty-only-anton', a, METRICS.anton.cap * a, 'Anton')
-    + svg('ty-only-smash', b, METRICS.smash.cap * b, 'SMASH', ` style="font-variation-settings:${settings({ ...SMASH_DEFAULTS, wdth: 175 })}"`);
+  const size = 860 / EM[n];
+  const cap = METRICS.anton.cap * size;
+  return `<svg class="ty-number" viewBox="0 0 860 ${f(cap)}" aria-label="${n}"><text x="0" y="${f(cap)}" font-family="Anton" font-size="${f(size)}" textLength="860" lengthAdjust="spacing" fill="currentColor">${n}</text></svg>`;
 }
 
 const COMPOSITIONS = `
@@ -301,176 +281,174 @@ const IN_USE = `
       </div>`, 'Film · end card')}
     </div>`;
 
-function fig(art, caption, cls = '') {
+export function fig(art, caption, cls = '') {
   return `<figure class="ty-fig ${cls}">${art}<figcaption class="label">${caption}</figcaption></figure>`;
 }
 const button = (attr, value, label, on, swatch = '') => `<button type="button" data-${attr}="${value}" aria-pressed="${on}">${swatch ? `<i style="background:${swatch}"></i>` : ''}${label}</button>`;
 
-const STYLE = `
-#type {
+/** Both sections' styles (this one's, and typeface.js's, which borrows its pieces). */
+export const STYLE = `
+:is(#type, #typeface) {
   --anton: Anton, Impact, "Arial Narrow", sans-serif; --nm: "Neue Montreal", "Helvetica Neue", Arial, sans-serif; 
   --ty-ground: #000; --ty-type: #fff; --ty-accent: #fff; --ty-field: #000; --ty-on-field: #fff; --ty-paper: #fff; --ty-on-paper: #000; --ty-light: #fff; --ty-on-light: #000; --ty-construct: ${PINK};
-  --ty-title-font: "SMASH", var(--anton); --ty-title-var: "wght" 500, "wdth" 175; --ty-title-k: 1.5; --ty-title-lh: 0.8; /* at its widest, so a title reads */
 }
-#type[data-titles="anton"] { --ty-title-font: var(--anton); --ty-title-var: normal; --ty-title-k: 1; --ty-title-lh: 0.92; }
-#type[data-titles="smash"] .ty-only-anton, #type[data-titles="anton"] .ty-only-smash { display: none; }
-#type .ty-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 28px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
-#type .ty-seg { display: flex; flex-wrap: wrap; gap: 4px; }
-#type .ty-seg button { display: inline-flex; align-items: center; gap: 7px; padding: 6px 10px; background: none; color: var(--dim); border: 1px solid var(--line); font: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer; }
-#type .ty-seg button:hover, #type .ty-seg button[aria-pressed="true"] { color: var(--text); border-color: var(--text); }
-#type .ty-seg i { width: 9px; height: 9px; flex: none; }
-#type .ty-pdfs { margin: 0; display: flex; gap: 14px; }
-#type .ty-pdfs a { color: var(--text); text-decoration: none; border-bottom: 1px solid var(--dim); }
-#type .ty-group { margin: calc(var(--gap) * 4) 0 0; }
-#type .ty-row { display: grid; gap: var(--gap); margin-top: var(--gap); }
-#type .ty-row.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-#type .ty-row.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-@media (max-width: 760px) { #type .ty-row.two, #type .ty-row.three { grid-template-columns: 1fr; } }
-#type .ty-fig { margin: 0; min-width: 0; }
-#type .ty-fig > figcaption { margin-top: 10px; }
-#type .ty-fold { margin-top: calc(var(--gap) * 4); }
+:is(#type, #typeface) .ty-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 28px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
+:is(#type, #typeface) .ty-seg { display: flex; flex-wrap: wrap; gap: 4px; }
+:is(#type, #typeface) .ty-seg button { display: inline-flex; align-items: center; gap: 7px; padding: 6px 10px; background: none; color: var(--dim); border: 1px solid var(--line); font: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer; }
+:is(#type, #typeface) .ty-seg button:hover, :is(#type, #typeface) .ty-seg button[aria-pressed="true"] { color: var(--text); border-color: var(--text); }
+:is(#type, #typeface) .ty-seg i { width: 9px; height: 9px; flex: none; }
+:is(#type, #typeface) .ty-pdfs { margin: 0; display: flex; gap: 14px; }
+:is(#type, #typeface) .ty-pdfs a { color: var(--text); text-decoration: none; border-bottom: 1px solid var(--dim); }
+:is(#type, #typeface) .ty-group { margin: calc(var(--gap) * 4) 0 0; }
+:is(#type, #typeface) .ty-row { display: grid; gap: var(--gap); margin-top: var(--gap); }
+:is(#type, #typeface) .ty-row.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+:is(#type, #typeface) .ty-row.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 760px) { :is(#type, #typeface) .ty-row.two, :is(#type, #typeface) .ty-row.three { grid-template-columns: 1fr; } }
+:is(#type, #typeface) .ty-fig { margin: 0; min-width: 0; }
+:is(#type, #typeface) .ty-fig > figcaption { margin-top: 10px; }
+:is(#type, #typeface) .ty-fold { margin-top: calc(var(--gap) * 4); }
 /* An artwork: what is in it measured in its width (cqw), so it scales as one picture. (Its own padding,
    gaps and tracks are in % instead: cqw there would be the viewport's.) The picture and its shade sit
    under the rest. */
-#type .ty-art { position: relative; container-type: inline-size; overflow: hidden; isolation: isolate; background: var(--ty-ground); color: var(--ty-type); }
-#type .ty-paper { background: var(--ty-paper); color: var(--ty-on-paper); }
-#type .ty-light { background: var(--ty-light); color: var(--ty-on-light); }
-#type .ty-field { background: var(--ty-field); color: var(--ty-on-field); }
-#type .ty-hi { color: var(--ty-accent); }
-#type .ty-stage { background: #5f5f5f; }
-#type .ty-photo { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; object-fit: cover; display: block; }
-#type .ty-shade::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(to top, color-mix(in srgb, var(--ty-ground) 82%, transparent), transparent 60%); }
-#type .ty-mk { display: block; }
-#type .ty-mk svg { display: block; width: 100%; height: auto; }
-#type .ty-title { margin: 0; font-family: var(--ty-title-font); font-weight: 400; font-size: calc(var(--s, 10cqw) * var(--ty-title-k)); line-height: var(--ty-title-lh); font-variation-settings: var(--ty-title-var); text-transform: uppercase; }
-#type .ty-text { margin: 0; font: 400 1.6cqw/1.4 var(--nm); max-width: 44ch; }
-#type .ty-meta { margin: 0; font: 400 1.05cqw/1.2 var(--nm); letter-spacing: 0.06em; text-transform: uppercase; }
-#type .ty-anton { font-family: var(--anton); }
-#type .ty-nm { font-family: var(--nm); }
-#type .ty-smash { font-family: "SMASH", var(--anton); font-variation-settings: "wght" 500; }
+:is(#type, #typeface) .ty-art { position: relative; container-type: inline-size; overflow: hidden; isolation: isolate; background: var(--ty-ground); color: var(--ty-type); }
+:is(#type, #typeface) .ty-paper { background: var(--ty-paper); color: var(--ty-on-paper); }
+:is(#type, #typeface) .ty-light { background: var(--ty-light); color: var(--ty-on-light); }
+:is(#type, #typeface) .ty-field { background: var(--ty-field); color: var(--ty-on-field); }
+:is(#type, #typeface) .ty-hi { color: var(--ty-accent); }
+:is(#type, #typeface) .ty-stage { background: #5f5f5f; }
+:is(#type, #typeface) .ty-photo { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; object-fit: cover; display: block; }
+:is(#type, #typeface) .ty-shade::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(to top, color-mix(in srgb, var(--ty-ground) 82%, transparent), transparent 60%); }
+:is(#type, #typeface) .ty-mk { display: block; }
+:is(#type, #typeface) .ty-mk svg { display: block; width: 100%; height: auto; }
+:is(#type, #typeface) .ty-title { margin: 0; font: 400 var(--s, 10cqw)/0.92 var(--anton); text-transform: uppercase; }
+:is(#type, #typeface) .ty-text { margin: 0; font: 400 1.6cqw/1.4 var(--nm); max-width: 44ch; }
+:is(#type, #typeface) .ty-meta { margin: 0; font: 400 1.05cqw/1.2 var(--nm); letter-spacing: 0.06em; text-transform: uppercase; }
+:is(#type, #typeface) .ty-anton { font-family: var(--anton); }
+:is(#type, #typeface) .ty-nm { font-family: var(--nm); }
+:is(#type, #typeface) .ty-smash { font-family: "SMASH", var(--anton); font-variation-settings: "wght" 500; }
 
 /* Specimens: a face's sheet (its word with its measures, its characters) and the scale */
-#type .ty-sheet { aspect-ratio: 2 / 1; padding: 3.5%; display: flex; flex-direction: column; gap: 3cqw; }
-#type .ty-sheet-head { display: grid; grid-template-columns: 1fr 2fr 1.4fr; gap: 3cqw; }
-#type .ty-sheet-head .ty-meta { font-size: 1.1cqw; }
-#type .ty-sheet-head .ty-meta:first-child { color: var(--ty-accent); }
-#type .ty-sheet-head .ty-meta:not(:first-child) { opacity: 0.7; }
-#type .ty-sheet-body { flex: 1; display: grid; grid-template-columns: 58fr 42fr; gap: 4cqw; align-items: center; min-height: 0; }
-#type .ty-measured { display: block; width: 100%; height: auto; overflow: visible; }
-#type .ty-rule { fill: none; stroke: var(--ty-construct); vector-effect: non-scaling-stroke; stroke-width: 1; }
-#type .ty-rule-label { fill: var(--ty-construct); font: 400 15px var(--nm); letter-spacing: 0.06em; text-transform: uppercase; }
-#type .ty-glyphs { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); border-top: 1px solid color-mix(in srgb, currentColor 22%, transparent); border-left: 1px solid color-mix(in srgb, currentColor 22%, transparent); }
-#type .ty-glyphs span { aspect-ratio: 1; display: grid; place-items: center; border-right: 1px solid color-mix(in srgb, currentColor 22%, transparent); border-bottom: 1px solid color-mix(in srgb, currentColor 22%, transparent); font-size: 2.1cqw; line-height: 1; }
-#type .ty-glyphs.ty-anton span { font-size: 2.6cqw; }
-#type .ty-glyphs.ty-smash span { font-size: 3.9cqw; font-variation-settings: "wght" 500, "wdth" 175; }
-#type .ty-axes { padding: 3.5%; display: grid; grid-template-columns: 16fr 28fr 28fr 28fr; column-gap: 3cqw; row-gap: 3.2cqw; align-items: end; }
-#type .ty-axes-name { font-size: 1.1cqw; }
-#type .ty-axes-name span { opacity: 0.6; }
-#type .ty-axes-cell .ty-smash { margin: 0 0 0.9cqw; font-size: 6cqw; line-height: 1; }
-#type .ty-axes-cell .ty-meta { font-size: 0.95cqw; opacity: 0.6; }
-#type .ty-scale { padding: 3.5%; display: grid; grid-template-columns: 22fr 78fr; column-gap: 3cqw; row-gap: 2.6cqw; align-items: baseline; }
-#type .ty-scale-spec { font-size: 0.95cqw; opacity: 0.7; }
-#type .ty-scale-spec span { opacity: 0.8; }
-#type .ty-scale-label { font-size: 0.83cqw; }
-#type .ty-scale-title { --s: 7.2cqw; }
-#type .ty-scale-lead { font-size: 2.5cqw; line-height: 1.2; max-width: 32ch; }
-#type .ty-scale-text { font-size: 1.11cqw; line-height: 1.5; max-width: 60ch; }
+:is(#type, #typeface) .ty-sheet { aspect-ratio: 2 / 1; padding: 3.5%; display: flex; flex-direction: column; gap: 3cqw; }
+:is(#type, #typeface) .ty-sheet-head { display: grid; grid-template-columns: 1fr 2fr 1.4fr; gap: 3cqw; }
+:is(#type, #typeface) .ty-sheet-head .ty-meta { font-size: 1.1cqw; }
+:is(#type, #typeface) .ty-sheet-head .ty-meta:first-child { color: var(--ty-accent); }
+:is(#type, #typeface) .ty-sheet-head .ty-meta:not(:first-child) { opacity: 0.7; }
+:is(#type, #typeface) .ty-sheet-body { flex: 1; display: grid; grid-template-columns: 58fr 42fr; gap: 4cqw; align-items: center; min-height: 0; }
+:is(#type, #typeface) .ty-measured { display: block; width: 100%; height: auto; overflow: visible; }
+:is(#type, #typeface) .ty-rule { fill: none; stroke: var(--ty-construct); vector-effect: non-scaling-stroke; stroke-width: 1; }
+:is(#type, #typeface) .ty-rule-label { fill: var(--ty-construct); font: 400 15px var(--nm); letter-spacing: 0.06em; text-transform: uppercase; }
+:is(#type, #typeface) .ty-glyphs { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); border-top: 1px solid color-mix(in srgb, currentColor 22%, transparent); border-left: 1px solid color-mix(in srgb, currentColor 22%, transparent); }
+:is(#type, #typeface) .ty-glyphs span { aspect-ratio: 1; display: grid; place-items: center; border-right: 1px solid color-mix(in srgb, currentColor 22%, transparent); border-bottom: 1px solid color-mix(in srgb, currentColor 22%, transparent); font-size: 2.1cqw; line-height: 1; }
+:is(#type, #typeface) .ty-glyphs.ty-anton span { font-size: 2.6cqw; }
+:is(#type, #typeface) .ty-glyphs.ty-smash span { font-size: 3.9cqw; font-variation-settings: "wght" 500, "wdth" 175; }
+:is(#type, #typeface) .ty-axes { padding: 3.5%; display: grid; grid-template-columns: 16fr 28fr 28fr 28fr; column-gap: 3cqw; row-gap: 3.2cqw; align-items: end; }
+:is(#type, #typeface) .ty-axes-name { font-size: 1.1cqw; }
+:is(#type, #typeface) .ty-axes-name span { opacity: 0.6; }
+:is(#type, #typeface) .ty-axes-cell .ty-smash { margin: 0 0 0.9cqw; font-size: 6cqw; line-height: 1; }
+:is(#type, #typeface) .ty-axes-cell .ty-meta { font-size: 0.95cqw; opacity: 0.6; }
+:is(#type, #typeface) .ty-scale { padding: 3.5%; display: grid; grid-template-columns: 22fr 78fr; column-gap: 3cqw; row-gap: 2.6cqw; align-items: baseline; }
+:is(#type, #typeface) .ty-scale-spec { font-size: 0.95cqw; opacity: 0.7; }
+:is(#type, #typeface) .ty-scale-spec span { opacity: 0.8; }
+:is(#type, #typeface) .ty-scale-label { font-size: 0.83cqw; }
+:is(#type, #typeface) .ty-scale-title { --s: 7.2cqw; line-height: 0.97; }
+:is(#type, #typeface) .ty-scale-lead { font-size: 2.5cqw; line-height: 1.2; max-width: 32ch; }
+:is(#type, #typeface) .ty-scale-text { font-size: 1.11cqw; line-height: 1.5; max-width: 60ch; }
 
 /* Compositions */
-#type .ty-count { justify-content: space-between; }
-#type .ty-number { display: block; width: 100%; height: auto; overflow: visible; }
-#type .ty-poster.ty-count .ty-title { --s: 9cqw; }
-#type .ty-poster.ty-count .ty-text { font-size: 6.2cqw; line-height: 1.12; margin-top: 3cqw; }
-#type .ty-poster-foot-row { display: flex; justify-content: space-between; align-items: end; }
-#type .ty-poster-foot-row .ty-mk { width: 16cqw; }
-#type .ty-squared { justify-content: space-between; }
-#type .ty-squared > .ty-mk { width: 100%; }
-#type .ty-squared-foot { display: flex; justify-content: space-between; align-items: end; gap: 4cqw; }
-#type .ty-poster.ty-squared .ty-title { --s: 11.4cqw; }
-#type .ty-squared .ty-meta { text-align: right; }
-#type .ty-leadpiece { aspect-ratio: 16 / 9; padding: 5%; display: flex; flex-direction: column; justify-content: space-between; }
-#type .ty-leadpiece-top { display: flex; justify-content: space-between; align-items: baseline; }
-#type .ty-leadpiece-top .ty-title { --s: 4.4cqw; }
-#type .ty-leadpiece .ty-meta { font-size: 1.3cqw; }
-#type .ty-leadpiece-lead { font-size: 5.4cqw; line-height: 1.08; max-width: none; }
-#type .ty-leadpiece-foot { display: flex; justify-content: space-between; align-items: end; }
-#type .ty-leadpiece-foot .ty-mk { width: 20cqw; }
-#type .ty-pixels { aspect-ratio: 16 / 9; }
-#type .ty-pixels-mark { position: absolute; width: 74cqw; left: 45cqw; top: 7cqw; }
-#type .ty-pixels-text { position: absolute; left: 5cqw; bottom: 5cqw; width: 34cqw; }
-#type .ty-pixels .ty-title { --s: 12cqw; margin: 1.4cqw 0 2cqw; }
-#type .ty-pixels .ty-text { font-size: 2.1cqw; line-height: 1.2; }
-#type .ty-pixels .ty-meta { font-size: 1.3cqw; }
-#type .ty-spread { aspect-ratio: 2 / 1; display: grid; grid-template-columns: 1fr 1fr; }
-#type .ty-spread-page { position: relative; padding: 7% 7% 5%; display: flex; flex-direction: column; justify-content: space-between; }
-#type .ty-spread-page + .ty-spread-page { border-left: 1px solid color-mix(in srgb, currentColor 18%, transparent); }
-#type .ty-spread .ty-title { --s: 8.6cqw; margin: 1.6cqw 0 2.4cqw; }
-#type .ty-spread .ty-meta { font-size: 0.95cqw; }
-#type .ty-spread-lead { font-size: 2.3cqw; line-height: 1.15; max-width: 22ch; }
-#type .ty-spread-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 2.6cqw; }
-#type .ty-spread-cols .ty-text { font-size: 1.12cqw; line-height: 1.5; margin-top: 1cqw; }
-#type .ty-folio { display: flex; align-items: end; gap: 1.4cqw; }
-#type .ty-folio .ty-mk { width: 2.2cqw; }
-#type .ty-folio-right { justify-content: space-between; }
+:is(#type, #typeface) .ty-count { justify-content: space-between; }
+:is(#type, #typeface) .ty-number { display: block; width: 100%; height: auto; overflow: visible; }
+:is(#type, #typeface) .ty-poster.ty-count .ty-title { --s: 9cqw; }
+:is(#type, #typeface) .ty-poster.ty-count .ty-text { font-size: 6.2cqw; line-height: 1.12; margin-top: 3cqw; }
+:is(#type, #typeface) .ty-poster-foot-row { display: flex; justify-content: space-between; align-items: end; }
+:is(#type, #typeface) .ty-poster-foot-row .ty-mk { width: 16cqw; }
+:is(#type, #typeface) .ty-squared { justify-content: space-between; }
+:is(#type, #typeface) .ty-squared > .ty-mk { width: 100%; }
+:is(#type, #typeface) .ty-squared-foot { display: flex; justify-content: space-between; align-items: end; gap: 4cqw; }
+:is(#type, #typeface) .ty-poster.ty-squared .ty-title { --s: 11.4cqw; }
+:is(#type, #typeface) .ty-squared .ty-meta { text-align: right; }
+:is(#type, #typeface) .ty-leadpiece { aspect-ratio: 16 / 9; padding: 5%; display: flex; flex-direction: column; justify-content: space-between; }
+:is(#type, #typeface) .ty-leadpiece-top { display: flex; justify-content: space-between; align-items: baseline; }
+:is(#type, #typeface) .ty-leadpiece-top .ty-title { --s: 4.4cqw; }
+:is(#type, #typeface) .ty-leadpiece .ty-meta { font-size: 1.3cqw; }
+:is(#type, #typeface) .ty-leadpiece-lead { font-size: 5.4cqw; line-height: 1.08; max-width: none; }
+:is(#type, #typeface) .ty-leadpiece-foot { display: flex; justify-content: space-between; align-items: end; }
+:is(#type, #typeface) .ty-leadpiece-foot .ty-mk { width: 20cqw; }
+:is(#type, #typeface) .ty-pixels { aspect-ratio: 16 / 9; }
+:is(#type, #typeface) .ty-pixels-mark { position: absolute; width: 74cqw; left: 45cqw; top: 7cqw; }
+:is(#type, #typeface) .ty-pixels-text { position: absolute; left: 5cqw; bottom: 5cqw; width: 34cqw; }
+:is(#type, #typeface) .ty-pixels .ty-title { --s: 12cqw; margin: 1.4cqw 0 2cqw; }
+:is(#type, #typeface) .ty-pixels .ty-text { font-size: 2.1cqw; line-height: 1.2; }
+:is(#type, #typeface) .ty-pixels .ty-meta { font-size: 1.3cqw; }
+:is(#type, #typeface) .ty-spread { aspect-ratio: 2 / 1; display: grid; grid-template-columns: 1fr 1fr; }
+:is(#type, #typeface) .ty-spread-page { position: relative; padding: 7% 7% 5%; display: flex; flex-direction: column; justify-content: space-between; }
+:is(#type, #typeface) .ty-spread-page + .ty-spread-page { border-left: 1px solid color-mix(in srgb, currentColor 18%, transparent); }
+:is(#type, #typeface) .ty-spread .ty-title { --s: 8.6cqw; margin: 1.6cqw 0 2.4cqw; }
+:is(#type, #typeface) .ty-spread .ty-meta { font-size: 0.95cqw; }
+:is(#type, #typeface) .ty-spread-lead { font-size: 2.3cqw; line-height: 1.15; max-width: 22ch; }
+:is(#type, #typeface) .ty-spread-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 2.6cqw; }
+:is(#type, #typeface) .ty-spread-cols .ty-text { font-size: 1.12cqw; line-height: 1.5; margin-top: 1cqw; }
+:is(#type, #typeface) .ty-folio { display: flex; align-items: end; gap: 1.4cqw; }
+:is(#type, #typeface) .ty-folio .ty-mk { width: 2.2cqw; }
+:is(#type, #typeface) .ty-folio-right { justify-content: space-between; }
 
 /* In use: a project's page on the site */
-#type .ty-web { aspect-ratio: 16 / 9; }
-#type .ty-web-bar { position: absolute; top: 3cqw; left: 3cqw; right: 3cqw; display: flex; justify-content: space-between; align-items: center; }
-#type .ty-web-bar .ty-mk { width: 5.4cqw; }
-#type .ty-web-hero { position: absolute; left: 3cqw; right: 3cqw; bottom: 3cqw; display: grid; grid-template-columns: minmax(0, 1fr) 32cqw; align-items: end; gap: 3cqw; }
-#type .ty-web-hero .ty-title { --s: 14cqw; margin-bottom: -1.1cqw; }
-#type .ty-web-hero .ty-text { font-size: 1.9cqw; line-height: 1.2; }
-#type .ty-web .ty-meta { font-size: 1.2cqw; }
-#type .ty-web-hero .ty-meta { margin-bottom: 1.2cqw; }
+:is(#type, #typeface) .ty-web { aspect-ratio: 16 / 9; }
+:is(#type, #typeface) .ty-web-bar { position: absolute; top: 3cqw; left: 3cqw; right: 3cqw; display: flex; justify-content: space-between; align-items: center; }
+:is(#type, #typeface) .ty-web-bar .ty-mk { width: 5.4cqw; }
+:is(#type, #typeface) .ty-web-hero { position: absolute; left: 3cqw; right: 3cqw; bottom: 3cqw; display: grid; grid-template-columns: minmax(0, 1fr) 32cqw; align-items: end; gap: 3cqw; }
+:is(#type, #typeface) .ty-web-hero .ty-title { --s: 14cqw; margin-bottom: -1.1cqw; }
+:is(#type, #typeface) .ty-web-hero .ty-text { font-size: 1.9cqw; line-height: 1.2; }
+:is(#type, #typeface) .ty-web .ty-meta { font-size: 1.2cqw; }
+:is(#type, #typeface) .ty-web-hero .ty-meta { margin-bottom: 1.2cqw; }
 
 /* Posters, A-sized */
-#type .ty-poster { aspect-ratio: 1 / 1.4142; padding: 7%; display: flex; flex-direction: column; justify-content: space-between; }
-#type .ty-poster .ty-title { --s: 19cqw; }
-#type .ty-poster .ty-text { font-size: 4.4cqw; line-height: 1.25; margin-top: 4cqw; }
-#type .ty-poster .ty-meta { font-size: 3cqw; }
-#type .ty-poster-top { display: flex; justify-content: space-between; align-items: start; gap: 4cqw; }
-#type .ty-poster-top .ty-mk { width: 22cqw; }
-#type .ty-poster-top .ty-mk.sq { width: 14cqw; }
-#type .ty-poster-top .ty-meta { text-align: right; }
-#type .ty-poster-foot .ty-meta { margin-top: 5cqw; display: flex; justify-content: space-between; }
+:is(#type, #typeface) .ty-poster { aspect-ratio: 1 / 1.4142; padding: 7%; display: flex; flex-direction: column; justify-content: space-between; }
+:is(#type, #typeface) .ty-poster .ty-title { --s: 19cqw; }
+:is(#type, #typeface) .ty-poster .ty-text { font-size: 4.4cqw; line-height: 1.25; margin-top: 4cqw; }
+:is(#type, #typeface) .ty-poster .ty-meta { font-size: 3cqw; }
+:is(#type, #typeface) .ty-poster-top { display: flex; justify-content: space-between; align-items: start; gap: 4cqw; }
+:is(#type, #typeface) .ty-poster-top .ty-mk { width: 22cqw; }
+:is(#type, #typeface) .ty-poster-top .ty-mk.sq { width: 14cqw; }
+:is(#type, #typeface) .ty-poster-top .ty-meta { text-align: right; }
+:is(#type, #typeface) .ty-poster-foot .ty-meta { margin-top: 5cqw; display: flex; justify-content: space-between; }
 
 /* Business cards, 85 × 55, on a grey table */
-#type .ty-cards { aspect-ratio: 16 / 9; display: flex; align-items: center; justify-content: center; gap: 4%; }
-#type .ty-card { width: 42cqw; aspect-ratio: 85 / 55; position: relative; box-shadow: 0 0.6cqw 2cqw rgba(0, 0, 0, 0.35); }
-#type .ty-card-front { display: grid; place-items: center; }
-#type .ty-card-front .ty-mk { width: 10cqw; }
-#type .ty-card-back { padding: 2.8cqw; display: flex; flex-direction: column; justify-content: space-between; }
-#type .ty-card-back .ty-mk { width: 7cqw; }
-#type .ty-card-name { margin: 0; font: 400 2.4cqw/1.15 var(--nm); }
-#type .ty-card-lines { margin: 0.4cqw 0 0; font: 400 1.6cqw/1.4 var(--nm); }
-#type .ty-card-back .ty-meta { font-size: 1.15cqw; }
+:is(#type, #typeface) .ty-cards { aspect-ratio: 16 / 9; display: flex; align-items: center; justify-content: center; gap: 4%; }
+:is(#type, #typeface) .ty-card { width: 42cqw; aspect-ratio: 85 / 55; position: relative; box-shadow: 0 0.6cqw 2cqw rgba(0, 0, 0, 0.35); }
+:is(#type, #typeface) .ty-card-front { display: grid; place-items: center; }
+:is(#type, #typeface) .ty-card-front .ty-mk { width: 10cqw; }
+:is(#type, #typeface) .ty-card-back { padding: 2.8cqw; display: flex; flex-direction: column; justify-content: space-between; }
+:is(#type, #typeface) .ty-card-back .ty-mk { width: 7cqw; }
+:is(#type, #typeface) .ty-card-name { margin: 0; font: 400 2.4cqw/1.15 var(--nm); }
+:is(#type, #typeface) .ty-card-lines { margin: 0.4cqw 0 0; font: 400 1.6cqw/1.4 var(--nm); }
+:is(#type, #typeface) .ty-card-back .ty-meta { font-size: 1.15cqw; }
 
 /* A profile picture at three sizes, and a post */
-#type .ty-social { aspect-ratio: 16 / 9; display: grid; grid-template-columns: auto 46%; align-items: center; justify-content: center; column-gap: 7%; }
-#type .ty-avatars { display: flex; align-items: end; gap: 2.4cqw; }
-#type .ty-avatar { border-radius: 50%; display: grid; place-items: center; }
-#type .ty-avatar .ty-mk { width: 56%; }
-#type .ty-post { aspect-ratio: 1; padding: 7%; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 0.6cqw 2cqw rgba(0, 0, 0, 0.35); }
-#type .ty-post .ty-mk { width: 16cqw; }
-#type .ty-post .ty-title { --s: 17cqw; }
-#type .ty-post .ty-text { font-size: 3.9cqw; line-height: 1.25; margin-top: 3cqw; }
+:is(#type, #typeface) .ty-social { aspect-ratio: 16 / 9; display: grid; grid-template-columns: auto 46%; align-items: center; justify-content: center; column-gap: 7%; }
+:is(#type, #typeface) .ty-avatars { display: flex; align-items: end; gap: 2.4cqw; }
+:is(#type, #typeface) .ty-avatar { border-radius: 50%; display: grid; place-items: center; }
+:is(#type, #typeface) .ty-avatar .ty-mk { width: 56%; }
+:is(#type, #typeface) .ty-post { aspect-ratio: 1; padding: 7%; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 0.6cqw 2cqw rgba(0, 0, 0, 0.35); }
+:is(#type, #typeface) .ty-post .ty-mk { width: 16cqw; }
+:is(#type, #typeface) .ty-post .ty-title { --s: 17cqw; }
+:is(#type, #typeface) .ty-post .ty-text { font-size: 3.9cqw; line-height: 1.25; margin-top: 3cqw; }
 
 /* A slide, and a film's end card */
-#type .ty-slide { aspect-ratio: 16 / 9; padding: 4%; display: flex; flex-direction: column; justify-content: space-between; }
-#type .ty-slide-top { display: flex; justify-content: space-between; align-items: start; }
-#type .ty-slide-top .ty-mk { width: 7cqw; }
-#type .ty-slide .ty-meta { font-size: 1.4cqw; }
-#type .ty-slide-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4cqw; align-items: end; }
-#type .ty-slide-body .ty-meta { margin-bottom: 1.4cqw; }
-#type .ty-slide-body .ty-title { --s: 9cqw; }
-#type .ty-slide .ty-text { font-size: 2cqw; line-height: 1.25; }
-#type .ty-end { aspect-ratio: 16 / 9; display: grid; place-items: center; align-content: center; }
-#type .ty-end .ty-mk { width: 22cqw; }
-#type .ty-end .ty-meta { margin-top: 3.4cqw; font-size: 1.45cqw; line-height: 1.5; opacity: 0.8; text-align: center; }
+:is(#type, #typeface) .ty-slide { aspect-ratio: 16 / 9; padding: 4%; display: flex; flex-direction: column; justify-content: space-between; }
+:is(#type, #typeface) .ty-slide-top { display: flex; justify-content: space-between; align-items: start; }
+:is(#type, #typeface) .ty-slide-top .ty-mk { width: 7cqw; }
+:is(#type, #typeface) .ty-slide .ty-meta { font-size: 1.4cqw; }
+:is(#type, #typeface) .ty-slide-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4cqw; align-items: end; }
+:is(#type, #typeface) .ty-slide-body .ty-meta { margin-bottom: 1.4cqw; }
+:is(#type, #typeface) .ty-slide-body .ty-title { --s: 9cqw; }
+:is(#type, #typeface) .ty-slide .ty-text { font-size: 2cqw; line-height: 1.25; }
+:is(#type, #typeface) .ty-end { aspect-ratio: 16 / 9; display: grid; place-items: center; align-content: center; }
+:is(#type, #typeface) .ty-end .ty-mk { width: 22cqw; }
+:is(#type, #typeface) .ty-end .ty-meta { margin-top: 3.4cqw; font-size: 1.45cqw; line-height: 1.5; opacity: 0.8; text-align: center; }
 `;
 
 export const HTML = `
-  <section class="lab" id="type" data-titles="smash">
+  <section class="lab" id="type">
     <style>${STYLE}</style>
     <header class="ch-head">
       <p class="ch-n">00 · type</p>
@@ -478,7 +456,7 @@ export const HTML = `
     </header>
     <div class="ty-controls">
       <div class="ty-seg" role="group" aria-label="Colour">${TREATMENTS.map((t, i) => button('treat', t, i ? ACCENTS[i - 1].name : 'Black and white', i === 0, i ? ACCENTS[i - 1].steps[0] : '')).join('')}</div>
-      <div class="ty-seg" role="group" aria-label="Titles">${button('titles', 'smash', 'Titles in SMASH', true)}${button('titles', 'anton', 'In Anton', false)}</div>
+      
       <p class="ty-pdfs">PDF ${PDFS.map((t) => `<a href="${pdfURL(t)}" target="_blank" rel="noopener">${t}</a>`).join('')}</p>
     </div>
     <p class="label ty-group">Specimens</p>
@@ -491,28 +469,24 @@ export const HTML = `
   </section>`;
 
 function load() {
-  const d = { treat: 'black and white', titles: 'smash' };
-  try { const { treat = d.treat, titles = d.titles } = JSON.parse(localStorage.getItem(STORE) || '{}'); return { treat, titles }; } catch { return d; }
+  try { return { treat: JSON.parse(localStorage.getItem(STORE) || '{}').treat ?? 'black and white' }; } catch { return { treat: 'black and white' }; }
 }
 
 /**
- * The switches, and the marks following the Pixel switch. Returns the usual
- * tool, plus set({ treat, titles }) for scripts (identity-samples.py).
+ * The colour switch, and the marks following the Pixel switch. Returns the
+ * usual tool, plus set({ treat }) for scripts (identity-samples.py).
  */
 export function mount(section) {
   const state = load();
   const apply = () => {
     for (const [k, v] of Object.entries(treatment(state.treat))) section.style.setProperty(`--ty-${k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`, v);
-    section.dataset.titles = state.titles;
     for (const b of section.querySelectorAll('[data-treat]')) b.setAttribute('aria-pressed', String(b.dataset.treat === state.treat));
-    for (const b of section.querySelectorAll('[data-titles]')) b.setAttribute('aria-pressed', String(b.dataset.titles === state.titles));
     try { localStorage.setItem(STORE, JSON.stringify(state)); } catch {}
   };
   const onClick = (e) => {
-    const b = e.target.closest('[data-treat], [data-titles]');
+    const b = e.target.closest('[data-treat]');
     if (!b) return;
-    if (b.dataset.treat) state.treat = b.dataset.treat;
-    if (b.dataset.titles) state.titles = b.dataset.titles;
+    state.treat = b.dataset.treat;
     apply();
   };
   section.addEventListener('click', onClick);
@@ -525,7 +499,7 @@ export function mount(section) {
   apply();
   return {
     ready: Promise.resolve(),
-    set({ treat = state.treat, titles = state.titles } = {}) { Object.assign(state, { treat, titles }); apply(); },
+    set({ treat = state.treat } = {}) { state.treat = treat; apply(); },
     pause() {},
     resume() {},
     destroy() { section.removeEventListener('click', onClick); document.removeEventListener('identity-pixel', draw); },

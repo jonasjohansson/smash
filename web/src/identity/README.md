@@ -44,22 +44,25 @@ also draws the favicons, on whole pixels). The stills, the motion and its MP4, a
   motion and the stereogram stay fine, as they need to. One WebGL context draws every tile in turn (`gl.js`); the mark
   comes in as its signed distance (`field.js`); the shaders are `techniques.js`. The bar swaps in the modular mark
   and inverts; a click shows a tile wide; each has its MP4.
-- `type.js` (after the sequence, before the colour): two faces (Jonas, 2026-09-30: "isnt it very ai-esque to have
-  almost 3 fonts?"). SMASH's own typeface for titles (`typeface/SMASH-VF.ttf`, drawn from the mark; titles at its
-  widest, width 175, so they read), always in capitals, and Neue Montreal for everything else. Anton, the site's
-  titles until SMASH has its own, is a switch away (Titles in SMASH, or in Anton); Season Mix is out. Type specimens,
-  then compositions with the marks, as Jonas asked: a sheet per face (a word with its measures drawn across it, read
-  from the font files; its characters; who made it and its licence), the SMASH face's five axes (weight, width,
-  crossbar, roundness, height, each at its least, the mark's and its most) and the scale; five compositions, each with
-  another version of the mark (400 for Sala with the S on its side, three words with the square S, Dome Conductor's
-  lead with the modular mark, Jagad with the wordmark in pixels of 10, a spread for Vi kommer i fred with the S
-  alone); and, folded, the type in use (a project's page, posters, business cards, a profile picture and a post, a
-  slide, an end card). Only SMASH's own work, the projects the site lists (`smash: true`), in their own words. Each
-  piece is sized in its own width (container units), so it scales as a picture. The colour switch (black and white,
-  or an accent on the earth ground, as the Colour section) and the titles' face are kept in this browser.
-  `python3 web/scripts/identity-samples.py [treatment ...]` renders every piece the section shows as a JPEG and all
-  of them as a PDF, black and white and yellow by default, in `samples/` (served at `/identity/samples/` and linked
-  from the section; a direct link to a file skips the site's password).
+- `type.js` (after the sequence): the type, two faces (Jonas, 2026-09-30: "isnt it very ai-esque to have almost 3
+  fonts?"): Anton for titles, always in capitals, and Neue Montreal for everything else, the site's own pair. Type
+  specimens, then compositions with the marks, as Jonas asked: a sheet per face (a word with its measures drawn across
+  it, read from the font files; its characters; who made it and its licence) and the scale; five compositions, each
+  with another version of the mark (400 for Sala with the S on its side, three words with the square S, Dome
+  Conductor's lead with the modular mark, Jagad with the wordmark in pixels of 10, a spread for Vi kommer i fred with
+  the S alone); and, folded, the type in use (a project's page, posters, business cards, a profile picture and a
+  post, a slide, an end card). Only SMASH's own work, the projects the site lists (`smash: true`), in their own
+  words. Each piece is sized in its own width (container units), so it scales as a picture. A colour switch (black
+  and white, or an accent on the earth ground, as the Colour section), kept in this browser.
+  `python3 web/scripts/identity-samples.py [treatment ...]` renders every piece as a JPEG and all of them as a PDF,
+  black and white and yellow by default, in `samples/` (served at `/identity/samples/` and linked from the section;
+  a direct link to a file skips the site's password).
+- `typeface.js` (after the type): SMASH's own typeface (`typeface/SMASH-VF.ttf`, the site's `/typeface/`), for very
+  special occasions (Jonas, 2026-10-01), a section of its own: a line to set in it with its five axes (weight, width,
+  crossbar, roundness, height; "The mark's" puts them back), its letters and its stylistic set; its specimen; its
+  axes each at its least, the mark's and its most; and three occasions: the wordmark beside SMASH typed in the face
+  at its defaults (the face is the mark's letters), 400 for Sala at its widest, Jagad at its widest and tallest. It
+  borrows the type section's pieces and styles.
 - `colour.js` (at the very bottom, after the sequence): the one section in colour, on Jonas's idea of hyper colours,
   raised, on a grounded, earthed ground. Hyper: seven accents round the wheel (Acid, Yellow, Orange, Red, Pink,
   Violet, Sky), each with three darker steps (the hue kept, the lightness at 80, 62 and 44 % of the base in OKLCH).
