@@ -40,6 +40,13 @@
         <label><span class="label">Body</span><select data-role="body"></select></label>
         <button type="button" class="shuffle">Shuffle</button>
       </div>
+      <div class="sizes">
+        <label><span class="label">Heading size <output data-for="hs"></output></span><input type="range" data-v="hs" min="2" max="8" step="0.1"></label>
+        <label><span class="label">Heading line height <output data-for="hl"></output></span><input type="range" data-v="hl" min="0.8" max="1.5" step="0.01"></label>
+        <label><span class="label">Body size <output data-for="bs"></output></span><input type="range" data-v="bs" min="13" max="24" step="0.5"></label>
+        <label><span class="label">Body line height <output data-for="bl"></output></span><input type="range" data-v="bl" min="1.1" max="2" step="0.01"></label>
+        <button type="button" class="reset-sizes">Reset sizes</button>
+      </div>
       <div class="stages"></div>
       <div class="pair-fb"></div>
     </section>

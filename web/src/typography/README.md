@@ -25,7 +25,7 @@ third face: the meta and credit lines are the body face, small and spaced (Jonas
   the chosen heading and body faces, in SMASH's own copy (the studio statement, and its projects Heroes, Resonance and Jagad, as the site tells them), on the palette's earth (or black, or paper)
   with a hyper accent (the colours are `/identity/colour.js`'s). Below it every candidate as a card; a click puts
   it in the pairing. The bar switches every font between the library and its Google alternative, or shows both
-  side by side. The state is in the address (`?h=&b=&src=&g=&a=`), so a pairing can be sent.
+  side by side. Sliders set the heading's size (in % of the stage's width) and line height and the body's size and line height, in the pairing and on the cards. The state is in the address (`?h=&b=&src=&g=&a=`, and `hs`, `hl`, `bs`, `bl` when moved), so a pairing can be sent.
 - `fonts/`: the library fonts as subset WOFF2 with `library.css`, made by
   `python3 web/scripts/typography-fonts.py` (from the repo root; run it again after changing `candidates.json`).
   In git, so the live site shows them. A library font that is missing falls back to its Google alternative,

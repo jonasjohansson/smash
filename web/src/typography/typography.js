@@ -59,8 +59,12 @@ const state = {
   ground: GROUNDS[params.get('g')] ? params.get('g') : 'earth',
   accent: params.get('a') ?? 'none', // no accent unless one is chosen (Jonas)
 };
+// Sizes and line heights (the sliders): the heading in % of the stage's width, the body in px.
+const SIZES = { hs: 4.2, hl: 1.05, bs: 17, bl: 1.55 };
+for (const [k, v] of Object.entries(SIZES)) state[k] = Number.isFinite(Number(params.get(k))) && params.get(k) !== null ? Number(params.get(k)) : v;
 function keep() {
   const q = new URLSearchParams({ h: state.heading, b: state.body, src: state.source, g: state.ground, a: state.accent });
+  for (const k of Object.keys(SIZES)) if (state[k] !== SIZES[k]) q.set(k, state[k]);
   history.replaceState(null, '', `?${q}`);
 }
 
@@ -163,6 +167,11 @@ function paint() {
   root.setProperty('--ground', g.ground);
   root.setProperty('--ink', g.ink);
   root.setProperty('--accent', state.accent === 'none' ? g.ink : state.accent);
+  for (const k of Object.keys(SIZES)) {
+    root.setProperty(`--${k}`, state[k]);
+    $(`input[data-v="${k}"]`).value = state[k];
+    $(`output[data-for="${k}"]`).textContent = k === 'bs' ? `${state[k]}px` : state[k];
+  }
   for (const set of ['source', 'ground']) {
     document.querySelectorAll(`[data-set="${set}"] button`).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === state[set])));
   }
@@ -194,6 +203,15 @@ function setup() {
     sel.innerHTML = data[role].map((c, i) => `<option value="${c.id}">${pad(i + 1)} ${esc(c.name)}</option>`).join('');
     sel.addEventListener('change', () => { state[role] = sel.value; render(); });
   }
+  // The sliders only restyle: nothing is drawn again while one moves.
+  document.querySelector('.sizes').addEventListener('input', (e) => {
+    const k = e.target.dataset?.v;
+    if (!k) return;
+    state[k] = Number(e.target.value);
+    paint();
+    keep();
+  });
+  $('.reset-sizes').addEventListener('click', () => { Object.assign(state, SIZES); paint(); keep(); });
   $('.shuffle').addEventListener('click', () => {
     for (const role of ROLES) state[role] = data[role][Math.floor(Math.random() * data[role].length)].id;
     render();
