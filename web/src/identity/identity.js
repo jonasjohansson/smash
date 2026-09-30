@@ -172,6 +172,8 @@ const EXTRAS = [
   { id: 'sculpture', name: 'Sculpture', load: async () => { const m = await import('./sculpture.js'); return { html: m.HTML, mount: m.mount }; } },
   // At the end of the page, after every chapter (Jonas, 2026-09-29).
   { id: 'sequence', name: 'Sequence', last: true, load: async () => { const m = await import('./sequence/section.js'); return { html: m.HTML, mount: m.mount }; } },
+  // The palette at the very bottom, after the sequence (Jonas, 2026-09-30).
+  { id: 'colour', name: 'Colour', last: true, load: async () => { const m = await import('./colour.js'); return { html: m.HTML, mount: m.mount }; } },
 ];
 const extras = {};
 async function addExtra(page, x) {

@@ -16,6 +16,20 @@ its marks, with no copy.
   letter's own measures.
 - `mapping.js`: a mapping grid for warping the mark.
 - `sculpture.js`: one object that reads SMASH from the front and the S from the side.
+- `illusion.js` and `illusion/` (off the page since 2026-09-30, at Jonas's word: it didn't give anything; Field was the one he liked): the mark as op art (the logo is already stripes, so it goes the other way): fifteen
+  optical illusions, each with the mark as its figure, live, in black and white: Field (its slots run on out of it,
+  so the letters are only where the stripes stop), Phase (an illusory contour), Grain (orientation), Ouchi, Current
+  (Riley), Rings, Echo (its outline sent out again), Swell (the liquified letter), Vega (Vasarely), Moiré,
+  Scanimation (a barrier grid), Motion (only there while it moves), Depth (a random-dot stereogram), and Turing and
+  Fingerprint (reaction–diffusion grown from it). The stripes, rings, checkers and grown patterns are at the mark's own
+  weight (a stem, then a slot, a pitch apart), so the mark reads as a piece of the pattern; only moiré, scanimation,
+  motion and the stereogram stay fine, as they need to. One WebGL context draws every tile in turn (`gl.js`); the mark
+  comes in as its signed distance (`field.js`); the shaders are `techniques.js`. The bar swaps in the modular mark
+  and inverts; a click shows a tile wide; each has its MP4.
+- `colour.js`: the one section in colour: the seven accents round the wheel (Acid, Yellow, Orange, Red, Pink, Violet, Sky), each with three darker steps
+  (the hue kept, the lightness at 80, 62 and 44 % of the base in OKLCH), the site's ground and type, every
+  swatch with its WCAG contrast (white and black type on it, it on the ground, worked out from the hex), and the mark
+  in each accent on the ground, on its own Dark 3, and in ground or type on the accent.
 - `directions/struck.js`: the mark with its slots leaning.
 - `sequence/`: a page of its own (`/identity/sequence/`), and a section on this page: the logo, square, taken down
   one move at a time to the modular mark, the S M, the S, the ! (the S's stem over its corner square) and that square
