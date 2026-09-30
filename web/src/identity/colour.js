@@ -3,8 +3,8 @@
 // taken to 80, 62 and 44 % of the base in OKLCH, as much chroma kept as a
 // screen can show), the earth they sit on (the brown ground, black, the type),
 // the marks in black and white, the dark steps as grounds under white, and
-// every mark (the original, the modular,
-// the struck lean, the S M) in every accent. Every swatch carries its hex and its WCAG contrast: white
+// the original, the modular and the S M in every accent (the struck lean stays
+// black and white). Every swatch carries its hex and its WCAG contrast: white
 // and black type on it, and it on the brown ground; the figures are worked out
 // here from the hex, not written in. The page is otherwise black and white;
 // this is the one place with colour.
@@ -127,7 +127,7 @@ export const HTML = `
     ${row(MARKS.map((m) => panel(m, GROUND, TYPE, m.name)), 'four')}
     ${group('The dark steps as grounds, white on top: Dark 1, Dark 2, Dark 3')}
     ${[1, 2, 3].map((i) => row(ACCENTS.map((a) => panel(MARKS[0], a.steps[i], WHITE, `${a.name} · ${STEPS[i]}`)))).join('')}
-    ${MARKS.map((m) => `
+    ${MARKS.filter((m) => m.name !== 'Struck').map((m) => `
     ${group(`${m.name} in colour: on the ground${m.name === 'Original' ? ', on its Dark 3' : ''}, and ground or type on it`)}
     ${row(ACCENTS.map((a) => panel(m, GROUND, a.steps[0], a.name)))}
     ${m.name === 'Original' ? row(ACCENTS.map((a) => panel(m, a.steps[3], a.steps[0], a.name))) : ''}
