@@ -21,7 +21,7 @@
 //
 // Keys on the landing page: H opens the tweak panel (the mark is drawn from
 // parameters, see mark.js), A inverts the mask, S swaps black for white.
-// Anywhere: G shows the grid.
+// Anywhere: G shows the grid, D turns the accent from SMASH yellow to white.
 
 // The modules come from the same build as this script: its address carries
 // the build's stamp (base.njk), and so do theirs.
@@ -31,6 +31,10 @@ const [
   { GLASS_DEFAULTS, createGlass },
   { createFeed, typeface, fitTitles },
 ] = await Promise.all([import(`./mark.js${build}`), import(`./glass.js${build}`), import(`./feed.js${build}`)]);
+
+// The site's mark: thinner slots, rounder bends, square ends set further in
+// than mark.js's own (which the identity pages keep).
+const MARK_DEFAULTS = { ...DEFAULTS, stroke: 12, corner: 16, caps: 'square', inset: 59 };
 
 const AHEAD = 24;
 const PARALLEL = 6;
@@ -54,9 +58,12 @@ const DIVE_DEFAULTS = {
 // browser's light or dark mode (main.css); on, it is the colour picked there,
 // on every page, the type turning dark or light to suit it. And the film
 // grain over it all, stronger on the brown than over the landing's mark.
-const GROUND_DEFAULTS = { ownGround: false, ground: '#1f1915', grain: 0.08, grainGround: 0.14 };
+// And the accent: SMASH yellow, or white (D).
+const GROUND_DEFAULTS = { ownGround: false, ground: '#1f1915', grain: 0.08, grainGround: 0.14, whiteAccent: false };
 function paintGround(p) {
   const root = document.documentElement.style;
+  if (p?.whiteAccent) root.setProperty('--accent', '#fff');
+  else root.removeProperty('--accent');
   for (const [k, v] of [['grain', '--grain'], ['grainGround', '--grain-ground']]) {
     if (typeof p?.[k] === 'number') root.setProperty(v, p[k]);
     else root.removeProperty(v);
@@ -108,7 +115,7 @@ if (stage && framesEl) {
     poster.decode().then(() => { if (!current) glass.setImage(poster); }).catch(() => {});
   }
   const STORE = glass ? 'smash-mark-v2' : 'smash-mark';
-  const BASE = glass ? { ...DEFAULTS, ...GLASS_DEFAULTS, ...GROUND_DEFAULTS } : { ...DEFAULTS, ...DIVE_DEFAULTS, ...GROUND_DEFAULTS };
+  const BASE = glass ? { ...MARK_DEFAULTS, ...GLASS_DEFAULTS, ...GROUND_DEFAULTS } : { ...MARK_DEFAULTS, ...DIVE_DEFAULTS, ...GROUND_DEFAULTS };
 
   // Settings are a per-viewer convenience; the page works without them.
   const params = { ...BASE };
@@ -606,6 +613,7 @@ if (stage && framesEl) {
     const colour = pane.addFolder({ title: 'Colour' });
     colour.addBinding(params, 'ownGround', { label: 'own background' }).on('change', () => paintGround(params));
     colour.addBinding(params, 'ground', { label: 'background' }).on('change', () => paintGround(params));
+    colour.addBinding(params, 'whiteAccent', { label: 'white accent (D)' }).on('change', () => paintGround(params));
     colour.addBinding(params, 'grain', { label: 'grain (mark)', min: 0, max: 0.3, step: 0.005 }).on('change', () => paintGround(params));
     colour.addBinding(params, 'grainGround', { label: 'grain (brown)', min: 0, max: 0.3, step: 0.005 }).on('change', () => paintGround(params));
 
@@ -640,6 +648,12 @@ if (stage && framesEl) {
       if (key === 's') params.light = !params.light;
       pane?.refresh();
       drawMark();
+      save();
+    }
+    if (key === 'd') {
+      params.whiteAccent = !params.whiteAccent;
+      pane?.refresh();
+      paintGround(params);
       save();
     }
   });
@@ -680,7 +694,7 @@ if (own) {
 // with the landing's ('smash-mark'), only what differs from the defaults kept.
 if (!stage) {
   const STORE = 'smash-mark';
-  const BASE = { ...DEFAULTS, ...DIVE_DEFAULTS, ...GROUND_DEFAULTS };
+  const BASE = { ...MARK_DEFAULTS, ...DIVE_DEFAULTS, ...GROUND_DEFAULTS };
   const params = { ...BASE };
   try { Object.assign(params, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch {}
   const save = () => {
@@ -771,6 +785,7 @@ if (!stage) {
     const colour = pane.addFolder({ title: 'Colour' });
     colour.addBinding(params, 'ownGround', { label: 'own background' });
     colour.addBinding(params, 'ground', { label: 'background' });
+    colour.addBinding(params, 'whiteAccent', { label: 'white accent (D)' });
     colour.addBinding(params, 'grain', { label: 'grain (mark)', min: 0, max: 0.3, step: 0.005 });
     colour.addBinding(params, 'grainGround', { label: 'grain (brown)', min: 0, max: 0.3, step: 0.005 });
     if (marked) {
@@ -788,7 +803,16 @@ if (!stage) {
   };
   if (paneWasOpen()) openPane();
   document.addEventListener('keydown', async (e) => {
-    if (e.metaKey || e.ctrlKey || e.altKey || typing(e) || e.key.toLowerCase() !== 'h') return;
+    if (e.metaKey || e.ctrlKey || e.altKey || typing(e)) return;
+    const key = e.key.toLowerCase();
+    // (v3's labyrinth walks on WASD.)
+    if (key === 'd' && !document.body.classList.contains('maze-page')) {
+      params.whiteAccent = !params.whiteAccent;
+      pane?.refresh();
+      paintGround(params);
+      save();
+    }
+    if (key !== 'h') return;
     if (!pane) await openPane();
     else pane.hidden = !pane.hidden;
     remember(!pane.hidden);
