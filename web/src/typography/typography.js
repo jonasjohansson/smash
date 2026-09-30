@@ -1,6 +1,6 @@
-// The typography round: a heading, a body and a detail face to go with the
-// SMASH typeface, from Jonas's library, each beside a Google Fonts
-// alternative. The pairing is set on the palette's earth with a hyper accent,
+// The typography round: a heading and a body face to go with the SMASH
+// typeface (no third: the meta and the credits are the body face, small and
+// spaced), from Jonas's library, each beside a Google Fonts alternative. The pairing is set on the palette's earth with a hyper accent,
 // in real copy; the galleries show every candidate, and a click puts it in the
 // pairing. The bar switches every font between the library and its Google
 // alternative, or shows both side by side.
@@ -8,7 +8,8 @@
 // The library fonts are made into fonts/ by web/scripts/typography-fonts.py (in
 // git, so the live site has them). Where one is missing, its Google
 // alternative stands in, and says so.
-// The state is in the address (?h=…&b=…&d=…&src=…&g=…&a=…), so a pairing can be sent.
+// The state is in the address (?h=…&b=…&src=…&g=…&a=…), so a pairing can be sent.
+// The galleries run in Jonas's round 1 order (his stars), the round 2 additions after his top pick.
 
 import { ACCENTS } from '/identity/colour.js';
 import { row, mountFeedback } from './feedback.js';
@@ -22,9 +23,12 @@ const GROUNDS = {
   black: { ground: '#000000', ink: '#ffffff' },
   paper: { ground: '#f3efe8', ink: '#1f1915' },
 };
-const ROLES = ['heading', 'body', 'detail'];
+const ROLES = ['heading', 'body'];
 
 const data = await fetch(new URL('candidates.json', import.meta.url)).then((r) => r.json());
+// Best rated first; a round 2 addition just under round 1's top rating, one not rated at the end.
+const rank = (c) => (c.r1 ?? (c.round === 2 ? 3.5 : 0));
+for (const role of ROLES) data[role].sort((a, b) => rank(b) - rank(a));
 const byId = Object.fromEntries(ROLES.map((role) => [role, Object.fromEntries(data[role].map((c) => [c.id, c]))]));
 
 // The Google alternatives, all in one stylesheet.
@@ -49,15 +53,14 @@ async function check() {
 const params = new URLSearchParams(location.search);
 const pick = (role, id) => (byId[role][id] ? id : data[role][0].id);
 const state = {
-  heading: pick('heading', params.get('h') ?? 'canela'),
-  body: pick('body', params.get('b') ?? 'suisse'),
-  detail: pick('detail', params.get('d') ?? 'maison-mono'),
+  heading: pick('heading', params.get('h') ?? 'stolzl-display'),
+  body: pick('body', params.get('b') ?? 'inter'),
   source: ['library', 'google', 'compare'].includes(params.get('src')) ? params.get('src') : 'library',
   ground: GROUNDS[params.get('g')] ? params.get('g') : 'earth',
   accent: params.get('a') ?? 'none', // no accent unless one is chosen (Jonas)
 };
 function keep() {
-  const q = new URLSearchParams({ h: state.heading, b: state.body, d: state.detail, src: state.source, g: state.ground, a: state.accent });
+  const q = new URLSearchParams({ h: state.heading, b: state.body, src: state.source, g: state.ground, a: state.accent });
   history.replaceState(null, '', `?${q}`);
 }
 
@@ -86,7 +89,7 @@ function stage(from, tag) {
   return `
     <article class="stage${h.caps ? ' caps' : ''}">
       ${tag ? `<p class="tag">${tag}</p>` : ''}
-      <p class="meta" style="${f.detail.css}">SMASH · Immersive experience studio · Stockholm</p>
+      <p class="meta" style="${f.body.css}">SMASH · Immersive experience studio · Stockholm</p>
       <nav class="nav" style="${f.heading.css}"><span>Work</span><span>Studio</span><span>Contact</span></nav>
       <h1 class="display">Heroes</h1>
       <h2 style="${f.heading.css}">Real-life statues, drone-scanned architecture, projected onto Stockholm's Great Synagogue.</h2>
@@ -98,7 +101,7 @@ function stage(from, tag) {
         <div class="body" style="${f.body.css}">
           <h3 style="${f.heading.css}">Resonance</h3>
           <p>Interactive projection mapping on Uppsala Town Hall, where the public could paint the facade in colour.</p>
-          <p class="credits" style="${f.detail.css}">Heroes — Stockholm, 2022<br>Music — Joseph Wilkinson<br>Nobel Week Lights</p>
+          <p class="credits" style="${f.body.css}">Heroes — Stockholm, 2022<br>Music — Joseph Wilkinson<br>Nobel Week Lights</p>
         </div>
       </div>
       <hr>
@@ -113,7 +116,7 @@ function renderStage() {
   const two = state.source === 'compare';
   el.classList.toggle('two', two);
   el.innerHTML = two ? stage('library', 'Library') + stage('google', 'Google alternatives') : stage(state.source);
-  $('.pair-fb').innerHTML = `<span class="label">This pairing</span>${row(`pair:${state.heading}+${state.body}+${state.detail}`)}`;
+  $('.pair-fb').innerHTML = `<span class="label">This pairing</span>${row(`pair:${state.heading}+${state.body}`)}`;
 }
 
 // The galleries --------------------------------------------------------------
@@ -121,7 +124,6 @@ function renderStage() {
 const SAMPLE = {
   heading: () => `<p class="h-big">Turning spaces into living experiences</p><p class="h-small">Heroes · Jagad · Sala Hjärtslag</p>`,
   body: () => `<p class="b-text">Smash is an immersive experience studio creating physical and digital experiences that make people feel, combining <em>art, technology and storytelling</em> with <strong>space</strong>: ljus, rum och rörelse.</p>`,
-  detail: () => `<p class="d-num">2022 · 5 storeys · 01–24</p><p class="d-text">Heroes — Stockholms Stora Synagoga<br>Jagad — Stockholm · Kanal 5</p>`,
 };
 
 function spec(c, role, from, label) {
@@ -134,6 +136,8 @@ function card(c, role, i) {
   const from = compare ? null : state.source;
   const f = face(c, from ?? 'library', role);
   const chips = [
+    c.r1 && `<span class="chip" title="${esc(c.note ?? '')}">Round 1 ${'★'.repeat(c.r1)}${'☆'.repeat(5 - c.r1)}</span>`,
+    c.round === 2 && `<span class="chip warn">New</span>`,
     c.current && `<span class="chip">Now: ${esc(c.current)}</span>`,
     c.trial && `<span class="chip warn">Trial: not to ship</span>`,
     c.googleOnly && `<span class="chip">Google Fonts</span>`,
@@ -143,7 +147,7 @@ function card(c, role, i) {
   const specs = compare && !c.googleOnly ? spec(c, role, 'library', 'Library') + spec(c, role, 'google', 'Google') : spec(c, role, from ?? 'library');
   return `<div class="card-wrap"><button type="button" class="card${c.caps ? ' caps' : ''}" data-role="${role}" data-id="${c.id}" aria-pressed="${state[role] === c.id}">
     ${specs}
-    <span class="foot"><b>${pad(i + 1)} ${esc(c.name)}</b><i>${esc(c.kind)}</i>${chips}</span>
+    <span class="foot"><b>${pad(i + 1)} ${esc(c.name)}</b><i>${esc(c.kind)}</i>${chips}${c.note ? `<span class="note-r1">“${esc(c.note)}”</span>` : ''}</span>
   </button>${row(`${role}:${c.id}`)}</div>`;
 }
 
@@ -206,16 +210,16 @@ function setup() {
 setup();
 render();
 // Feedback: every candidate and every pairing tried, gathered to copy (feedback.js).
-const ROLE_NAME = { heading: 'Headings', body: 'Body', detail: 'Detail' };
+const ROLE_NAME = { heading: 'Headings', body: 'Body' };
 mountFeedback({
-  groups: ['Pairings', 'Headings', 'Body', 'Detail'],
+  groups: ['Pairings', 'Headings', 'Body'],
   describe(key) {
     const [kind, rest] = key.split(':');
     if (kind === 'pair') {
       const [h, b, d] = rest.split('+');
-      if (!byId.heading[h] || !byId.body[b] || !byId.detail[d]) return null;
-      const link = `${location.origin}${location.pathname}?${new URLSearchParams({ h, b, d })}`;
-      return { group: 'Pairings', name: `${byId.heading[h].name} + ${byId.body[b].name} + ${byId.detail[d].name}`, link };
+      if (d || !byId.heading[h] || !byId.body[b]) return null; // round 1's pairings had a third (detail) face
+      const link = `${location.origin}${location.pathname}?${new URLSearchParams({ h, b })}`;
+      return { group: 'Pairings', name: `${byId.heading[h].name} + ${byId.body[b].name}`, link };
     }
     const c = byId[kind]?.[rest];
     return c ? { group: ROLE_NAME[kind], name: `${c.name} (Google: ${c.google.family})` } : null;

@@ -55,7 +55,7 @@ def main():
     OUT.mkdir(exist_ok=True)
     # A family in two roles (a heading and a body) is one family: all its styles together.
     families = {}
-    for role in ('heading', 'body', 'detail'):
+    for role in ('heading', 'body'):
         for c in data[role]:
             if c.get('library'):
                 f = families.setdefault(c['id'], {'id': c['id'], 'library': {'dir': c['library']['dir'], 'files': {}}})
@@ -76,6 +76,12 @@ def main():
             rules.append(f'@font-face {{ font-family: "L {c["id"]}"; font-weight: {weight}; font-style: {"italic" if italic else "normal"}; '
                          f'font-display: swap; src: url({name}) format("woff2"); unicode-range: {RANGE}; }}')
         print(f"{c['id']}: {len(lib['files'])} styles")
+    # Faces no candidate uses any more (a candidate set aside) go.
+    kept = {f"{c['id']}-{style}.woff2" for c in families.values() for style in c['library']['files']}
+    for old in OUT.glob('*.woff2'):
+        if old.name not in kept:
+            old.unlink()
+            print('removed', old.name)
     (OUT / 'library.css').write_text('/* Made by web/scripts/typography-fonts.py from candidates.json: the library fonts, local only. */\n' + '\n'.join(rules) + '\n')
     for m in missing:
         print('missing:', m)
