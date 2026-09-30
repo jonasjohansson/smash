@@ -26,10 +26,13 @@ its marks, with no copy.
   motion and the stereogram stay fine, as they need to. One WebGL context draws every tile in turn (`gl.js`); the mark
   comes in as its signed distance (`field.js`); the shaders are `techniques.js`. The bar swaps in the modular mark
   and inverts; a click shows a tile wide; each has its MP4.
-- `colour.js`: the one section in colour: the seven accents round the wheel (Acid, Yellow, Orange, Red, Pink, Violet, Sky), each with three darker steps
-  (the hue kept, the lightness at 80, 62 and 44 % of the base in OKLCH), the site's ground and type, every
-  swatch with its WCAG contrast (white and black type on it, it on the ground, worked out from the hex), and the mark
-  in each accent on the ground, on its own Dark 3, and in ground or type on the accent.
+- `colour.js` (at the very bottom, after the sequence): the one section in colour, on Jonas's idea of hyper colours,
+  raised, on a grounded, earthed ground. Hyper: seven accents round the wheel (Acid, Yellow, Orange, Red, Pink,
+  Violet, Sky), each with three darker steps (the hue kept, the lightness at 80, 62 and 44 % of the base in OKLCH).
+  Earth: the brown ground, black and the type. Every swatch has its WCAG contrast (white and black type on it, it on
+  the ground, worked out from the hex). Then the four marks (original, modular, struck, S M) in black and white; the
+  dark steps as grounds under white; and each mark in every accent: on the ground (the original on its Dark 3 too),
+  and in ground or type on the accent.
 - `directions/struck.js`: the mark with its slots leaning.
 - `sequence/`: a page of its own (`/identity/sequence/`), and a section on this page: the logo, square, taken down
   one move at a time to the modular mark, the S M, the S, the ! (the S's stem over its corner square) and that square

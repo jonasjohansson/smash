@@ -1,12 +1,18 @@
-// Colour: the seven accents, each with three darker steps (the colour's hue
-// kept, its lightness taken to 80, 62 and 44 % of the base in OKLCH, as much
-// chroma kept as a screen can show), the site's own colours beside them, and
-// the mark in each. Every swatch carries its hex and its WCAG contrast: white
+// Colour: hyper colours, raised, on a grounded, earthed ground. The seven
+// accents, each with three darker steps (the colour's hue kept, its lightness
+// taken to 80, 62 and 44 % of the base in OKLCH, as much chroma kept as a
+// screen can show), the earth they sit on (the brown ground, black, the type),
+// the marks in black and white, the dark steps as grounds under white, and
+// every mark (the original, the modular,
+// the struck lean, the S M) in every accent. Every swatch carries its hex and its WCAG contrast: white
 // and black type on it, and it on the brown ground; the figures are worked out
 // here from the hex, not written in. The page is otherwise black and white;
 // this is the one place with colour.
 
 import { letters, REST, W, H } from './directions/original/geometry.js';
+import { markSVG, MODULAR_DEFAULTS } from './modular.js';
+import * as original from './directions/original.js';
+import * as struck from './directions/struck.js';
 
 // Round the colour wheel. Yellow is the site's own (SMASH yellow); Orange sits
 // half way between it and Red (hue 45°), Pink half way between Red and Violet
@@ -20,13 +26,17 @@ export const ACCENTS = [
   { name: 'Violet', steps: ['#ab00ff', '#7e00bd', '#580086', '#340052'] },
   { name: 'Sky', steps: ['#00bdff', '#068cbd', '#046285', '#023b52'] },
 ];
-export const SITE = [
+// The earth the hyper colours sit on: the warm brown ground, black, and the type.
+export const EARTH = [
   { name: 'Ground', hex: '#1f1915' },
+  { name: 'Black', hex: '#000000' },
   { name: 'Type', hex: '#f3efe8' },
 ];
 const STEPS = ['Base', 'Dark 1', 'Dark 2', 'Dark 3'];
 const GROUND = '#1f1915';
 const TYPE = '#f3efe8';
+const BLACK = '#000000';
+const WHITE = '#ffffff';
 
 /** WCAG relative luminance of a hex colour. */
 export function luminance(hex) {
@@ -43,8 +53,16 @@ const fmt = (n) => n.toFixed(1);
 /** White or black, whichever reads better on hex. */
 const typeOn = (hex) => (contrast(hex, '#ffffff') >= contrast(hex, '#000000') ? '#ffffff' : '#000000');
 
+// The marks, each in currentColor: the original, the modular mark, the struck
+// lean and the S M symbol.
+let masks = 0;
 const MARK = letters(REST);
-const mark = (fill) => `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true"><path fill="${fill}" fill-rule="evenodd" d="${MARK}"/></svg>`;
+export const MARKS = [
+  { name: 'Original', svg: () => `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="${MARK}"/></svg>` },
+  { name: 'Modular', svg: () => markSVG(MODULAR_DEFAULTS, 4, 'currentColor', `col-m${masks++}`) },
+  { name: 'Struck', svg: () => struck.wordmark() },
+  { name: 'S M', svg: () => original.symbol() },
+];
 
 function swatch(name, hex) {
   const t = typeOn(hex);
@@ -58,27 +76,39 @@ function swatch(name, hex) {
     </figure>`;
 }
 
-function panel(ground, fill, label) {
-  return `<figure class="panel col-panel" style="background:${ground};color:${typeOn(ground)}"><div class="col-mark">${mark(fill)}</div><figcaption class="label">${label} · ${fmt(contrast(fill, ground))}</figcaption></figure>`;
+/** A mark (from MARKS) in fill on ground, labelled with its contrast. */
+function panel(m, ground, fill, label) {
+  return `<figure class="panel col-panel" style="background:${ground};color:${typeOn(ground)}"><div class="col-mark" style="color:${fill}">${m.svg()}</div><figcaption class="label">${label} · ${fmt(contrast(fill, ground))}</figcaption></figure>`;
 }
+/** Ground or type, whichever the accent takes (the ground on the light ones). */
+const onAccent = (hex) => (typeOn(hex) === BLACK ? GROUND : TYPE);
+const row = (cells, cls = '') => `<div class="col-use ${cls}">${cells.join('')}</div>`;
+const group = (name) => `<p class="label col-group">${name}</p>`;
 
 const STYLE = `
 #colour .col-ramp { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
-#colour .col-site { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; margin-top: var(--gap); box-shadow: inset 0 0 0 1px var(--line); }
+#colour .col-earth { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; box-shadow: inset 0 0 0 1px var(--line); }
+#colour .col-group { margin: calc(var(--gap) * 3) 0 var(--gap); }
+#colour .col-group:first-of-type { margin-top: 0; }
 #colour .col-swatch { position: relative; aspect-ratio: 3 / 2; display: flex; align-items: flex-end; padding: 12px; }
-#colour .col-site .col-swatch { aspect-ratio: 4 / 1; }
+#colour .col-earth .col-swatch { aspect-ratio: 3 / 1; }
 #colour .col-swatch figcaption { display: grid; gap: 2px; font-size: 13px; line-height: 1.3; }
 #colour .col-name { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
 #colour .col-hex { font: 15px/1.3 ui-monospace, Menlo, monospace; }
 #colour .col-ratio { font: 11px/1.3 ui-monospace, Menlo, monospace; opacity: 0.7; }
 #colour .col-use { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--gap); margin-top: var(--gap); }
-#colour .col-panel { aspect-ratio: 1; }
-#colour .col-mark { width: 100%; height: 100%; padding: 24%; display: grid; place-items: center; }
+#colour .col-use.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+#colour .col-panel { aspect-ratio: 4 / 3; }
+#colour .col-mark { position: absolute; inset: 16% 14% 24%; } /* a definite box, so a tall mark fits as well as a wide one */
+#colour .col-panel .label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; right: 12px; }
 #colour .col-mark svg { width: 100%; height: 100%; display: block; }
 @media (max-width: 1100px) { #colour .col-use { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-@media (max-width: 900px) { #colour .col-ramp, #colour .col-use { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 900px) { #colour .col-ramp, #colour .col-use, #colour .col-use.four { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 `;
 
+// Hyper colours, raised, on a grounded, earthed ground (Jonas, 2026-09-30):
+// the seven accents, then the earth they sit on, the marks in black and white,
+// and every mark in every accent.
 export const HTML = `
   <section class="lab" id="colour">
     <style>${STYLE}</style>
@@ -86,14 +116,23 @@ export const HTML = `
       <p class="ch-n">00 · colour</p>
       <h2 class="ch-name">Colour</h2>
     </header>
+    ${group('Hyper')}
     ${ACCENTS.map((a) => `
     <div class="col-ramp">${a.steps.map((hex, i) => swatch(`${a.name}${i ? ` · ${STEPS[i]}` : ''}`, hex)).join('')}</div>`).join('')}
-    <div class="col-ramp col-site">${SITE.map((s) => swatch(s.name, s.hex)).join('')}</div>
-    <div class="col-use">${ACCENTS.map((a) => panel(GROUND, a.steps[0], 'on the ground')).join('')}</div>
-    <div class="col-use">${ACCENTS.map((a) => panel(a.steps[3], a.steps[0], 'on Dark 3')).join('')}</div>
-    <div class="col-use">${ACCENTS.map((a) => panel(a.steps[0], typeOn(a.steps[0]) === '#000000' ? GROUND : TYPE, typeOn(a.steps[0]) === '#000000' ? 'Ground on it' : 'Type on it')).join('')}</div>
+    ${group('Earth')}
+    <div class="col-ramp col-earth">${EARTH.map((s) => swatch(s.name, s.hex)).join('')}</div>
+    ${group('Black and white: white on black, black on white, type on the ground')}
+    ${row(MARKS.map((m) => panel(m, BLACK, WHITE, m.name)), 'four')}
+    ${row(MARKS.map((m) => panel(m, WHITE, BLACK, m.name)), 'four')}
+    ${row(MARKS.map((m) => panel(m, GROUND, TYPE, m.name)), 'four')}
+    ${group('The dark steps as grounds, white on top: Dark 1, Dark 2, Dark 3')}
+    ${[1, 2, 3].map((i) => row(ACCENTS.map((a) => panel(MARKS[0], a.steps[i], WHITE, `${a.name} · ${STEPS[i]}`)))).join('')}
+    ${MARKS.map((m) => `
+    ${group(`${m.name} in colour: on the ground${m.name === 'Original' ? ', on its Dark 3' : ''}, and ground or type on it`)}
+    ${row(ACCENTS.map((a) => panel(m, GROUND, a.steps[0], a.name)))}
+    ${m.name === 'Original' ? row(ACCENTS.map((a) => panel(m, a.steps[3], a.steps[0], a.name))) : ''}
+    ${row(ACCENTS.map((a) => panel(m, a.steps[0], onAccent(a.steps[0]), a.name)))}`).join('')}
   </section>`;
-
 
 /** Nothing moves here (the style comes with the section's HTML). */
 export function mount() {
