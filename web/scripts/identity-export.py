@@ -8,6 +8,8 @@ Writes identity/<nn>-<slug>/ at the repo root:
   symbol-on-ink.svg, lockup-on-paper.svg             rectangle (id "ground"), easy to delete
   favicon-16.svg, favicon-32.svg, favicon-64.svg
   lockup-sm.svg, lockup-sm-on-paper.svg            the S M's lockup, where a chapter has one
+  s.svg, s-turned.svg, s-square.svg                the S alone, on its side, drawn out to a square
+  pixel-4/, pixel-10/                              the masters with their curves in pixels of 4 or 10
   motion/t0.0.png … t1.0.png                       the motion, eleven frames at 1920 x 1080
   application.png                                  only where a chapter still shows one
 Every SVG gets a width and height from its viewBox, and currentColor becomes a
@@ -49,8 +51,15 @@ GET = '''async (slug) => {
     lockup_ink: call('lockup', { ground: 'ink' }), lockup_paper: call('lockup', { ground: 'paper' }),
     lockup_sm: typeof m.lockupSM === 'function' ? call('lockupSM', { ground: 'paper' }) : null,
     fav16: call('favicon', { size: 16 }), fav32: call('favicon', { size: 32 }), fav64: call('favicon', { size: 64 }),
+    s: call('s', { ground: 'paper' }), s_turned: call('sTurned', { ground: 'paper' }), s_square: call('sSquare', { ground: 'paper' }),
+    pixel: Object.fromEntries([4, 10].map((q) => [q, Object.fromEntries(
+      ['wordmark', 'symbol', 'lockup', 'lockupSM', 's', 'sTurned', 'sSquare'].map((fn) => [fn, call(fn, { ground: 'paper', pixel: q })]))])),
   };
 }'''
+
+# The masters again with their curves in pixels (pixel-4/, pixel-10/): the page's function, and its file name.
+PIXEL_FILES = {'wordmark': 'wordmark.svg', 'symbol': 'symbol.svg', 'lockup': 'lockup.svg', 'lockupSM': 'lockup-sm.svg',
+               's': 's.svg', 'sTurned': 's-turned.svg', 'sSquare': 's-square.svg'}
 
 
 def viewbox(svg):
@@ -102,6 +111,11 @@ def export(page, slug, n):
         'favicon-16.svg': (d['fav16'], pal['paper'], None, 16),
         'favicon-32.svg': (d['fav32'], pal['paper'], None, 32),
         'favicon-64.svg': (d['fav64'], pal['paper'], None, 64),
+        **({'s.svg': (d['s'], '#000000', None, None),
+            's-turned.svg': (d['s_turned'], '#000000', None, None),
+            's-square.svg': (d['s_square'], '#000000', None, None)} if d.get('s') else {}),
+        **{f'pixel-{q}/{name}': (svg, '#000000', None, None)
+           for q, fns in (d.get('pixel') or {}).items() for fn, name in PIXEL_FILES.items() if (svg := fns.get(fn))},
     }
     for name, (svg, color, ground, size) in files.items():
         if not svg or not isinstance(svg, str) or not svg.lstrip().startswith('<svg'):
@@ -110,6 +124,7 @@ def export(page, slug, n):
         for needle, why in RISKY.items():
             if needle in svg:
                 warnings.append(f'{name}: {why}')
+        (out / name).parent.mkdir(parents=True, exist_ok=True)
         (out / name).write_text(prepare(svg, color, ground, size))
     return out, warnings
 

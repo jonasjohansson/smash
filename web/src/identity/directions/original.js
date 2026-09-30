@@ -9,10 +9,13 @@
 // the pixel grid. The lockups set three lines on the three solid bands of the
 // drawing beside them, the middle one on the crossbar. Their type is a
 // placeholder (Neue Montreal, as outlines set by original/outline-text.py)
-// until the typeface is chosen. Stills are plain vector in currentColor.
+// until the typeface is chosen. The S alone comes three ways: as in the S M,
+// on its side, and drawn out to a square. Every still takes { pixel }: its
+// curves in pixels of 4 (the grid) or 10 (half a slot) instead of round
+// (geometry.js: pixelate). Stills are plain vector in currentColor.
 
 import { svg, timeline, canvasStage, withCleanup, ease, span } from '../lib.js';
-import { letterPaths, letters, W, H, PITCH, REST, symbolA, SYM_W, SYM_H, SYM_COLS, SYM_ROWS } from './original/geometry.js';
+import { letterPaths, letters, letterS, pixelate, W, H, PITCH, REST, symbolA, SYM_W, SYM_H, SYM_COLS, SYM_ROWS } from './original/geometry.js';
 import { OUTLINES } from './original/outlines.js';
 
 const BLACK = '#000000';
@@ -37,12 +40,14 @@ export const info = {
 
 const MARK = letters(REST);
 const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${rule}" d="${d}"/>`;
+/** A mark's path data, round, or with its curves in pixels of `pixel` mark units. */
+const px = (d, pixel) => (pixel ? pixelate(d, pixel) : d);
 
 // The wordmark on its own artboard, tight: 552 × 472 on the grid. (The page
 // widens it for its 16 : 9 panels, identity.js; the exports add a pitch of
 // clear space round it on a ground.)
-export function wordmark() {
-  return svg(W, H, path(MARK));
+export function wordmark({ pixel = 0 } = {}) {
+  return svg(W, H, path(px(MARK, pixel)));
 }
 
 // The symbol: the S M, 240 × 136, exactly the modular mark's
@@ -50,8 +55,24 @@ export function wordmark() {
 // crop: the S's slots running out through its two bends, and the M's slots
 // with round ends. On its own artboard, nothing around it.
 const SYM = symbolA();
-export function symbol() {
-  return svg(SYM_W, SYM_H, path(SYM));
+export function symbol({ pixel = 0 } = {}) {
+  return svg(SYM_W, SYM_H, path(px(SYM, pixel)));
+}
+
+// The S alone (Jonas, 2026-09-30): the S M's S, 84 × 136; on its side, 136 ×
+// 84; and drawn out by a pitch to a square, 136 × 136, its slots still a bar
+// in from either side.
+const S = letterS();
+const S_TURNED = letterS({ turn: true });
+const S_SQUARE = letterS({ wide: 1 });
+export function s({ pixel = 0 } = {}) {
+  return svg(S.w, S.h, path(px(S.d, pixel)));
+}
+export function sTurned({ pixel = 0 } = {}) {
+  return svg(S_TURNED.w, S_TURNED.h, path(px(S_TURNED.d, pixel)));
+}
+export function sSquare({ pixel = 0 } = {}) {
+  return svg(S_SQUARE.w, S_SQUARE.h, path(px(S_SQUARE.d, pixel)));
 }
 
 /** Move and scale path data made of (x, y) pairs only (M, L, Q, C, Z). */
@@ -74,8 +95,8 @@ function lockPaths(lines, cap, x) {
 const CAP = 32;
 const FOOT = REST.crossbar + REST.gap / 2 - REST.stroke / 2; // 251.5: the crossbar's foot
 const LOCK = lockPaths([['studio', CAP], ['middle', FOOT], ['stockholm', H]], CAP, W + PITCH);
-export function lockup() {
-  return svg(LOCK.width, H, path(MARK) + path(LOCK.d, 'nonzero'));
+export function lockup({ pixel = 0 } = {}) {
+  return svg(LOCK.width, H, path(px(MARK, pixel)) + path(LOCK.d, 'nonzero'));
 }
 
 // The S M's lockup, for where the mark is too tall: the same rule on the
@@ -83,17 +104,17 @@ export function lockup() {
 const SM_BARS = [SYM_ROWS[0], SYM_ROWS[0] + SYM_ROWS[1] + SYM_ROWS[2], SYM_H]; // 32, 84, 136
 const SM_PITCH = SYM_COLS[1] + SYM_COLS[2]; // a slot and a bar: 52
 const LOCK_SM = lockPaths([['name', SM_BARS[0]], ['studio', SM_BARS[1]], ['stockholm', SM_BARS[2]]], SYM_ROWS[0], SYM_W + SM_PITCH);
-export function lockupSM() {
-  return svg(LOCK_SM.width, SYM_H, path(SYM) + path(LOCK_SM.d, 'nonzero'));
+export function lockupSM({ pixel = 0 } = {}) {
+  return svg(LOCK_SM.width, SYM_H, path(px(SYM, pixel)) + path(LOCK_SM.d, 'nonzero'));
 }
 
 // Favicons: the S M on the pixel grid, white on black. Its nine columns at
 // 2 : 1 (bars 8, 4 and 2 px; slots 4, 2 and 1) and its five rows the same
 // (8/4/8/4/8 at 64), centred with a one-sixteenth margin either side. The
 // bends and the round slot ends are the mark's curves sampled at pixel
-// centres, so every edge is a whole pixel: at 64 the slot ends step in and the
-// bends take a stair, at 32 the bends lose one corner pixel, at 16 all is
-// square.
+// centres (pixelate, on pixels of 1), so every edge is a whole pixel: at 64
+// the slot ends step in and the bends take a stair, at 32 the bends lose one
+// corner pixel, at 16 all is square.
 const FAV = { 64: 8, 32: 4, 16: 2 };
 
 export function favicon({ size = 32 } = {}) {
@@ -104,7 +125,7 @@ export function favicon({ size = 32 } = {}) {
   const rows = [bar, sl, bar, sl, bar];
   const x = (n - (5 * bar + 4 * sl)) / 2;
   const y = (n - (3 * bar + 2 * sl)) / 2;
-  const d = symbolA({ cols, rows, x, y, pixel: true });
+  const d = pixelate(symbolA({ cols, rows, x, y, bend: sl / 2, stop: bar }), 1); // bends one slot round outside, the M's slots a bar down
   return svg(n, n, `<rect width="${n}" height="${n}" fill="${BLACK}"/><path fill="${WHITE}" fill-rule="evenodd" d="${d}"/>`, 'shape-rendering="crispEdges"');
 }
 
@@ -161,9 +182,10 @@ function markAt(s) {
  * The motion at t (0 to 1) on any canvas, w × h in its current units: the
  * ground and the mark. For the stage and the MP4. With grid, the mark's grid
  * over it (as grid.js draws the stills'): a slot after every bar on across the
- * stage, the three bands, the block's box.
+ * stage, the three bands, the block's box. With pixel, its curves in pixels
+ * of that many units, as the stills'.
  */
-export function frame(ctx, w, h, t, { grid = false } = {}) {
+export function frame(ctx, w, h, t, { grid = false, pixel = 0 } = {}) {
   const s = (t % 1) * DURATION; // t 1 draws the same frame as t 0
   ctx.fillStyle = BLACK;
   ctx.fillRect(0, 0, w, h);
@@ -185,7 +207,7 @@ export function frame(ctx, w, h, t, { grid = false } = {}) {
   ctx.translate(x, y);
   ctx.scale(k, k);
   ctx.fillStyle = WHITE;
-  ctx.fill(new Path2D(markAt(s)), 'evenodd');
+  ctx.fill(new Path2D(px(markAt(s), pixel)), 'evenodd');
   ctx.restore();
 }
 export const duration = DURATION;
@@ -196,7 +218,7 @@ export function motion(el) {
 
   const render = (t) => {
     if (dead) return;
-    frame(stage.ctx, stage.width, stage.height, t, { grid: document.body.classList.contains('show-grid') });
+    frame(stage.ctx, stage.width, stage.height, t, { grid: document.body.classList.contains('show-grid'), pixel: Number(document.body.dataset.pixel) || 0 });
   };
 
   const tl = timeline({ duration: DURATION, render });

@@ -10,13 +10,20 @@ closed ends' centres a pitch in; the S M 240 × 136, the modular mark's bands 32
 themselves: the Grid button (bottom left) or G shows each still's grid in its own drawing (a slot after every bar on
 across the artboard, the bands, the mark's box, where a lockup's type starts, a pitch after the mark, and every circle
 its curves come from, with its centre), the motion's over the stage, and the modular mark's own grid and circles.
-The exports never carry it.
+The exports never carry it. The Pixel button beside it, or P (Shift P back), draws every mark's curves in pixels
+instead of round (Jonas, 2026-09-30): pixels of 4, the grid itself, where every point of the mark falls on the grid,
+the closed ends step in once and the bends take three steps; or pixels of 10, half a slot: square ends and one pixel
+off each bend. Each curve is sampled at its pixels' centres (`pixelate` in `directions/original/geometry.js`, which
+also draws the favicons, on whole pixels). The stills, the motion and its MP4 follow it; the grid then shows the
+circles the pixels were sampled from.
 
 - `index.html` and `identity.js`: the page. Chapters come from `directions/<slug>.js` (the
   slugs are listed in `directions.js`), and the tools come from the `EXTRAS` list in
   `identity.js`. `?d=<slug>` shows one alone, `?t=0.5` seeks every motion to t = 0.5 and pauses
   it (for screenshots), and `?feedback` adds a rating and comment for each section.
-- `directions/original.js`: the mark, the S M symbol, the favicons, the lockups and the motion.
+- `directions/original.js`: the mark, the S M symbol, the S alone (as in the S M, on its side, and drawn out by a
+  pitch to a square, 136 × 136, its slots still a bar in from either side), the favicons, the lockups and the motion.
+  Every still takes `{ pixel }`, and `frame()` too.
 - `modular.js`: the modular mark. The symbol is the S M or the S alone, and it can be turned. Its grid view also shows the circles its curves are
   drawn from (each bend's, each round end's), dashed, with their centres, in the construction's pink.
 - `shapes.js` and `shapes/` (off the page since 2026-09-29, at Jonas's word; kept for `identity-export.py`): the kit, the mark's negative shapes that aren't letters made into chunky building blocks

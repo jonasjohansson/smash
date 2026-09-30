@@ -194,8 +194,10 @@ h1, h2 { font-weight: 400; margin: 0; }
 .show-grid .mk-grid { display: inline; }
 /* Every line of a grid one device pixel wide, whatever the mark's scale (--hair: identity.js). */
 .mk-grid *, .mk-hair, .mk-hair * { vector-effect: non-scaling-stroke; stroke-width: var(--hair, 1px); }
-.grid-toggle { position: fixed; left: 12px; bottom: 12px; z-index: 60; padding: 6px 12px; background: #000; color: var(--dim); border: 1px solid var(--line); font: 400 12px/1 "Neue Montreal", "Helvetica Neue", Arial, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
-.grid-toggle:hover, .grid-toggle[aria-pressed="true"] { color: #ff29b8; border-color: #ff29b8; }
+/* The Grid and Pixel buttons, bottom left (identity.js). */
+.view-tools { position: fixed; left: 12px; bottom: 12px; z-index: 60; display: flex; gap: 6px; }
+.view-toggle { padding: 6px 12px; background: #000; color: var(--dim); border: 1px solid var(--line); font: 400 12px/1 "Neue Montreal", "Helvetica Neue", Arial, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
+.view-toggle:hover, .view-toggle[aria-pressed="true"] { color: #ff29b8; border-color: #ff29b8; }
 
 /* Folded sections at the end of the page (Jonas, 2026-09-30): a line each, opened on a click; the line is the heading. */
 .fold { border-top: 1px solid var(--line); }

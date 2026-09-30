@@ -21,6 +21,9 @@ const esc = (s = '') => String(s).replace(/[<&"]/g, (c) => ({ '<': '&lt;', '&': 
  */
 const wide = (str) => str.replace(/viewBox="\s*([-\d.]+)[\s,]+([-\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)\s*"/, (m, x, y, w, h) => `viewBox="${+x - w / 2} ${y} ${2 * w} ${h}"`);
 
+/** A tall still's artboard widened to a square, centred (the S alone): it fits its box by its width, like the rest. */
+const squared = (str) => str.replace(/viewBox="\s*([-\d.]+)[\s,]+([-\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)\s*"/, (m, x, y, w, h) => (+h > +w ? `viewBox="${+x - (h - w) / 2} ${y} ${h} ${h}"` : m));
+
 /** An SVG string from a module function, or its error. */
 function still(d, fn, arg) {
   const r = attempt(d, fn, arg);
@@ -28,6 +31,25 @@ function still(d, fn, arg) {
   if (typeof r.value !== 'string' || !r.value.includes('<svg')) return errorHTML(`${d.slug}.${fn}() did not return an SVG string`);
   return r.value;
 }
+
+// The marks' curves: round (0), or in pixels of 4 (the grid) or 10 (half a
+// slot) (Jonas, 2026-09-30); the Pixel button and P step through them.
+const PIXELS = [0, 4, 10];
+let pixel = 0;
+
+/**
+ * A still as the page shows it: in pixels or round, the wordmark's artboard
+ * widened, its grid added (with the circles of its round self). fn is also
+ * its kind of grid (grid.js).
+ */
+function drawn(d, fn, ground) {
+  const one = (px) => { const v = still(d, fn, { ground, pixel: px }); return fn === 'wordmark' ? wide(v) : squared(v); };
+  const svg = one(pixel);
+  return withGrid(svg, fn, pixel ? one(0) : svg);
+}
+
+/** A still's box, marked so the page can draw it again when the curves change. */
+const markHTML = (d, fn, ground, cls) => `<div class="mark ${cls}" data-still="${fn}" data-ground="${ground}">${drawn(d, fn, ground)}</div>`;
 
 // Black and white, for every chapter (the focus round): a module's own palette is set aside.
 function palette() {
@@ -60,17 +82,22 @@ function chapter(d) {
         </figcaption>
       </figure>
       <div class="row two">
-        <figure class="panel ground-ink"><div class="mark wm">${withGrid(wide(still(d, 'wordmark', { ground: 'ink' })), 'wordmark')}</div><figcaption class="label">Wordmark</figcaption></figure>
-        <figure class="panel ground-paper"><div class="mark wm">${withGrid(wide(still(d, 'wordmark', { ground: 'paper' })), 'wordmark')}</div><figcaption class="label">Wordmark</figcaption></figure>
+        <figure class="panel ground-ink">${markHTML(d, 'wordmark', 'ink', 'wm')}<figcaption class="label">Wordmark</figcaption></figure>
+        <figure class="panel ground-paper">${markHTML(d, 'wordmark', 'paper', 'wm')}<figcaption class="label">Wordmark</figcaption></figure>
       </div>
       <div class="row three">
-        <figure class="panel ground-ink square"><div class="mark sym">${withGrid(still(d, 'symbol', { ground: 'ink' }), 'symbol')}</div><figcaption class="label">Symbol</figcaption></figure>
+        <figure class="panel ground-ink square">${markHTML(d, 'symbol', 'ink', 'sym')}<figcaption class="label">Symbol</figcaption></figure>
         <figure class="panel ground-mid square">${favicons(d)}<figcaption class="label">Favicon 64 · 32 · 16</figcaption></figure>
-        <figure class="panel ground-paper square"><div class="mark lock">${withGrid(still(d, 'lockup', { ground: 'paper' }), 'lockup')}</div><figcaption class="label">Lockup</figcaption></figure>
+        <figure class="panel ground-paper square">${markHTML(d, 'lockup', 'paper', 'lock')}<figcaption class="label">Lockup</figcaption></figure>
       </div>
+      ${typeof d.mod.s === 'function' ? `<div class="row three">
+        <figure class="panel ground-ink square">${markHTML(d, 's', 'ink', 'sym')}<figcaption class="label">S</figcaption></figure>
+        <figure class="panel ground-ink square">${markHTML(d, 'sTurned', 'ink', 'sym')}<figcaption class="label">S, on its side</figcaption></figure>
+        <figure class="panel ground-ink square">${markHTML(d, 'sSquare', 'ink', 'sym')}<figcaption class="label">S, square</figcaption></figure>
+      </div>` : ''}
       ${typeof d.mod.lockupSM === 'function' ? `<div class="row two">
-        <figure class="panel ground-ink"><div class="mark lock-sm">${withGrid(still(d, 'lockupSM', { ground: 'ink' }), 'lockupSM')}</div><figcaption class="label">Lockup, S M</figcaption></figure>
-        <figure class="panel ground-paper"><div class="mark lock-sm">${withGrid(still(d, 'lockupSM', { ground: 'paper' }), 'lockupSM')}</div><figcaption class="label">Lockup, S M</figcaption></figure>
+        <figure class="panel ground-ink">${markHTML(d, 'lockupSM', 'ink', 'lock-sm')}<figcaption class="label">Lockup, S M</figcaption></figure>
+        <figure class="panel ground-paper">${markHTML(d, 'lockupSM', 'paper', 'lock-sm')}<figcaption class="label">Lockup, S M</figcaption></figure>
       </div>` : ''}
     </section>`);
   return el;
@@ -142,7 +169,7 @@ function live(d, section) {
       const period = d.mod.duration;
       const blob = await renderVideo({
         period, width, height,
-        paint: (ctx, w, h, s) => d.mod.frame(ctx, w, h, s / period),
+        paint: (ctx, w, h, s) => d.mod.frame(ctx, w, h, s / period, { pixel }), // in pixels too, when the page is
         onProgress: (p) => { dl.textContent = `${Math.round(p * 100)}%`; },
       });
       save(blob, `smash-${d.slug}-motion-${width}x${height}.mp4`);
@@ -227,9 +254,11 @@ async function main() {
   for (const x of EXTRAS.filter((x) => x.id === ONLY)) await addExtra(page, x);
   // The grid, previewed on the marks (grid.js): a button, and G; kept in this browser. Its lines one device pixel wide.
   document.documentElement.style.setProperty('--hair', `${1 / (window.devicePixelRatio || 1)}px`);
+  const tools = h('<div class="view-tools"></div>');
+  document.body.appendChild(tools);
   const GRID = 'smash-identity-grid';
-  const button = h('<button type="button" class="grid-toggle" aria-pressed="false" title="Show the grid (G)">Grid</button>');
-  document.body.appendChild(button);
+  const button = h('<button type="button" class="view-toggle" aria-pressed="false" title="Show the grid (G)">Grid</button>');
+  tools.appendChild(button);
   const showGrid = (on) => {
     document.body.classList.toggle('show-grid', on);
     button.setAttribute('aria-pressed', String(on));
@@ -238,11 +267,28 @@ async function main() {
     document.dispatchEvent(new Event('identity-grid'));
   };
   button.addEventListener('click', () => showGrid(!document.body.classList.contains('show-grid')));
+  // The curves in pixels: a button, and P (Shift P back): round, pixels of 4, pixels of 10; kept in this browser.
+  const PIXEL = 'smash-identity-pixel';
+  const pxButton = h('<button type="button" class="view-toggle" aria-pressed="false" title="The curves round, or in pixels of 4 or 10 (P)">Pixel</button>');
+  tools.appendChild(pxButton);
+  const setPixel = (n) => {
+    pixel = PIXELS.includes(n) ? n : 0;
+    document.body.dataset.pixel = String(pixel); // for the motion (directions/original.js)
+    pxButton.setAttribute('aria-pressed', String(!!pixel));
+    pxButton.textContent = pixel ? `Pixel ${pixel}` : 'Pixel';
+    try { localStorage.setItem(PIXEL, pixel ? String(pixel) : ''); } catch {}
+    for (const d of directions) for (const el of document.querySelectorAll(`#${d.slug} [data-still]`)) el.innerHTML = drawn(d, el.dataset.still, el.dataset.ground);
+    lives.forEach((l) => l.motion?.redraw?.());
+  };
+  const stepPixel = (by) => setPixel(PIXELS[(PIXELS.indexOf(pixel) + by + PIXELS.length) % PIXELS.length]);
+  pxButton.addEventListener('click', () => stepPixel(1));
   document.addEventListener('keydown', (e) => {
-    if (e.key.toLowerCase() !== 'g' || e.metaKey || e.ctrlKey || e.altKey || e.target.closest?.('input, select, textarea, [contenteditable]')) return;
-    showGrid(!document.body.classList.contains('show-grid'));
+    if (e.metaKey || e.ctrlKey || e.altKey || e.target.closest?.('input, select, textarea, [contenteditable]')) return;
+    if (e.key.toLowerCase() === 'g') showGrid(!document.body.classList.contains('show-grid'));
+    else if (e.key.toLowerCase() === 'p') stepPixel(e.shiftKey ? -1 : 1);
   });
   try { if (localStorage.getItem(GRID)) showGrid(true); } catch {}
+  try { const n = Number(localStorage.getItem(PIXEL)); if (n) setPixel(n); } catch {}
   // For the screenshot tool (web/scripts/identity-shoot.py).
   window.__identity = {
     seek(slug, t) { const m = bySlug[slug]?.motion; m?.pause?.(); m?.seek?.(t); return !!m; },

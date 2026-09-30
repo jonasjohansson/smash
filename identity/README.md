@@ -11,6 +11,10 @@ The marks from `/identity/` (`web/src/identity/`), exported for Illustrator, in 
 In each folder:
 
 - `wordmark.svg`, `symbol.svg`, `lockup.svg` (and `lockup-sm.svg`): the masters, black, no ground.
+- `s.svg`, `s-turned.svg`, `s-square.svg`: the S alone (84 × 136), on its side (136 × 84), and drawn out to a
+  square (136 × 136).
+- `pixel-4/`, `pixel-10/`: the same masters with their curves in pixels of 4 (the grid: every point on it) or of 10
+  (half a slot: square ends, a pixel off each bend).
 - `*-on-ink.svg`, `*-on-paper.svg`: on black or white, a pitch (52) of clear space round the mark (the
   wordmark's is one grid row, 656 × 576). The ground is its own rectangle (`id="ground"`), easy to delete.
 - `favicon-16.svg`, `favicon-32.svg`, `favicon-64.svg`: drawn for their size.
