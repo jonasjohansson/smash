@@ -195,3 +195,14 @@ h1, h2 { font-weight: 400; margin: 0; }
 .mk-grid *, .mk-hair, .mk-hair * { vector-effect: non-scaling-stroke; stroke-width: var(--hair, 1px); }
 .grid-toggle { position: fixed; left: 12px; bottom: 12px; z-index: 60; padding: 6px 12px; background: #000; color: var(--dim); border: 1px solid var(--line); font: 400 12px/1 "Neue Montreal", "Helvetica Neue", Arial, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
 .grid-toggle:hover, .grid-toggle[aria-pressed="true"] { color: #ff29b8; border-color: #ff29b8; }
+
+/* Folded sections at the end of the page (Jonas, 2026-09-30): a line each, opened on a click; the line is the heading. */
+.fold { border-top: 1px solid var(--line); }
+.fold:not(.fold + .fold) { margin-top: clamp(56px, 8vw, 120px); }
+.fold-head { display: flex; justify-content: space-between; align-items: baseline; padding: 16px 0; cursor: pointer; list-style: none; font-size: 13px; color: var(--text); }
+.fold-head::-webkit-details-marker { display: none; }
+.fold-state::after { content: "Open"; color: var(--dim); }
+.fold[open] .fold-state::after { content: "Close"; }
+.fold-head:hover .fold-state::after { color: var(--text); }
+.fold > .lab { padding-top: 0; }
+.fold > .lab > .ch-head { display: none; }

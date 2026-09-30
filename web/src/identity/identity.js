@@ -176,12 +176,13 @@ function live(d, section) {
 const EXTRAS = [
   { id: 'modular', name: 'The modular mark', load: async () => { const m = await import('./modular.js'); return { html: m.HTML, mount: m.mount }; } },
   { id: 'lab', name: 'The live mark', load: async () => { const m = await import('./lab.js'); return { html: m.LAB_HTML, mount: m.mountLab }; } },
-  { id: 'mapping', name: 'Mapping', load: async () => { const m = await import('./mapping.js'); return { html: m.HTML, mount: m.mount }; } },
-  { id: 'sculpture', name: 'Sculpture', load: async () => { const m = await import('./sculpture.js'); return { html: m.HTML, mount: m.mount }; } },
   // At the end of the page, after every chapter (Jonas, 2026-09-29).
   { id: 'sequence', name: 'Sequence', last: true, load: async () => { const m = await import('./sequence/section.js'); return { html: m.HTML, mount: m.mount }; } },
   // The palette at the very bottom, after the sequence (Jonas, 2026-09-30).
   { id: 'colour', name: 'Colour', last: true, load: async () => { const m = await import('./colour.js'); return { html: m.HTML, mount: m.mount }; } },
+  // Folded, under the colour (Jonas, 2026-09-30: not so important any more): a line each, loaded when opened.
+  { id: 'mapping', name: 'Mapping', last: true, folded: true, load: async () => { const m = await import('./mapping.js'); return { html: m.HTML, mount: m.mount }; } },
+  { id: 'sculpture', name: 'Sculpture', last: true, folded: true, load: async () => { const m = await import('./sculpture.js'); return { html: m.HTML, mount: m.mount }; } },
 ];
 const extras = {};
 async function addExtra(page, x) {
@@ -201,6 +202,14 @@ async function addExtra(page, x) {
 
 
 
+/** A section folded to one line; its module loads, and it mounts, only once it is opened. */
+function addFolded(page, x) {
+  const fold = h(`<details class="fold" id="fold-${x.id}"><summary class="fold-head"><span class="fold-name">${esc(x.name)}</span><span class="fold-state"></span></summary></details>`);
+  page.appendChild(fold);
+  let loaded = null;
+  fold.addEventListener('toggle', () => { if (fold.open && !loaded) loaded = addExtra(fold, x); });
+}
+
 async function main() {
   const directions = await loadDirections(ONLY);
   directions.forEach((d) => loadFonts(d.info));
@@ -214,7 +223,7 @@ async function main() {
     lives.push(bySlug[d.slug] = live(d, section));
     if (d.slug === 'original' && !ONLY) for (const x of EXTRAS.filter((x) => !x.last)) await addExtra(page, x);
   }
-  if (!ONLY) for (const x of EXTRAS.filter((x) => x.last)) await addExtra(page, x);
+  if (!ONLY) for (const x of EXTRAS.filter((x) => x.last)) await (x.folded ? addFolded(page, x) : addExtra(page, x));
   for (const x of EXTRAS.filter((x) => x.id === ONLY)) await addExtra(page, x);
   // The grid, previewed on the marks (grid.js): a button, and G; kept in this browser. Its lines one device pixel wide.
   document.documentElement.style.setProperty('--hair', `${1 / (window.devicePixelRatio || 1)}px`);
