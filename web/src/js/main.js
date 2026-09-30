@@ -22,7 +22,8 @@
 // Keys on the landing page: H opens the tweak panel (the mark is drawn from
 // parameters, see mark.js), A inverts the mask, S swaps black for white.
 // Anywhere: G shows the grid, C steps through the colour palettes, D puts
-// the type's colour in the accent's place.
+// the type's colour in the accent's place. On a project's page: T and B step
+// through the typography round's heading and body faces (the type tester).
 
 // The modules come from the same build as this script: its address carries
 // the build's stamp (base.njk), and so do theirs.
@@ -811,6 +812,12 @@ if (!stage) {
   const STORE = 'smash-mark';
   const BASE = { ...MARK_DEFAULTS, ...DIVE_DEFAULTS, ...GROUND_DEFAULTS };
   const params = { ...BASE, ...stored(STORE) };
+  // On a project's page, the type tester (/typography/tester.js): the
+  // typography round's heading and body faces tried on the page itself, a
+  // folder in the panel, T and B to step through them.
+  const tester = own ? import(`/typography/tester.js${build}`)
+    .then((m) => m.start({ refit: () => document.querySelectorAll('main > .project').forEach(fitTitles) }))
+    .catch((e) => { console.error('[type tester]', e); return null; }) : null;
   const save = () => {
     const changed = Object.fromEntries(Object.entries(params).filter(([k, v]) => v !== BASE[k]));
     try { localStorage.setItem(STORE, JSON.stringify(changed)); } catch {}
@@ -897,6 +904,7 @@ if (!stage) {
       pane.refresh();
       paintGround(params);
       draw();
+      tester?.then((t) => t?.reset());
     });
     relist = addPalette(pane, params, () => { paintGround(params); save(); });
     const grain = pane.addFolder({ title: 'Grain' });
@@ -913,6 +921,7 @@ if (!stage) {
       mark.addBinding(params, 'columns', { label: 'spread', min: 0.5, max: 1.12, step: 0.005 });
       mark.addBinding(params, 'invert', { label: 'invert' });
     }
+    await (await tester)?.addFolder(pane);
     pane.on('change', () => { paintGround(params); draw(); save(); });
   };
   if (paneWasOpen()) openPane();

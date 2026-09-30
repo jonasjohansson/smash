@@ -57,6 +57,8 @@ function offeringHead(slug) {
 // The masks' typeface. Its stylesheet (main.css, data-info-font) has to be in
 // before the typeface can be asked for, and WebKit runs this module before it
 // is: asked too soon, the answer is that there is no such typeface yet.
+// (A title mask is set in whatever its text is set in: Anton, unless the type
+// tester on the project pages, /typography/tester.js, sets it in another.)
 const FONT = 'Anton';
 const sheet = new Promise((resolve) => {
   const link = document.querySelector('link[data-info-font]');
@@ -64,19 +66,19 @@ const sheet = new Promise((resolve) => {
   link.addEventListener('load', resolve, { once: true });
   link.addEventListener('error', resolve, { once: true });
 });
-export const typeface = (text) => sheet.then(() => document.fonts.load(`100px ${FONT}`, text)).catch(() => {});
+export const typeface = (text, font = `100px ${FONT}`) => sheet.then(() => document.fonts.load(font, text)).catch(() => {});
 
-// The ink of `text` set at 100px: left of and right of the origin, above and
-// below the baseline. Read from its pixels, set large: WebKit's measureText
-// gives the advance for the sides, not the ink.
+// The ink of `text` set at 100px (in `family`, at `weight`): left of and
+// right of the origin, above and below the baseline. Read from its pixels,
+// set large: WebKit's measureText gives the advance for the sides, not the ink.
 const LARGE = 200;
 const ruler = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
-function ink(text) {
-  ruler.font = `${LARGE}px ${FONT}`;
+function ink(text, family = FONT, weight = 400) {
+  ruler.font = `${weight} ${LARGE}px ${family}`;
   const pad = LARGE / 2, base = LARGE * 1.5;
   const w = Math.ceil(ruler.measureText(text).width + 2 * pad), h = LARGE * 2;
   Object.assign(ruler.canvas, { width: w, height: h }); // clears it, and its font
-  ruler.font = `${LARGE}px ${FONT}`;
+  ruler.font = `${weight} ${LARGE}px ${family}`;
   ruler.fillText(text, pad, base);
   const px = ruler.getImageData(0, 0, w, h).data;
   let x0 = w, x1 = -1, y0 = h, y1 = -1;
@@ -101,9 +103,11 @@ export async function fitTitle(svg) {
   const text = svg?.querySelector('text');
   const words = text?.textContent;
   if (!words) return;
-  await typeface(words);
-  if (text.textContent !== words) return; // changed while the typeface loaded
-  const m = ink(words);
+  await sheet;
+  const { fontFamily, fontWeight } = getComputedStyle(text);
+  await typeface(words, `${fontWeight} 100px ${fontFamily}`);
+  if (text.textContent !== words || getComputedStyle(text).fontFamily !== fontFamily) return; // changed while the typeface loaded
+  const m = ink(words, fontFamily, fontWeight);
   if (m) svg.setAttribute('viewBox', `${-m.left} ${-m.up} ${m.left + m.right} ${m.up + m.down}`);
 }
 export const fitTitles = (root) => root.querySelectorAll('.title-mask').forEach(fitTitle);

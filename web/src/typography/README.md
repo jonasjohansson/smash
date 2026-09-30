@@ -22,6 +22,21 @@ third face: the meta and credit lines are the body face, small and spaced (Jonas
 - The pairing's text can be edited in place: click and type. Edits are kept in the browser and feed the cards'
   samples; Reset text puts SMASH's own copy back.
 
+## On the project pages: the type tester
+
+The round can be tried on the site's own project pages (Jonas: "this tester system in a gui on the project
+pages"). On a project's page, H opens the tweak panel, which has a Typography folder: the heading and body faces
+(the same candidates, in the same order), the title, library or Google alternatives, the heading's and the body's
+size (the page's own, scaled) and line height, and Reset. T and B step through the heading and body faces (Shift:
+back), with a note at the foot of the screen when the panel is shut. Until a face is chosen the page keeps its own
+type. What goes where, as in this page's pairing: the heading face sets the introduction (the large words under the
+hero) and a title without a hero; the body face the texts, their labels and the credits; the title cut out of the
+hero and the footer's invitation are the display (the site's Anton, the heading face, or the SMASH typeface; the
+title is sized again to its letters in the new face, feed.js). The choice is kept in the browser and carries from
+project to project, and to the ones the page runs on into. "Take /typography's pairing" takes the pairing last set
+on this page (its sizes relative to this page's own); "Open in /typography" goes the other way; Copy link gives a
+link that shows the page set as it is (`?h=&b=&src=&title=&hsize=&hline=&bsize=&bline=`), without keeping it.
+
 ## Files
 
 
@@ -38,6 +53,9 @@ third face: the meta and credit lines are the body face, small and spaced (Jonas
   `python3 web/scripts/typography-fonts.py` (from the repo root; run it again after changing `candidates.json`).
   In git, so the live site shows them. A library font that is missing falls back to its Google alternative,
   marked "Not here".
+- `faces.js`: the candidates ranked, the Google stylesheet for any of them, which library faces are here, and the CSS
+  for a candidate from the library or as its Google alternative; shared by this page and the tester.
+- `tester.js`: the type tester on the project pages (above); main.js loads it there.
 - `feedback.js`: a rating (1–5) and a comment under every card and under the pairing (each pairing tried is kept
   on its own), free notes, and a Feedback button that gathers it all as text, best rated first, with a link to
   each rated pairing, to copy and paste into a conversation. Kept in the browser (localStorage) as you go;

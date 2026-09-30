@@ -14,6 +14,7 @@
 
 import { ACCENTS } from '/identity/colour.js';
 import { row, mountFeedback } from './feedback.js';
+import { ROLES, candidates, googleHref, libraryHere, face as faceOf } from './faces.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const esc = (s = '') => String(s).replace(/[<&"]/g, (c) => ({ '<': '&lt;', '&': '&amp;', '"': '&quot;' })[c]);
@@ -24,31 +25,21 @@ const GROUNDS = {
   black: { ground: '#000000', ink: '#ffffff' },
   paper: { ground: '#f3efe8', ink: '#1f1915' },
 };
-const ROLES = ['heading', 'body'];
-
-const data = await fetch(new URL('candidates.json', import.meta.url)).then((r) => r.json());
-// Best rated first; a round 2 addition just under round 1's top rating, one not rated at the end.
-const rank = (c) => (c.r1 ?? (c.round === 2 ? 3.5 : 0));
-for (const role of ROLES) data[role].sort((a, b) => rank(b) - rank(a));
-const byId = Object.fromEntries(ROLES.map((role) => [role, Object.fromEntries(data[role].map((c) => [c.id, c]))]));
+// The candidates, ranked (best rated first), and how each is set: faces.js,
+// shared with the type tester on the project pages (tester.js).
+const { data, byId } = await candidates();
 
 // The Google alternatives, all in one stylesheet.
 {
-  const specs = [...new Set(ROLES.flatMap((role) => data[role].map((c) => c.google.css2)))];
   const link = document.createElement('link');
   link.rel = 'stylesheet';
-  link.href = `https://fonts.googleapis.com/css2?${specs.map((s) => `family=${s}`).join('&')}&display=swap`;
+  link.href = googleHref(ROLES.flatMap((role) => data[role]));
   document.head.appendChild(link);
 }
 
-// Which library fonts are here: a face that loads. (On the live site fonts/ is not there.)
+// Which library fonts are here: a face that loads.
 const here = {};
-async function check() {
-  const ids = [...new Set(ROLES.flatMap((role) => data[role].filter((c) => c.library).map((c) => c.id)))];
-  await Promise.all(ids.map(async (id) => {
-    try { here[id] = (await document.fonts.load(`20px "L ${id}"`)).length > 0; } catch { here[id] = false; }
-  }));
-}
+const check = async () => Object.assign(here, await libraryHere(ROLES.flatMap((role) => data[role])));
 
 // State, from the address.
 const params = new URLSearchParams(location.search);
@@ -67,22 +58,17 @@ function keep() {
   const q = new URLSearchParams({ h: state.heading, b: state.body, src: state.source, g: state.ground, a: state.accent });
   for (const k of Object.keys(SIZES)) if (state[k] !== SIZES[k]) q.set(k, state[k]);
   history.replaceState(null, '', `?${q}`);
+  // The pairing as it stands, for the type tester on the project pages to take (tester.js).
+  const pairing = { heading: state.heading, body: state.body, source: state.source === 'google' ? 'google' : 'library', ...Object.fromEntries(Object.keys(SIZES).map((k) => [k, state[k]])) };
+  try { localStorage.setItem('smash-typography-pairing', JSON.stringify(pairing)); } catch {}
 }
 
 /**
- * (Its CSS goes in a style attribute, so it quotes with single quotes.)
  * The face for candidate c from `from` ('library' or 'google'): its CSS
- * (family, weight, any axis), where it came from, and whether it stands in
- * for a library font that is not here.
+ * (family, weight, any axis; in a style attribute, so single quotes), where it
+ * came from, and whether it stands in for a library font that is not here.
  */
-function face(c, from, role) {
-  const weight = role === 'heading' ? (c.weight ?? 400) : 400;
-  const google = () => ({ css: `font-family:'${c.google.family}',sans-serif;font-weight:${weight};${c.google.css ?? ''}`, name: c.google.family, from: 'google' });
-  if (from === 'google' || c.googleOnly) return google();
-  if (c.local) return { css: `font-family:'${c.local}',sans-serif;font-weight:${weight};`, name: c.name, from: 'library' };
-  if (here[c.id]) return { css: `font-family:'L ${c.id}',sans-serif;font-weight:${weight};`, name: c.name, from: 'library' };
-  return { ...google(), standIn: true };
-}
+const face = (c, from, role) => faceOf(c, from, role, here);
 const faces = (from) => Object.fromEntries(ROLES.map((role) => [role, face(byId[role][state[role]], from, role)]));
 
 // The pairing ----------------------------------------------------------------
