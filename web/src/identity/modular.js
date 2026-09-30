@@ -149,7 +149,7 @@ function gridSVG(p, upTo, color) {
   }
   const lines = [...g.y.map((y) => `<line x1="-12" x2="${f(g.w + 12)}" y1="${f(y)}" y2="${f(y)}"/>`),
     ...[0, ...xs.filter((x) => x < g.w), g.w].map((x) => `<line y1="-12" y2="${f(g.h + 12)}" x1="${f(x)}" x2="${f(x)}"/>`)];
-  return `<g stroke="${color}" stroke-width="0.6" opacity="0.7" fill="none">${lines.join('')}</g>${circlesSVG(p, g, '#ff29b8')}`; // the circles in the construction's pink (as constructed.js), seen on black and on white
+  return `<g stroke="${color}" stroke-width="0.6" opacity="0.7" fill="none">${lines.join('')}</g>${circlesSVG(p, g, '#ff29b8')}`; // the circles in pink, seen on black and on white
 }
 
 /**
