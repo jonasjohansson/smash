@@ -13,16 +13,17 @@ its marks, with no copy.
 - `shapes.js` and `shapes/` (off the page since 2026-09-29, at Jonas's word; kept for `identity-export.py`): the kit, the mark's negative shapes that aren't letters made into chunky building blocks
   (`kit.js`), and what they build: a gallery of symbols from a seeded grammar (`grammar.js`), as blocks or cut from a
   block, patterns, and a bench to build one by hand (`editor.js`). Every piece exports as an outline SVG (`outline.js`).
-- `constructed.js`: SMASH built the way the Elicit Projects wordmark was (Jonas's reference, 2026-09-30; its manual,
-  presentations and working files are in his Drive). Elicit took a geometric sans (Futura) down to one even stroke and
-  took each letter apart into particles, the movements of that stroke (a bar, a stub, the stroke turned, bent into an
-  arc or a corner, a ring), with a gap wherever two would join; what bends stays whole. Here: Elicit's S (two rings and
-  the stroke on their inside tangent); the M apart at its point (each stem bent into its arm); the A a Λ with a stub of
-  a bar; the H's bar a gap off each stem. Or the M and the A round (arches). Joined, the skeleton. Measured on a
-  stroke-unit grid (cap height 7u, gap 1u). The construction shows the grid, each particle's centre line, the S's rings
-  whole with their centres, the V's and the Λ's edges run to the box's corners, and the measures; "particles apart"
-  pulls the pieces away from each other as Elicit's Particles pages do. Under the mark, the system: the stroke turned,
-  bent and cornered, the particles SMASH uses in pink. A line or stacked (SMA / SH, SM / ASH, SM / AS / H); Export SVG.
+- `constructed.js`: SMASH made the way Jonas made the Elicit Projects wordmark (2015; his Drive): only lines, arcs
+  and circles, one even stroke, measured on a grid, with the numbers taken from Elicit's vector. The grid is 10 and the
+  stroke 3, square ended; a row has three lines (cap, mid, base, 10 apart); rings sit on the mid line (the O is r 10),
+  stubs run line to line, bars lie on lines; lines at 0, 45 or 90°, curves ending on a circle's 45° or 90° point; each
+  piece one stroke, and no two pieces touch (a gap of 3.9 where they would). The S is Elicit's own; the M a 45° V from
+  the cap line's corners to the mid line over two lower stems; the A the top half of the O run on into its legs, the bar
+  on the mid line; the H's bar on the mid line, a gap off each stem. Alternates: the M in arches, the A under a 45°
+  roof; joined (no gaps), the skeleton. Stacked SM / ASH by default (Elicit's is a block), or a line, SMA / SH, SM / AS
+  / H. The construction shows the rows' lines, each letter's grid squares, every circle whole with its centre, the 45°
+  lines, each stroke's centre line and the measures; "pieces apart" pulls the strokes away from each other as Elicit's
+  Particles pages do. Export SVG gives the mark as strokes.
 - `lab.js`: the parametric mark (`/js/mark.js`), live, in 2D or 3D (`extrude.js`), with each
   letter's own measures.
 - `mapping.js`: a mapping grid for warping the mark.
