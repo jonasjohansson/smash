@@ -20,7 +20,7 @@ export const MODULAR_DEFAULTS = {
   view: 'board', // board | wordmark | monogram
   symbol: 'S M', // S M | S: the symbol, and the favicons with it
   turn: 0, // 0 | 90 | 180 | 270: the symbol turned, in degrees
-  grid: false, // the bands drawn over it
+  grid: false, // the bands drawn over it, and the circles its curves are drawn from
   colors: 'white on black',
 };
 
@@ -149,7 +149,34 @@ function gridSVG(p, upTo, color) {
   }
   const lines = [...g.y.map((y) => `<line x1="-12" x2="${f(g.w + 12)}" y1="${f(y)}" y2="${f(y)}"/>`),
     ...[0, ...xs.filter((x) => x < g.w), g.w].map((x) => `<line y1="-12" y2="${f(g.h + 12)}" x1="${f(x)}" x2="${f(x)}"/>`)];
-  return `<g stroke="${color}" stroke-width="0.6" opacity="0.7" fill="none">${lines.join('')}</g>`;
+  return `<g stroke="${color}" stroke-width="0.6" opacity="0.7" fill="none">${lines.join('')}</g>${circlesSVG(p, g, '#ff29b8')}`; // the circles in the construction's pink (as constructed.js), seen on black and on white
+}
+
+/**
+ * The circles the curves are drawn from, measured: each bend's circle (the
+ * slot's centre line bent at radius k, so the slot's two edges are circles of
+ * k ± half a slot), each round end's circle (half a slot), dashed, with
+ * their centres crossed.
+ */
+function circlesSVG(p, g, color) {
+  const f = (n) => +n.toFixed(2);
+  const half = g.s / 2;
+  const rings = [];
+  for (const { pts } of g.slots) {
+    for (let i = 1; i < pts.length - 1; i++) {
+      const [ax, ay] = pts[i - 1], [bx, by] = pts[i], [cx, cy] = pts[i + 1];
+      const l1 = Math.hypot(bx - ax, by - ay), l2 = Math.hypot(cx - bx, cy - by);
+      const k = Math.min(p.bend, l1 / 2, l2 / 2);
+      if (k <= 0.01) continue;
+      const centre = [bx - ((bx - ax) / l1) * k + ((cx - bx) / l2) * k, by - ((by - ay) / l1) * k + ((cy - by) / l2) * k];
+      rings.push([centre, [k + half, Math.max(0, k - half)]]);
+    }
+  }
+  if (p.ends === 'round') for (const [x, y] of cuts(p, g).dots) rings.push([[x, y], [half]]);
+  const circles = rings.flatMap(([[x, y], rs]) => rs.filter((r) => r > 0.01).map((r) => `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}"/>`));
+  const crosses = rings.map(([[x, y]]) => `M${f(x - 3)} ${f(y)}H${f(x + 3)}M${f(x)} ${f(y - 3)}V${f(y + 3)}`).join('');
+  return `<g stroke="${color}" stroke-width="0.6" fill="none" stroke-dasharray="2 1.5" opacity="0.9">${circles.join('')}</g>`
+    + `<path d="${crosses}" stroke="${color}" stroke-width="0.6" fill="none"/>`;
 }
 
 /**
@@ -325,7 +352,7 @@ export function mount(section, { panel = true, settings = null } = {}) {
       const view = pane.addFolder({ title: 'View' });
       view.addBinding(params, 'view', { options: { 'wordmark, symbol, favicons': 'board', wordmark: 'wordmark', symbol: 'monogram' } });
       view.addBinding(params, 'colors', { options: Object.fromEntries(Object.keys(COLORS).map((k) => [k, k])) });
-      view.addBinding(params, 'grid', { label: 'show the grid' });
+      view.addBinding(params, 'grid', { label: 'show the grid and circles' });
       const sym = pane.addFolder({ title: 'Symbol' });
       sym.addBinding(params, 'symbol', { options: { 'S M': 'S M', 'the S alone': 'S' } });
       sym.addBinding(params, 'turn', { options: { '0°': 0, '90°': 90, '180°': 180, '270°': 270 } });

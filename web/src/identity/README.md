@@ -8,7 +8,8 @@ its marks, with no copy.
   `identity.js`. `?d=<slug>` shows one alone, `?t=0.5` seeks every motion to t = 0.5 and pauses
   it (for screenshots), and `?feedback` adds a rating and comment for each section.
 - `directions/original.js`: the mark, the S M symbol, the favicons, the lockups and the motion.
-- `modular.js`: the modular mark. The symbol is the S M or the S alone, and it can be turned.
+- `modular.js`: the modular mark. The symbol is the S M or the S alone, and it can be turned. Its grid view also shows the circles its curves are
+  drawn from (each bend's, each round end's), dashed, with their centres, in the construction's pink.
 - `shapes.js` and `shapes/` (off the page since 2026-09-29, at Jonas's word; kept for `identity-export.py`): the kit, the mark's negative shapes that aren't letters made into chunky building blocks
   (`kit.js`), and what they build: a gallery of symbols from a seeded grammar (`grammar.js`), as blocks or cut from a
   block, patterns, and a bench to build one by hand (`editor.js`). Every piece exports as an outline SVG (`outline.js`).
