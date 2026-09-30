@@ -8,5 +8,3 @@ dist/
 src/identity/directions/*/fonts/
 identity-dropped/*/fonts/
 
-# The typography round's library fonts (web/scripts/typography-fonts.py): desktop licences, local only.
-src/typography/fonts/
