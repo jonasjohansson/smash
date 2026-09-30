@@ -1,5 +1,5 @@
 {
-  "_": "The typography round: heading, body and detail candidates from Jonas's library (fonts skill, _PUBLIC/FONTS), each with a Google Fonts alternative. library.dir is Category/Family in the library; library.files maps a style (400, 700, 400i …) to a file in it. google.css2 is the css2 family spec; google.css is extra CSS for the alternative (an axis setting). scripts/typography-fonts.py turns library.files into WOFF2 in fonts/ (kept out of git: desktop licences).",
+  "_": "The typography round: heading, body and detail candidates from Jonas's library (fonts skill, _PUBLIC/FONTS), each with a Google Fonts alternative. library.dir is Category/Family in the library; library.files maps a style (400, 700, 400i …) to a file in it. google.css2 is the css2 family spec; google.css is extra CSS for the alternative (an axis setting). scripts/typography-fonts.py turns library.files into WOFF2 in fonts/.",
   "heading": [
     { "id": "neue-haas-display", "name": "Neue Haas Grotesk Display", "kind": "Neo-grotesk", "weight": 500,
       "library": { "dir": "Display/Neue Haas Grotesk Display Pro", "files": { "500": "NeueHaasGroteskDisplayW02-Medium.ttf", "700": "NeueHaasGroteskDisplayW02-Bold.ttf", "500i": "NeueHaasGroteskDisplayW02-MediumItalic.ttf" } },

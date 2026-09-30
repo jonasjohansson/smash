@@ -5,9 +5,9 @@
 // pairing. The bar switches every font between the library and its Google
 // alternative, or shows both side by side.
 //
-// The library fonts are desktop licences: web/scripts/typography-fonts.py makes
-// them into fonts/ on this machine only (kept out of git). Where one is not
-// there (the live site), its Google alternative stands in, and says so.
+// The library fonts are made into fonts/ by web/scripts/typography-fonts.py (in
+// git, so the live site has them). Where one is missing, its Google
+// alternative stands in, and says so.
 // The state is in the address (?h=…&b=…&d=…&src=…&g=…&a=…), so a pairing can be sent.
 
 import { ACCENTS } from '/identity/colour.js';

@@ -6,9 +6,8 @@ Reads web/src/typography/candidates.json and, for every candidate with a
 `library` entry, subsets its files from Jonas's font library (_PUBLIC/FONTS on
 the shared drive, found the way the fonts skill finds it; FONTS_DIR overrides)
 to Latin and Latin Extended WOFF2 in web/src/typography/fonts/, with a
-library.css of @font-face rules (family "L <id>"). The fonts are desktop
-licences, so the folder is kept out of git and the live site shows the Google
-alternatives in their place. Needs `pip install fonttools brotli`.
+library.css of @font-face rules (family "L <id>"). The folder is in git, so
+the live site has them; run this again after changing candidates.json. Needs `pip install fonttools brotli`.
 """
 
 import glob

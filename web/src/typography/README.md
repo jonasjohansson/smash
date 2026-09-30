@@ -14,6 +14,6 @@ alternative.
   it in the pairing. The bar switches every font between the library and its Google alternative, or shows both
   side by side. The state is in the address (`?h=&b=&d=&src=&g=&a=`), so a pairing can be sent.
 - `fonts/`: the library fonts as subset WOFF2 with `library.css`, made by
-  `python3 web/scripts/typography-fonts.py` (from the repo root). They are desktop licences, so the folder is
-  kept out of git: they show on a machine that has run the script. Elsewhere (the live site) each library font's
-  Google alternative stands in, marked "Not here".
+  `python3 web/scripts/typography-fonts.py` (from the repo root; run it again after changing `candidates.json`).
+  In git, so the live site shows them. A library font that is missing falls back to its Google alternative,
+  marked "Not here".
