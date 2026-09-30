@@ -4,25 +4,28 @@
 // apart at stencil breaks, set as a line or stacked into a block. Close to
 // the geometric direction of the typography round (Stolzl Display).
 //
-// Units: the cap height is 5 and the stroke 0.8 by default; the bowls and
-// arches are half the cap height, the A's arch its whole width.
-// A letter is a list of pieces, each a centre line (a line or an arc) stroked
-// with butt ends; `cut` shortens a piece's start or end by the stencil gap.
-// The construction shows the unit grid and each arc's whole circle.
+// Measured as the reference is: the grid's unit (u) is the stroke; the cap
+// height is 7u; every curve is a piece of one ring, 4u across on its outside
+// (half the cap height and a stroke, so two stacked rings share a stroke):
+// the S is two of them meeting at its spine, the M's two arches and the A's
+// arch are the same ring. The construction shows the unit grid, each ring
+// whole (dashed, its unused part pale), the arcs used in pink, the rings'
+// centres, and the measures: the cap height, the ring and the stroke.
 
 const STORE = 'smash-identity-constructed';
 export const CONSTRUCTED_DEFAULTS = {
   layout: 'line', // line | sma-sh | sm-ash | sm-as-h
   stencil: true, // the breaks
-  gap: 0.4, // the stencil gap, in units
-  weight: 0.8, // the stroke, in units
-  tracking: 0.8, // between letters, in units
+  gap: 0.5, // the stencil gap, in units
+  weight: 1, // the stroke, in units (1: the grid's unit)
+  tracking: 1, // between letters, in units
   leading: 1, // between lines, in units
   construction: false,
   ground: 'ink', // ink | paper
 };
 
-const H = 5;
+const H = 7; // the cap height, in units
+const RING = 4; // the ring's outside diameter
 const L = (x1, y1, x2, y2, cut = [0, 0]) => ({ kind: 'line', x1, y1, x2, y2, cut });
 const A = (cx, cy, r, a0, a1, cut = [0, 0]) => ({ kind: 'arc', cx, cy, r, a0, a1, cut });
 
@@ -33,32 +36,31 @@ const A = (cx, cy, r, a0, a1, cut = [0, 0]) => ({ kind: 'arc', cx, cy, r, a0, a1
 // and cut back to its edge and a gap beyond.
 function letters(w) {
   const h = w / 2;
-  const r = (H / 2 - h) / 2; // a bowl or an arch half the cap height, on its centre line
+  const r = RING / 2 - h; // the ring on its centre line
+  const c = RING / 2; // a ring's centre, from its box's edge
   return {
-    S: { w: 3, pieces: [
-      L(3, h, r + h, h),
-      A(r + h, h + r, r, 270, 90), // the top bowl, round the left, down to the middle
-      L(r + h, H / 2, 3 - r - h, H / 2, [0.5, 0.5]), // the spine: a stencil break
-      A(3 - r - h, H / 2 + r, r, 270, 450), // the bottom bowl, round the right
-      L(3 - r - h, H - h, 0, H - h),
+    S: { w: RING, pieces: [
+      A(c, c, r, 315, 90, [0, 0.5]), // the top ring: from its upper right, over the top and round the left, to the spine
+      L(c, c + r, c, H - c - r), // (only a step when the stroke isn't the unit)
+      A(c, H - c, r, 270, 495, [0.5, 0]), // the bottom ring: from the spine, round the right and under, to its lower left
     ] },
-    M: { w: 5, pieces: [
-      L(h, H, h, h + (2.5 - h) / 2),
-      A(h + (2.5 - h) / 2, h + (2.5 - h) / 2, (2.5 - h) / 2, 180, 360),
-      A(2.5 + (2.5 - h) / 2, h + (2.5 - h) / 2, (2.5 - h) / 2, 180, 360),
-      L(2.5, h + (2.5 - h) / 2, 2.5, H, [1, 0]), // the middle stem, floating a gap under the arches
-      L(5 - h, h + (2.5 - h) / 2, 5 - h, H),
+    M: { w: 2 * RING - w, pieces: [
+      L(h, H, h, c),
+      A(c, c, r, 180, 360),
+      A(RING - w + c, c, r, 180, 360),
+      L(RING - h, c, RING - h, H, [1, 0]), // the middle stem, floating a gap under the arches
+      L(2 * RING - w - h, c, 2 * RING - w - h, H),
     ] },
-    A: { w: 4, pieces: [
-      L(h, H, h, 2),
-      A(2, 2, 2 - h, 180, 360),
-      L(4 - h, 2, 4 - h, H),
-      L(h, 3.4, 4 - h, 3.4, [1.5, 1.5]), // the crossbar, clear of both stems
+    A: { w: RING, pieces: [
+      L(h, H, h, c),
+      A(c, c, r, 180, 360),
+      L(RING - h, c, RING - h, H),
+      L(h, 4.5, RING - h, 4.5, [1.5, 0]), // the crossbar, off the left stem by a gap
     ] },
-    H: { w: 4, pieces: [
+    H: { w: RING, pieces: [
       L(h, 0, h, H),
-      L(4 - h, 0, 4 - h, H),
-      L(h, H / 2, 4 - h, H / 2, [1.5, 1.5]),
+      L(RING - h, 0, RING - h, H),
+      L(h, H / 2, RING - h, H / 2, [0, 1.5]), // the crossbar, off the right stem by a gap
     ] },
   };
 }
@@ -118,20 +120,41 @@ export function layout(s) {
 }
 
 /** The mark as an SVG, stroked in color, with its construction when asked. */
+/** The mark as an SVG, stroked in color, with its measured construction when asked. */
 export function markSVG(s, color = 'currentColor', { pad = 0, construction = s.construction, accent = '#ff29b8' } = {}) {
   const m = layout(s);
-  const x0 = -pad, y0 = -pad, W = m.w + 2 * pad, Hh = m.h + 2 * pad;
+  const p = construction ? Math.max(pad, 2.4) : pad; // room for the measures
+  const x0 = -p, y0 = -p, W = m.w + 2 * p, Hh = m.h + 2 * p;
+  const w = s.weight;
   let under = '', over = '';
   if (construction) {
+    const dash = 'stroke-dasharray="0.12 0.1"';
     const grid = [];
     for (let x = 0; x <= Math.ceil(m.w); x++) grid.push(`M${x} 0V${f(m.h)}`);
     for (let y = 0; y <= Math.ceil(m.h); y++) grid.push(`M0 ${y}H${f(m.w)}`);
-    under = `<path d="${grid.join('')}" fill="none" stroke="${accent}" stroke-width="0.03" stroke-dasharray="0.08 0.08" opacity="0.8"/>`
-      + m.circles.map(([cx, cy, r]) => `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r)}" fill="none" stroke="${accent}" stroke-width="${f(s.weight)}" opacity="0.18"/>`).join('');
-    over = `<path d="${m.arcs.join('')}" fill="none" stroke="${accent}" stroke-width="${f(s.weight)}" stroke-linecap="butt"/>`;
+    const rings = [...new Map(m.circles.map((c) => [c.map(f).join(','), c])).values()];
+    under = `<path d="${grid.join('')}" fill="none" stroke="${accent}" stroke-width="0.025" ${dash} opacity="0.7"/>`
+      + rings.map(([cx, cy, r]) => `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r)}" fill="none" stroke="${accent}" stroke-width="${f(w)}" opacity="0.16"/>`
+        + `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r + w / 2)}" fill="none" stroke="${accent}" stroke-width="0.03" ${dash}/>`
+        + `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(Math.max(0.01, r - w / 2))}" fill="none" stroke="${accent}" stroke-width="0.03" ${dash}/>`).join('');
+    const centres = rings.map(([cx, cy]) => `M${f(cx - 0.25)} ${f(cy)}H${f(cx + 0.25)}M${f(cx)} ${f(cy - 0.25)}V${f(cy + 0.25)}`).join('');
+    // The measures: the cap height beside the first line, the first ring across its top, the stroke under the last stem.
+    const t = (x, y, str, rot = 0) => `<text x="${f(x)}" y="${f(y)}" font-size="0.55" font-family="Neue Montreal, Helvetica, sans-serif" fill="${accent}" text-anchor="middle" ${rot ? `transform="rotate(${rot} ${f(x)} ${f(y)})"` : ''}>${str}</text>`;
+    const dim = (x1, y1, x2, y2) => {
+      const tick = 0.3, vert = x1 === x2;
+      const ends = vert ? `M${f(x1 - tick)} ${f(y1)}H${f(x1 + tick)}M${f(x2 - tick)} ${f(y2)}H${f(x2 + tick)}` : `M${f(x1)} ${f(y1 - tick)}V${f(y1 + tick)}M${f(x2)} ${f(y2 - tick)}V${f(y2 + tick)}`;
+      return `<path d="M${f(x1)} ${f(y1)}L${f(x2)} ${f(y2)}${ends}" fill="none" stroke="${accent}" stroke-width="0.04"/>`;
+    };
+    const unit = (n) => `${+n.toFixed(2)}u`;
+    const ring = m.circles[0];
+    over = `<path d="${m.arcs.join('')}" fill="none" stroke="${accent}" stroke-width="${f(w)}" stroke-linecap="butt"/>`
+      + `<path d="${centres}" fill="none" stroke="${color}" stroke-width="0.05"/>`
+      + dim(-1.2, 0, -1.2, H) + t(-1.6, H / 2, unit(H), -90)
+      + (ring ? dim(ring[0] - ring[2] - w / 2, -1.2, ring[0] + ring[2] + w / 2, -1.2) + t(ring[0], -1.5, `Ø ${unit(2 * ring[2] + w)}`) : '')
+      + dim(m.w - w, m.h + 1.1, m.w, m.h + 1.1) + t(m.w - w / 2, m.h + 1.9, unit(w));
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${f(x0)} ${f(y0)} ${f(W)} ${f(Hh)}">${under}`
-    + `<g fill="none" stroke="${color}" stroke-width="${f(s.weight)}" stroke-linecap="butt" stroke-linejoin="miter"><path d="${m.paths.join('')}"/></g>${over}</svg>`; // one path: no seams where the pieces meet
+    + `<g fill="none" stroke="${color}" stroke-width="${f(w)}" stroke-linecap="butt" stroke-linejoin="miter"><path d="${m.paths.join('')}"/></g>${over}</svg>`; // one path: no seams where the pieces meet
 }
 
 export const HTML = `
@@ -211,8 +234,8 @@ export function mount(section, { panel = true, settings = null } = {}) {
       pane.addBinding(params, 'construction', { label: 'show the construction' });
       const m = pane.addFolder({ title: 'Drawing' });
       m.addBinding(params, 'stencil', { label: 'stencil breaks' });
-      m.addBinding(params, 'gap', { label: 'stencil gap', min: 0.1, max: 1, step: 0.05 });
-      m.addBinding(params, 'weight', { label: 'stroke', min: 0.5, max: 1.6, step: 0.05 });
+      m.addBinding(params, 'gap', { label: 'stencil gap', min: 0.1, max: 1.5, step: 0.05 });
+      m.addBinding(params, 'weight', { label: 'stroke', min: 0.5, max: 1.8, step: 0.05 });
       m.addBinding(params, 'tracking', { min: 0, max: 2, step: 0.05 });
       m.addBinding(params, 'leading', { label: 'between lines', min: 0, max: 2, step: 0.05 });
       pane.addButton({ title: 'Export SVG' }).on('click', () => {

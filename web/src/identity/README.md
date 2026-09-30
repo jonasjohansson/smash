@@ -12,9 +12,11 @@ its marks, with no copy.
 - `shapes.js` and `shapes/` (off the page since 2026-09-29, at Jonas's word; kept for `identity-export.py`): the kit, the mark's negative shapes that aren't letters made into chunky building blocks
   (`kit.js`), and what they build: a gallery of symbols from a seeded grammar (`grammar.js`), as blocks or cut from a
   block, patterns, and a bench to build one by hand (`editor.js`). Every piece exports as an outline SVG (`outline.js`).
-- `constructed.js`: SMASH in the manner of the Elicit Projects wordmark (Jonas's reference, 2026-09-30): one even
-  stroke on a square grid, the letters built from bars and arcs of one circle, stencil breaks, as a line or stacked
-  (SMA / SH, SM / ASH, SM / AS / H), with its construction (the grid, the circles in pink) to show. Stroke, gap,
+- `constructed.js`: SMASH in the manner of the Elicit Projects wordmark (Jonas's reference, 2026-09-30), measured as
+  it is: the grid's unit is the stroke, the cap height 7 units, and every curve a piece of one ring 4 units across
+  (two stacked rings share a stroke: the S; the M's arches and the A's arch are the same ring). Stencil breaks; a
+  line or stacked (SMA / SH, SM / ASH, SM / AS / H). Its construction shows the unit grid, each ring whole (dashed,
+  its unused part pale), the arcs used in pink, the rings' centres, and the measures (cap height, ring, stroke). Stroke, gap,
   tracking and leading are set in its panel; Export SVG gives the mark (as strokes).
 - `lab.js`: the parametric mark (`/js/mark.js`), live, in 2D or 3D (`extrude.js`), with each
   letter's own measures.
