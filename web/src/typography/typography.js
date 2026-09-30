@@ -54,7 +54,7 @@ const state = {
   detail: pick('detail', params.get('d') ?? 'maison-mono'),
   source: ['library', 'google', 'compare'].includes(params.get('src')) ? params.get('src') : 'library',
   ground: GROUNDS[params.get('g')] ? params.get('g') : 'earth',
-  accent: params.get('a') ?? ACCENTS[0].steps[0],
+  accent: params.get('a') ?? 'none', // no accent unless one is chosen (Jonas)
 };
 function keep() {
   const q = new URLSearchParams({ h: state.heading, b: state.body, d: state.detail, src: state.source, g: state.ground, a: state.accent });
