@@ -11,6 +11,7 @@
 // The state is in the address (?h=…&b=…&d=…&src=…&g=…&a=…), so a pairing can be sent.
 
 import { ACCENTS } from '/identity/colour.js';
+import { row, mountFeedback } from './feedback.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const esc = (s = '') => String(s).replace(/[<&"]/g, (c) => ({ '<': '&lt;', '&': '&amp;', '"': '&quot;' })[c]);
@@ -112,6 +113,7 @@ function renderStage() {
   const two = state.source === 'compare';
   el.classList.toggle('two', two);
   el.innerHTML = two ? stage('library', 'Library') + stage('google', 'Google alternatives') : stage(state.source);
+  $('.pair-fb').innerHTML = `<span class="label">This pairing</span>${row(`pair:${state.heading}+${state.body}+${state.detail}`)}`;
 }
 
 // The galleries --------------------------------------------------------------
@@ -139,10 +141,10 @@ function card(c, role, i) {
     !compare && f.standIn && `<span class="chip warn">Not here: showing ${esc(c.google.family)}</span>`,
   ].filter(Boolean).join('');
   const specs = compare && !c.googleOnly ? spec(c, role, 'library', 'Library') + spec(c, role, 'google', 'Google') : spec(c, role, from ?? 'library');
-  return `<button type="button" class="card${c.caps ? ' caps' : ''}" data-role="${role}" data-id="${c.id}" aria-pressed="${state[role] === c.id}">
+  return `<div class="card-wrap"><button type="button" class="card${c.caps ? ' caps' : ''}" data-role="${role}" data-id="${c.id}" aria-pressed="${state[role] === c.id}">
     ${specs}
     <span class="foot"><b>${pad(i + 1)} ${esc(c.name)}</b><i>${esc(c.kind)}</i>${chips}</span>
-  </button>`;
+  </button>${row(`${role}:${c.id}`)}</div>`;
 }
 
 function renderGalleries() {
@@ -203,6 +205,22 @@ function setup() {
 
 setup();
 render();
+// Feedback: every candidate and every pairing tried, gathered to copy (feedback.js).
+const ROLE_NAME = { heading: 'Headings', body: 'Body', detail: 'Detail' };
+mountFeedback({
+  groups: ['Pairings', 'Headings', 'Body', 'Detail'],
+  describe(key) {
+    const [kind, rest] = key.split(':');
+    if (kind === 'pair') {
+      const [h, b, d] = rest.split('+');
+      if (!byId.heading[h] || !byId.body[b] || !byId.detail[d]) return null;
+      const link = `${location.origin}${location.pathname}?${new URLSearchParams({ h, b, d })}`;
+      return { group: 'Pairings', name: `${byId.heading[h].name} + ${byId.body[b].name} + ${byId.detail[d].name}`, link };
+    }
+    const c = byId[kind]?.[rest];
+    return c ? { group: ROLE_NAME[kind], name: `${c.name} (Google: ${c.google.family})` } : null;
+  },
+});
 // Once the library's faces are known, draw again with the ones that are here.
 check().then(render);
 await document.fonts.ready;

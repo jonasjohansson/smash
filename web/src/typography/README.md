@@ -17,3 +17,7 @@ alternative.
   `python3 web/scripts/typography-fonts.py` (from the repo root; run it again after changing `candidates.json`).
   In git, so the live site shows them. A library font that is missing falls back to its Google alternative,
   marked "Not here".
+- `feedback.js`: a rating (1–5) and a comment under every card and under the pairing (each pairing tried is kept
+  on its own), free notes, and a Feedback button that gathers it all as text, best rated first, with a link to
+  each rated pairing, to copy and paste into a conversation. Kept in the browser (localStorage) as you go;
+  nothing is sent anywhere. Clear all takes a second click.

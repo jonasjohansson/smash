@@ -70,6 +70,10 @@ button, select { font: inherit; color: inherit; }
 .stage .caps h2, .stage .caps h3 { text-transform: uppercase; }
 .stage .note { font: 12px/1.4 "Neue Montreal", sans-serif; opacity: 0.55; }
 
+/* Feedback rows (feedback.js): under the pairing and every card */
+.pair-fb { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; }
+.card-wrap { display: grid; grid-template-rows: 1fr auto; }
+
 /* The galleries */
 .gallery { display: grid; gap: var(--gap); }
 .sec { display: grid; grid-template-columns: auto 1fr; column-gap: 24px; align-items: baseline; border-top: 1px solid var(--line); padding-top: 16px; margin-bottom: clamp(8px, 2vw, 24px); }
