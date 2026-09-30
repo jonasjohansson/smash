@@ -1,10 +1,8 @@
 /* SMASH — one grid, one type scale, nothing else.
    Press G for the 12 columns and the team's local three-column guides. */
 
-/* Two faces (Jonas, 2026-10-01): Neue Montreal throughout, the large texts
-   that tell a project too; Anton for the masks and titles. (Season Mix set the
-   large texts, as gentilhomme.com has it; its faces are kept below, unused and
-   so never fetched, and --serif can take it back.) */
+/* The pairing of gentilhomme.com: Neue Montreal throughout, Season Mix for
+   the large texts that tell a project; Anton for the masks. */
 @font-face { font-family: "Anton"; font-weight: 400; font-style: normal; font-display: block; src: url(/fonts/Anton-Regular.woff2) format("woff2"); }
 @font-face { font-family: "Neue Montreal"; font-weight: 400; font-style: normal; font-display: swap; src: url(/fonts/NeueMontreal-Regular.woff) format("woff"); }
 @font-face { font-family: "Season Mix"; font-weight: 400; font-style: normal; font-display: swap; src: url(/fonts/SeasonMix-Regular.woff) format("woff"); }
@@ -35,7 +33,7 @@
   --header: 72px;
 
   --font: "Neue Montreal", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --serif: var(--font); /* the large texts; was "Season Mix", Georgia, serif */
+  --serif: "Season Mix", Georgia, serif;
   --display: Anton, Impact, "Arial Narrow", sans-serif; /* the chunky face, until SMASH chooses its own */
   --t-small: 12px;
   --t-body: clamp(14px, 1vw, 16px);
