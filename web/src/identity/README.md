@@ -1,21 +1,16 @@
 # /identity/: the wordmark and the logo
 
 A page for the SMASH identity, in black and white: each section is its number, its name and
-its marks, with no copy. In the site's own pairing (Jonas kept it, 2026-09-30): Anton for the headings, in
-capitals, Neue Montreal for the rest.
+its marks, with no copy, in Neue Montreal (the site's own): a section's title the size of its number.
 
-The grid (`grid.js`, 2026-09-30, Jonas: every version of the mark on one grid, tightened). The mark's own measures
-are the units, on a grid of 4: a bar 32 and a slot 20 (8 : 5), a pitch 52, the block 552 × 472 (the trace measured
-550 × 471, a 51.78 pitch and stems of 31.78; `js/mark.js` and the site now draw it on the grid too), the crossbars a
-pitch apart round the middle (236), the closed ends' centres a pitch in; the S M 240 × 136, the modular mark
-552 × 136. Every still is set at one scale (so the symbol is exactly the S M of the wordmark, and a lockup's mark
-exactly the wordmark), a pitch in from its panel's left and bottom, its label a pitch in, in the band above; every
-row is one height (a pitch, the block, a pitch: 576); a stage of two rows (the original's motion, the modular mark)
-sets its mark at twice the scale on the same margins; seven across (the colour section) is half a row at a quarter
-of it. On a phone the scale is the one at which the widest still (the lockup) fits. Headings sit on the columns'
-edge, their number flush right. G shows the grid: the mark's rhythm (a slot after every bar) across every panel, the
-bands, the margins; on it the mark's edges, the S M's, and a lockup's type (a pitch after the mark) all land on an
-edge.
+The marks are drawn on a grid of 4 (2026-09-30, Jonas: every version of the mark on one grid, tightened): a bar 32
+and a slot 20 (8 : 5), a pitch 52, the block 552 × 472 (the trace measured 550 × 471, a 51.78 pitch and stems of
+31.78; `js/mark.js` and the site draw it on the grid too), the crossbars a pitch apart round the middle (236), the
+closed ends' centres a pitch in; the S M 240 × 136, the modular mark's bands 32. `grid.js` previews it on the marks
+themselves: the Grid button (bottom left) or G shows each still's grid in its own drawing (a slot after every bar on
+across the artboard, the bands, the mark's box, where a lockup's type starts, a pitch after the mark, and every circle
+its curves come from, with its centre), the motion's over the stage, and the modular mark's own grid and circles.
+The exports never carry it.
 
 - `index.html` and `identity.js`: the page. Chapters come from `directions/<slug>.js` (the
   slugs are listed in `directions.js`), and the tools come from the `EXTRAS` list in

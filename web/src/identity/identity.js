@@ -4,7 +4,7 @@
 import { IMAGES } from './lib.js';
 import { loadDirections, attempt, errorHTML, loadFonts, settle, pad } from './directions.js';
 import { SIZES_HINT } from './video.js';
-import { placed, layoutGrid, BANDS, BANDS5 } from './grid.js';
+import { withGrid } from './grid.js';
 
 const params = new URLSearchParams(location.search);
 const ONLY = params.get('d');
@@ -13,6 +13,13 @@ const FIXED_T = params.has('t') ? Number(params.get('t')) : null;
 const $ = (sel, root = document) => root.querySelector(sel);
 const h = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
 const esc = (s = '') => String(s).replace(/[<&"]/g, (c) => ({ '<': '&lt;', '&': '&amp;', '"': '&quot;' })[c]);
+
+/**
+ * A still's artboard widened to half its width either side: the room the 16 : 9
+ * panels need round the wordmark (a percentage height does not resolve inside
+ * them, so the artboard carries the width).
+ */
+const wide = (str) => str.replace(/viewBox="\s*([-\d.]+)[\s,]+([-\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)\s*"/, (m, x, y, w, h) => `viewBox="${+x - w / 2} ${y} ${2 * w} ${h}"`);
 
 /** An SVG string from a module function, or its error. */
 function still(d, fn, arg) {
@@ -30,15 +37,13 @@ function palette() {
 function favicons(d) {
   const at = (size) => `<span class="fav" style="width:${size}px;height:${size}px">${still(d, 'favicon', { size })}</span>`;
   const tab = (theme) => `<div class="tab ${theme}"><span class="fav" style="width:16px;height:16px">${still(d, 'favicon', { size: 16 })}</span><span>SMASH</span><i>×</i></div>`;
-  return `<div class="favicons"><div class="tabs">${tab('light')}${tab('dark')}</div><div class="sizes">${at(64)}${at(32)}${at(16)}</div></div>`;
+  return `<div class="favicons"><div class="sizes">${at(64)}${at(32)}${at(16)}</div><div class="tabs">${tab('light')}${tab('dark')}</div></div>`;
 }
+
 
 function chapter(d) {
   const { info } = d;
   const n = pad(info.n);
-  // Every still on the grid (grid.js): one scale, a pitch in from the left and the bottom; the bands its lines show.
-  const bandsOf = { wordmark: BANDS, lockup: BANDS, symbol: BANDS5, lockupSM: BANDS5 };
-  const panel = (ground, fn, label, arg = {}) => `<figure class="gpanel ground-${ground}">${placed(still(d, fn, { ground, ...arg }), bandsOf[fn])}<figcaption class="label">${label}</figcaption></figure>`;
   const el = h(`
     <section class="chapter" id="${d.slug}" style="${palette(info)}">
       <header class="ch-head">
@@ -54,11 +59,19 @@ function chapter(d) {
           ${typeof d.mod.frame === 'function' ? `<button type="button" class="download" title="${SIZES_HINT}">MP4</button>` : ''}
         </figcaption>
       </figure>
-      <div class="grow two">${panel('ink', 'wordmark', 'Wordmark')}${panel('paper', 'wordmark', 'Wordmark')}</div>
-      <div class="grow three">${panel('ink', 'symbol', 'Symbol')}<figure class="gpanel ground-mid">${favicons(d)}<figcaption class="label">Favicon 64 · 32 · 16</figcaption></figure>${panel('paper', 'symbol', 'Symbol')}</div>
-      <div class="grow one">${panel('ink', 'lockup', 'Lockup')}</div>
-      <div class="grow one">${panel('paper', 'lockup', 'Lockup')}</div>
-      ${typeof d.mod.lockupSM === 'function' ? `<div class="grow two">${panel('ink', 'lockupSM', 'Lockup, S M')}${panel('paper', 'lockupSM', 'Lockup, S M')}</div>` : ''}
+      <div class="row two">
+        <figure class="panel ground-ink"><div class="mark wm">${withGrid(wide(still(d, 'wordmark', { ground: 'ink' })), 'wordmark')}</div><figcaption class="label">Wordmark</figcaption></figure>
+        <figure class="panel ground-paper"><div class="mark wm">${withGrid(wide(still(d, 'wordmark', { ground: 'paper' })), 'wordmark')}</div><figcaption class="label">Wordmark</figcaption></figure>
+      </div>
+      <div class="row three">
+        <figure class="panel ground-ink square"><div class="mark sym">${withGrid(still(d, 'symbol', { ground: 'ink' }), 'symbol')}</div><figcaption class="label">Symbol</figcaption></figure>
+        <figure class="panel ground-mid square">${favicons(d)}<figcaption class="label">Favicon 64 · 32 · 16</figcaption></figure>
+        <figure class="panel ground-paper square"><div class="mark lock">${withGrid(still(d, 'lockup', { ground: 'paper' }), 'lockup')}</div><figcaption class="label">Lockup</figcaption></figure>
+      </div>
+      ${typeof d.mod.lockupSM === 'function' ? `<div class="row two">
+        <figure class="panel ground-ink"><div class="mark lock-sm">${withGrid(still(d, 'lockupSM', { ground: 'ink' }), 'lockupSM')}</div><figcaption class="label">Lockup, S M</figcaption></figure>
+        <figure class="panel ground-paper"><div class="mark lock-sm">${withGrid(still(d, 'lockupSM', { ground: 'paper' }), 'lockupSM')}</div><figcaption class="label">Lockup, S M</figcaption></figure>
+      </div>` : ''}
     </section>`);
   return el;
 }
@@ -203,14 +216,23 @@ async function main() {
   }
   if (!ONLY) for (const x of EXTRAS.filter((x) => x.last)) await addExtra(page, x);
   for (const x of EXTRAS.filter((x) => x.id === ONLY)) await addExtra(page, x);
-  // The grid: its scale from the page's width, again as it changes; G shows its lines.
-  layoutGrid();
-  new ResizeObserver(() => layoutGrid()).observe(page);
+  // The grid, previewed on the marks (grid.js): a button, and G; kept in this browser.
+  const GRID = 'smash-identity-grid';
+  const button = h('<button type="button" class="grid-toggle" aria-pressed="false" title="Show the grid (G)">Grid</button>');
+  document.body.appendChild(button);
+  const showGrid = (on) => {
+    document.body.classList.toggle('show-grid', on);
+    button.setAttribute('aria-pressed', String(on));
+    try { localStorage.setItem(GRID, on ? '1' : ''); } catch {}
+    lives.forEach((l) => l.motion?.redraw?.());
+    document.dispatchEvent(new Event('identity-grid'));
+  };
+  button.addEventListener('click', () => showGrid(!document.body.classList.contains('show-grid')));
   document.addEventListener('keydown', (e) => {
     if (e.key.toLowerCase() !== 'g' || e.metaKey || e.ctrlKey || e.altKey || e.target.closest?.('input, select, textarea, [contenteditable]')) return;
-    document.body.classList.toggle('show-grid');
-    lives.forEach((l) => l.motion?.redraw?.());
+    showGrid(!document.body.classList.contains('show-grid'));
   });
+  try { if (localStorage.getItem(GRID)) showGrid(true); } catch {}
   // For the screenshot tool (web/scripts/identity-shoot.py).
   window.__identity = {
     seek(slug, t) { const m = bySlug[slug]?.motion; m?.pause?.(); m?.seek?.(t); return !!m; },

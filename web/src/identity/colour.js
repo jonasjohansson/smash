@@ -11,7 +11,6 @@
 import { letters, REST, W, H } from './directions/original/geometry.js';
 import { markSVG, MODULAR_DEFAULTS } from './modular.js';
 import * as original from './directions/original.js';
-import { placed, BANDS, BANDS5 } from './grid.js';
 
 // Round the colour wheel. Yellow is the site's own (SMASH yellow); Orange sits
 // half way between it and Red (hue 45°), Pink half way between Red and Violet
@@ -56,9 +55,9 @@ const typeOn = (hex) => (contrast(hex, '#ffffff') >= contrast(hex, '#000000') ? 
 let masks = 0;
 const MARK = letters(REST);
 export const MARKS = [
-  { name: 'Original', bands: BANDS, svg: () => `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="${MARK}"/></svg>` },
-  { name: 'Modular', bands: BANDS5, svg: () => markSVG(MODULAR_DEFAULTS, 4, 'currentColor', `col-m${masks++}`) },
-  { name: 'S M', bands: BANDS5, svg: () => original.symbol() },
+  { name: 'Original', svg: () => `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="${MARK}"/></svg>` },
+  { name: 'Modular', svg: () => markSVG(MODULAR_DEFAULTS, 4, 'currentColor', `col-m${masks++}`) },
+  { name: 'S M', svg: () => original.symbol() },
 ];
 
 function swatch(name, hex) {
@@ -73,14 +72,9 @@ function swatch(name, hex) {
     </figure>`;
 }
 
-/**
- * A mark (from MARKS) in fill on ground, labelled with its contrast, on the
- * page's grid (grid.js): three across, a row high at the page's scale; seven
- * across (small), half a row at a quarter of it.
- */
-function panel(m, ground, fill, label, small = false) {
-  const sheet = placed(m.svg(), m.bands, small ? { k: 0.25, rows: 0.5 } : {}).replace('<svg class="placed"', `<svg class="placed" style="color:${fill}"`);
-  return `<figure class="gpanel col-panel${small ? ' half' : ''}" style="background:${ground};color:${typeOn(ground)}">${sheet}<figcaption class="label">${label} · ${fmt(contrast(fill, ground))}</figcaption></figure>`;
+/** A mark (from MARKS) in fill on ground, labelled with its contrast. */
+function panel(m, ground, fill, label) {
+  return `<figure class="panel col-panel" style="background:${ground};color:${typeOn(ground)}"><div class="col-mark" style="color:${fill}">${m.svg()}</div><figcaption class="label">${label} · ${fmt(contrast(fill, ground))}</figcaption></figure>`;
 }
 /** Ground or type, whichever the accent takes (the ground on the light ones). */
 const onAccent = (hex) => (typeOn(hex) === BLACK ? GROUND : TYPE);
@@ -100,8 +94,10 @@ const STYLE = `
 #colour .col-ratio { font: 11px/1.3 ui-monospace, Menlo, monospace; opacity: 0.7; }
 #colour .col-use { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--gap); margin-top: var(--gap); }
 #colour .col-use.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-#colour .gpanel.half { height: calc(var(--row, 360px) / 2); }
-#colour .col-panel .label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; right: var(--m, 12px); }
+#colour .col-panel { aspect-ratio: 4 / 3; }
+#colour .col-mark { position: absolute; inset: 16% 14% 24%; } /* a definite box, so a tall mark fits as well as a wide one */
+#colour .col-panel .label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; right: 12px; }
+#colour .col-mark svg { width: 100%; height: 100%; display: block; }
 @media (max-width: 1100px) { #colour .col-use { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (max-width: 900px) { #colour .col-ramp, #colour .col-use, #colour .col-use.three { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 `;
@@ -126,12 +122,12 @@ export const HTML = `
     ${row(MARKS.map((m) => panel(m, WHITE, BLACK, m.name)), 'three')}
     ${row(MARKS.map((m) => panel(m, GROUND, TYPE, m.name)), 'three')}
     ${group('The dark steps as grounds, white on top: Dark 1, Dark 2, Dark 3')}
-    ${[1, 2, 3].map((i) => row(ACCENTS.map((a) => panel(MARKS[0], a.steps[i], WHITE, `${a.name} · ${STEPS[i]}`, true)))).join('')}
+    ${[1, 2, 3].map((i) => row(ACCENTS.map((a) => panel(MARKS[0], a.steps[i], WHITE, `${a.name} · ${STEPS[i]}`)))).join('')}
     ${MARKS.map((m) => `
     ${group(`${m.name} in colour: on the ground${m.name === 'Original' ? ', on its Dark 3' : ''}, and ground or type on it`)}
-    ${row(ACCENTS.map((a) => panel(m, GROUND, a.steps[0], a.name, true)))}
-    ${m.name === 'Original' ? row(ACCENTS.map((a) => panel(m, a.steps[3], a.steps[0], a.name, true))) : ''}
-    ${row(ACCENTS.map((a) => panel(m, a.steps[0], onAccent(a.steps[0]), a.name, true)))}`).join('')}
+    ${row(ACCENTS.map((a) => panel(m, GROUND, a.steps[0], a.name)))}
+    ${m.name === 'Original' ? row(ACCENTS.map((a) => panel(m, a.steps[3], a.steps[0], a.name))) : ''}
+    ${row(ACCENTS.map((a) => panel(m, a.steps[0], onAccent(a.steps[0]), a.name)))}`).join('')}
   </section>`;
 
 /** Nothing moves here (the style comes with the section's HTML). */
