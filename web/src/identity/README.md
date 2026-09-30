@@ -44,10 +44,12 @@ also draws the favicons, on whole pixels). The stills, the motion and its MP4, a
   motion and the stereogram stay fine, as they need to. One WebGL context draws every tile in turn (`gl.js`); the mark
   comes in as its signed distance (`field.js`); the shaders are `techniques.js`. The bar swaps in the modular mark
   and inverts; a click shows a tile wide; each has its MP4.
-- `type.js` (after the sequence): the type, two faces (Jonas, 2026-09-30: "isnt it very ai-esque to have almost 3
-  fonts?"): Anton for titles, always in capitals, and Neue Montreal for everything else, the site's own pair. Type
+- `type.js` (after the sequence): the site's own type. Anton for titles, always in capitals; Neue Montreal for
+  labels, captions and small text; Season Mix for what tells a project, its lead and its story (Jonas, 2026-10-01,
+  after the site had tried Neue Montreal there: "i think we prefer the season mix"). Type
   specimens, then compositions with the marks, as Jonas asked: a sheet per face (a word with its measures drawn across
-  it, read from the font files; its characters; who made it and its licence) and the scale; five compositions, each
+  it, read from the font files; its characters; who made it and its licence) and the scale, as on the site; five
+  compositions, each
   with another version of the mark (400 for Sala with the S on its side, three words with the square S, Dome
   Conductor's lead with the modular mark, Jagad with the wordmark in pixels of 10, a spread for Vi kommer i fred with
   the S alone); and, folded, the type in use (a project's page, posters, business cards, a profile picture and a

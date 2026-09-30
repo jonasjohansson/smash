@@ -1,15 +1,15 @@
-// Typography: two faces in use (Jonas, 2026-09-30: "isnt it very ai-esque to
-// have almost 3 fonts?"): Anton for titles, always in capitals, and Neue
-// Montreal for everything else, the site's own pair ("i quite liked the
-// current pairing"). SMASH's own typeface, for very special occasions ("we
-// wont use it primiarly"), has a section of its own (typeface.js), which
-// borrows this one's pieces and styles. Then, as Jonas asked ("more like type
-// specimens and then some typography compositions ... with various versions
-// of the logo and wordmark"): specimens (each face, the scale), compositions,
-// each with another version of
-// the mark (the S on its side, the square S, the modular mark, the wordmark in
-// pixels, the S alone), and, folded, the type in use. Only SMASH's own work
-// (the projects the site lists), in its own words.
+// Typography: the site's own type. Anton for titles, always in capitals; Neue
+// Montreal for labels, captions and small text; Season Mix for what tells a
+// project at length, its lead and its story (Jonas, 2026-10-01, after trying
+// the site without it: "i think we prefer the season mix"). SMASH's own
+// typeface, for very special occasions ("we wont use it primiarly"), has a
+// section of its own (typeface.js), which borrows this one's pieces and
+// styles. Then, as Jonas asked ("more like type specimens and then some
+// typography compositions ... with various versions of the logo and
+// wordmark"): specimens (each face, the scale), compositions, each with
+// another version of the mark (the S on its side, the square S, the modular
+// mark, the wordmark in pixels, the S alone), and, folded, the type in use.
+// Only SMASH's own work (the projects the site lists), in its own words.
 //
 // The colour switch: black and white, or an accent on the earth ground, as
 // the Colour section has it. The marks follow the page's Pixel switch
@@ -72,11 +72,12 @@ const HOW = 'Four weatherproofed touch pads with embedded lighting were placed i
 export const METRICS = {
   anton: { cap: 1760 / 2048, x: 1500 / 2048, desc: 674 / 2048 },
   nm: { cap: 0.715, x: 0.51, desc: 0.225 },
+  sm: { cap: 0.721, x: 0.519, desc: 0.254 },
   smash: { cap: 0.7, x: 0.7, desc: 0.2 }, // at its defaults: its height 471 (the mark's) draws the letters 700 high
 };
 // The advance widths, per em, of the words set to a measure (read from the fonts with fontTools).
-export const EM = { 400: 1.4824, JAGAD: 2.415, Uppsala: 3.465, Resonance: 1.386 };
-const FAMILY = { anton: 'Anton', nm: 'Neue Montreal', smash: 'SMASH' };
+export const EM = { 400: 1.4824, JAGAD: 2.415, Uppsala: 3.465, Hjärtslag: 3.783, Resonance: 1.386 };
+const FAMILY = { anton: 'Anton', nm: 'Neue Montreal', sm: 'Season Mix', smash: 'SMASH' };
 const per1000 = (v) => Math.round(v * 1000);
 
 /**
@@ -138,9 +139,18 @@ const SPECIMENS = `
       ${fig(sheet({
         name: 'Neue Montreal', face: 'nm', word: 'Uppsala', cols: 10,
         by: 'Mathieu Desjardins, Sebastien Tremblay · Pangram Pangram · licensed',
-        role: 'Everything but the titles: text, leads, captions, labels · labels in capitals, tracked 6 %',
+        role: 'Labels, captions, small text · labels in capitals, tracked 6 %',
         set: CAPS + LOWER + FIGURES + MARKS_ + MORE,
       }), 'Specimen · Neue Montreal')}
+    </div>
+    <div class="ty-row">
+      ${fig(sheet({
+        name: 'Season Mix', face: 'sm', word: 'Hjärtslag', cols: 10,
+        by: 'Martin Vácha · Displaay · licensed',
+        role: 'A project told at length: its lead, its story · roman and italic',
+        set: CAPS + LOWER + FIGURES + MARKS_ + MORE,
+        extra: '<p class="ty-sheet-italic ty-sm"><em>Projection mapping 400 years of Sala\'s history onto a curved facade.</em></p>',
+      }), 'Specimen · Season Mix')}
     </div>
     <div class="ty-row">
       ${fig(`<div class="ty-art ty-scale">
@@ -148,11 +158,11 @@ const SPECIMENS = `
         <p class="ty-meta ty-scale-label">Uppsala Town Hall · 2024</p>
         <p class="ty-meta ty-scale-spec">Title<br><span>Anton 104 · line height 0.97 · capitals</span></p>
         <h3 class="ty-title ty-scale-title">Resonance</h3>
-        <p class="ty-meta ty-scale-spec">Lead<br><span>Neue Montreal 36 · line height 1.2</span></p>
+        <p class="ty-meta ty-scale-spec">Lead and story<br><span>Season Mix 46 · line height 1.15</span></p>
         <p class="ty-text ty-scale-lead">${RESONANCE}</p>
-        <p class="ty-meta ty-scale-spec">Text<br><span>Neue Montreal 16 · line height 1.5</span></p>
-        <p class="ty-text ty-scale-text">${HOW}</p>
-      </div>`, 'Specimen · the scale, at 1440 px')}
+        <p class="ty-meta ty-scale-spec">Small text<br><span>Neue Montreal 16 · line height 1.5</span></p>
+        <p class="ty-text ty-scale-text">Made with Rose Hallgren, for Allt Ljus på Uppsala. The facade was drone-scanned to build a digital replica, and a laser-cut scale model of the building served for testing the projection.</p>
+      </div>`, 'Specimen · the scale, as on the site at 1440 px')}
     </div>
 `;
 
@@ -289,7 +299,7 @@ const button = (attr, value, label, on, swatch = '') => `<button type="button" d
 /** Both sections' styles (this one's, and typeface.js's, which borrows its pieces). */
 export const STYLE = `
 :is(#type, #typeface) {
-  --anton: Anton, Impact, "Arial Narrow", sans-serif; --nm: "Neue Montreal", "Helvetica Neue", Arial, sans-serif; 
+  --anton: Anton, Impact, "Arial Narrow", sans-serif; --nm: "Neue Montreal", "Helvetica Neue", Arial, sans-serif; --sm: "Season Mix", Georgia, serif;
   --ty-ground: #000; --ty-type: #fff; --ty-accent: #fff; --ty-field: #000; --ty-on-field: #fff; --ty-paper: #fff; --ty-on-paper: #000; --ty-light: #fff; --ty-on-light: #000; --ty-construct: ${PINK};
 }
 :is(#type, #typeface) .ty-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 28px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
@@ -321,10 +331,12 @@ export const STYLE = `
 :is(#type, #typeface) .ty-mk { display: block; }
 :is(#type, #typeface) .ty-mk svg { display: block; width: 100%; height: auto; }
 :is(#type, #typeface) .ty-title { margin: 0; font: 400 var(--s, 10cqw)/0.92 var(--anton); text-transform: uppercase; }
-:is(#type, #typeface) .ty-text { margin: 0; font: 400 1.6cqw/1.4 var(--nm); max-width: 44ch; }
+:is(#type, #typeface) .ty-text { margin: 0; font: 400 1.6cqw/1.4 var(--sm); max-width: 44ch; } /* what tells a project: its lead, its story */
 :is(#type, #typeface) .ty-meta { margin: 0; font: 400 1.05cqw/1.2 var(--nm); letter-spacing: 0.06em; text-transform: uppercase; }
 :is(#type, #typeface) .ty-anton { font-family: var(--anton); }
 :is(#type, #typeface) .ty-nm { font-family: var(--nm); }
+:is(#type, #typeface) .ty-sm { font-family: var(--sm); }
+:is(#type, #typeface) .ty-sheet-italic { margin: 3cqw 0 0; font-size: 2.2cqw; line-height: 1.2; color: var(--ty-type); }
 :is(#type, #typeface) .ty-smash { font-family: "SMASH", var(--anton); font-variation-settings: "wght" 500; }
 
 /* Specimens: a face's sheet (its word with its measures, its characters) and the scale */
@@ -351,8 +363,8 @@ export const STYLE = `
 :is(#type, #typeface) .ty-scale-spec span { opacity: 0.8; }
 :is(#type, #typeface) .ty-scale-label { font-size: 0.83cqw; }
 :is(#type, #typeface) .ty-scale-title { --s: 7.2cqw; line-height: 0.97; }
-:is(#type, #typeface) .ty-scale-lead { font-size: 2.5cqw; line-height: 1.2; max-width: 32ch; }
-:is(#type, #typeface) .ty-scale-text { font-size: 1.11cqw; line-height: 1.5; max-width: 60ch; }
+:is(#type, #typeface) .ty-scale-lead { font-size: 3.2cqw; line-height: 1.15; max-width: 28ch; }
+:is(#type, #typeface) .ty-scale-text { font-family: var(--nm); font-size: 1.11cqw; line-height: 1.5; max-width: 60ch; }
 
 /* Compositions */
 :is(#type, #typeface) .ty-count { justify-content: space-between; }
