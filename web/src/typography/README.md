@@ -14,6 +14,14 @@ third face: the meta and credit lines are the body face, small and spaced (Jonas
 - Round 2: the geometric direction Stolzl opened (Futura, ITC Avant Garde, FF Mark, Neuzeit Grotesk, Campton,
   Geomanist, Sharp Sans No. 1, Gerstner Programm, Styrene A) and Sharp Grotesk's other widths, marked New.
 
+- Round 3: an Experimental display gallery (Jonas: "more experimental display fonts like Stolzl"): Dinamo's
+  Galapagos, Maxi Round, Synt, Whyte Inktrap, Gravity Extended and Repro; Avantt, Bagoss Extended, Dazzed, Fellix,
+  Labil Grotesk, Attila Sans Sharp, Kicker, OPS Cubic (trials: to sketch with, not to ship); and from the library
+  proper Agrandir (wide, oversized), Adieu, Funkis A Sharp, Solomon Deco, FK Display and Mondwest. They are heading
+  candidates (`experimental: true`), so a click puts one in the pairing.
+- The pairing's text can be edited in place: click and type. Edits are kept in the browser and feed the cards'
+  samples; Reset text puts SMASH's own copy back.
+
 ## Files
 
 

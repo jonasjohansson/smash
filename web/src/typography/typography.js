@@ -8,7 +8,8 @@
 // The library fonts are made into fonts/ by web/scripts/typography-fonts.py (in
 // git, so the live site has them). Where one is missing, its Google
 // alternative stands in, and says so.
-// The state is in the address (?h=…&b=…&src=…&g=…&a=…), so a pairing can be sent.
+// The state is in the address (?h=…&b=…&src=…&g=…&a=…), so a pairing can be sent; the
+// pairing's text can be edited in place (kept in this browser).
 // The galleries run in Jonas's round 1 order (his stars), the round 2 additions after his top pick.
 
 import { ACCENTS } from '/identity/colour.js';
@@ -86,6 +87,30 @@ const faces = (from) => Object.fromEntries(ROLES.map((role) => [role, face(byId[
 
 // The pairing ----------------------------------------------------------------
 
+// The pairing's text: SMASH's own copy by default, editable in place (any
+// element with data-t); an edit is kept in this browser and feeds the cards.
+const TEXT_STORE = 'smash-typography-text';
+const TEXT = {
+  meta: 'SMASH · Immersive experience studio · Stockholm',
+  nav: '<span>Work</span><span>Studio</span><span>Contact</span>',
+  display: 'Heroes',
+  h2a: "Real-life statues, drone-scanned architecture, projected onto Stockholm's Great Synagogue.",
+  p1: 'Heroes was a projection mapped piece on the facade of Stockholms Stora Synagoga in 2022. It honoured <em>Raoul Wallenberg</em>, who saved thousands of Jews in Budapest during the Holocaust, and <em>Dag Hammarskjöld</em>, 1961 Nobel Peace Prize laureate and UN Secretary-General.',
+  p2: 'Real-life statues of both men were 3D scanned and the synagogue was captured by drone, <strong>giving precise geometry to work with</strong>. <a href="#">See the project</a>.',
+  h3: 'Resonance',
+  p3: 'Interactive projection mapping on Uppsala Town Hall, where the public could paint the facade in colour.',
+  credits: 'Heroes — Stockholm, 2022<br>Music — Joseph Wilkinson<br>Nobel Week Lights',
+  h2b: 'Smash ultimately wants to make people feel.',
+  lede: 'We turn spaces into living experiences: interactive installations, projection mapping and immersive environments that invite people in.',
+};
+let edits = {};
+try { edits = JSON.parse(localStorage.getItem(TEXT_STORE) || '{}'); } catch {}
+/** A text's HTML: an edit (kept as plain text, line breaks kept) or the default. */
+const text = (k) => (k in edits ? esc(edits[k]).replace(/\n/g, '<br>') : TEXT[k]);
+/** Plain text for a card sample. */
+const plain = (k) => (k in edits ? edits[k] : TEXT[k].replace(/<br>/g, ' ').replace(/<[^>]+>/g, ''));
+const ed = (k) => `data-t="${k}" contenteditable="plaintext-only" spellcheck="false"`;
+
 function stage(from, tag) {
   const f = faces(from);
   const h = byId.heading[state.heading];
@@ -93,24 +118,24 @@ function stage(from, tag) {
   return `
     <article class="stage${h.caps ? ' caps' : ''}">
       ${tag ? `<p class="tag">${tag}</p>` : ''}
-      <p class="meta" style="${f.body.css}">SMASH · Immersive experience studio · Stockholm</p>
-      <nav class="nav" style="${f.heading.css}"><span>Work</span><span>Studio</span><span>Contact</span></nav>
-      <h1 class="display">Heroes</h1>
-      <h2 style="${f.heading.css}">Real-life statues, drone-scanned architecture, projected onto Stockholm's Great Synagogue.</h2>
+      <p class="meta" style="${f.body.css}" ${ed('meta')}>${text('meta')}</p>
+      <nav class="nav" style="${f.heading.css}">${TEXT.nav}</nav>
+      <h1 class="display" ${ed('display')}>${text('display')}</h1>
+      <h2 style="${f.heading.css}" ${ed('h2a')}>${text('h2a')}</h2>
       <div class="cols">
         <div class="body" style="${f.body.css}">
-          <p>Heroes was a projection mapped piece on the facade of Stockholms Stora Synagoga in 2022. It honoured <em>Raoul Wallenberg</em>, who saved thousands of Jews in Budapest during the Holocaust, and <em>Dag Hammarskjöld</em>, 1961 Nobel Peace Prize laureate and UN Secretary-General.</p>
-          <p>Real-life statues of both men were 3D scanned and the synagogue was captured by drone, <strong>giving precise geometry to work with</strong>. <a href="#">See the project</a>.</p>
+          <p ${ed('p1')}>${text('p1')}</p>
+          <p ${ed('p2')}>${text('p2')}</p>
         </div>
         <div class="body" style="${f.body.css}">
-          <h3 style="${f.heading.css}">Resonance</h3>
-          <p>Interactive projection mapping on Uppsala Town Hall, where the public could paint the facade in colour.</p>
-          <p class="credits" style="${f.body.css}">Heroes — Stockholm, 2022<br>Music — Joseph Wilkinson<br>Nobel Week Lights</p>
+          <h3 style="${f.heading.css}" ${ed('h3')}>${text('h3')}</h3>
+          <p ${ed('p3')}>${text('p3')}</p>
+          <p class="credits" style="${f.body.css}" ${ed('credits')}>${text('credits')}</p>
         </div>
       </div>
       <hr>
-      <h2 style="${f.heading.css}">Smash ultimately wants to make people feel.</h2>
-      <p class="lede" style="${f.body.css}">We turn spaces into living experiences: interactive installations, projection mapping and immersive environments that invite people in.</p>
+      <h2 style="${f.heading.css}" ${ed('h2b')}>${text('h2b')}</h2>
+      <p class="lede" style="${f.body.css}" ${ed('lede')}>${text('lede')}</p>
       <p class="note">${esc(names)}</p>
     </article>`;
 }
@@ -126,8 +151,8 @@ function renderStage() {
 // The galleries --------------------------------------------------------------
 
 const SAMPLE = {
-  heading: () => `<p class="h-big">Turning spaces into living experiences</p><p class="h-small">Heroes · Jagad · Sala Hjärtslag</p>`,
-  body: () => `<p class="b-text">Smash is an immersive experience studio creating physical and digital experiences that make people feel, combining <em>art, technology and storytelling</em> with <strong>space</strong>: ljus, rum och rörelse.</p>`,
+  heading: () => `<p class="h-big">${esc(plain('h2b'))}</p><p class="h-small">Heroes · Jagad · Sala Hjärtslag</p>`,
+  body: () => `<p class="b-text">${esc(plain('p1'))}</p>`,
 };
 
 function spec(c, role, from, label) {
@@ -155,8 +180,14 @@ function card(c, role, i) {
   </button>${row(`${role}:${c.id}`)}</div>`;
 }
 
+// Three galleries: the headings, the experimental display faces (headings too), the body faces.
+const GALLERIES = [
+  { sel: '.gallery[data-role="heading"]:not(.experimental)', role: 'heading', keep: (c) => !c.experimental },
+  { sel: '.gallery.experimental', role: 'heading', keep: (c) => c.experimental },
+  { sel: '.gallery[data-role="body"]', role: 'body', keep: () => true },
+];
 function renderGalleries() {
-  for (const role of ROLES) $(`.gallery[data-role="${role}"] .cards`).innerHTML = data[role].map((c, i) => card(c, role, i)).join('');
+  for (const g of GALLERIES) $(`${g.sel} .cards`).innerHTML = data[g.role].filter(g.keep).map((c, i) => card(c, g.role, i)).join('');
 }
 
 // The bar and the pickers ------------------------------------------------------
@@ -212,6 +243,23 @@ function setup() {
     keep();
   });
   $('.reset-sizes').addEventListener('click', () => { Object.assign(state, SIZES); paint(); keep(); });
+  // Editing the text in place: kept as you type; the other stage (side by side) follows at once, the cards a moment later.
+  let cardsLater = 0;
+  document.querySelector('.stages').addEventListener('input', (e) => {
+    const el = e.target.closest('[data-t]');
+    if (!el) return;
+    const k = el.dataset.t;
+    edits[k] = el.innerText;
+    try { localStorage.setItem(TEXT_STORE, JSON.stringify(edits)); } catch {}
+    document.querySelectorAll(`.stages [data-t="${k}"]`).forEach((other) => { if (other !== el) other.innerText = edits[k]; });
+    clearTimeout(cardsLater);
+    cardsLater = setTimeout(renderGalleries, 400);
+  });
+  $('.reset-text').addEventListener('click', () => {
+    edits = {};
+    try { localStorage.removeItem(TEXT_STORE); } catch {}
+    render();
+  });
   $('.shuffle').addEventListener('click', () => {
     for (const role of ROLES) state[role] = data[role][Math.floor(Math.random() * data[role].length)].id;
     render();

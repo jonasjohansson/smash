@@ -1,5 +1,5 @@
 {
- "_": "The typography round: heading and body candidates to go with the SMASH typeface (no third face: meta and credits are set in the body face), from Jonas's library (fonts skill, _PUBLIC/FONTS), each with a Google Fonts alternative. library.dir is Category/Family in the library; library.files maps a style (400, 700, 400i …) to a file in it. google.css2 is the css2 family spec; google.css is extra CSS for the alternative (an axis setting). r1 and note are Jonas's round 1 rating and comment; round 2 marks the ones added after it (the geometric direction his top pick, Stolzl Display, opened). Round 1 set aside Druk, Canela, Saol Display, Monument Grotesk and GT America Expanded (1 star) and the detail (mono) role. scripts/typography-fonts.py turns library.files into WOFF2 in fonts/.",
+ "_": "The typography round: heading and body candidates to go with the SMASH typeface (no third face: meta and credits are set in the body face), from Jonas's library (fonts skill, _PUBLIC/FONTS), each with a Google Fonts alternative. library.dir is Category/Family in the library; library.files maps a style (400, 700, 400i …) to a file in it. google.css2 is the css2 family spec; google.css is extra CSS for the alternative (an axis setting). r1 and note are Jonas's round 1 rating and comment; round 2 marks the ones added after it (the geometric direction his top pick, Stolzl Display, opened). Round 1 set aside Druk, Canela, Saol Display, Monument Grotesk and GT America Expanded (1 star) and the detail (mono) role. round 3 (experimental: true) is the experimental display set Jonas asked for after Stolzl, shown in a gallery of its own. scripts/typography-fonts.py turns library.files into WOFF2 in fonts/.",
  "heading": [
   {
    "id": "neue-haas-display",
@@ -501,6 +501,413 @@
    "google": {
     "family": "Bricolage Grotesque",
     "css2": "Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800"
+   }
+  },
+  {
+   "id": "galapagos",
+   "name": "ABC Galapagos",
+   "kind": "Monoline, joined on a grid",
+   "weight": 400,
+   "round": 3,
+   "experimental": true,
+   "library": {
+    "dir": "Trials/DINAMO Trial Fonts",
+    "files": {
+     "400": "ABCGalapagosA-Regular-Trial.otf",
+     "600": "ABCGalapagosA-Semibold-Trial.otf"
+    }
+   },
+   "google": {
+    "family": "Tektur",
+    "css2": "Tektur:wght@400..900"
+   },
+   "trial": true
+  },
+  {
+   "id": "maxi-round",
+   "name": "ABC Maxi Round",
+   "kind": "Round geometric",
+   "weight": 400,
+   "round": 3,
+   "experimental": true,
+   "library": {
+    "dir": "Trials/DINAMO Trial Fonts",
+    "files": {
+     "400": "ABCMaxiRound-Regular-Trial.otf"
+    }
+   },
+   "google": {
+    "family": "Righteous",
+    "css2": "Righteous"
+   },
+   "trial": true
+  },
+  {
+   "id": "synt",
+   "name": "ABC Synt",
+   "kind": "Constructed",
+   "weight": 400,
+   "round": 3,
+   "experimental": true,
+   "library": {
+    "dir": "Trials/DINAMO Trial Fonts",
+    "files": {
+     "400": "ABCSynt-Regular-Trial.otf"
+    }
+   },
+   "google": {
+    "family": "Michroma",
+    "css2": "Michroma"
+   },
+   "trial": true
+  },
+  {
+   "id": "whyte-inktrap",
+   "name": "ABC Whyte Inktrap",
+   "kind": "Grotesk with ink traps",
+   "weight": 400,
+   "round": 3,
+   "experimental": true,
+   "library": {
+    "dir": "Trials/DINAMO Trial Fonts",
+    "files": {
+     "400": "ABCWhyteInktrap-Regular-Trial.otf",
+     "500": "ABCWhyteInktrap-Medium-Trial.otf"
+    }
+   },
+   "google": {
+    "family": "Familjen Grotesk",
+    "css2": "Familjen+Grotesk:ital,wght@0,400..700;1,400..700"
+   },
+   "trial": true
+  },
+  {
+   "id": "gravity-extended",
+   "name": "ABC Gravity Extended",
+   "kind": "Extended display",
+   "weight": 400,
+   "round": 3,
+   "experimental": true,
+   "library": {
+    "dir": "Trials/DINAMO Trial Fonts",
+    "files": {
+     "400": "ABCGravity-Extended-Trial.otf"
+    }
+   },
+   "google": {
+    "family": "Unbounded",
+    "css2": "Unbounded:wght@200..900"
+   },
+   "trial": true
+  },
+  {
+   "id": "repro",
+   "name": "ABC Repro",
+   "kind": "Grotesk, reproduced",
+   "weight": 400,
+   "round": 3,
+   "experimental": true,
+   "library": {
+    "dir": "Trials/DINAMO Trial Fonts",
+    "files": {
+     "400": "ABCRepro-Regular-Trial.otf",
+     "500": "ABCRepro-Medium-Trial.otf"
+    }
+   },
+   "google": {
+    "family": "Schibsted Grotesk",
+    "css2": "Schibsted+Grotesk:ital,wght@0,400..900;1,400..900"
+   },
+   "trial": true
+  },
+  {
+   "id": "avantt",
+   "name": "Avantt",
+   "kind": "Geometric, Avant Garde-like",
+   "weight": 500,
+   "round": 3,
+   "experimental": true,
+   "library": {
+    "dir": "Trials/DISPLAY Trial Fonts",
+    "files": {
+     "400": "Avantt-Regular-Trial.otf",
+     "500": "Avantt-Medium-Trial.otf"
+    }
+   },
+   "google": {
+    "family": "Urbanist",
+    "css2": "Urbanist:ital,wght@0,100..900;1,100..900"
+   },
+   "trial": true
+  },
+  {
+   "id": "bagoss-extended",
+   "name": "Bagoss Extended",
+   "kind": "Extended grotesk",
+   "weight": 400,
+   "round": 3,
+   "experimental": true,
+   "library": {
+    "dir": "Trials/DISPLAY Trial Fonts",
+    "files": {
+     "400": "BagossTRIALExtended-Regular.otf",
+     "500": "BagossTRIALExtended-Medium.otf"
+    }
+   },
+   "google": {
+    "family": "Syne",
+    "css2": "Syne:wght@400..800"
+   },
+   "trial": true
+  },
+  {
+   "id": "dazzed",
+   "name": "Dazzed",
+   "kind": "Grotesk with quirks",
+   "weight": 500,
+   "round": 3,
+   "experimental": true,
+   "library": {
+    "dir": "Trials/DISPLAY Trial Fonts",
+    "files": {
+     "400": "Dazzed-Regular-Trial.otf",
+     "500": "Dazzed-Medium-Trial.otf"
+    }
+   },
+   "google": {
+    "family": "Space Grotesk",
+    "css2": "Space+Grotesk:wght@300..700"
+   },
+   "trial": true
+  },
+  {
+   "id": "fellix",
+   "name": "Fellix",
+   "kind": "Geometric",
+   "weight": 500,
+   "round": 3,
+   "experimental": true,
+   "library": {
+    "dir": "Trials/DISPLAY Trial Fonts",
+    "files": {
+     "400": "Fellix-Regular-Trial.otf",
+     "500": "Fellix-Medium-Trial.otf"
+    }
+   },
+   "google": {
+    "family": "Outfit",
+    "css2": "Outfit:wght@100..900"
+   },
+   "trial": true
+  },
+  {
+   "id": "labil",
+   "name": "Labil Grotesk",
+   "kind": "Grotesk, unsteady",
+   "weight": 400,
+   "round": 3,
+   "experimental": true,
+   "library": {
+    "dir": "Trials/KOMETA-Trials-2021-C",
+    "files": {
+     "400": "LabilGrotesk-Regular-Trial.otf",
+     "500": "LabilGrotesk-Medium-Trial.otf"
+    }
+   },
+   "google": {
+    "family": "Space Grotesk",
+    "css2": "Space+Grotesk:wght@300..700"
+   },
+   "trial": true
+  },
+  {
+   "id": "attila-sharp",
+   "name": "Attila Sans Sharp",
+   "kind": "Sharp-cut sans",
+   "weight": 400,
+   "round": 3,
+   "experimental": true,
+   "library": {
+    "dir": "Trials/KOMETA-Trials-2021-C",
+    "files": {
+     "400": "AttilaSansSharp-Regular-Trial.otf",
+     "500": "AttilaSansSharp-Medium-Trial.otf"
+    }
+   },
+   "google": {
+    "family": "Chakra Petch",
+    "css2": "Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400"
+   },
+   "trial": true
+  },
+  {
+   "id": "kicker",
+   "name": "Kicker",
+   "kind": "Retro display",
+   "weight": 400,
+   "round": 3,
+   "experimental": true,
+   "library": {
+    "dir": "Trials/Vectro-Trial-Fonts-2022-05-17",
+    "files": {
+     "400": "Kicker-Regular-Trial.otf",
+     "700": "Kicker-Bold-Trial.otf"
+    }
+   },
+   "google": {
+    "family": "Big Shoulders Display",
+    "css2": "Big+Shoulders+Display:wght@100..900"
+   },
+   "trial": true
+  },
+  {
+   "id": "ops-cubic",
+   "name": "OPS Cubic",
+   "kind": "Cubic, blocky",
+   "weight": 400,
+   "round": 3,
+   "experimental": true,
+   "library": {
+    "dir": "Trials/OPS Type Trial Fonts",
+    "files": {
+     "400": "OPSCubicTrial-Regular.otf",
+     "700": "OPSCubicTrial-Bold.otf"
+    }
+   },
+   "google": {
+    "family": "Bungee",
+    "css2": "Bungee"
+   },
+   "trial": true
+  },
+  {
+   "id": "agrandir-wide",
+   "name": "Agrandir Wide",
+   "kind": "Wide geometric",
+   "weight": 400,
+   "round": 3,
+   "experimental": true,
+   "library": {
+    "dir": "Sans/Agrandir",
+    "files": {
+     "400": "Agrandir-D3-WideRegular.otf",
+     "500": "Agrandir-D4-WideMedium.otf"
+    }
+   },
+   "google": {
+    "family": "Syne",
+    "css2": "Syne:wght@400..800"
+   }
+  },
+  {
+   "id": "agrandir-oversized",
+   "name": "Agrandir Oversized",
+   "kind": "Oversized geometric",
+   "weight": 400,
+   "round": 3,
+   "experimental": true,
+   "library": {
+    "dir": "Sans/Agrandir",
+    "files": {
+     "400": "Agrandir-F3-OversizedRegular.otf",
+     "500": "Agrandir-F4-OversizedMedium.otf"
+    }
+   },
+   "google": {
+    "family": "Unbounded",
+    "css2": "Unbounded:wght@200..900"
+   }
+  },
+  {
+   "id": "adieu",
+   "name": "Adieu",
+   "kind": "Wide geometric",
+   "weight": 400,
+   "round": 3,
+   "experimental": true,
+   "library": {
+    "dir": "Sans/Adieu",
+    "files": {
+     "400": "Adieu-Regular.otf"
+    }
+   },
+   "google": {
+    "family": "Unbounded",
+    "css2": "Unbounded:wght@200..900"
+   }
+  },
+  {
+   "id": "funkis-sharp",
+   "name": "Funkis A Sharp",
+   "kind": "Swedish functionalist",
+   "weight": 400,
+   "round": 3,
+   "experimental": true,
+   "library": {
+    "dir": "Sans/Funkis ABC",
+    "files": {
+     "400": "FunkisASharp-Regular.otf"
+    }
+   },
+   "google": {
+    "family": "Jost",
+    "css2": "Jost:ital,wght@0,100..900;1,100..900"
+   }
+  },
+  {
+   "id": "solomon-deco",
+   "name": "Solomon Deco",
+   "kind": "Bauhaus deco",
+   "weight": 400,
+   "round": 3,
+   "experimental": true,
+   "library": {
+    "dir": "Sans/Solomon",
+    "files": {
+     "400": "Solomon-NormalDeco.otf",
+     "700": "Solomon-BoldDeco.otf"
+    }
+   },
+   "google": {
+    "family": "Josefin Sans",
+    "css2": "Josefin+Sans:ital,wght@0,100..700;1,100..700"
+   }
+  },
+  {
+   "id": "fk-display",
+   "name": "FK Display",
+   "kind": "Display with alternates",
+   "weight": 400,
+   "round": 3,
+   "experimental": true,
+   "library": {
+    "dir": "Display/FK Display",
+    "files": {
+     "400": "FKDisplay-Regular.ttf"
+    }
+   },
+   "google": {
+    "family": "Syne",
+    "css2": "Syne:wght@400..800"
+   }
+  },
+  {
+   "id": "mondwest",
+   "name": "Mondwest",
+   "kind": "Pixel serif",
+   "weight": 400,
+   "round": 3,
+   "experimental": true,
+   "library": {
+    "dir": "Sans/Mondwest Neuebit",
+    "files": {
+     "400": "Mondwest-Regular.otf",
+     "700": "Mondwest-Bold.otf"
+    }
+   },
+   "google": {
+    "family": "Pixelify Sans",
+    "css2": "Pixelify+Sans:wght@400..700"
    }
   }
  ],
