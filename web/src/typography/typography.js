@@ -277,7 +277,7 @@ mountFeedback({
       // Rated on the site itself, with the type tester (tester.js).
       const [h, b] = rest.split('+');
       const hn = h === 'own' ? "the site's own (Anton)" : h === 'smash' ? 'SMASH typeface' : byId.heading[h]?.name;
-      const bn = b === 'own' ? "the site's own (Season Mix, Neue Montreal)" : byId.body[b]?.name;
+      const bn = b === 'own' ? "the site's own (Neue Montreal)" : byId.body[b]?.name;
       if (!hn || !bn) return null;
       return { group: 'On the site', name: `${hn} + ${bn}`, link: `${location.origin}/?${new URLSearchParams({ h, b })}` };
     }

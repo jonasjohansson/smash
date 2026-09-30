@@ -9,8 +9,9 @@
 // (Anton) has now, the big titles (the studio's statement, the pillars, an
 // offering's title, "Let's work together" and the address under it) and the
 // titles cut out of the heroes; the SMASH typeface can take them too. The body
-// face takes everything else, the site's serif (Season Mix: the introductions,
-// the texts, the offering's links) and its sans (Neue Montreal: labels, credits,
+// face takes everything else, the site's large texts (--serif: the
+// introductions, the texts, the offering's links; Neue Montreal since
+// 2026-10-01, Season Mix before) and its sans (Neue Montreal: labels, credits,
 // the rest). Sizes and line heights are the site's own, scaled (100 %): the
 // rules are read from the site's stylesheet, so a new one is taken as it comes.
 //
@@ -248,7 +249,7 @@ export function start({ refit = () => {} } = {}) {
     const opts = (role, own) => [`<option value="own">${own}</option>`, ...(role === 'heading' ? ['<option value="smash">SMASH typeface</option>'] : []),
       ...data[role].map((c, i) => `<option value="${c.id}">${pad(i + 1)} ${c.name}${c.trial ? ' (trial)' : ''}${c.r1 ? ` ${'★'.repeat(c.r1)}` : ''}</option>`)].join('');
     $('select[data-k="heading"]').innerHTML = opts('heading', "The site's own (Anton)");
-    $('select[data-k="body"]').innerHTML = opts('body', "The site's own (Season Mix, Neue Montreal)");
+    $('select[data-k="body"]').innerHTML = opts('body', "The site's own (Neue Montreal)");
     paint();
   }
   const setOpen = (open) => {
