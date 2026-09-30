@@ -22,20 +22,26 @@ third face: the meta and credit lines are the body face, small and spaced (Jonas
 - The pairing's text can be edited in place: click and type. Edits are kept in the browser and feed the cards'
   samples; Reset text puts SMASH's own copy back.
 
-## On the project pages: the type tester
+## On the site: the type tester
 
-The round can be tried on the site's own project pages (Jonas: "this tester system in a gui on the project
-pages"). On a project's page, H opens the tweak panel, which has a Typography folder: the heading and body faces
-(the same candidates, in the same order), the title, library or Google alternatives, the heading's and the body's
-size (the page's own, scaled) and line height, and Reset. T and B step through the heading and body faces (Shift:
-back), with a note at the foot of the screen when the panel is shut. Until a face is chosen the page keeps its own
-type. What goes where, as in this page's pairing: the heading face sets the introduction (the large words under the
-hero) and a title without a hero; the body face the texts, their labels and the credits; the title cut out of the
-hero and the footer's invitation are the display (the site's Anton, the heading face, or the SMASH typeface; the
-title is sized again to its letters in the new face, feed.js). The choice is kept in the browser and carries from
-project to project, and to the ones the page runs on into. "Take /typography's pairing" takes the pairing last set
-on this page (its sizes relative to this page's own); "Open in /typography" goes the other way; Copy link gives a
-link that shows the page set as it is (`?h=&b=&src=&title=&hsize=&hline=&bsize=&bline=`), without keeping it.
+The round can be tried on the site itself, on every page, with its real text (Jonas: "integrate the text tool gui on
+the website so we can experiment with real data"). A small Aa button at the bottom left opens the panel: the heading
+and body faces (the same candidates, in the same order, with their round 1 stars; the heading can also be the SMASH
+typeface), library or Google alternatives, the heading's and the body's size and line height (the site's own,
+scaled), headings in capitals or not, and what is showing. T and B step through the faces (Shift: back), with a note
+by the button when the panel is shut; Escape shuts it. Until a face is chosen the page keeps its own type.
+
+What goes where: the heading face takes every place the site's display face (Anton) has now (the studio's
+statement, the pillars, an offering's title, "Let's work together" and the address, the titles cut out of the
+heroes, which are sized again to their letters in the new face, feed.js); the body face takes all the rest (the
+serif's introductions and texts, and the sans' labels, credits and everything else). The rules are read from the
+site's stylesheet (every `font:` in `var(--display)` or `var(--serif)`), so a new one is taken as it comes.
+
+The choice is kept in the browser and carries from page to page (and the panel stays open or shut). The pairing on
+the screen can be rated with a comment, which joins this page's feedback drawer under "On the site". "Take
+/typography's pairing" takes the pairing last set here (its sizes relative to this page's own); "Open in
+/typography" goes the other way; Copy link gives a link that shows the page set as it is
+(`?h=&b=&src=&hs=&hl=&bs=&bl=&caps=`), without keeping it.
 
 ## Files
 
@@ -55,7 +61,7 @@ link that shows the page set as it is (`?h=&b=&src=&title=&hsize=&hline=&bsize=&
   marked "Not here".
 - `faces.js`: the candidates ranked, the Google stylesheet for any of them, which library faces are here, and the CSS
   for a candidate from the library or as its Google alternative; shared by this page and the tester.
-- `tester.js`: the type tester on the project pages (above); main.js loads it there.
+- `tester.js`: the type tester on the site (above); main.js loads it on every page.
 - `feedback.js`: a rating (1–5) and a comment under every card and under the pairing (each pairing tried is kept
   on its own), free notes, and a Feedback button that gathers it all as text, best rated first, with a link to
   each rated pairing, to copy and paste into a conversation. Kept in the browser (localStorage) as you go;

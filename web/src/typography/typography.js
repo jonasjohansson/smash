@@ -264,7 +264,7 @@ render();
 // Feedback: every candidate and every pairing tried, gathered to copy (feedback.js).
 const ROLE_NAME = { heading: 'Headings', body: 'Body' };
 mountFeedback({
-  groups: ['Pairings', 'Headings', 'Body'],
+  groups: ['Pairings', 'On the site', 'Headings', 'Body'],
   describe(key) {
     const [kind, rest] = key.split(':');
     if (kind === 'pair') {
@@ -272,6 +272,14 @@ mountFeedback({
       if (d || !byId.heading[h] || !byId.body[b]) return null; // round 1's pairings had a third (detail) face
       const link = `${location.origin}${location.pathname}?${new URLSearchParams({ h, b })}`;
       return { group: 'Pairings', name: `${byId.heading[h].name} + ${byId.body[b].name}`, link };
+    }
+    if (kind === 'site') {
+      // Rated on the site itself, with the type tester (tester.js).
+      const [h, b] = rest.split('+');
+      const hn = h === 'own' ? "the site's own (Anton)" : h === 'smash' ? 'SMASH typeface' : byId.heading[h]?.name;
+      const bn = b === 'own' ? "the site's own (Season Mix, Neue Montreal)" : byId.body[b]?.name;
+      if (!hn || !bn) return null;
+      return { group: 'On the site', name: `${hn} + ${bn}`, link: `${location.origin}/?${new URLSearchParams({ h, b })}` };
     }
     const c = byId[kind]?.[rest];
     return c ? { group: ROLE_NAME[kind], name: `${c.name} (Google: ${c.google.family})` } : null;
