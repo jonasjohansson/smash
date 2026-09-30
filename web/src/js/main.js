@@ -185,6 +185,12 @@ if (stage && framesEl) {
   const view = { t: 0, e: 0, s: 1, x: 0, y: 0, image: 1, fade: 0 };
   // Reveal the logo with the About headline: both start at the fold and
   // finish together. Keep a pinned interval before the page covers it.
+  // How far the About scrolls up from the fold while the logo comes in:
+  const logoDistance = (box) => {
+    const headlineEnd = introHead ? introHead.getBoundingClientRect().bottom - box.top : box.height;
+    const room = innerHeight - 2 * (landedLogo.offsetTop + landedLogo.offsetHeight);
+    return Math.max(1, Math.min(headlineEnd, room));
+  };
   const syncLogo = (tail) => {
     if (!landedLogo || !intro) return;
     if (tail) {
@@ -193,10 +199,7 @@ if (stage && framesEl) {
       return;
     }
     const box = intro.getBoundingClientRect();
-    const headlineEnd = introHead ? introHead.getBoundingClientRect().bottom - box.top : box.height;
-    const room = innerHeight - 2 * (landedLogo.offsetTop + landedLogo.offsetHeight);
-    const distance = Math.max(1, Math.min(headlineEnd, room));
-    const progress = Math.min(1, Math.max(0, (innerHeight - box.top) / distance));
+    const progress = Math.min(1, Math.max(0, (innerHeight - box.top) / logoDistance(box)));
     landedLogo.style.setProperty('--logo-progress', progress);
     landedLogo.classList.toggle('is-visible', progress > 0);
     // A covered logo stays behind the page, without a hidden tab stop.
@@ -504,12 +507,26 @@ if (stage && framesEl) {
     poster.decode().then(() => { if (!current) show(poster, -1, posterSlug); }).catch(() => {});
     // The rows wait for their typeface rather than flash another.
     typeface(infoRows.join(' ')).then(() => { infoReady = true; dirty = maskDirty = true; });
-    // A click at rest dives in by itself, as a scroll through the track would;
-    // a scroll, touch or key of the viewer's own takes over.
-    stage.addEventListener('click', (e) => {
+    // A click dives in by itself, as a scroll through the track would, on
+    // until the logo has settled in its corner (or, without it, a little past,
+    // so the page below shows its edge); a scroll, touch or key of the
+    // viewer's own takes over. At rest the click is on the mark; part way in,
+    // or as the footer leaves, the mark is inert and the click falls through
+    // to the track or the tail beneath, and from the tail it glides on round
+    // the loop.
+    document.addEventListener('click', (e) => {
       if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || !trackEl) return;
+      if (!e.target.closest?.('[data-stage], [data-track], [data-loop]')) return;
+      let to = diveEnd() + innerHeight * 0.2;
+      if (landedLogo && intro) {
+        const box = intro.getBoundingClientRect();
+        to = Math.max(diveEnd(), box.top + scrollY - innerHeight + logoDistance(box));
+      }
+      const at = loopEl ? loopEl.getBoundingClientRect().top + scrollY : Infinity;
+      const tail = scrollY + innerHeight > at;
+      if (!tail && scrollY >= to - 1) return;
       e.preventDefault();
-      glide(diveEnd() + innerHeight * 0.2); // a little past, so the page below shows its edge
+      glide(Math.ceil(to), tail ? at : 0);
     });
   }
 
@@ -522,10 +539,12 @@ if (stage && framesEl) {
     if (reel.paused) reel.play().catch(() => {});
   });
 
+  // From the tail, `wrap` is where the loop starts over: the glide begins that
+  // far before the top and passes through it, as the scroll would.
   let gliding = 0;
-  function glide(to) {
+  function glide(to, wrap = 0) {
     if (slow) return scrollTo(0, to);
-    const run = ++gliding, from = scrollY, start = performance.now(), length = 2600;
+    const run = ++gliding, from = scrollY - wrap, start = performance.now(), length = 2600;
     const root = document.documentElement.style;
     const stop = () => { gliding++; end(); };
     const end = () => {
@@ -537,7 +556,8 @@ if (stage && framesEl) {
     const step = (now) => {
       if (run !== gliding) return;
       const x = Math.min(1, (now - start) / length);
-      scrollTo(0, from + (to - from) * (0.5 - Math.cos(Math.PI * x) / 2));
+      const y = from + (to - from) * (0.5 - Math.cos(Math.PI * x) / 2);
+      scrollTo(0, y < 0 ? y + wrap : y);
       if (x < 1) requestAnimationFrame(step);
       else end();
     };
