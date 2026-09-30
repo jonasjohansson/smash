@@ -7,3 +7,6 @@ dist/
 # Licensed fonts copied from the library for the identity round: kept out of git.
 src/identity/directions/*/fonts/
 identity-dropped/*/fonts/
+
+# The typography round's library fonts (web/scripts/typography-fonts.py): desktop licences, local only.
+src/typography/fonts/

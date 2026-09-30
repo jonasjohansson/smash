@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <script src="/js/lock.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>SMASH typography</title>
+  <link rel="preload" href="/typeface/SMASH-VF.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="fonts/library.css">
+  <link rel="stylesheet" href="typography.css">
+  <script type="module" src="typography.js"></script>
+</head>
+<body>
+  <main id="page">
+    <header class="head">
+      <p class="n">00 · typography</p>
+      <h1 class="title">Typography</h1>
+    </header>
+
+    <div class="bar" role="toolbar" aria-label="Settings">
+      <div class="group" data-set="source">
+        <span class="label">Fonts</span>
+        <button type="button" data-v="library">Library</button>
+        <button type="button" data-v="google">Google</button>
+        <button type="button" data-v="compare">Side by side</button>
+      </div>
+      <div class="group" data-set="ground">
+        <span class="label">Ground</span>
+        <button type="button" data-v="earth">Earth</button>
+        <button type="button" data-v="black">Black</button>
+        <button type="button" data-v="paper">Paper</button>
+      </div>
+      <div class="group accents" data-set="accent"><span class="label">Accent</span></div>
+    </div>
+
+    <section class="pairing">
+      <div class="pick">
+        <label><span class="label">Heading</span><select data-role="heading"></select></label>
+        <label><span class="label">Body</span><select data-role="body"></select></label>
+        <label><span class="label">Detail</span><select data-role="detail"></select></label>
+        <button type="button" class="shuffle">Shuffle</button>
+      </div>
+      <div class="stages"></div>
+    </section>
+
+    <section class="gallery" data-role="heading">
+      <header class="sec"><p class="n">01</p><h2>Headings</h2></header>
+      <div class="cards"></div>
+    </section>
+    <section class="gallery" data-role="body">
+      <header class="sec"><p class="n">02</p><h2>Body</h2></header>
+      <div class="cards"></div>
+    </section>
+    <section class="gallery" data-role="detail">
+      <header class="sec"><p class="n">03</p><h2>Detail</h2></header>
+      <div class="cards"></div>
+    </section>
+  </main>
+</body>
+</html>
