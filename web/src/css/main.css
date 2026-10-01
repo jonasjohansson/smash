@@ -34,7 +34,7 @@
 
   --font: "Neue Montreal", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --serif: "Season Mix", Georgia, serif;
-  --display: Anton, Impact, "Arial Narrow", sans-serif; /* the chunky face, until SMASH chooses its own */
+  --display: Anton, Impact, "Arial Narrow", sans-serif; /* the titles: Anton, on the web in place of Druk, SMASH's title face */
   --t-small: 12px;
   --t-body: clamp(14px, 1vw, 16px);
   --t-lead: clamp(20px, 2vw, 32px);

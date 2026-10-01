@@ -1,4 +1,8 @@
-// Typography: the site's own type. Anton for titles, always in capitals; Neue
+// Typography: the site's own type. Anton for titles, always in capitals, on
+// the web standing in for Druk (Commercial Type), SMASH's title face (Jonas,
+// 2026-10-01: "i think druk is great, and anton a good web font alternative";
+// only Druk's trial is in the library, without Å Ä Ö, so the pieces stay in
+// Anton until it is bought); Neue
 // Montreal for labels, captions and small text; Season Mix for what tells a
 // project at length, its lead and its story (Jonas, 2026-10-01, after trying
 // the site without it: "i think we prefer the season mix"). SMASH's own
@@ -131,7 +135,7 @@ const SPECIMENS = `
       ${fig(sheet({
         name: 'Anton', face: 'anton', word: 'JAGAD', cols: 7, measure: { lines: ['cap', 'base', 'desc'] },
         by: 'Vernon Adams · Google Fonts · free, SIL Open Font License',
-        role: 'Titles · always in capitals · line height 0.92',
+        role: 'Titles on the web, in place of Druk, the title face · always in capitals · line height 0.92',
         set: CAPS + FIGURES + MARKS_,
       }), 'Specimen · Anton')}
     </div>
