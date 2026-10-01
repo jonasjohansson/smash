@@ -120,7 +120,6 @@ export const HTML = `
   <section class="lab" id="colour">
     <style>${STYLE}</style>
     <header class="ch-head">
-      <p class="ch-n">00 · colour</p>
       <h2 class="ch-name">Colour</h2>
     </header>
     ${group('Hyper')}

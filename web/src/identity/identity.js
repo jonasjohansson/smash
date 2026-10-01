@@ -2,7 +2,7 @@
 // ?d=<slug> shows one chapter; ?t=0.5 seeks every motion there and pauses it.
 
 import { IMAGES } from './lib.js';
-import { loadDirections, attempt, errorHTML, loadFonts, settle, pad } from './directions.js';
+import { loadDirections, attempt, errorHTML, loadFonts, settle } from './directions.js';
 import { SIZES_HINT } from './video.js';
 import { withGrid } from './grid.js';
 
@@ -65,11 +65,9 @@ function favicons(d) {
 
 function chapter(d) {
   const { info } = d;
-  const n = pad(info.n);
   const el = h(`
     <section class="chapter" id="${d.slug}" style="${palette(info)}">
       <header class="ch-head">
-        <p class="ch-n">${n}</p>
         <h2 class="ch-name">${esc(info.name)}</h2>
       </header>
       ${d.error ? errorHTML(`${d.slug} did not load: ${d.error.message}`) : ''}

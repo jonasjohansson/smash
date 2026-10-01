@@ -467,7 +467,6 @@ export const HTML = `
   <section class="lab" id="type">
     <style>${STYLE}</style>
     <header class="ch-head">
-      <p class="ch-n">00 · type</p>
       <h2 class="ch-name">Typography</h2>
     </header>
     <div class="ty-controls">

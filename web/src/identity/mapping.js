@@ -99,7 +99,6 @@ const NOTE = {
 export const HTML = `
   <section class="lab" id="${ID}">
     <header class="ch-head">
-      <p class="ch-n">00 · mapping</p>
       <h2 class="ch-name">Mapping</h2>
       <p class="ch-lane">The mark, mapped</p>
       <p class="ch-idea">The mark on a grid of mapping points. Pull them and it bends the way projected light does.</p>

@@ -74,7 +74,6 @@ export const patterns = (p = SHAPES_DEFAULTS) => PATTERNS.map((k) => pattern(p.s
 export const HTML = `
   <section class="lab" id="shapes">
     <header class="ch-head">
-      <p class="ch-n">00 · shapes</p>
       <h2 class="ch-name">Shapes</h2>
     </header>
     <div class="lab-body">

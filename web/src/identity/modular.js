@@ -289,7 +289,6 @@ export async function outlineSVG(p, upTo = 4, fill = '#000000', turn = 0) {
 export const HTML = `
   <section class="lab" id="modular">
     <header class="ch-head">
-      <p class="ch-n">00 · modular</p>
       <h2 class="ch-name">The modular mark</h2>
     </header>
     <div class="lab-body">

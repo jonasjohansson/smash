@@ -9,7 +9,6 @@ import { SIZES_HINT } from '../video.js';
 export const HTML = `
   <section class="lab" id="sequence">
     <header class="ch-head">
-      <p class="ch-n">00 · sequence</p>
       <h2 class="ch-name">Sequence</h2>
     </header>
     <figure class="stage seq-stage">

@@ -50,7 +50,6 @@ function measuresAt(params, t) {
 export const LAB_HTML = `
   <section class="lab" id="original-live">
     <header class="ch-head">
-      <p class="ch-n">00 · live</p>
       <h2 class="ch-name">The mark, live</h2>
       <p class="ch-lane">The generator</p>
       <p class="ch-idea">Every measure of the mark is a setting, letter by letter, in 2D and in 3D.</p>

@@ -22,7 +22,6 @@ const pad = (n) => String(n).padStart(2, '0');
 export const HTML = `
   <section class="lab" id="illusion">
     <header class="ch-head">
-      <p class="ch-n">00 · illusion</p>
       <h2 class="ch-name">Illusion</h2>
     </header>
     <div class="controls ill-bar">

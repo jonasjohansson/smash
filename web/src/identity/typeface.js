@@ -72,7 +72,6 @@ export const HTML = `
   <section class="lab" id="typeface">
     <style>${TYPE_STYLE}${STYLE}</style>
     <header class="ch-head">
-      <p class="ch-n">00 · typeface</p>
       <h2 class="ch-name">The SMASH typeface</h2>
     </header>
     <div class="tf-tester">

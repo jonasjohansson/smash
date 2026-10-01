@@ -42,12 +42,8 @@ const STYLE = `
 .fb-drawer .fb-hint { font-size: 12px; color: #8d877f; }
 `;
 
-/** The section's name as the page shows it: "00 Original", "05 Alignment", "00 · live The mark, live". */
-function sectionName(section) {
-  const n = section.querySelector('.ch-n')?.textContent.trim() ?? '';
-  const name = section.querySelector('.ch-name')?.textContent.trim() ?? section.id;
-  return /^\d+$/.test(n) ? `${n} ${name}` : n ? `${name} (${n})` : name; // "03 Impact", "The modular mark (00 · modular)"
-}
+/** The section's name as the page shows it: "Original", "The modular mark". */
+const sectionName = (section) => section.querySelector('.ch-name')?.textContent.trim() ?? section.id;
 
 /** The pieces in a section a like or a dislike can go on, each with a name. */
 function pieces(section) {

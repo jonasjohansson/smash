@@ -83,7 +83,6 @@ function save(params) {
 export const HTML = `
   <section class="lab" id="sculpture">
     <header class="ch-head">
-      <p class="ch-n">00 · sculpture</p>
       <h2 class="ch-name">Sculpture</h2>
     </header>
     <div class="lab-body">
