@@ -5,7 +5,7 @@ tags:
   - mapping
 blocks:
   - type: image
-    src: 01.jpg
+    src: /projects/chorus/01.jpg
     alt: White branching lines radiate from a dark circular centre across the illuminated facade of Storkyrkan at night.
   - type: text
     content: A sound-reactive work projected onto Uppsala Cathedral for [Allt ljus på Uppsala](https://alltljuspauppsala.se/) in 2021 and onto Storkyrkan for [Nobel Week Lights](https://nobelweeklights.se/) the year after.

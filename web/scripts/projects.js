@@ -42,6 +42,13 @@ async function dominant(file) {
   return tints.get(file);
 }
 
+/**
+ * A file named in data.md, on disk: by its name in the project's folder
+ * (`01.jpg`), or by its path on the site (`/projects/harpa/01.jpg`, as Pages
+ * CMS writes it, .pages.yml).
+ */
+export const asset = (dir, file) => (file.startsWith('/') ? file.slice(1) : path.join(dir, file));
+
 /** The projects on the site, as { slug, data } from their data.md; read as is. */
 export function listed(root) {
   return fs.readdirSync(root, { withFileTypes: true })
@@ -56,12 +63,12 @@ export async function readProjects(root) {
       const dir = path.join(root, slug);
       const blocks = await Promise.all((data.blocks ?? []).map(async (b) => {
         if (b.type === 'image') {
-          const src = path.join(dir, b.src);
+          const src = asset(dir, b.src);
           return { ...b, src, ar: b.ar ?? (await aspect(src)) };
         }
         if (b.type === 'video') {
-          const poster = b.poster ? path.join(dir, b.poster) : null;
-          return { ...b, src: `/${dir}/${b.src}`, poster, ar: b.ar ?? (poster ? await aspect(poster) : 16 / 9) };
+          const poster = b.poster ? asset(dir, b.poster) : null;
+          return { ...b, src: `/${asset(dir, b.src)}`, poster, ar: b.ar ?? (poster ? await aspect(poster) : 16 / 9) };
         }
         return b;
       }));
@@ -73,8 +80,9 @@ export async function readProjects(root) {
         title: data.title,
         caption: data.caption ?? null, // who it was for, or where: the small line over the introduction
         category: data.category ?? null, // which of the studio's offerings (categories/)
-        // The picture on its card, if not its cover (`thumb: file` in data.md).
-        thumb: (data.thumb && blocks.find((b) => b.type === 'image' && path.basename(b.src) === data.thumb)) || cover,
+        // The picture on its card, if not its cover (`thumb: file` in data.md;
+        // one of its images, so known by its name).
+        thumb: (data.thumb && blocks.find((b) => b.type === 'image' && path.basename(b.src) === path.basename(data.thumb))) || cover,
         color: data.color ?? (cover ? await dominant(cover.src) : null),
         date: date.toISOString().slice(0, 10),
         year: date.getUTCFullYear(),

@@ -4,19 +4,19 @@ date: 2024-01-01
 smash: true
 category: originals
 caption: "Melodifestivalen"
-thumb: 03.jpg
+thumb: /projects/danny-saucedo/03.jpg
 color: '#9b2500'
 tags:
   - mapping
   - stage
 blocks:
   - type: image
-    src: 01.jpg
+    src: /projects/danny-saucedo/01.jpg
     alt: A silhouetted performer stands inside nested orange arches that extend into the dark stage.
   - type: text
     content: Projection mapping and stage design for Danny Saucedo's "Happy That You Found Me" in [Melodifestivalen](https://en.wikipedia.org/wiki/Melodifestivalen) 2024.
   - type: image
-    src: 02.jpg
+    src: /projects/danny-saucedo/02.jpg
   - type: text
     label: "The stage"
     fontSize: small
@@ -30,9 +30,9 @@ blocks:
     fontSize: small
     content: We tested the visuals on a physical maquette, and I developed a custom [Unity](https://unity.com/) camera tool to lock a precise direction of photography across the scenes.
   - type: image
-    src: 03.jpg
+    src: /projects/danny-saucedo/03.jpg
   - type: image
-    src: 01-poster.jpg
+    src: /projects/danny-saucedo/01-poster.jpg
     alt: Behind the scenes and stage visuals for Danny Saucedo’s Happy That You Found Me.
   - type: text
     label: "Credits"

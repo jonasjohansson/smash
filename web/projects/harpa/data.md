@@ -6,7 +6,7 @@ tags:
   - light
 blocks:
   - type: image
-    src: 01.jpg
+    src: /projects/harpa/01.jpg
     alt: Hands play a small illuminated keyboard on an orange tabletop, the public controller for Harpa’s facade.
   - type: text
     content: We turned the 714-panel LED facade of Reykjavík's [Harpa Concert Hall](https://en.harpa.is/) into a public game, then an instrument.
@@ -23,7 +23,7 @@ blocks:
     fontSize: small
     content: In 2016 we took it further and built a [light organ](https://youtu.be/m53kuvMLAiY) on the 4th floor balcony, overlooking the geometric glass front and the downtown area. Visitors could play the building like an instrument. Harmony was colour, pitch was position, strength was brilliance. In 2017 we did a series of interactive installations using hardware from [Teenage Engineering](https://teenage.engineering/) and Flic, giving the festival audience direct control of the facade. We called it Sónarspil.
   - type: image
-    src: 02.jpg
+    src: /projects/harpa/02.jpg
   - type: text
     fontSize: small
     content: "[Rose Hallgren](https://rosehallgren.se/) built the physical wood and concrete models used as tactile interfaces, and Johanna Tano did the hardware coding. We had funding from the [Nordic Culture Fund](https://nordiskkulturfond.org/) through their Opstart grant."
@@ -31,7 +31,7 @@ blocks:
     fontSize: small
     content: In 2019, as [Tiny/Massive](/tinymassive/), we opened the facade to artists worldwide during the Reykjavík Winter Lights Festival. [Loney Dear](https://youtu.be/wAKno0pe4UQ) and [Teenage Engineering](https://teenage.engineering/) performed a live concert controlling the visuals with the [OP-Z](https://teenage.engineering/store/op-z/), ten storeys of light on the harbour, driven from inside a city bus.
   - type: image
-    src: 03.jpg
+    src: /projects/harpa/03.jpg
   - type: text
     fontSize: small
     content: It was a great few years. We would gather in Reykjavík for Sónar, hack the facade, have morning meetings in the pool, and enjoy playing with lights in the evenings. The work with Harpa became the spark for [NAVA](https://www.nava.community) (Nordic Audiovisual Artists), a community where Atlí, Owen, myself and artist [Rasmus Stride](https://www.instagram.com/rasmus.stride/) formed the collective that would go on to do projects like [Tiny/Massive](/tinymassive/) and Skaðablót.

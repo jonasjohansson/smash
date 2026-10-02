@@ -89,7 +89,7 @@ layout: base.njk
     <ul class="clients-grid">
       {% for c in clients %}{% if c.logo %}
       <li>
-        {% set logo %}<img src="/clients/{{ c.logo }}" alt="{{ c.name }}" width="{{ c.width }}" height="{{ c.height }}" style="--ratio: {{ (c.width / c.height) | round(3) }}">{% endset %}
+        {% set logo %}<img src="{{ c.logo }}" alt="{{ c.name }}" width="{{ c.width }}" height="{{ c.height }}" style="--ratio: {{ (c.width / c.height) | round(3) }}">{% endset %}
         {% if c.project %}<a class="client" href="/{{ c.project }}/">{{ logo | safe }}</a>{% else %}<span class="client">{{ logo | safe }}</span>{% endif %}
       </li>
       {% endif %}{% endfor %}

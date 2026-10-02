@@ -7,7 +7,7 @@ tags:
   - community
 blocks:
   - type: image
-    src: 01.jpg
+    src: /projects/tinymassive/01.jpg
     alt: A visitor watches colourful patterns illuminate the glass panels of Harpa Concert Hall.
   - type: text
     content: "An open call for artists to illuminate the facade of [Harpa Concert Hall](/harpa/) in Reykjavík: 77 pixels wide, 13 pixels tall, one enormous building."

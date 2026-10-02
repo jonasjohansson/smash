@@ -7,7 +7,7 @@ tags:
   - community
 blocks:
   - type: image
-    src: 01.jpg
+    src: /projects/dome-dreaming/01.jpg
     alt: An audience reclines beneath a dome filled with swirling gold and white imagery during a live performance.
     focal: 50% 60%
   - type: text
@@ -17,7 +17,7 @@ blocks:
     fontSize: small
     content: In May 2026, I co-organised [Dome Dreaming](https://www.domedreaming.com), a non-profit festival across three evenings at Wisdome Stockholm and one at Wisdome Malmö. Both venues were newly built, and as far as we know it was the first fulldome film festival in the Nordics.
   - type: image
-    src: 04.jpg
+    src: /projects/dome-dreaming/04.jpg
     colStart: 4
     colSpan: 6
   - type: text
@@ -25,7 +25,7 @@ blocks:
     fontSize: small
     content: The idea took shape at a hackathon I co-organised with Tekniska museet. Through [NAVA](https://www.nava.community), we had been collaborating with [Aavistus](https://www.aavistusfestival.fi/) in Helsinki for years and seen how strong their fulldome programme was, and with two new Wisdome venues open in Sweden, we decided to make one of our own.
   - type: image
-    src: 08.jpg
+    src: /projects/dome-dreaming/08.jpg
   - type: text
     label: "Expanded cinema"
     fontSize: small
@@ -39,23 +39,23 @@ blocks:
     fontSize: small
     content: Each Stockholm evening moved between pre-recorded fulldome works and live audiovisual performances composed directly for the dome. The Malmö evening played a tighter selection. An open call brought in shorts from artists across Europe, and an installation programme ran at Trähallen, the wooden hall next to Wisdome Stockholm.
   - type: image
-    src: 07.jpg
+    src: /projects/dome-dreaming/07.jpg
   - type: image
-    src: 12.jpg
+    src: /projects/dome-dreaming/12.jpg
   - type: text
     label: "Trähallen"
     fontSize: small
     content: Trähallen stayed open between sets so audiences could drift through it, a tactile moss landscape, electromagnetic sculptures of branches and orange extension cables, a VR embodiment piece, and the new mobile dome from SKH.
   - type: image
-    src: 13.jpg
+    src: /projects/dome-dreaming/13.jpg
   - type: image
-    src: 29.jpg
+    src: /projects/dome-dreaming/29.jpg
   - type: image
-    src: 14.jpg
+    src: /projects/dome-dreaming/14.jpg
   - type: image
-    src: 05.jpg
+    src: /projects/dome-dreaming/05.jpg
   - type: image
-    src: 02.jpg
+    src: /projects/dome-dreaming/02.jpg
   - type: text
     label: "The student day"
     fontSize: small
@@ -65,33 +65,33 @@ blocks:
     fontSize: small
     content: I designed and built the festival website at [domedreaming.com](https://www.domedreaming.com) and the surrounding visual identity, with Linn Willebrand on graphics, animation and communication. To help artists prepare for the dome geometry, I also built a [browser-based preview tool](https://preview.domedreaming.com) that maps any image or video onto a 3D model of Wisdome Stockholm, so they could see how their work would land on the surface before arriving for the production residency. The 3D model was made by Ashley Reed at [Smash Studio](https://www.smash.studio/).
   - type: image
-    src: 15.jpg
+    src: /projects/dome-dreaming/15.jpg
   - type: image
-    src: 17.jpg
+    src: /projects/dome-dreaming/17.jpg
   - type: image
-    src: 20.jpg
+    src: /projects/dome-dreaming/20.jpg
   - type: image
-    src: 21.jpg
+    src: /projects/dome-dreaming/21.jpg
   - type: image
-    src: 22.jpg
+    src: /projects/dome-dreaming/22.jpg
   - type: image
-    src: 23.jpg
+    src: /projects/dome-dreaming/23.jpg
   - type: image
-    src: 24.jpg
+    src: /projects/dome-dreaming/24.jpg
   - type: image
-    src: 27.jpg
+    src: /projects/dome-dreaming/27.jpg
   - type: image
-    src: 28.jpg
+    src: /projects/dome-dreaming/28.jpg
   - type: image
-    src: 30.jpg
+    src: /projects/dome-dreaming/30.jpg
   - type: image
-    src: 31.jpg
+    src: /projects/dome-dreaming/31.jpg
   - type: image
-    src: 32.jpg
+    src: /projects/dome-dreaming/32.jpg
   - type: image
-    src: 33.jpg
+    src: /projects/dome-dreaming/33.jpg
   - type: image
-    src: 34.jpg
+    src: /projects/dome-dreaming/34.jpg
   - type: text
     label: "Credits"
     fontSize: small

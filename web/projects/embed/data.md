@@ -6,7 +6,7 @@ tags:
   - mapping
 blocks:
   - type: image
-    src: 01.jpg
+    src: /projects/embed/01.jpg
     alt: A bedside tablet controls blue and violet projections that wrap around the walls of a hotel room.
   - type: text
     content: A Hobo Hotel room where guests fill all four walls with films from a tablet by the bed.

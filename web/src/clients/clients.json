@@ -1,0 +1,68 @@
+[
+  {
+    "name": "Netflix",
+    "logo": "/clients/netflix.svg"
+  },
+  {
+    "name": "HBO",
+    "logo": "/clients/hbo.svg"
+  },
+  {
+    "name": "Spotify",
+    "logo": "/clients/spotify.svg"
+  },
+  {
+    "name": "IKEA",
+    "logo": "/clients/ikea.svg"
+  },
+  {
+    "name": "H&M",
+    "logo": "/clients/hm.svg"
+  },
+  {
+    "name": "Ericsson",
+    "logo": "/clients/ericsson.svg"
+  },
+  {
+    "name": "Madison Square Garden",
+    "logo": "/clients/madison-square-garden.svg"
+  },
+  {
+    "name": "Kanal 5",
+    "project": "jagad",
+    "logo": "/clients/kanal5.svg"
+  },
+  {
+    "name": "TV4",
+    "project": "vi-kommer-i-fred",
+    "logo": "/clients/tv4.svg"
+  },
+  {
+    "name": "Melodifestivalen",
+    "project": "danny-saucedo",
+    "logo": "/clients/melodifestivalen.svg"
+  },
+  {
+    "name": "KTH",
+    "project": "dome-conductor",
+    "logo": "/clients/kth.svg"
+  },
+  {
+    "name": "Tekniska museet",
+    "project": "dome-conductor",
+    "logo": "/clients/tekniska-museet.png"
+  },
+  {
+    "name": "Raoul Wallenberg Academy",
+    "project": "heroes",
+    "logo": "/clients/raoul-wallenberg-academy.svg"
+  },
+  {
+    "name": "Nobel Foundation",
+    "logo": "/clients/nobel-foundation.svg"
+  },
+  {
+    "name": "Allt Ljus på Uppsala",
+    "project": "resonance"
+  }
+]

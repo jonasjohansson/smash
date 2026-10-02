@@ -1,0 +1,266 @@
+# Pages CMS (https://pagescms.org): edit the site's content in the browser.
+# Each save is a commit to main, which builds and deploys the site
+# (.github/workflows/pages.yml).
+#
+# Pages CMS drops any key an entry has that is not a field here, so every key
+# the site reads is listed, the ones it no longer uses as hidden fields.
+#
+# Files are written as their paths on the site (/projects/harpa/01.jpg),
+# which the site reads as well as bare names (web/scripts/projects.js).
+
+media:
+  - name: projects
+    label: Project pictures and films
+    input: web/projects
+    output: /projects
+    categories: [image, video]
+  - name: team
+    label: Portraits
+    input: web/team
+    output: /team
+    categories: [image]
+  - name: clients
+    label: Client logos
+    input: web/src/clients
+    output: /clients
+    extensions: [svg, png]
+
+content:
+  - name: projects
+    label: Projects
+    type: collection
+    path: web/projects
+    filename: "{primary}/data.md"
+    view:
+      layout: tree
+      node:
+        filename: data.md
+        hideDirs: nodes
+      primary: title
+      fields: [title, smash, category, date]
+      sort: [date, title]
+      default:
+        sort: date
+        order: desc
+    # A project's folder holds its pictures, so renaming one is done in git.
+    operations:
+      rename: false
+    fields:
+      - name: title
+        label: Title
+        type: string
+        required: true
+      - name: smash
+        label: On the site
+        type: boolean
+        description: Off for the projects kept here from Jonas's own portfolio.
+      - name: category
+        label: Offering
+        type: select
+        description: Its offering's page lists it. A new offering needs adding here too.
+        options:
+          values:
+            - name: experience-design
+              label: Experience Design
+            - name: digital-interactive
+              label: Digital Interactive
+            - name: originals
+              label: Originals
+      - name: caption
+        label: Caption
+        type: string
+        description: Who it was for, or where, in the small line over the introduction.
+      - name: date
+        label: Date
+        type: date
+        description: Projects are listed newest first; the page shows its year.
+        options:
+          format: yyyy-MM-dd
+      - name: featured
+        label: Featured
+        type: number
+        description: Its place among the featured projects on the landing (1 first). Empty for none.
+        options:
+          min: 1
+      - name: thumb
+        label: Card picture
+        type: image
+        description: One of its pictures below, for its card. Empty for the first.
+        options:
+          media: projects
+      - name: color
+        label: Colour
+        type: string
+        description: As hex (#ff5c1a). Empty to take it from the first picture.
+      - name: tags
+        type: string
+        list: true
+        hidden: true
+      - name: blocks
+        label: Page
+        type: block
+        blockKey: type
+        description: The introduction is the first text; the first picture is its cover.
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{index}. {type}"
+        blocks:
+          - name: text
+            label: Text
+            fields:
+              - name: label
+                label: Heading
+                type: string
+                description: A small heading over the text.
+              - name: content
+                label: Text
+                type: rich-text
+                options:
+                  format: markdown
+                  media: false
+              - { name: fontSize, type: string, hidden: true }
+          - name: image
+            label: Picture
+            fields:
+              - name: src
+                label: Picture
+                type: image
+                required: true
+                options:
+                  media: projects
+              - name: alt
+                label: Description
+                type: text
+                description: What it shows, for people who cannot see it.
+              - &size
+                name: size
+                label: Size
+                type: select
+                description: Empty to let the page lay it out.
+                options:
+                  values: [full, large, left, right, half-left, half-right, small-left, small-right]
+              - &colStart { name: colStart, type: number, hidden: true }
+              - &colSpan { name: colSpan, type: number, hidden: true }
+              - &ar { name: ar, type: number, hidden: true }
+              - &focal { name: focal, type: string, hidden: true }
+              - { name: fit, type: string, hidden: true }
+              - { name: heroFit, type: string, hidden: true }
+              - { name: zoom, type: number, hidden: true }
+              - { name: mask, type: string, hidden: true }
+          - name: video
+            label: Film
+            fields:
+              - name: src
+                label: Film
+                type: file
+                required: true
+                options:
+                  media: projects
+                  categories: [video]
+              - name: poster
+                label: Poster frame
+                type: image
+                description: Shown until it plays; also sets its proportions.
+                options:
+                  media: projects
+              - name: alt
+                label: Description
+                type: text
+              - *size
+              - *colStart
+              - *colSpan
+              - *ar
+              - *focal
+              - { name: caption, type: string, hidden: true }
+              - { name: link, type: string, hidden: true }
+          - name: credits
+            label: Credits
+            fields:
+              - name: credits
+                label: Lines
+                type: string
+                list: true
+
+  - name: categories
+    label: Offerings
+    type: collection
+    path: web/categories
+    filename: "{primary}.md"
+    view:
+      primary: name
+      fields: [name, order]
+      default:
+        sort: order
+        order: asc
+    operations:
+      rename: false
+    fields:
+      - name: name
+        label: Name
+        type: string
+        required: true
+      - name: order
+        label: Order
+        type: number
+        required: true
+      - name: label
+        label: Caption
+        type: string
+        description: The small line over its introduction.
+      - name: picture
+        label: Picture
+        type: image
+        required: true
+        description: One of the pictures of a project on the site.
+        options:
+          media: projects
+      - name: body
+        label: Introduction
+        type: rich-text
+        options:
+          format: markdown
+          media: false
+
+  - name: team
+    label: Team
+    type: file
+    path: web/team/team.json
+    format: json
+    list: true
+    fields:
+      - name: name
+        label: Name
+        type: string
+        required: true
+      - name: email
+        label: Email
+        type: string
+      - name: picture
+        label: Portrait
+        type: image
+        required: true
+        options:
+          media: team
+
+  - name: clients
+    label: Clients
+    type: file
+    path: web/src/clients/clients.json
+    format: json
+    list: true
+    fields:
+      - name: name
+        label: Name
+        type: string
+        required: true
+      - name: logo
+        label: Logo
+        type: image
+        description: Empty to leave it off the landing.
+        options:
+          media: clients
+      - name: project
+        label: Project
+        type: string
+        description: The project its logo links to, by its folder name (vi-kommer-i-fred). Empty for none.

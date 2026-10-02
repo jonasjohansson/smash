@@ -7,12 +7,12 @@ tags:
   - mixed reality
 blocks:
   - type: image
-    src: 01.jpg
+    src: /projects/emerging-sensation/01.jpg
     alt: Translucent textile forms glow blue and pink, with a bright red line tracing their folds.
   - type: text
     content: An interactive installation combining smart textiles and augmented reality, 25 metres below ground in a retired nuclear reactor hall.
   - type: image
-    src: 02.jpg
+    src: /projects/emerging-sensation/02.jpg
   - type: text
     fontSize: small
     content: |
@@ -31,7 +31,7 @@ blocks:
       nights in that reactor hall, listening to System of a Down and going
       slightly insane.
   - type: image
-    src: 03.jpg
+    src: /projects/emerging-sensation/03.jpg
   - type: text
     fontSize: small
     content: "[Malin Bobeck Tadaa](https://malintadaa.com/) initiated the project and developed the textile sculptures. I made the light animations and the system connecting them to the HoloLens. Björn Albihn and Jonatan Crafoord at [Really Interactive](https://www.really-interactive.se/) built the mixed reality side."

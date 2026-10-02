@@ -8,7 +8,7 @@ tags:
   - mixed reality
 blocks:
   - type: image
-    src: 01.jpg
+    src: /projects/transcend/01.jpg
     alt: Two projected hands reach towards one another across a dark reflective surface.
   - type: text
     content: An interactive [Pepper's Ghost](https://en.wikipedia.org/wiki/Pepper%27s_ghost) installation inspired by Michelangelo's Creation of Adam, where two strangers' fingertips touch in mid-air.

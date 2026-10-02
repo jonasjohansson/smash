@@ -1,8 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import Image from '@11ty/eleventy-img';
+import sharp from 'sharp';
 import markdownIt from 'markdown-it';
-import { listed, readProjects } from './scripts/projects.js';
+import { asset, listed, readProjects } from './scripts/projects.js';
 import { readCategories } from './scripts/categories.js';
 import { compose, indexLayout } from './scripts/compose.js';
 import { ogImage, summary } from './scripts/og.js';
@@ -43,8 +44,8 @@ export default function (config) {
   // The videos of the projects on the site, and their poster frames.
   for (const { slug, data } of listed('projects')) {
     for (const b of (data.blocks ?? []).filter((b) => b.type === 'video')) {
-      config.addPassthroughCopy(`projects/${slug}/${b.src}`);
-      if (b.poster) config.addPassthroughCopy(`projects/${slug}/${b.poster}`);
+      config.addPassthroughCopy(asset(`projects/${slug}`, b.src));
+      if (b.poster) config.addPassthroughCopy(asset(`projects/${slug}`, b.poster));
     }
   }
   config.addWatchTarget('src/');
@@ -123,7 +124,8 @@ export default function (config) {
       if (!categories.some((c) => c.slug === p.category)) console.warn(`[smash] ${p.slug} is in no category ('${p.category ?? ''}'), so on no category page`);
     }
     return Promise.all(categories.map(async (c) => {
-      const [from, src] = String(c.picture).split('/');
+      // `project/file`, or its path on the site (/projects/project/file).
+      const [from, src] = String(c.picture).replace(/^\/projects\//, '').split('/');
       const block = projects.find((q) => q.slug === from)?.blocks.find((b) => b.type === 'image' && path.basename(b.src) === src);
       if (!block) throw new Error(`${c.name}'s picture, ${c.picture}, is not an image of a project on the site`);
       // A tall panel crops the picture to its height: nearly the screen's on
@@ -149,8 +151,18 @@ export default function (config) {
     const people = JSON.parse(await fs.readFile('team/team.json', 'utf8'));
     return Promise.all(people.map(async (p) => ({
       ...p,
-      picture: await image(path.join('team', p.picture), p.name, '(max-width: 720px) 33vw, 22vw'),
+      picture: await image(asset('team', p.picture), p.name, '(max-width: 720px) 33vw, 22vw'),
     })));
+  });
+  // The clients on the landing (src/clients/clients.json), each logo at its
+  // own proportions, read from the file.
+  config.addGlobalData('clients', async () => {
+    const clients = JSON.parse(await fs.readFile('src/clients/clients.json', 'utf8'));
+    return Promise.all(clients.map(async (c) => {
+      if (!c.logo) return c;
+      const { width, height } = await sharp(path.join('src', c.logo)).metadata();
+      return { ...c, width, height };
+    }));
   });
   // Stamped on every stylesheet and script address, so a page is never shown
   // with a stylesheet or script from an earlier build still in the browser's
