@@ -6,7 +6,8 @@ Renders each piece of /identity's Typography section (web/src/identity/type.js: 
 compositions and the type in use) on its own, in
 each treatment asked for (black and white, or an accent: acid, yellow, orange, red, pink, violet,
 sky), the titles in the SMASH face and the marks round, and writes to
-web/src/identity/samples/, which the site serves at /identity/samples/ and the section links:
+web/src/identity/samples/, which the site serves at /identity/samples/ and the section links,
+and the same to identity/typography/, the identity as files:
 
   <treatment>/NN-<sample>.jpg            one picture per sample
   SMASH-typography-<treatment>.pdf       all of them, one a page
@@ -17,6 +18,7 @@ The wide samples are drawn 1600 px wide and the posters 1000, at twice the pixel
 
 import io
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -30,6 +32,7 @@ shoot = import_module('identity-shoot')
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 OUT = ROOT / 'web' / 'src' / 'identity' / 'samples'
+FILES = ROOT / 'identity' / 'typography'  # a copy, beside the marks' files
 WIDE, POSTER = 1600, 1000  # CSS px across, drawn at twice the pixels
 slug = lambda s: re.sub(r'[^a-z0-9]+', '-', s.lower()).strip('-')
 
@@ -90,6 +93,11 @@ def main():
             pdf = OUT / f'SMASH-typography-{slug(t)}.pdf'
             pages[0].save(pdf, 'PDF', save_all=True, append_images=pages[1:], resolution=144, quality=90)
             print(f'{t}: {count} samples, {pdf.name} ({pdf.stat().st_size / 1e6:.1f} MB), in {OUT.relative_to(ROOT)}/')
+            copy = FILES / slug(t)
+            if copy.exists():
+                shutil.rmtree(copy)
+            shutil.copytree(folder, copy)
+            shutil.copy2(pdf, FILES / pdf.name)
         b.close()
     for line in log:
         print('  ', line)

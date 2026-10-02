@@ -45,7 +45,7 @@ also draws the favicons, on whole pixels). The stills, the motion and its MP4, a
   comes in as its signed distance (`field.js`); the shaders are `techniques.js`. The bar swaps in the modular mark
   and inverts; a click shows a tile wide; each has its MP4.
 - `type.js` (after the sequence): the site's own type. Druk for titles, always in capitals (Jonas, 2026-10-01: "i think
-  druk is great"; 2026-10-03: "go with druk"), its trial for now, Anton setting what the trial lacks; Neue Montreal for
+  druk is great"; 2026-10-03: "go with druk"), its trial for now, Anton setting what the trial lacks; Anton beside it, its Google Fonts alternative; Neue Montreal for
   labels, captions and small text; Season Mix for what tells a project, its lead and its story (Jonas, 2026-10-01,
   after the site had tried Neue Montreal there: "i think we prefer the season mix"). Type
   specimens, then compositions with the marks, as Jonas asked: a sheet per face (a word with its measures drawn across
