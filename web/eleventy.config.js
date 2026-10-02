@@ -31,7 +31,7 @@ async function image(src, alt = '', sizes = '100vw', loading = 'lazy', className
 }
 
 /**
- * Just a URL, for code that loads images itself (the slideshow, the gate).
+ * Just a URL, for code that loads images itself (the slideshow).
  * Same options as `image`, so it reuses those files rather than making more.
  */
 async function imageSrc(src, width = 640, format = 'jpeg') {
@@ -40,7 +40,7 @@ async function imageSrc(src, width = 640, format = 'jpeg') {
 }
 
 export default function (config) {
-  config.addPassthroughCopy({ 'src/css': 'css', 'src/fonts': 'fonts', 'src/js': 'js', 'src/CNAME': 'CNAME', 'src/brand': 'brand', 'src/gate': 'gate', 'src/v3': 'assets/v3', 'src/reel': 'reel', 'src/clients': 'clients', 'src/typeface': 'typeface', 'src/identity': 'identity', 'src/typography': 'typography' });
+  config.addPassthroughCopy({ 'src/css': 'css', 'src/fonts': 'fonts', 'src/js': 'js', 'src/CNAME': 'CNAME', 'src/brand': 'brand', 'src/reel': 'reel', 'src/clients': 'clients', 'src/typeface': 'typeface', 'src/identity': 'identity', 'src/typography': 'typography' });
   // The videos of the projects on the site, and their poster frames.
   for (const { slug, data } of listed('projects')) {
     for (const b of (data.blocks ?? []).filter((b) => b.type === 'video')) {
@@ -99,14 +99,6 @@ export default function (config) {
     }
     return frames;
   });
-  // Project covers for the WebGL pages (the labyrinth).
-  config.addGlobalData('slides', async () => {
-    const projects = await readProjects('projects');
-    return Promise.all(projects.map(async (p) => ({
-      slug: p.slug, title: p.title, ar: p.cover.ar,
-      s: await imageSrc(p.cover.src, 640, 'webp'), l: await imageSrc(p.cover.src, 1280, 'webp'),
-    })));
-  });
   config.addGlobalData('poster', async () => {
     const projects = await readProjects('projects');
     const first = projects.filter((p) => p.featured).sort((a, b) => a.featured - b.featured)[0]
@@ -142,8 +134,6 @@ export default function (config) {
       };
     }));
   });
-  // The typeface's share picture, drawn by type/build.py in the font itself.
-  config.addGlobalData('typefaceOg', () => ogImage('src/typeface/og.svg'));
   // The people in the studio (team/team.json), each with a portrait from
   // team/, in black and white (main.css).
   config.addWatchTarget('team/');

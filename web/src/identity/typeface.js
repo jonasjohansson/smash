@@ -1,8 +1,7 @@
-// The SMASH typeface: SMASH's own, drawn from the mark (web/src/typeface/, the
-// site's /typeface/), for very special occasions (Jonas, 2026-10-01: "i think
+// The SMASH typeface: SMASH's own, drawn from the mark (web/src/typeface/), for very special occasions (Jonas, 2026-10-01: "i think
 // the smash typeface is mostly for very special occassions we wont use it
 // primiarly", "but i thought the smash typeface could have a section on the
-// page"). A line to set in it with its five axes, as /typeface/ has them; its
+// page"). A line to set in it with its five axes; its
 // specimen; its axes at their least, the mark's and their most; and three
 // occasions: the wordmark beside SMASH typed in the face (the face is the
 // mark's letters), a number at its widest, a name at its tallest. The pieces
@@ -80,7 +79,7 @@ export const HTML = `
         <button type="button" class="tf-reset">The mark's</button>
       </div>
       <p class="tf-sample" contenteditable="true" spellcheck="false" aria-label="Type to try the typeface">Immersive experience studio</p>
-      <div class="tf-alts"><p>Its letters<span>RKVXY</span></p><p>Stylistic set 1<span class="ss01">RKVXY</span></p><p>The font, its Glyphs file, its sources<a href="/typeface/">smash.jonasjohansson.se/typeface</a></p></div>
+      <div class="tf-alts"><p>Its letters<span>RKVXY</span></p><p>Stylistic set 1<span class="ss01">RKVXY</span></p><p>The font, its Glyphs file, its sources<a href="/typeface/SMASH-VF.ttf" download>Font (TTF)</a> <a href="/typeface/SMASH.glyphs" download>Glyphs file</a> <a href="/typeface/SMASH-sources.zip" download>Sources (UFO)</a></p></div>
     </div>
     <div class="ty-row">
       ${fig(sheet({
