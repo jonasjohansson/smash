@@ -203,7 +203,7 @@ const EXTRAS = [
   { id: 'lab', name: 'The live mark', load: async () => { const m = await import('./lab.js'); return { html: m.LAB_HTML, mount: m.mountLab }; } },
   // At the end of the page, after every chapter (Jonas, 2026-09-29).
   { id: 'sequence', name: 'Sequence', last: true, load: async () => { const m = await import('./sequence/section.js'); return { html: m.HTML, mount: m.mount }; } },
-  // The type chosen, Anton and Neue Montreal, and the pair at work with the marks (Jonas, 2026-09-30).
+  // The type chosen, Druk (Anton until 2026-10-03), Neue Montreal and Season Mix, at work with the marks (Jonas, 2026-09-30).
   { id: 'type', name: 'Typography', last: true, load: async () => { const m = await import('./type.js'); return { html: m.HTML, mount: m.mount }; } },
   // SMASH's own typeface, for very special occasions: a section of its own (Jonas, 2026-10-01).
   { id: 'typeface', name: 'The SMASH typeface', last: true, load: async () => { const m = await import('./typeface.js'); return { html: m.HTML, mount: m.mount }; } },

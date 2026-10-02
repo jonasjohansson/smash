@@ -2,7 +2,12 @@
    Press G for the 12 columns and the team's local three-column guides. */
 
 /* The pairing of gentilhomme.com: Neue Montreal throughout, Season Mix for
-   the large texts that tell a project; Anton for the masks. */
+   the large texts that tell a project; Druk for the titles and the masks.
+   Druk Heavy is the trial (no licence yet), which lacks & @ / and Å Ä Ö:
+   Anton, its web stand-in until now, sets those, scaled to Druk's capitals
+   (cap heights 744 and 859 in 1000). */
+@font-face { font-family: "Druk"; font-weight: 400; font-style: normal; font-display: block; src: url(/fonts/Druk-Heavy-Trial.woff2) format("woff2"); }
+@font-face { font-family: "Druk Fill"; font-weight: 400; font-style: normal; font-display: block; size-adjust: 86.6%; src: url(/fonts/Anton-Regular.woff2) format("woff2"); }
 @font-face { font-family: "Anton"; font-weight: 400; font-style: normal; font-display: block; src: url(/fonts/Anton-Regular.woff2) format("woff2"); }
 @font-face { font-family: "Neue Montreal"; font-weight: 400; font-style: normal; font-display: swap; src: url(/fonts/NeueMontreal-Regular.woff) format("woff"); }
 @font-face { font-family: "Season Mix"; font-weight: 400; font-style: normal; font-display: swap; src: url(/fonts/SeasonMix-Regular.woff) format("woff"); }
@@ -34,7 +39,7 @@
 
   --font: "Neue Montreal", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --serif: "Season Mix", Georgia, serif;
-  --display: Anton, Impact, "Arial Narrow", sans-serif; /* the titles: Anton, on the web in place of Druk, SMASH's title face */
+  --display: Druk, "Druk Fill", Impact, "Arial Narrow", sans-serif; /* the titles: Druk, SMASH's title face */
   --t-small: 12px;
   --t-body: clamp(14px, 1vw, 16px);
   --t-lead: clamp(20px, 2vw, 32px);

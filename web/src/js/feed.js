@@ -57,9 +57,9 @@ function offeringHead(slug) {
 // The masks' typeface. Its stylesheet (main.css, data-info-font) has to be in
 // before the typeface can be asked for, and WebKit runs this module before it
 // is: asked too soon, the answer is that there is no such typeface yet.
-// (A title mask is set in whatever its text is set in: Anton, unless the type
+// (A title mask is set in whatever its text is set in: Druk, unless the type
 // tester on the project pages, /typography/tester.js, sets it in another.)
-const FONT = 'Anton';
+const FONT = 'Druk, "Druk Fill"'; // Anton for what Druk's trial lacks (main.css)
 const sheet = new Promise((resolve) => {
   const link = document.querySelector('link[data-info-font]');
   if (!link || link.sheet) return resolve();

@@ -1,8 +1,8 @@
-// Typography: the site's own type. Anton for titles, always in capitals, on
-// the web standing in for Druk (Commercial Type), SMASH's title face (Jonas,
-// 2026-10-01: "i think druk is great, and anton a good web font alternative";
-// only Druk's trial is in the library, without Å Ä Ö, so the pieces stay in
-// Anton until it is bought); Neue
+// Typography: the site's own type. Druk (Commercial Type) for titles, always
+// in capitals (Jonas, 2026-10-01: "i think druk is great", and 2026-10-03,
+// "go with druk"); only its trial is in the library, without Å Ä Ö, & and
+// the brackets, which Anton, its stand-in until then, sets, scaled to Druk's
+// capitals (main.css, identity.css: "Druk Fill"); Neue
 // Montreal for labels, captions and small text; Season Mix for what tells a
 // project at length, its lead and its story (Jonas, 2026-10-01, after trying
 // the site without it: "i think we prefer the season mix"). SMASH's own
@@ -74,14 +74,14 @@ const HOW = 'Four weatherproofed touch pads with embedded lighting were placed i
 
 // Their vertical measures per em (the fonts' OS/2 and hhea tables): cap height, x-height, descent.
 export const METRICS = {
-  anton: { cap: 1760 / 2048, x: 1500 / 2048, desc: 674 / 2048 },
+  druk: { cap: 0.744, x: 0.538, desc: 0.188 },
   nm: { cap: 0.715, x: 0.51, desc: 0.225 },
   sm: { cap: 0.721, x: 0.519, desc: 0.254 },
   smash: { cap: 0.7, x: 0.7, desc: 0.2 }, // at its defaults: its height 471 (the mark's) draws the letters 700 high
 };
 // The advance widths, per em, of the words set to a measure (read from the fonts with fontTools).
-export const EM = { 400: 1.4824, JAGAD: 2.415, Uppsala: 3.465, Hjärtslag: 3.783, Resonance: 1.386 };
-const FAMILY = { anton: 'Anton', nm: 'Neue Montreal', sm: 'Season Mix', smash: 'SMASH' };
+export const EM = { 400: 1.237, JAGAD: 2.02, Uppsala: 3.465, Hjärtslag: 3.783, Resonance: 1.386 };
+const FAMILY = { druk: 'Druk', nm: 'Neue Montreal', sm: 'Season Mix', smash: 'SMASH' };
 const per1000 = (v) => Math.round(v * 1000);
 
 /**
@@ -92,7 +92,7 @@ const per1000 = (v) => Math.round(v * 1000);
 export function measured(face, word, { lines = ['cap', 'x', 'base', 'desc'], labels = {}, settings = '' } = {}) {
   const m = METRICS[face];
   const size = 740 / EM[word];
-  const top = face === 'anton' ? 40 : 60; // room over the cap height for the ascenders
+  const top = face === 'druk' ? 40 : 60; // room over the cap height for the ascenders
   const base = top + m.cap * size;
   const h = Math.ceil(base + m.desc * size + 34);
   const at = { cap: base - m.cap * size, x: base - m.x * size, base, desc: base + m.desc * size };
@@ -133,11 +133,11 @@ export const settings = (o) => Object.entries(o).map(([k, v]) => `'${k}' ${v}`).
 const SPECIMENS = `
     <div class="ty-row">
       ${fig(sheet({
-        name: 'Anton', face: 'anton', word: 'JAGAD', cols: 7, measure: { lines: ['cap', 'base', 'desc'] },
-        by: 'Vernon Adams · Google Fonts · free, SIL Open Font License',
-        role: 'Titles on the web, in place of Druk, the title face · always in capitals · line height 0.92',
-        set: CAPS + FIGURES + MARKS_,
-      }), 'Specimen · Anton')}
+        name: 'Druk', face: 'druk', word: 'JAGAD', cols: 8, measure: { lines: ['cap', 'base', 'desc'] },
+        by: 'Berton Hasebe · Commercial Type · the trial, Heavy, to be licensed',
+        role: 'Titles · always in capitals · line height 0.92',
+        set: CAPS.slice(0, 26) + FIGURES + '?!.,', // what the trial has
+      }), 'Specimen · Druk')}
     </div>
     <div class="ty-row">
       ${fig(sheet({
@@ -160,7 +160,7 @@ const SPECIMENS = `
       ${fig(`<div class="ty-art ty-scale">
         <p class="ty-meta ty-scale-spec">Label<br><span>Neue Montreal 12 · capitals · tracked 6 %</span></p>
         <p class="ty-meta ty-scale-label">Uppsala Town Hall · 2024</p>
-        <p class="ty-meta ty-scale-spec">Title<br><span>Anton 104 · line height 0.97 · capitals</span></p>
+        <p class="ty-meta ty-scale-spec">Title<br><span>Druk 104 · line height 0.97 · capitals</span></p>
         <h3 class="ty-title ty-scale-title">Resonance</h3>
         <p class="ty-meta ty-scale-spec">Lead and story<br><span>Season Mix 46 · line height 1.15</span></p>
         <p class="ty-text ty-scale-lead">${RESONANCE}</p>
@@ -175,8 +175,8 @@ const SPECIMENS = `
 /** One number as wide as the measure (860 of 1000). */
 function number(n) {
   const size = 860 / EM[n];
-  const cap = METRICS.anton.cap * size;
-  return `<svg class="ty-number" viewBox="0 0 860 ${f(cap)}" aria-label="${n}"><text x="0" y="${f(cap)}" font-family="Anton" font-size="${f(size)}" textLength="860" lengthAdjust="spacing" fill="currentColor">${n}</text></svg>`;
+  const cap = METRICS.druk.cap * size;
+  return `<svg class="ty-number" viewBox="0 0 860 ${f(cap)}" aria-label="${n}"><text x="0" y="${f(cap)}" font-family="Druk" font-size="${f(size)}" textLength="860" lengthAdjust="spacing" fill="currentColor">${n}</text></svg>`;
 }
 
 const COMPOSITIONS = `
@@ -303,7 +303,7 @@ const button = (attr, value, label, on, swatch = '') => `<button type="button" d
 /** Both sections' styles (this one's, and typeface.js's, which borrows its pieces). */
 export const STYLE = `
 :is(#type, #typeface) {
-  --anton: Anton, Impact, "Arial Narrow", sans-serif; --nm: "Neue Montreal", "Helvetica Neue", Arial, sans-serif; --sm: "Season Mix", Georgia, serif;
+  --druk: Druk, "Druk Fill", Impact, "Arial Narrow", sans-serif; --nm: "Neue Montreal", "Helvetica Neue", Arial, sans-serif; --sm: "Season Mix", Georgia, serif;
   --ty-ground: #000; --ty-type: #fff; --ty-accent: #fff; --ty-field: #000; --ty-on-field: #fff; --ty-paper: #fff; --ty-on-paper: #000; --ty-light: #fff; --ty-on-light: #000; --ty-construct: ${PINK};
 }
 :is(#type, #typeface) .ty-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 28px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
@@ -334,14 +334,14 @@ export const STYLE = `
 :is(#type, #typeface) .ty-shade::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(to top, color-mix(in srgb, var(--ty-ground) 82%, transparent), transparent 60%); }
 :is(#type, #typeface) .ty-mk { display: block; }
 :is(#type, #typeface) .ty-mk svg { display: block; width: 100%; height: auto; }
-:is(#type, #typeface) .ty-title { margin: 0; font: 400 var(--s, 10cqw)/0.92 var(--anton); text-transform: uppercase; }
+:is(#type, #typeface) .ty-title { margin: 0; font: 400 var(--s, 10cqw)/0.92 var(--druk); text-transform: uppercase; }
 :is(#type, #typeface) .ty-text { margin: 0; font: 400 1.6cqw/1.4 var(--sm); max-width: 44ch; } /* what tells a project: its lead, its story */
 :is(#type, #typeface) .ty-meta { margin: 0; font: 400 1.05cqw/1.2 var(--nm); letter-spacing: 0.06em; text-transform: uppercase; }
-:is(#type, #typeface) .ty-anton { font-family: var(--anton); }
+:is(#type, #typeface) .ty-druk { font-family: var(--druk); }
 :is(#type, #typeface) .ty-nm { font-family: var(--nm); }
 :is(#type, #typeface) .ty-sm { font-family: var(--sm); }
 :is(#type, #typeface) .ty-sheet-italic { margin: 3cqw 0 0; font-size: 2.2cqw; line-height: 1.2; color: var(--ty-type); }
-:is(#type, #typeface) .ty-smash { font-family: "SMASH", var(--anton); font-variation-settings: "wght" 500; }
+:is(#type, #typeface) .ty-smash { font-family: "SMASH", var(--druk); font-variation-settings: "wght" 500; }
 
 /* Specimens: a face's sheet (its word with its measures, its characters) and the scale */
 :is(#type, #typeface) .ty-sheet { aspect-ratio: 2 / 1; padding: 3.5%; display: flex; flex-direction: column; gap: 3cqw; }
@@ -355,7 +355,7 @@ export const STYLE = `
 :is(#type, #typeface) .ty-rule-label { fill: var(--ty-construct); font: 400 15px var(--nm); letter-spacing: 0.06em; text-transform: uppercase; }
 :is(#type, #typeface) .ty-glyphs { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); border-top: 1px solid color-mix(in srgb, currentColor 22%, transparent); border-left: 1px solid color-mix(in srgb, currentColor 22%, transparent); }
 :is(#type, #typeface) .ty-glyphs span { aspect-ratio: 1; display: grid; place-items: center; border-right: 1px solid color-mix(in srgb, currentColor 22%, transparent); border-bottom: 1px solid color-mix(in srgb, currentColor 22%, transparent); font-size: 2.1cqw; line-height: 1; }
-:is(#type, #typeface) .ty-glyphs.ty-anton span { font-size: 2.6cqw; }
+:is(#type, #typeface) .ty-glyphs.ty-druk span { font-size: 2.6cqw; }
 :is(#type, #typeface) .ty-glyphs.ty-smash span { font-size: 3.9cqw; font-variation-settings: "wght" 500, "wdth" 175; }
 :is(#type, #typeface) .ty-axes { padding: 3.5%; display: grid; grid-template-columns: 16fr 28fr 28fr 28fr; column-gap: 3cqw; row-gap: 3.2cqw; align-items: end; }
 :is(#type, #typeface) .ty-axes-name { font-size: 1.1cqw; }

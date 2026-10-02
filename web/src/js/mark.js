@@ -256,7 +256,7 @@ export function paintMark(ctx, shape, invert) {
   ctx.globalCompositeOperation = 'source-over';
 }
 
-export const INFO_FONT = 'Anton';
+export const INFO_FONT = 'Druk, "Druk Fill"'; // Anton for what Druk's trial lacks (main.css)
 
 // Icons that can close a row (paintInfo), drawn on a 24-unit square: they
 // keep their shape however the row's letters are stretched.

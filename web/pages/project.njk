@@ -32,8 +32,8 @@ eleventyComputed:
     {# The hero shows through the letters of the title, as the work shows
        through the mark on the landing: black with the title cut out, laid over
        it (multiply). feed.js sizes the letters to meet the hero's edges. #}
-    <svg class="title-mask" viewBox="0 -88 {{ (p.title | length) * 41 }} 89" preserveAspectRatio="none" aria-hidden="true"><rect x="-99999" y="-99999" width="199999" height="199999" fill="#000"/><text font-family="Anton" font-size="100" fill="#fff">{{ p.title | upper }}</text></svg>
-    <svg class="title-mask title-ground" viewBox="0 -88 {{ (p.title | length) * 41 }} 89" preserveAspectRatio="none" aria-hidden="true"><rect x="-99999" y="-99999" width="199999" height="199999" fill="#fff"/><text font-family="Anton" font-size="100" fill="#000">{{ p.title | upper }}</text></svg>
+    <svg class="title-mask" viewBox="0 -76 {{ (p.title | length) * 35 }} 77" preserveAspectRatio="none" aria-hidden="true"><rect x="-99999" y="-99999" width="199999" height="199999" fill="#000"/><text font-family="Druk, 'Druk Fill'" font-size="100" fill="#fff">{{ p.title | upper }}</text></svg>
+    <svg class="title-mask title-ground" viewBox="0 -76 {{ (p.title | length) * 35 }} 77" preserveAspectRatio="none" aria-hidden="true"><rect x="-99999" y="-99999" width="199999" height="199999" fill="#fff"/><text font-family="Druk, 'Druk Fill'" font-size="100" fill="#000">{{ p.title | upper }}</text></svg>
     </figure>
     {% endif %}
     <h1 class="project-title">{{ p.title }}</h1>

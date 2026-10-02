@@ -2,7 +2,8 @@
    cream) so the six directions carry the colour and the character. */
 
 @font-face { font-family: "Neue Montreal"; font-weight: 400; font-display: swap; src: url(/fonts/NeueMontreal-Regular.woff) format("woff"); }
-@font-face { font-family: "Anton"; font-weight: 400; font-display: swap; src: url(/fonts/Anton-Regular.woff2) format("woff2"); }
+@font-face { font-family: "Druk"; font-weight: 400; font-display: swap; src: url(/fonts/Druk-Heavy-Trial.woff2) format("woff2"); }
+@font-face { font-family: "Druk Fill"; font-weight: 400; font-display: swap; size-adjust: 86.6%; src: url(/fonts/Anton-Regular.woff2) format("woff2"); } /* what Druk's trial lacks, as main.css */
 @font-face { font-family: "Season Mix"; font-weight: 400; font-display: swap; src: url(/fonts/SeasonMix-Regular.woff) format("woff"); }
 @font-face { font-family: "Season Mix"; font-weight: 400; font-style: italic; font-display: swap; src: url(/fonts/SeasonMix-RegularItalic.woff) format("woff"); }
 @font-face { font-family: "SMASH"; font-weight: 100 900; font-display: swap; src: url(/typeface/SMASH-VF.ttf) format("truetype"); }
