@@ -5,7 +5,8 @@
 // The focus round (2026-09-28): the original and the struck lean; the struck lean came off
 // too on 2026-09-30 (Jonas). Reassembled, Impact, Cut,
 // Alignment and Crack Line were set aside; their modules stay in directions/ for the record.
-export const SLUGS = ['original'];
+// Slant (2026-10-11): the original with its curves cut, after CM.SUPPLY's round 4.
+export const SLUGS = ['original', 'slant'];
 
 export async function loadDirections(only) {
   const slugs = only ? SLUGS.filter((s) => s === only) : SLUGS;

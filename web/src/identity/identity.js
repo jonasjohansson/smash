@@ -43,9 +43,10 @@ let pixel = 0;
  * its kind of grid (grid.js).
  */
 function drawn(d, fn, ground) {
-  const one = (px) => { const v = still(d, fn, { ground, pixel: px }); return fn === 'wordmark' ? wide(v) : squared(v); };
+  const kind = fn.startsWith('wordmark') ? 'wordmark' : fn; // the a's versions (slant.js: VERSIONS) are wordmarks too
+  const one = (px) => { const v = still(d, fn, { ground, pixel: px }); return kind === 'wordmark' ? wide(v) : squared(v); };
   const svg = one(pixel);
-  return withGrid(svg, fn, pixel ? one(0) : svg);
+  return withGrid(svg, kind, pixel ? one(0) : svg);
 }
 
 /** A still's box, marked so the page can draw it again when the curves change. */
@@ -83,6 +84,9 @@ function chapter(d) {
         <figure class="panel ground-ink">${markHTML(d, 'wordmark', 'ink', 'wm')}<figcaption class="label">Wordmark</figcaption></figure>
         <figure class="panel ground-paper">${markHTML(d, 'wordmark', 'paper', 'wm')}<figcaption class="label">Wordmark</figcaption></figure>
       </div>
+      ${d.mod.VERSIONS ? `<div class="row three">${d.mod.VERSIONS.map(([fn, label]) => `
+        <figure class="panel ground-paper">${markHTML(d, fn, 'paper', 'wm')}<figcaption class="label">${esc(label)}</figcaption></figure>`).join('')}
+      </div>` : ''}
       <div class="row three">
         <figure class="panel ground-ink square">${markHTML(d, 'symbol', 'ink', 'sym')}<figcaption class="label">Symbol</figcaption></figure>
         <figure class="panel ground-mid square">${favicons(d)}<figcaption class="label">Favicon 64 · 32 · 16</figcaption></figure>

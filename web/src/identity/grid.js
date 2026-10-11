@@ -36,10 +36,11 @@ const f = (n) => +n.toFixed(2);
 export function circles(d) {
   const out = new Map();
   let cur = [0, 0], start = [0, 0];
-  for (const [, cmd, args] of d.matchAll(/([MLAZ])([^MLAZ]*)/g)) {
+  for (const [, cmd, args] of d.matchAll(/([MLAZC])([^MLAZC]*)/g)) {
     const n = args.trim() ? args.trim().split(/[\s,]+/).map(Number) : [];
     if (cmd === 'M') { cur = [n[0], n[1]]; start = cur; }
     else if (cmd === 'L') cur = [n[0], n[1]];
+    else if (cmd === 'C') cur = [n[4], n[5]];
     else if (cmd === 'Z') cur = start;
     else if (cmd === 'A') {
       const to = [n[5], n[6]];
