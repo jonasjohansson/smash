@@ -82,7 +82,7 @@ function place(d, k, dx, dy) {
 }
 
 /** Lines of type as outlines: [key, baseline] pairs, capitals `cap` tall, starting at x. */
-function lockPaths(lines, cap, x) {
+export function lockPaths(lines, cap, x) {
   const k = cap / OUTLINES.studio.cap;
   const d = lines.map(([key, base]) => place(OUTLINES[key].d, k, x, base)).join('');
   return { d, width: +(x + Math.max(...lines.map(([key]) => OUTLINES[key].advance)) * k).toFixed(2) };

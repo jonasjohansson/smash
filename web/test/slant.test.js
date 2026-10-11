@@ -85,3 +85,16 @@ test('the S M and the S alone: on the grid, cut 8 in 20, the S the same upside d
   assert.deepEqual([G.SYM_W, G.SYM_H], [240, 136]);
   assert.equal([...G.symbol().matchAll(/A4 4/g)].length, 2); // the M's two slot ends
 });
+
+const C = await import('../src/identity/directions/slant.js');
+
+test('the chapter gives every still as plain vector, and the a three ways', () => {
+  for (const fn of ['wordmark', 'symbol', 'lockup', 'lockupSM', 's', 'sTurned', 'sSquare', ...C.VERSIONS.map(([v]) => v)]) {
+    const out = C[fn]();
+    assert.match(out, /^<svg [^>]*viewBox="0 0 [\d.]+ [\d.]+"/, fn);
+    assert.doesNotMatch(out, /<text|style=|filter|mask|transform/, fn);
+  }
+  for (const n of [16, 32, 64]) assert.match(C.favicon({ size: n }), new RegExp(`viewBox="0 0 ${n} ${n}"`));
+  assert.match(C.wordmarkBelow(), /viewBox="0 0 552 484"/);
+  assert.equal(C.info.slug, 'slant');
+});
