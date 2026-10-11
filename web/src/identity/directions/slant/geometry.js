@@ -6,7 +6,7 @@
 // round tip was (a bar from the edge), its obtuse corner rounded 4; an S's
 // bend is cut outside, 20 across and 8 down, and stays sharp inside.
 
-import { W, H, PITCH, REST, measures, smMeasures, quarterTurn } from '../original/geometry.js';
+import { W, H, PITCH, REST, measures, smMeasures, quarterTurn, SYM_COLS, SYM_ROWS, SYM_H } from '../original/geometry.js';
 
 const f = (n) => String(+n.toFixed(2));
 const P = (x, y) => `${f(x)} ${f(y)}`;
@@ -15,7 +15,11 @@ const P = (x, y) => `${f(x)} ${f(y)}`;
 function fillet(prev, c, next, r) {
   const unit = (p) => { const dx = p[0] - c[0], dy = p[1] - c[1], l = Math.hypot(dx, dy); return [dx / l, dy / l]; };
   const u = unit(prev), v = unit(next);
-  const t = r / Math.tan(Math.acos(u[0] * v[0] + u[1] * v[1]) / 2);
+  const t = r / Math.tan(Math.acos(Math.max(-1, Math.min(1, u[0] * v[0] + u[1] * v[1]))) / 2);
+  // A corner that turns right back (or a side of no length) can't be rounded, and a round longer than a side would overrun it.
+  if (!Number.isFinite(t) || t > Math.min(Math.hypot(prev[0] - c[0], prev[1] - c[1]), Math.hypot(next[0] - c[0], next[1] - c[1]))) {
+    throw new Error(`poly: corner ${c[0]} ${c[1]} can't be rounded by ${r}`);
+  }
   const turn = (c[0] - prev[0]) * (next[1] - c[1]) - (c[1] - prev[1]) * (next[0] - c[0]);
   return { from: [c[0] + u[0] * t, c[1] + u[1] * t], to: [c[0] + v[0] * t, c[1] + v[1] * t], sweep: turn > 0 ? 1 : 0 };
 }
@@ -23,6 +27,8 @@ function fillet(prev, c, next, r) {
 /**
  * A closed outline as path data: corners [x, y], corners rounded by r [x, y, r],
  * or curves to (x, y) ['C', x1, y1, x2, y2, x, y]. The first is a corner.
+ * A rounded corner's neighbours are corners, not curves: the round is cut
+ * along the straight lines to them.
  */
 export function poly(pts) {
   const end = (p) => (p[0] === 'C' ? p.slice(5, 7) : p.slice(0, 2));
@@ -49,6 +55,7 @@ export const depth = (a) => (a === 'below' ? DIP : 0);
 
 /** The letters as path data, one closed outline each (the a's slot a second subpath): S, M, a, S, H. */
 export function letterPaths(p = SLANT) {
+  if (!A_VERSIONS.includes(p.a)) throw new Error(`slant: no a called ${p.a}`);
   const { s, c, top, bot, up, lo } = measures(p);
   const d = DROP * 2 * s; // 8
   const r = p.round ? ROUND * 2 * s : 0; // 4
@@ -80,6 +87,7 @@ export function letterPaths(p = SLANT) {
   // the bowl's base swoops from the stem down to the block's corner; below, it
   // dips under the baseline; flat, the block stays square and the slot ends as
   // the S's. Either way a bar (32) stands under the slot where it meets the stem.
+  // The curves' control points are set by eye, to CM.SUPPLY's drawing.
   const A = (L, x, R, kind) => {
     const end = kind === 'flat' ? low : H - SWOOP - bar; // the slot's low corner
     const base = {
@@ -113,11 +121,8 @@ export const letters = (p = SLANT) => letterPaths(p).join('');
 // columns by 5 rows of bars and slots, 240 × 136. The S's slots run out of
 // the top and the bottom, so its only curves are its bends, cut; the M's
 // two slots hang from its top bar, their ends cut.
-const SM = smMeasures();
-export const SYM_COLS = SM.cols;
-export const SYM_ROWS = SM.rows;
-export const SYM_W = SYM_COLS.reduce((a, b) => a + b); // 240
-export const SYM_H = SYM_ROWS.reduce((a, b) => a + b); // 136
+export { SYM_COLS, SYM_ROWS, SYM_W, SYM_H } from '../original/geometry.js'; // 240 × 136
+const { stop: SM_STOP } = smMeasures(); // where the M's slots end, from the top
 const edges = (sizes, o) => sizes.reduce((a, n) => [...a, a.at(-1) + n], [o]);
 
 /**
@@ -134,7 +139,7 @@ function sPath({ L, R, a, b, r, slot }) {
 }
 
 /** The S M as path data; cols and rows its bands, x and y its top left, stop where the M's slots end (from the top). */
-export function symbol({ cols = SYM_COLS, rows = SYM_ROWS, x = 0, y = 0, stop = SM.stop, round = 1 } = {}) {
+export function symbol({ cols = SYM_COLS, rows = SYM_ROWS, x = 0, y = 0, stop = SM_STOP, round = 1 } = {}) {
   const e = edges(cols, x);
   const r = edges(rows, y);
   const slot = cols[1];
