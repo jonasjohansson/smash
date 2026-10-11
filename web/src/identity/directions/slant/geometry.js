@@ -6,7 +6,7 @@
 // round tip was (a bar from the edge), its obtuse corner rounded 4; an S's
 // bend is cut outside, 20 across and 8 down, and stays sharp inside.
 
-import { W, H, PITCH, REST, measures } from '../original/geometry.js';
+import { W, H, PITCH, REST, measures, smMeasures, quarterTurn } from '../original/geometry.js';
 
 const f = (n) => String(+n.toFixed(2));
 const P = (x, y) => `${f(x)} ${f(y)}`;
@@ -108,3 +108,49 @@ export function letterPaths(p = SLANT) {
 
 /** The letters as one path, filled evenodd. */
 export const letters = (p = SLANT) => letterPaths(p).join('');
+
+// The symbol, the S M, as the original's (read from the modular mark): 9
+// columns by 5 rows of bars and slots, 240 × 136. The S's slots run out of
+// the top and the bottom, so its only curves are its bends, cut; the M's
+// two slots hang from its top bar, their ends cut.
+const SM = smMeasures();
+export const SYM_COLS = SM.cols;
+export const SYM_ROWS = SM.rows;
+export const SYM_W = SYM_COLS.reduce((a, b) => a + b); // 240
+export const SYM_H = SYM_ROWS.reduce((a, b) => a + b); // 136
+const edges = (sizes, o) => sizes.reduce((a, n) => [...a, a.at(-1) + n], [o]);
+
+/**
+ * An S of the S M as path data: its body and the two blocks its slots cut off.
+ * L and R its edges; a and b the left edges of its top slot and its bottom
+ * one; r its six row edges. The bends are cut outside, sharp inside.
+ */
+function sPath({ L, R, a, b, r, slot }) {
+  const d = DROP * slot;
+  return poly([[L, r[0]], [a, r[0]], [a, r[2] - d], [a + slot, r[2]], [R, r[2]], [R, r[5]],
+    [b + slot, r[5]], [b + slot, r[3] + d], [b, r[3]], [L, r[3]]])
+    + poly([[a + slot, r[0]], [R, r[0]], [R, r[1]], [a + slot, r[1]]])
+    + poly([[L, r[4]], [b, r[4]], [b, r[5]], [L, r[5]]]);
+}
+
+/** The S M as path data; cols and rows its bands, x and y its top left, stop where the M's slots end (from the top). */
+export function symbol({ cols = SYM_COLS, rows = SYM_ROWS, x = 0, y = 0, stop = SM.stop, round = 1 } = {}) {
+  const e = edges(cols, x);
+  const r = edges(rows, y);
+  const slot = cols[1];
+  const d = DROP * slot;
+  const k = round ? ROUND * slot : 0;
+  const top = y + stop;
+  return sPath({ L: e[0], R: e[3], a: e[1], b: e[1], r, slot })
+    + poly([[e[4], r[0]], [e[9], r[0]], [e[9], r[5]],
+      ...[[e[7], e[8]], [e[5], e[6]]].flatMap(([a, b]) => [[b, r[5]], [b, top + d, k], [a, top], [a, r[5]]]),
+      [e[4], r[5]]]);
+}
+
+/** The S alone, as the original's: 84 × 136; wide draws it out by pitches (1: a square); turn lays it on its side. */
+export function letterS({ wide = 0, turn = false } = {}) {
+  const [bar, slot] = SYM_COLS;
+  const w = 2 * bar + slot + wide * (bar + slot);
+  const d = sPath({ L: 0, R: w, a: bar, b: bar + wide * (bar + slot), r: edges(SYM_ROWS, 0), slot });
+  return turn ? { d: quarterTurn(d, SYM_H), w: SYM_H, h: w } : { d, w, h: SYM_H };
+}

@@ -52,3 +52,13 @@ test('the a: inside stays in the block, below dips 12 under it, flat is square',
   assert.equal(G.depth('below'), 12);
   assert.equal(G.depth('inside'), 0);
 });
+
+test('the S M and the S alone: on the grid, cut 8 in 20, the S the same upside down', () => {
+  for (const d of [G.symbol({ round: 0 }), G.letterS().d, G.letterS({ wide: 1 }).d, G.letterS({ turn: true }).d]) {
+    assert.doesNotMatch(d, /[AC]/);
+    for (const p of polys(d)) assert.deepEqual(p.flat().filter((n) => n % 4), []);
+  }
+  for (const s of [G.letterS(), G.letterS({ wide: 1 })]) assert.deepEqual(turned(s.d, s.w, s.h), corners(s.d));
+  assert.deepEqual([G.SYM_W, G.SYM_H], [240, 136]);
+  assert.equal([...G.symbol().matchAll(/A4 4/g)].length, 2); // the M's two slot ends
+});

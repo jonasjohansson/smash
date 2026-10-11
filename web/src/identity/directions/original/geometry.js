@@ -129,7 +129,7 @@ export function letterS({ wide = 0, turn = false } = {}) {
 }
 
 /** Path data (M, L, A, Z, absolute) turned a quarter clockwise in a box h high: (x, y) to (h − y, x). */
-function quarterTurn(d, h) {
+export function quarterTurn(d, h) {
   return [...d.matchAll(/([MLAZ])([^MLAZ]*)/g)].map(([, cmd, args]) => {
     if (cmd === 'Z') return 'Z';
     const n = args.trim().split(/[\s,]+/).map(Number);
