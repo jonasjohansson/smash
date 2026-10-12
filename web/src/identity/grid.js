@@ -55,19 +55,21 @@ export function circles(d) {
 /**
  * The still's SVG with its grid added, hidden (class "mk-grid") until the page
  * shows it; the circles are read from round (the still itself, unless it is in
- * pixels).
+ * pixels). own is a chapter's own grid for the still, when its measures move
+ * (slant.js: gridOf): as KINDS, with its bar and slot.
  */
-export function withGrid(svg, kind, round = svg) {
-  const K = KINDS[kind];
+export function withGrid(svg, kind, round = svg, own = null) {
+  const K = own ?? KINDS[kind];
   const vb = svg.match(/viewBox="\s*([-\d.]+)[\s,]+([-\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)\s*"/);
   if (!K || !vb) return svg;
   const [x0, y0, w, h] = vb.slice(1).map(Number);
   // A slot (20) after every bar (32), from the mark's first, on across the artboard (down it, on its side).
+  const bar = K.bar ?? 32, slot = K.slot ?? 20, pitch = bar + slot;
   const [from, span] = K.turn ? [y0, h] : [x0, w];
-  const first = Math.ceil((from - 32) / 52), last = Math.ceil((from + span - 32) / 52) - 1; // those that start on the artboard
+  const first = Math.ceil((from - bar) / pitch), last = Math.ceil((from + span - bar) / pitch) - 1; // those that start on the artboard
   let cols = '';
   for (let i = first; i <= last; i++) {
-    cols += K.turn ? `<rect x="${f(x0)}" y="${32 + 52 * i}" width="${f(w)}" height="20"/>` : `<rect x="${32 + 52 * i}" y="${f(y0)}" width="20" height="${f(h)}"/>`;
+    cols += K.turn ? `<rect x="${f(x0)}" y="${bar + pitch * i}" width="${f(w)}" height="${slot}"/>` : `<rect x="${bar + pitch * i}" y="${f(y0)}" width="${slot}" height="${f(h)}"/>`;
   }
   const bands = K.bands.map((v) => (K.turn ? `M${v} ${f(y0)}V${f(y0 + h)}` : `M${f(x0)} ${v}H${f(x0 + w)}`)).join('');
   const d = round.match(/<path[^>]*\sd="([^"]+)"/)?.[1] ?? '';

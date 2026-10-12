@@ -17,9 +17,14 @@ const esc = (s = '') => String(s).replace(/[<&"]/g, (c) => ({ '<': '&lt;', '&': 
 /**
  * A still's artboard widened to half its width either side: the room the 16 : 9
  * panels need round the wordmark (a percentage height does not resolve inside
- * them, so the artboard carries the width).
+ * them, so the artboard carries the width). A wider mark (slant.js, its stems
+ * widened) gets less: the original's proportion, or a sixth of its own width
+ * either side, whichever is more.
  */
-const wide = (str) => str.replace(/viewBox="\s*([-\d.]+)[\s,]+([-\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)\s*"/, (m, x, y, w, h) => `viewBox="${+x - w / 2} ${y} ${2 * w} ${h}"`);
+const wide = (str) => str.replace(/viewBox="\s*([-\d.]+)[\s,]+([-\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)\s*"/, (m, x, y, w, h) => {
+  const to = Math.max(Math.min(2 * w, (h * 1104) / 472), (4 * w) / 3);
+  return `viewBox="${+x - (to - w) / 2} ${y} ${to} ${h}"`;
+});
 
 /** A tall still's artboard widened to a square, centred (the S alone): it fits its box by its width, like the rest. */
 const squared = (str) => str.replace(/viewBox="\s*([-\d.]+)[\s,]+([-\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)\s*"/, (m, x, y, w, h) => (+h > +w ? `viewBox="${+x - (h - w) / 2} ${y} ${h} ${h}"` : m));
@@ -46,7 +51,7 @@ function drawn(d, fn, ground) {
   const kind = fn.startsWith('wordmark') ? 'wordmark' : fn; // the a's versions (slant.js: VERSIONS) are wordmarks too
   const one = (px) => { const v = still(d, fn, { ground, pixel: px }); return kind === 'wordmark' ? wide(v) : squared(v); };
   const svg = one(pixel);
-  return withGrid(svg, kind, pixel ? one(0) : svg);
+  return withGrid(svg, kind, pixel ? one(0) : svg, d.mod.gridOf?.(kind));
 }
 
 /** A still's box, marked so the page can draw it again when the curves change. */
@@ -64,22 +69,23 @@ function favicons(d) {
 }
 
 
-/** A chapter's own slider (slant.js: SLOPE): its label, the range, and its value in words. */
-const knobHTML = (k) => `<label class="knob"><span>${esc(k.label)}</span><input type="range" min="${k.min}" max="${k.max}" step="${k.step}" value="${k.value}"><output>${esc(k.text(k.value))}</output></label>`;
+/** A chapter's own slider (slant.js: KNOBS): its label, the range, and its value in words. */
+const knobHTML = (k) => `<label class="knob" data-knob="${esc(k.key)}"><span>${esc(k.label)}</span><input type="range" min="${k.min}" max="${k.max}" step="${k.step}" value="${k.value}"><output>${esc(k.text(k.value))}</output></label>`;
 
-/** The slider sets the chapter's measure, and its stills, favicons and stage are drawn again. */
-function knob(d, section) {
-  const input = $('.knob input', section);
-  if (!input) return;
-  const out = $('.knob output', section);
-  input.addEventListener('input', () => {
-    d.mod.SLOPE.set(input.value);
-    out.textContent = d.mod.SLOPE.text(Number(input.value));
-    for (const el of section.querySelectorAll('[data-still]')) el.innerHTML = drawn(d, el.dataset.still, el.dataset.ground);
-    const fav = $('.favicons', section);
-    if (fav) fav.outerHTML = favicons(d);
-    d.live?.motion?.redraw?.();
-  });
+/** Each slider sets its measure, and the chapter's stills, favicons and stage are drawn again. */
+function knobs(d, section) {
+  for (const k of d.mod.KNOBS ?? []) {
+    const label = $(`.knob[data-knob="${k.key}"]`, section);
+    const input = $('input', label);
+    input.addEventListener('input', () => {
+      k.set(input.value);
+      $('output', label).textContent = k.text(Number(input.value));
+      for (const el of section.querySelectorAll('[data-still]')) el.innerHTML = drawn(d, el.dataset.still, el.dataset.ground);
+      const fav = $('.favicons', section);
+      if (fav) fav.outerHTML = favicons(d);
+      d.live?.motion?.redraw?.();
+    });
+  }
 }
 
 function chapter(d) {
@@ -96,7 +102,7 @@ function chapter(d) {
           <button type="button" class="play" aria-label="Play or pause"${info.motion === false ? ' hidden' : ''}>Pause</button>
           <input type="range" class="scrub" min="0" max="1000" value="0" aria-label="Scrub the motion"${info.motion === false ? ' hidden' : ''}>
           ${typeof d.mod.frame === 'function' ? `<button type="button" class="download" title="${SIZES_HINT}">MP4</button>` : ''}
-          ${d.mod.SLOPE ? knobHTML(d.mod.SLOPE) : ''}
+          ${(d.mod.KNOBS ?? []).map(knobHTML).join('')}
         </figcaption>
       </figure>
       <div class="row two">
@@ -273,7 +279,7 @@ async function main() {
     const section = chapter(d);
     page.appendChild(section);
     lives.push(bySlug[d.slug] = d.live = live(d, section));
-    knob(d, section);
+    knobs(d, section);
     if (d.slug === 'original' && !ONLY) for (const x of EXTRAS.filter((x) => !x.last)) await addExtra(page, x);
   }
   if (!ONLY) for (const x of EXTRAS.filter((x) => x.last)) await (x.folded ? addFolded(page, x) : addExtra(page, x));

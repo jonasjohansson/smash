@@ -6,7 +6,7 @@
 // round tip was (a bar from the edge), its obtuse corner rounded 4; an S's
 // bend is cut outside, 20 across and 8 down, and stays sharp inside.
 
-import { W, H, PITCH, REST, measures, smMeasures, quarterTurn, SYM_COLS, SYM_ROWS, SYM_H } from '../original/geometry.js';
+import { W, H, PITCH, REST, smMeasures, quarterTurn, SYM_COLS, SYM_ROWS, SYM_H } from '../original/geometry.js';
 
 const f = (n) => String(+n.toFixed(2));
 const P = (x, y) => `${f(x)} ${f(y)}`;
@@ -49,8 +49,29 @@ export const SWOOP = 20; // the a: how far above the baseline its bowl meets the
 export const DIP = 12; // the a (below): how far under the baseline its bowl dips
 export const SHOULDER = 40; // the a: how far below the stem's top its bowl's top starts, at the left
 export const A_VERSIONS = ['inside', 'below'];
-/** The mark's parameters: the original's, the ends rounded, cut 8 in 20, the a inside. */
-export const SLANT = { ...REST, round: 1, drop: DROP, a: 'inside' };
+export const BAR = 32; // a bar, across and down
+/** The mark's parameters: the original's, the ends rounded, cut 8 in 20, the a inside; its stems a bar wide, the block 472 tall. */
+export const SLANT = { ...REST, round: 1, drop: DROP, a: 'inside', stem: BAR, height: H };
+
+/**
+ * The block's measures (Jonas, 2026-10-12: stems wider, "to match a bit"
+ * CM.SUPPLY's latest): eleven stems (p.stem, 32 or wider, in steps of 4) and
+ * ten slots of 20 across; down, the bars stay 32 and the crossbars centred in
+ * p.height (in steps of 8), so every point stays on the grid of 4. At the
+ * original's, 552 × 472.
+ */
+export function block(p = SLANT) {
+  const stem = p.stem ?? BAR, slot = p.stroke, s = slot / 2, h = p.height ?? H;
+  return {
+    s, stem, slot,
+    c: (i) => stem + s + (stem + slot) * i, // the slots' centres, left to right: 42, 94 …
+    W: 11 * stem + 10 * slot,
+    H: h,
+    up: h / 2 - (BAR + slot) / 2, // the upper crossbar slot's centre: 210
+    lo: h / 2 + (BAR + slot) / 2, // the lower one's: 262
+    bands: [0, BAR, h / 2 - BAR / 2, h / 2 + BAR / 2, h - BAR, h], // the bars down: 0 32 220 252 440 472
+  };
+}
 
 /** How far a version of the a reaches below the block. */
 export const depth = (a) => (a === 'below' ? DIP : 0);
@@ -58,12 +79,12 @@ export const depth = (a) => (a === 'below' ? DIP : 0);
 /** The letters as path data, one closed outline each (the a's slot a second subpath): S, M, a, S, H. */
 export function letterPaths(p = SLANT) {
   if (!A_VERSIONS.includes(p.a)) throw new Error(`slant: no a called ${p.a}`);
-  const { s, c, top, bot, up, lo } = measures(p);
+  const { s, c, up, lo, W, H } = block(p);
   const d = (p.drop ?? DROP) * 2 * s; // 8
   const r = p.round ? ROUND * 2 * s : 0; // 4
-  const hi = top - s; // 32: a top end's high corner, where the round tip was
-  const low = bot + s; // 440: a bottom end's low corner
-  const bar = PITCH - 2 * s; // 32
+  const bar = BAR;
+  const hi = bar; // 32: a top end's high corner, where the round tip was
+  const low = H - bar; // 440: a bottom end's low corner
 
   // An S: the slot from its closed top end turns right at the upper bend and
   // out; the slot in from the left turns down at the lower bend to its closed
@@ -141,6 +162,9 @@ function sPath({ L, R, a, b, r, slot, drop = DROP }) {
     + poly([[L, r[4]], [b, r[4]], [b, r[5]], [L, r[5]]]);
 }
 
+/** The S M's columns with its stems widened: bar, slot, bar … */
+export const symCols = (stem = BAR) => SYM_COLS.map((n, i) => (i % 2 ? n : stem));
+
 /** The S M as path data; cols and rows its bands, x and y its top left, stop where the M's slots end (from the top), drop its cuts' slope. */
 export function symbol({ cols = SYM_COLS, rows = SYM_ROWS, x = 0, y = 0, stop = SM_STOP, round = 1, drop = DROP } = {}) {
   const e = edges(cols, x);
@@ -155,9 +179,9 @@ export function symbol({ cols = SYM_COLS, rows = SYM_ROWS, x = 0, y = 0, stop = 
       [e[4], r[5]]]);
 }
 
-/** The S alone, as the original's: 84 × 136; wide draws it out by pitches (1: a square); turn lays it on its side; drop its cuts' slope. */
-export function letterS({ wide = 0, turn = false, drop = DROP } = {}) {
-  const [bar, slot] = SYM_COLS;
+/** The S alone, as the original's: 84 × 136; wide draws it out by pitches (1: a square); turn lays it on its side; drop its cuts' slope; stem its stems' width. */
+export function letterS({ wide = 0, turn = false, drop = DROP, stem = BAR } = {}) {
+  const [bar, slot] = symCols(stem);
   const w = 2 * bar + slot + wide * (bar + slot);
   const d = sPath({ L: 0, R: w, a: bar, b: bar + wide * (bar + slot), r: edges(SYM_ROWS, 0), slot, drop });
   return turn ? { d: quarterTurn(d, SYM_H), w: SYM_H, h: w } : { d, w, h: SYM_H };

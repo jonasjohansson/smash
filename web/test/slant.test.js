@@ -116,12 +116,36 @@ test('the chapter gives every still as plain vector, and the a two ways', () => 
   assert.equal(C.VERSIONS.length, 2);
 });
 
-test('the slope slider cuts every still at its slope, and back', () => {
+test('the sliders draw every still at their measures, and back', () => {
+  const [slope, stem, height] = C.KNOBS;
+  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'stem', 'height']);
   const at8 = C.wordmark();
-  C.SLOPE.set(12);
+  slope.set(12);
   assert.ok(C.symbol().includes(G.symbol({ drop: 0.6 })));
   assert.ok(C.wordmark().includes(G.letters({ ...G.SLANT, drop: 0.6 })));
-  assert.equal(C.SLOPE.text(12), '12 in 20');
-  C.SLOPE.set(C.SLOPE.value);
+  assert.equal(slope.text(12), '12 in 20');
+  stem.set('96'); height.set('280');
+  assert.match(C.wordmark(), /viewBox="0 0 1256 280"/); // 11 stems of 96, 10 slots of 20
+  assert.match(C.symbol(), /viewBox="0 0 560 136"/); // 5 stems of 96, 4 slots
+  assert.deepEqual(C.gridOf('wordmark'), { w: 1256, h: 280, bands: [0, 32, 124, 156, 248, 280], bar: 96, slot: 20 });
+  for (const fn of ['wordmark', 'wordmarkBelow', 'symbol', 'lockup', 'lockupSM', 's', 'sTurned', 'sSquare']) assert.match(C[fn](), /<path/, fn);
+  for (const k of C.KNOBS) k.set(k.value);
   assert.equal(C.wordmark(), at8);
+});
+
+test('wider stems and another height: on the grid of 4, every cut at the slope, the S the same upside down', () => {
+  for (const stem of [32, 64, 160]) for (const height of [240, 472, 720]) {
+    const p = { ...SQUARE, stem, height };
+    const b = G.block(p);
+    const d = cut(p);
+    for (const q of polys(d)) assert.deepEqual(q.flat().filter((n) => n % 4), [], `${stem} ${height}`);
+    assert.deepEqual(slopes(d).filter((s) => s !== 0.4), [], `${stem} ${height}`);
+    assert.equal(Math.max(...polys(d).flat().map(([x]) => x)), b.W);
+    const S = G.letterPaths(p)[0];
+    assert.deepEqual(turned(S, 2 * stem + 20, height), corners(S));
+    assert.doesNotThrow(() => G.letters({ ...G.SLANT, stem, height, drop: 1 }));
+  }
+  assert.deepEqual([G.block().W, G.block().H], [552, 472]);
+  const S = G.letterS({ stem: 64, wide: 1 });
+  assert.deepEqual(turned(S.d, S.w, S.h), corners(S.d));
 });
