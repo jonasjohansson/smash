@@ -232,24 +232,21 @@ export function move(d, dx, dy) {
   }).join('');
 }
 
-const STEMS = [2, 3, 2, 2, 2]; // S M A S H: their stems, and their slots one fewer
 /**
  * SMASH written down (Jonas, 2026-10-12: of the recompositions, "the DOWN
  * looks pretty good, but lets assume no dip"): the five letters in a column,
- * each as wide as an S and as short as its slots allow (the M's three stems
- * narrower, to fit), a gap between; no dip. { d, w, h }.
+ * each as short as its slots allow, a gap between; no dip. Every letter has
+ * the wordmark's stems and slots (Jonas: "all characters uniformly thick";
+ * of the ways to do it, "2"), so the M, three stems to their two, stands
+ * wider: the column is centred on it. { d, w, h }.
  */
 export function down(p = SLANT) {
-  const slot = p.stroke, stem = p.stem ?? BAR, w = 2 * stem + slot, gap = p.space ?? slot;
   const q = { ...p, dip: 0, height: 0 }; // the least height its slots allow
-  let y = 0, d = '';
-  STEMS.forEach((n, i) => {
-    const b = block({ ...q, stem: (w - (n - 1) * slot) / n });
-    const x0 = [0, b.right(1), b.right(4), b.right(6), b.right(8)][i];
-    d += move(letterPaths({ ...q, stem: (w - (n - 1) * slot) / n })[i], -x0, y);
-    y += b.H + gap;
-  });
-  return { d, w, h: y - gap };
+  const b = block(q), gap = p.space ?? p.stroke;
+  const spans = [[0, b.left(1)], [b.right(1), b.left(4)], [b.right(4), b.left(6)], [b.right(6), b.left(8)], [b.right(8), b.W]];
+  const w = Math.max(...spans.map(([x0, x1]) => x1 - x0));
+  const d = letterPaths(q).map((l, i) => move(l, (w - (spans[i][1] - spans[i][0])) / 2 - spans[i][0], i * (b.H + gap))).join('');
+  return { d, w, h: 5 * b.H + 4 * gap };
 }
 
 // The symbol, the S M, as the original's (read from the modular mark): 9
