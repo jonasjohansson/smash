@@ -320,17 +320,29 @@ test('the chapter framed: the wordmark, Down and the S M in a frame round them, 
   assert.equal(C.wordmark(), plain);
 });
 
-test('cells: a frame round each letter, the walls as thick as the frame; the H rounded both sides', () => {
+test("fitted: the frame fills the wedge where two rounded corners meet, keeping its gap from both, never between the letters", () => {
+  const box = (x0, x1, r) => ({ box: [x0, 0, x1, 100], radii: [r, r, r, r] });
+  const w = G.wedges([box(0, 40, 20), box(60, 100, 20)], 100, 16, 0.6); // a gap of 20 between, 16 from each
+  assert.equal(w.split('M').filter(Boolean).length, 2); // a wedge at the top, one at the base
+  const pts = [...w.matchAll(/([-\d.]+) ([-\d.]+)/g)].map((m) => [+m[1], +m[2]]);
+  const top = pts.filter(([, y]) => y < 50);
+  assert.ok(top.every(([, y]) => y >= -16 - 1e-9)); // no higher than the frame's inside
+  assert.ok(Math.max(...top.map(([, y]) => y)) < 20); // down only till the gaps meet, far above the letters' sides
+  assert.ok(top.every(([x]) => x >= 4 && x <= 96)); // within the corners' rounds
+  assert.equal(G.wedges([box(0, 40, 20), box(80, 120, 20)], 100, 16, 0.6), ''); // a gap wider than both gaps: the frame stays out
+  assert.equal(G.wedges([box(0, 40, 0), box(60, 100, 0)], 100, 16, 0.6), ''); // square corners: nothing to fill
   const K = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
-  K.frame.set('2'); K.frameGap.set('8'); K.frameWidth.set('12');
-  // the gaps 2 × 8 + 12 = 28: 11 stems of 72, 6 slots of 20, 4 gaps of 28; and 20 each side
-  assert.match(C.wordmark(), /viewBox="0 0 1064 512"/);
-  assert.equal(C.wordmark().match(/M/g).length, G.letters(G.SLANT).match(/M/g).length + 1 + 5); // the frame's outside, a cell a letter
-  assert.equal(C.symbol().match(/M/g).length, G.symbol().match(/M/g).length + 1 + 2);
-  assert.equal(C.down().match(/M/g).length, G.down(G.SLANT).d.match(/M/g).length + 1 + 5);
+  K.frame.set('2');
+  const around = (() => { K.frame.set('1'); return C.wordmark(); })();
+  K.frame.set('2');
+  assert.match(C.wordmark(), /viewBox="0 0 1072 552"/); // the letters' gaps as they were
+  assert.equal(C.wordmark().match(/M/g).length, around.match(/M/g).length + 7); // four meetings at the top; at the base, three (the M's and the A's feet square)
+  assert.ok(C.down().match(/M/g).length > G.down({ ...G.SLANT, ...C.START }).d.match(/M/g).length + 2);
+  assert.ok(C.symbol().match(/M/g).length >= G.symbol().match(/M/g).length + 3);
   for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value));
-  const c = G.cells(100, 50, 5, 10, [0, 0, 0, 0], [{ box: [0, 0, 40, 50], radii: [0, 0, 0, 0] }, { box: [60, 0, 100, 50], radii: [0, 0, 0, 0] }]);
-  assert.equal(c, 'M-15 -15L115 -15L115 65L-15 65ZM-5 -5L45 -5L45 55L-5 55ZM55 -5L105 -5L105 55L55 55Z'); // a wall of 10 between
+});
+
+test('the H rounded both sides', () => {
   const H = (both) => G.letterPaths({ ...G.SLANT, outer: 16, per: Object.assign([], { 4: { both } }) })[4];
   assert.equal(H(0).match(/C/g).length, 2);
   assert.equal(H(1).match(/C/g).length, 4);

@@ -178,14 +178,61 @@ export function roundBox([x0, y0, x1, y1], e, radii, tension = TENSION) {
 }
 
 /**
- * A frame that goes into the gaps (Jonas, 2026-10-12: "another setting for
- * the frame where the frame goes into the gaps"): round the whole (w × h,
- * radii), gap from it and width thick, and a cell gap round each box (a
- * letter: { box, radii }), the walls between them the frame's. The letters'
- * gaps should be 2 gap + width, so the walls are as thick as the frame.
+ * Where two rounded corners meet across a gap, the frame fills the wedge they
+ * leave under its inner edge (Jonas, 2026-10-12: "the frame goes into the
+ * gaps", the red part in his drawing, but "shouldn't go between the gaps of
+ * the letters"): it keeps gap from both corners, down to where their gaps
+ * meet. boxes ({ box: [x0, y0, x1, y1], radii }) run left to right in a row
+ * on y 0 to h; for a column (Down), down turns the reckoning a quarter. Path
+ * data, a closed wedge for each meeting at the top and at the base.
  */
-export function cells(w, h, gap, width, radii, boxes, tension = TENSION) {
-  return roundBox([0, 0, w, h], gap + width, radii, tension) + boxes.map((b) => roundBox(b.box, gap, b.radii, tension)).join('');
+export function wedges(boxes, h, gap, tension = TENSION, down = false) {
+  const N = 24;
+  const swap = ([x, y]) => [y, x];
+  // As a row: a column's boxes turned onto their sides, its corners with them.
+  const row = down ? boxes.map(({ box: [x0, y0, x1, y1], radii: [a, b, c, d] }) => ({ box: [y0, x0, y1, x1], radii: [a, d, c, b] })) : boxes;
+  const cubic = (p0, p1, p2, p3) => Array.from({ length: N + 1 }, (_, k) => {
+    const t = k / N, u = 1 - t;
+    return [0, 1].map((i) => u * u * u * p0[i] + 3 * u * u * t * p1[i] + 3 * u * t * t * p2[i] + t * t * t * p3[i]);
+  });
+  // A grown box's corner at (cx, top) bending down on side dir (-1: its left, 1: its right), r its round: points from the top edge down.
+  const corner = (cx, r, dir, depth) => {
+    const top = -gap, c = [cx + dir * gap, top];
+    if (r <= 0) return [c, [c[0], depth]];
+    const R = r + gap, a = [c[0] - dir * R, top], b = [c[0], top + R];
+    const toward = (q) => [q[0] + (c[0] - q[0]) * tension, q[1] + (c[1] - q[1]) * tension];
+    return [...cubic(a, toward(a), toward(b), b), [b[0], depth]];
+  };
+  const cross = (L1, L2) => { // where two polylines first meet: [i, j, point]
+    for (let i = 0; i < L1.length - 1; i++) for (let j = 0; j < L2.length - 1; j++) {
+      const [p, p2, q, q2] = [L1[i], L1[i + 1], L2[j], L2[j + 1]];
+      const r = [p2[0] - p[0], p2[1] - p[1]], s = [q2[0] - q[0], q2[1] - q[1]];
+      const den = r[0] * s[1] - r[1] * s[0];
+      if (Math.abs(den) < 1e-12) continue;
+      const t = ((q[0] - p[0]) * s[1] - (q[1] - p[1]) * s[0]) / den, u = ((q[0] - p[0]) * r[1] - (q[1] - p[1]) * r[0]) / den;
+      if (t >= 0 && t <= 1 && u >= 0 && u <= 1) return [i, j, [p[0] + t * r[0], p[1] + t * r[1]]];
+    }
+    return null;
+  };
+  const out = [];
+  for (const [flip, ra, rb] of [[false, 1, 0], [true, 2, 3]]) { // the top (each box's top right, the next's top left), and the base
+    for (let k = 0; k < row.length - 1; k++) {
+      const A = row[k], B = row[k + 1];
+      const edge = flip ? [A.box[3], B.box[3]].every((y) => Math.abs(y - h) < 1e-6) : [A.box[1], B.box[1]].every((y) => Math.abs(y) < 1e-6);
+      if (!edge) continue; // a letter set in from the frame's edge (Down, the M wider; the A dipping) makes no wedge
+      const depth = h / 2;
+      const ca = corner(A.box[2], A.radii[ra], 1, depth), cb = corner(B.box[0], B.radii[rb], -1, depth);
+      if (ca.length === 2 && cb.length === 2) continue; // two square corners leave no wedge
+      const m = cross(ca, cb);
+      if (!m) continue; // their gaps never meet: the frame stays out
+      const [i, j, at] = m;
+      let pts = [...ca.slice(0, i + 1), at, ...cb.slice(0, j + 1).reverse()];
+      if (flip) pts = pts.map(([x, y]) => [x, h - y]);
+      if (down) pts = pts.map(swap);
+      out.push('M' + pts.map(([x, y]) => P(x, y)).join('L') + 'Z');
+    }
+  }
+  return out.join('');
 }
 
 export function letterPaths(p = SLANT) {
