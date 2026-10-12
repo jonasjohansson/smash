@@ -249,6 +249,9 @@ export function letterPaths(p = SLANT) {
     return {
       d: q.cut ? cutOf(p.drop ?? DROP, slot) : 0, // 8
       r: q.cut && p.round ? Math.min(p.cut ?? CUT, s) : 0, // 4: a cut's obtuse corner, at a slot's end and an S's bend
+      // its other corner too, when the ends are rounded both sides (p.tips; Jonas 2026-10-12: "fully rounded also as
+      // option ... so it's not just one corner in the gap of the m that is rounded"): at half a slot, a round tip
+      r2: q.cut && p.round && p.tips ? Math.min(p.cut ?? CUT, s) : 0,
       Rr,
       o: (x, y) => (Rr > 0 ? [x, y, Rr, p.tension ?? TENSION] : [x, y]),
       Rb,
@@ -276,7 +279,7 @@ export function letterPaths(p = SLANT) {
   // bar between the two, falls tilt across the letter (CM.SUPPLY's long
   // diagonal), so the slots either side of it are wedges; split opens its slot
   // straight through it, the S in two pieces, as theirs.
-  const S = (L, x, R, { d, r, o, ob, tilt, split, open, hi, low }) => {
+  const S = (L, x, R, { d, r, r2, o, ob, tilt, split, open, hi, low }) => {
     const band = (X) => H / 2 + (tilt * (X - x)) / (R - L); // the crossbar's centre line
     const top = (X) => band(X) - bar / 2, bot = (X) => band(X) + bar / 2;
     const tr = top(x + s), bl = bot(x - s); // where the crossbar meets the slot
@@ -289,28 +292,28 @@ export function letterPaths(p = SLANT) {
         return poly([o(L, 0), [x - s, 0], [x - s, bl], [L, bot(L)]])
           + poly([[x + s, tr], [R, top(R)], ob(R, H), [x + s, H]]) + blocks;
       }
-      return poly([o(L, 0), [x - s, 0], [x - s, tr - d, r], [x + s, tr], [R, top(R)], ob(R, H), [x + s, H], [x + s, bl + d, r], [x - s, bl], [L, bot(L)]])
+      return poly([o(L, 0), [x - s, 0], [x - s, tr - d, r], [x + s, tr, r2], [R, top(R)], ob(R, H), [x + s, H], [x + s, bl + d, r], [x - s, bl, r2], [L, bot(L)]])
         + blocks;
     }
     if (split) {
-      return poly([o(L, 0), o(R, 0), [R, up - s], [x + s, up - s], [x + s, hi + d, r], [x - s, hi], [x - s, bl], [L, bot(L)]])
-        + poly([[x + s, tr], [R, top(R)], ob(R, H), ob(L, H), [L, lo + s], [x - s, lo + s], [x - s, low - d, r], [x + s, low]]);
+      return poly([o(L, 0), o(R, 0), [R, up - s], [x + s, up - s], [x + s, hi + d, r], [x - s, hi, r2], [x - s, bl], [L, bot(L)]])
+        + poly([[x + s, tr], [R, top(R)], ob(R, H), ob(L, H), [L, lo + s], [x - s, lo + s], [x - s, low - d, r], [x + s, low, r2]]);
     }
     return poly([
       o(L, 0), o(R, 0), [R, up - s], [x + s, up - s],
-      [x + s, hi + d, r], [x - s, hi],
-      [x - s, tr - d, r], [x + s, tr],
+      [x + s, hi + d, r], [x - s, hi, r2],
+      [x - s, tr - d, r], [x + s, tr, r2],
       [R, top(R)], ob(R, H), ob(L, H), [L, lo + s], [x - s, lo + s],
-      [x - s, low - d, r], [x + s, low],
-      [x + s, bl + d, r], [x - s, bl],
+      [x - s, low - d, r], [x + s, low, r2],
+      [x + s, bl + d, r], [x - s, bl, r2],
       [L, bot(L)],
     ]);
   };
 
   // The M: two slots from the bottom, their top ends cut.
-  const M = (L, R, { d, r, o, ob, hi }) => poly([
+  const M = (L, R, { d, r, r2, o, ob, hi }) => poly([
     o(L, 0), o(R, 0), ob(R, H),
-    ...[c(3), c(2)].flatMap((x) => [[x + s, H], [x + s, hi + d, r], [x - s, hi], [x - s, H]]),
+    ...[c(3), c(2)].flatMap((x) => [[x + s, H], [x + s, hi + d, r], [x - s, hi, r2], [x - s, H]]),
     ob(L, H),
   ]);
 
@@ -330,14 +333,14 @@ export function letterPaths(p = SLANT) {
   // foot; the right leg stands square, as the a's stem.
   const A = (L, x, R, k) => poly([k.o(L, 0), k.o(R, 0), k.ob(R, H), [x + s, H], [x + s, lo - s], [x - s, lo - s],
     ...(k.dip ? swoopTo(x - s, L, k, k.Rb, k.ob) : [[x - s, H], k.ob(L, H)])])
-    + poly([[x + s, k.hi + k.d, k.r], [x - s, k.hi], [x - s, up + s], [x + s, up + s]]);
+    + poly([[x + s, k.hi + k.d, k.r], [x - s, k.hi, k.r2], [x - s, up + s], [x + s, up + s]]);
 
   // The a, as CM.SUPPLY's latest (Jonas, 2026-10-12: "lets explore having
   // both capital and lowercase a"): the stem square on the right, the bowl
   // rounded on the left; its slot closed and cut at both ends, a bar above
   // where the bowl meets the stem, and the foot swooping from there.
   const a = (L, x, R, k) => poly([k.o(L, 0), [R, 0], k.ob(R, H), [x + s, H], ...swoopTo(x + s, L, k, k.Rr, k.o)]) // its bowl's corner rounds with its top
-    + poly([[x + s, k.hi + k.d, k.r], [x - s, k.hi], [x - s, H - swoop - bar - k.d, k.r], [x + s, H - swoop - bar]]);
+    + poly([[x + s, k.hi + k.d, k.r], [x - s, k.hi, k.r2], [x - s, H - swoop - bar - k.d, k.r], [x + s, H - swoop - bar, k.r2]]);
 
   // The H, as the original's; its right corners, the word's, rounded.
   const Hh = (L, x, R, { o, ob, both }) => poly([
@@ -426,11 +429,11 @@ const edges = (sizes, o) => sizes.reduce((a, n) => [...a, a.at(-1) + n], [o]);
  * L and R its edges; a and b the left edges of its top slot and its bottom
  * one; r its six row edges. The bends are cut outside, sharp inside.
  */
-function sPath({ L, R, a, b, r, slot, drop = DROP, o = (x, y) => [x, y], grid = 4, cut = 0 }) {
+function sPath({ L, R, a, b, r, slot, drop = DROP, o = (x, y) => [x, y], grid = 4, cut = 0, tips = 0 }) {
   const d = cutOf(drop, slot, grid);
-  const k = Math.min(cut, slot / 2); // the bends' obtuse corners
-  return poly([o(L, r[0]), [a, r[0]], [a, r[2] - d, k], [a + slot, r[2]], [R, r[2]], o(R, r[5]),
-    [b + slot, r[5]], [b + slot, r[3] + d, k], [b, r[3]], [L, r[3]]])
+  const k = Math.min(cut, slot / 2), k2 = tips ? k : 0; // the bends' obtuse corners, and their others
+  return poly([o(L, r[0]), [a, r[0]], [a, r[2] - d, k], [a + slot, r[2], k2], [R, r[2]], o(R, r[5]),
+    [b + slot, r[5]], [b + slot, r[3] + d, k], [b, r[3], k2], [L, r[3]]])
     + poly([[a + slot, r[0]], o(R, r[0]), [R, r[1]], [a + slot, r[1]]])
     + poly([[L, r[4]], [b, r[4]], [b, r[5]], o(L, r[5])]);
 }
@@ -450,7 +453,7 @@ export const symCols = (stem = BAR, slot = SYM_COLS[1], gap = slot) => SYM_COLS.
 export const symRows = (slot = SYM_ROWS[1]) => SYM_ROWS.map((n, i) => (i % 2 ? slot : n));
 
 /** The S M as path data; cols and rows its bands, x and y its top left, stop where the M's slots end (from the top), drop its cuts' slope. */
-export function symbol({ cols = SYM_COLS, rows = SYM_ROWS, x = 0, y = 0, stop = SM_STOP, round = 1, cut = CUT, drop = DROP, outer = 0, tension = TENSION, grid = 4 } = {}) {
+export function symbol({ cols = SYM_COLS, rows = SYM_ROWS, x = 0, y = 0, stop = SM_STOP, round = 1, cut = CUT, tips = 0, drop = DROP, outer = 0, tension = TENSION, grid = 4 } = {}) {
   const e = edges(cols, x);
   const r = edges(rows, y);
   const slot = cols[1];
@@ -458,18 +461,19 @@ export function symbol({ cols = SYM_COLS, rows = SYM_ROWS, x = 0, y = 0, stop = 
   const k = round ? Math.min(cut, slot / 2) : 0;
   const top = y + stop;
   const o = rounder(outer, tension, cols, rows);
-  return sPath({ L: e[0], R: e[3], a: e[1], b: e[1], r, slot, drop, o, grid, cut: k })
+  const k2 = tips ? k : 0;
+  return sPath({ L: e[0], R: e[3], a: e[1], b: e[1], r, slot, drop, o, grid, cut: k, tips })
     + poly([o(e[4], r[0]), o(e[9], r[0]), [e[9], r[5]],
-      ...[[e[7], e[8]], [e[5], e[6]]].flatMap(([a, b]) => [[b, r[5]], [b, top + d, k], [a, top], [a, r[5]]]),
+      ...[[e[7], e[8]], [e[5], e[6]]].flatMap(([a, b]) => [[b, r[5]], [b, top + d, k], [a, top, k2], [a, r[5]]]),
       [e[4], r[5]]]);
 }
 
 /** The S alone, as the original's: 84 × 136; wide draws it out by pitches (1: a square); turn lays it on its side; drop its cuts' slope; stem its stems' width. */
-export function letterS({ wide = 0, turn = false, drop = DROP, stem = BAR, slot = SYM_COLS[1], outer = 0, tension = TENSION, cut = CUT } = {}) {
+export function letterS({ wide = 0, turn = false, drop = DROP, stem = BAR, slot = SYM_COLS[1], outer = 0, tension = TENSION, cut = CUT, tips = 0 } = {}) {
   const [bar] = symCols(stem, slot);
   const rows = symRows(slot), h = rows.reduce((t, n) => t + n);
   const o = rounder(outer, tension, [bar], rows);
   const w = 2 * bar + slot + wide * (bar + slot);
-  const d = sPath({ L: 0, R: w, a: bar, b: bar + wide * (bar + slot), r: edges(rows, 0), slot, drop, o, cut });
+  const d = sPath({ L: 0, R: w, a: bar, b: bar + wide * (bar + slot), r: edges(rows, 0), slot, drop, o, cut, tips });
   return turn ? { d: quarterTurn(d, h), w: h, h: w } : { d, w, h };
 }

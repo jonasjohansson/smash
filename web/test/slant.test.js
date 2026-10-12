@@ -115,7 +115,7 @@ test('the chapter gives every still as plain vector', () => {
   }
   for (const n of [16, 32, 64]) assert.match(C.favicon({ size: n }), new RegExp(`viewBox="0 0 ${n} ${n}"`));
   // At Jonas's settings: 11 stems of 72, 10 slots and gaps of 20; no dip.
-  assert.deepEqual(C.START, { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: 472, outer: 64, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', frame: 0, frameGap: 20, frameWidth: 20 });
+  assert.deepEqual(C.START, { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: 472, outer: 64, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20 });
   assert.match(C.wordmark(), /viewBox="0 0 992 472"/);
   assert.equal(C.wordmark(), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 992 472" ><path fill="currentColor" fill-rule="evenodd" d="${G.letters({ ...G.SLANT, ...C.START })}"/></svg>`);
   assert.equal(C.info.slug, 'slant');
@@ -123,7 +123,7 @@ test('the chapter gives every still as plain vector', () => {
 
 test('the sliders draw every still at their measures, and back', () => {
   const { slope, stem, height } = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
-  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'ceil', 'height', 'outer', 'tension', 'tilt', 'dip', 'split', 'a', 'frame', 'frameGap', 'frameWidth', 'downFit', 'per', 'lower']);
+  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'ceil', 'height', 'outer', 'tension', 'tilt', 'dip', 'split', 'a', 'tips', 'frame', 'frameGap', 'frameWidth', 'downFit', 'per', 'lower']);
   const at8 = C.wordmark();
   slope.set(12);
   const S0 = C.START;
@@ -347,4 +347,15 @@ test('the H rounded both sides', () => {
   assert.equal(H(0).match(/C/g).length, 2);
   assert.equal(H(1).match(/C/g).length, 4);
   assert.deepEqual(G.letterRadii({ ...G.SLANT, outer: 16, per: Object.assign([], { 4: { both: 1 } }) }, 4), [16, 16, 16, 16]);
+});
+
+test("the ends rounded both sides: at half a slot and no slope, a round tip, as the original's", () => {
+  const arcs = (d) => [...d.matchAll(/A([\d.]+) /g)].map((m) => +m[1]);
+  const M = (q) => G.letterPaths({ ...G.SLANT, outer: 0, drop: 0, cut: 10, ...q })[1];
+  assert.deepEqual(arcs(M({})), [10, 10]); // one corner of each of the M's two ends
+  assert.deepEqual(arcs(M({ tips: 1 })), [10, 10, 10, 10]); // both
+  assert.match(M({ tips: 1 }), /L208 42A10 10 0 0 0 198 32(L198 32)?A10 10 0 0 0 188 42L/); // a half circle: 32 to 42, across the slot
+  assert.equal(arcs(G.letters({ ...G.SLANT, tips: 1 })).length, 22); // every cut's two corners: 2 × 11
+  assert.equal(arcs(G.symbol({ tips: 1 })).length, 8);
+  for (const drop of G.DROPS) for (const stroke of [8, 20, 60]) assert.doesNotThrow(() => G.letters({ ...G.SLANT, drop, stroke, cut: 30, tips: 1, per: [{ open: 1 }, {}, {}, { split: 1 }] }));
 });

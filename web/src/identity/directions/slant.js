@@ -44,7 +44,7 @@ const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${ru
 // ("this is decent settings too for default"): the cuts flat (slope 0), the
 // slot ends' corners rounded, the ceiling 44, the outer corners rounded 64
 // at 60%, no tilt and no dip, the A a capital, Down filled.
-export const START = { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: H, outer: 64, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', frame: 0, frameGap: 20, frameWidth: 20 };
+export const START = { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: H, outer: 64, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20 };
 const at = { ...START, per: PER.map((q) => ({ ...q })), lower: [0, 0, 0, 0, 0] };
 const knob = (key, label, min, max, step, value, text, set) => ({ key, label, min, max, step, value, text, set: (v) => set(Number(v)) });
 /** A switch between a few options (the page draws a button for each): [label, value]. */
@@ -67,6 +67,7 @@ export const KNOBS = [
   knob('dip', 'Dip', 0, 24, 4, START.dip, (v) => `${v}`, (v) => { at.dip = v; }),
   choice('split', 'S', [['Whole', 0], ['Split', 1]], START.split),
   choice('a', 'A', [['A', 'A'], ['a', 'a']], START.a),
+  choice('tips', 'Ends', [['One corner', 0], ['Both', 1]], START.tips),
   choice('frame', 'Frame', [['Off', 0], ['Around', 1], ['Fitted', 2]], START.frame),
   knob('frameGap', 'Frame gap', 0, 80, 4, START.frameGap, (v) => `${v}`, (v) => { at.frameGap = v; }),
   knob('frameWidth', 'Frame width', 4, 64, 4, START.frameWidth, (v) => `${v}`, (v) => { at.frameWidth = v; }),
@@ -139,13 +140,13 @@ const cols = () => symCols(at.stem, at.stroke, at.space);
 const rows = () => symRows(at.stroke);
 const symW = () => cols().reduce((t, n) => t + n);
 const symH = () => rows().reduce((t, n) => t + n);
-const sym = () => symbolPath({ cols: cols(), rows: rows(), cut: at.cut, drop: at.drop, outer: at.outer, tension: at.tension });
+const sym = () => symbolPath({ cols: cols(), rows: rows(), cut: at.cut, tips: at.tips, drop: at.drop, outer: at.outer, tension: at.tension });
 export const symbol = () => {
   const c = cols(), [R] = symRadii(at.outer, c, rows()), sw = c[0] + c[1] + c[2];
   const boxes = [{ box: [0, 0, sw, symH()], radii: [R, R, R, R] }, { box: [sw + c[3], 0, symW(), symH()], radii: [R, R, 0, 0] }]; // the S, the M
   return still(framed(symW(), symH(), sym(), symRadii(at.outer, c, rows()), boxes));
 };
-const alone = (o) => { const S = letterS({ ...o, cut: at.cut, drop: at.drop, stem: at.stem, slot: at.stroke, outer: at.outer, tension: at.tension }); return svg(S.w, S.h, path(S.d)); };
+const alone = (o) => { const S = letterS({ ...o, cut: at.cut, tips: at.tips, drop: at.drop, stem: at.stem, slot: at.stroke, outer: at.outer, tension: at.tension }); return svg(S.w, S.h, path(S.d)); };
 export const s = () => alone({});
 export const sTurned = () => alone({ turn: true });
 export const sSquare = () => alone({ wide: 1 });
@@ -193,7 +194,7 @@ export function favicon({ size = 32 } = {}) {
   const sl = bar / 2;
   const cols = [bar, sl, bar, sl, bar, sl, bar, sl, bar];
   const rows = [bar, sl, bar, sl, bar];
-  const d = symbolPath({ cols, rows, x: (n - (5 * bar + 4 * sl)) / 2, y: (n - (3 * bar + 2 * sl)) / 2, stop: bar, cut: (at.cut * bar) / BAR, drop: at.drop, outer: (at.outer * bar) / BAR, tension: at.tension, grid: 0 });
+  const d = symbolPath({ cols, rows, x: (n - (5 * bar + 4 * sl)) / 2, y: (n - (3 * bar + 2 * sl)) / 2, stop: bar, tips: at.tips, cut: (at.cut * bar) / BAR, drop: at.drop, outer: (at.outer * bar) / BAR, tension: at.tension, grid: 0 });
   return svg(n, n, `<rect width="${n}" height="${n}" fill="${BLACK}"/><path fill="${WHITE}" fill-rule="evenodd" d="${d}"/>`);
 }
 
