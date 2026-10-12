@@ -247,11 +247,21 @@ export function gridOf(kind) {
 const FAV = { 64: 8, 32: 4, 16: 2 };
 export function favicon({ size = 32 } = {}) {
   const n = FAV[size] ? size : 32;
-  // Cells: that S M scaled to the original's 7 in 8 of the icon at its longer side, centred.
-  const C = cells();
-  if (C) {
-    const k = (0.875 * n) / Math.max(C.w, C.h);
-    return svg(n, n, `<rect width="${n}" height="${n}" fill="${BLACK}"/><path fill="${WHITE}" fill-rule="evenodd" d="${move(C.d, (n - C.w * k) / 2, (n - C.h * k) / 2, k)}"/>`);
+  // Cells: that S M built again at favicon measures, on whole pixels (the design panel's review, round 2,
+  // 2026-10-13: scaled down from the wordmark's, its slots were 0.59 px at 16, grey smears). Its stems a bar
+  // (8, 4 and 2 px, as the extended's), its slots and its gap half that, 7 in 8 of the icon tall; its ceiling,
+  // rise and lowered ends the wordmark's share of its height, to the pixel at 16; its cut rounds, corners and
+  // tilt the same share of its slots, stems and S. Its switches, slope and angle the symbol's, its cuts off the
+  // grid (its slots of 16 would round them to it). Where the ceiling and the rise leave a held S no room, they
+  // give way, the ceiling first.
+  if (at.symbol === 'cells') {
+    const k = FAV[n] / BAR, px = BAR / 2, tall = 7 * BAR; // its scale; 16 px of it, a pixel at 16; 7 in 8 of the icon
+    const H = box().H, snap = (v) => Math.round((v * tall) / H / px) * px;
+    let ceil = Math.max(px, snap(at.ceil)), rise = snap(at.rise), C;
+    const make = () => symbolCells({ ...now(), stem: BAR, stroke: px, space: px, height: tall, ceil, rise, grid: 0, cut: (at.cut * px) / at.stroke, outer: (at.outer * BAR) / at.stem, tilt: (at.tilt * (2 * BAR + px)) / (2 * at.stem + at.stroke), lower: at.lower.map(snap) });
+    while ((C = make()).h > tall && (ceil > px || rise > 0)) ceil > px ? (ceil -= px) : (rise -= px);
+    const x = Math.floor((n - C.w * k) / 2), y = Math.floor((n - C.h * k) / 2);
+    return svg(n, n, `<rect width="${n}" height="${n}" fill="${BLACK}"/><path fill="${WHITE}" fill-rule="evenodd" d="${move(C.d, x, y, k)}"/>`);
   }
   const bar = FAV[n];
   const sl = bar / 2;

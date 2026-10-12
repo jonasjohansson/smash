@@ -998,3 +998,72 @@ test("the chapter's Symbol: cells, the S M, its lockup and favicons from the wor
   for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value));
   assert.deepEqual([C.symbol(), C.lockupSM(), C.favicon({ size: 32 }), C.wordmark(), C.down(), C.s()], start);
 });
+
+/** Two sides of a path, its curves and arcs flattened (clip.js), that cross, or null. */
+const crossingFlat = (d, step = 0.5) => {
+  const S = K.flatten(d, step).flatMap((r) => r.map((p, i) => [p, r[(i + 1) % r.length]]));
+  const turn = (a, b, c) => { const v = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]); return Math.abs(v) < 1e-6 ? 0 : Math.sign(v); };
+  for (let i = 0; i < S.length; i++) for (let j = i + 1; j < S.length; j++) {
+    const [a, b] = S[i], [c, e] = S[j];
+    if (turn(a, b, c) * turn(a, b, e) < 0 && turn(c, e, a) * turn(c, e, b) < 0) return JSON.stringify([S[i], S[j]]);
+  }
+  return null;
+};
+
+test("held, the first S's own Cut switch off: its ends at the bends fall the blade's fall, the blade at the cuts' slope exactly", () => {
+  const near = (a, b) => Math.abs(a - b) < 1e-3;
+  // Stems 72, slots 40, 20 in 20: square ends held the blade at 0.6 under the M's slot heads at 1.
+  const p = { ...SQUARE, stem: 72, stroke: 40, drop: 1, lock: 1, per: [{ cut: 0 }] };
+  const S = G.symbolCells(p).d.split('M').filter(Boolean).map((d) => 'M' + d)[0];
+  assert.ok(near(blade(S), 1), `${blade(S)}`);
+  assert.deepEqual([...new Set(slopes(S))], [1]); // its ends at the bends along the blade, parallel
+  assert.equal(slopes(G.letterPaths({ ...p, lock: 0, tilt: 0 })[0]).length, 0); // free and level, its ends square, as before
+  for (const stem of [32, 72, 200]) for (const slot of [8, 20, 28, 40, 60]) for (const drop of [0.2, 0.6, 1]) for (const height of [240, 472]) for (const rise of [0, 48]) for (const look of [{ outer: 0 }, { outer: 64, tension: 0.6, cut: 12 }]) {
+    const q = { ...G.SLANT, ...look, stem, stroke: slot, drop, height, rise, lock: 1 }, at = JSON.stringify({ stem, slot, drop, height, rise, ...look });
+    const k = (Math.round((drop * slot) / 4) * 4) / slot; // the cuts' slope as drawn, on the grid
+    for (const open of [0, 1]) for (const split of [0, 1]) {
+      const r = { ...q, split, per: [{ cut: 0, open }, {}, {}, { cut: 0, open }] }, Y = G.symbolCells(r);
+      assert.ok(near(blade(Y.d.split('M').filter(Boolean).map((d) => 'M' + d)[0]), k), `${at} open ${open} split ${split}: ${blade(Y.d)}`);
+      assert.equal(crossing(Y.d), null, `${at} open ${open} split ${split}`);
+    }
+    const D = G.down({ ...q, per: [{ cut: 0 }, {}, {}, { cut: 0 }], downFit: 'squeeze' }).d.split('M').filter(Boolean).map((d) => 'M' + d);
+    for (const i of [0, D.length - 2]) assert.ok(near(blade(D[i]), k), `Down ${i} ${at}: ${blade(D[i])}`);
+  }
+});
+
+test("the squeezed M: its stems a quarter of a bar at least, its slots narrower where they must; its top rounds clear of its slots", () => {
+  assert.deepEqual(G.squeezeM(164, 20), { stem: 124 / 3, stroke: 20 }); // as it was: three stems and two of the S's slots
+  assert.deepEqual(G.squeezeM(124, 60), { stem: 8, stroke: 50 }); // stems 32, slots 60: 4 / 3 wide; a quarter bar, slots 50
+  for (const [stem, outer] of [[32, 32], [32, 64], [36, 64]]) for (const tension of [0.55, 0.6, 1]) {
+    const p = { ...G.SLANT, stem, stroke: 60, ceil: 16, outer, tension }, at = JSON.stringify({ stem, outer, tension });
+    const Y = G.symbolCells(p), M = Y.d.split('M').filter(Boolean).map((d) => 'M' + d).at(-1);
+    const xs = K.flatten(M, 1)[0].map(([x]) => x);
+    assert.ok(Math.abs(Math.max(...xs) - Math.min(...xs) - (2 * stem + 60)) < 1e-9, at); // as wide as the S
+    assert.ok(Y.columns.slice(2).every(([, w]) => w === G.squeezeM(2 * stem + 60, 60).stroke), at); // its slots, as drawn
+    assert.equal(crossingFlat(Y.d), null, at);
+    assert.equal(crossingFlat(G.down({ ...p, downFit: 'squeeze' }).d), null, `Down ${at}`);
+  }
+  // Thinner still, its top corners round only till they pass over its slots' tops: a stem of 4, a ceiling of 16.
+  const thin = { ...G.SLANT, stem: 4, stroke: 60, ceil: 16, outer: 64, tension: 0.55 };
+  const { Rr } = G.rounds(thin, 1);
+  assert.ok(Rr < 4 + 30 && Math.abs(Rr - (4 + 15 + Math.sqrt(2 * 4 * 15))) < 1e-9, `${Rr}`);
+  assert.equal(crossingFlat(G.letterPaths(thin, 1)[1]), null);
+});
+
+test("the cells favicons: built at favicon measures, every stem and slot on whole pixels, the slots a pixel at 16", () => {
+  const K2 = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
+  const reset = () => { for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value)); };
+  const looks = [{}, { stem: 200, slot: 8 }, { stem: 32, slot: 60, ceil: 160, rise: 48 }, { slope: 20, lock: '1' }];
+  for (const look of looks) for (const size of [16, 32, 64]) {
+    reset();
+    K2.symbol.set('cells');
+    for (const [k, v] of Object.entries(look)) K2[k].set(v);
+    const d = C.favicon({ size }).match(/<path[^>]* d="([^"]+)"/)[1], at = `${JSON.stringify(look)} ${size}`;
+    const xs = [...new Set(sides(d).filter(([a, b]) => a[0] === b[0] && a[1] !== b[1]).map(([a]) => a[0]))].sort((a, b) => a - b);
+    assert.deepEqual(xs.filter((x) => !Number.isInteger(x)), [], at); // every stem's side on a whole pixel
+    // The S's stems a bar and its slot half one, the gap half one, the M's stems and slots half one: at 16, 2 px and 1 px.
+    assert.deepEqual(xs, [0, 32, 48, 80, 96, 112, 128, 144, 160, 176].map((u) => Math.floor((5 * size) / 32) + (u * size) / 256), at);
+    assert.ok(xs.slice(1).every((x, i) => x - xs[i] >= size / 16), at); // a pixel at 16 at least
+  }
+  reset();
+});
