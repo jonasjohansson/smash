@@ -101,6 +101,8 @@ h1, h2 { font-weight: 400; margin: 0; }
 
 .panel { position: relative; aspect-ratio: 16 / 9; display: grid; place-items: center; overflow: hidden; }
 .panel.square { aspect-ratio: 1; }
+.panel.tall { aspect-ratio: auto; min-height: 360px; padding: 56px 0 64px; }
+.mark.down svg { width: auto; height: auto; max-width: none; max-height: none; }
 .panel > .label { position: absolute; left: 12px; bottom: 10px; color: inherit; opacity: 0.55; }
 .mark { display: grid; place-items: center; width: 100%; height: 100%; }
 .mark svg { display: block; max-width: 100%; max-height: 100%; }

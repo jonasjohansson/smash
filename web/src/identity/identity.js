@@ -26,6 +26,15 @@ const wide = (str) => str.replace(/viewBox="\s*([-\d.]+)[\s,]+([-\d.]+)[\s,]+([\
   return `viewBox="${+x - (to - w) / 2} ${y} ${to} ${h}"`;
 });
 
+/**
+ * A still drawn at a fixed scale, its box as wide as its own width says
+ * (slant.js: down, Jonas 2026-10-12: "changing the ceiling seems to change
+ * the width"): a taller column grows down the page instead of shrinking to
+ * fit its panel.
+ */
+const DOWN_SCALE = 0.4; // px a unit
+const atScale = (str) => str.replace(/<svg ([^>]*)viewBox="\s*([-\d.]+)[\s,]+([-\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)\s*"/, (m, pre, x, y, w, h) => `<svg ${pre}viewBox="${x} ${y} ${w} ${h}" width="${+w * DOWN_SCALE}" height="${+h * DOWN_SCALE}"`);
+
 /** A tall still's artboard widened to a square, centred (the S alone): it fits its box by its width, like the rest. */
 const squared = (str) => str.replace(/viewBox="\s*([-\d.]+)[\s,]+([-\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)\s*"/, (m, x, y, w, h) => (+h > +w ? `viewBox="${+x - (h - w) / 2} ${y} ${h} ${h}"` : m));
 
@@ -49,7 +58,7 @@ let pixel = 0;
  */
 function drawn(d, fn, ground) {
   const kind = fn.startsWith('wordmark') ? 'wordmark' : fn; // the a's versions (slant.js: VERSIONS) are wordmarks too
-  const one = (px) => { const v = still(d, fn, { ground, pixel: px }); return kind === 'wordmark' ? wide(v) : squared(v); };
+  const one = (px) => { const v = still(d, fn, { ground, pixel: px }); return kind === 'wordmark' ? wide(v) : kind === 'down' ? atScale(v) : squared(v); };
   const svg = one(pixel);
   return withGrid(svg, kind, pixel ? one(0) : svg, d.mod.gridOf?.(kind));
 }
@@ -144,8 +153,8 @@ function chapter(d) {
         <figure class="panel ground-paper">${markHTML(d, fn, 'paper', 'wm')}<figcaption class="label">${esc(label)}</figcaption></figure>`).join('')}
       </div>` : ''}
       ${typeof d.mod.down === 'function' ? `<div class="row three">
-        <figure class="panel ground-ink square">${markHTML(d, 'down', 'ink', 'sym')}<figcaption class="label">Down</figcaption></figure>
-        <figure class="panel ground-paper square">${markHTML(d, 'down', 'paper', 'sym')}<figcaption class="label">Down</figcaption></figure>
+        <figure class="panel ground-ink tall">${markHTML(d, 'down', 'ink', 'down')}<figcaption class="label">Down</figcaption></figure>
+        <figure class="panel ground-paper tall">${markHTML(d, 'down', 'paper', 'down')}<figcaption class="label">Down</figcaption></figure>
       </div>` : ''}
       <div class="row three">
         <figure class="panel ground-ink square">${markHTML(d, 'symbol', 'ink', 'sym')}<figcaption class="label">Symbol</figcaption></figure>
