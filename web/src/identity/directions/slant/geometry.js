@@ -2,8 +2,8 @@
 // the uniform inner curves", and "the alternate a"): the original mark with
 // every curve cut straight. Every cut falls to the right at one slope, 8 in a
 // slot of 20 (p.drop; 0 to 20 in steps of 4), so every point stays on the grid of 4 and the S is the same
-// upside down. A closed slot's end is cut across, its high corner where the
-// round tip was (a bar from the edge), its obtuse corner rounded 4; an S's
+// upside down (unless its crossbar rises, p.rise). A closed slot's end is cut
+// across, its high corner where the round tip was (a bar from the edge), its obtuse corner rounded 4; an S's
 // bend is cut outside, 20 across and 8 down, and stays sharp inside. The
 // letters' outer corners are rounded tight, as CM.SUPPLY's (p.outer, at
 // p.tension); the stems' sides stay square. The A stays a capital (the
@@ -77,8 +77,8 @@ export const depth = (p = SLANT) => ((p.a === 'a' || p.dip) && per(p, 2).dip !==
  * The block's measures (Jonas, 2026-10-12: stems wider, "to match a bit"
  * CM.SUPPLY's latest): eleven stems (p.stem, 32 or wider, in steps of 4) and
  * ten slots (p.stroke, 20, in steps of 4) across; down, the bars stay 32 and
- * the crossbars centred in p.height (in steps of 8), so every point stays on
- * the grid of 4. At the original's, 552 × 472.
+ * the crossbars centred in p.height (in steps of 8; or risen, p.rise), so
+ * every point stays on the grid of 4. At the original's, 552 × 472.
  */
 export const GAPS = [1, 4, 6, 8]; // the columns between letters (the rest are slots in them): S | M M | A | S | H
 
@@ -93,19 +93,26 @@ export function block(p = SLANT) {
   // Jonas 2026-10-12: "lower the gaps, ie increase the ceiling"); the
   // crossbars stay a bar.
   const ceil = p.ceil ?? BAR;
-  // At least tall enough that a slot's top end stays half a slot above its bend: 176 at the original's slots.
-  const least = Math.ceil((2 * ceil + BAR + 3 * slot + 2 * cutOf(p.drop ?? DROP, slot)) / 8) * 8;
+  // The crossbars risen above the middle (p.rise; the design panel, round 1,
+  // 2026-10-12: an optical crossbar, as type sets its E's and H's a little
+  // high): their centre rise above h / 2, in steps of 4, so the upper half is
+  // the shorter. Never below the middle.
+  const rise = Math.max(0, p.rise ?? 0);
+  // At least tall enough that a slot's top end stays half a slot above its bend, in the shorter, upper
+  // half: 176 at the original's slots, and twice the rise more.
+  const least = Math.ceil((2 * ceil + BAR + 3 * slot + 2 * cutOf(p.drop ?? DROP, slot) + 2 * rise) / 8) * 8;
   const h = Math.max(p.height ?? H, least);
+  const mid = h / 2 - rise; // the crossbars' centre: 236
   return {
-    s, stem, slot, gap, ceil,
+    s, stem, slot, gap, ceil, rise, mid,
     c: (i) => lefts[i] + widths[i] / 2, // the columns' centres, left to right: 42, 94 …
     left: (i) => lefts[i], right: (i) => lefts[i] + widths[i], // and their edges
     columns: widths.map((w, i) => [lefts[i], w]),
     W: 11 * stem + 6 * slot + 4 * gap,
     H: h,
-    up: h / 2 - (BAR + slot) / 2, // the upper crossbar slot's centre: 210
-    lo: h / 2 + (BAR + slot) / 2, // the lower one's: 262
-    bands: [0, ceil, h / 2 - BAR / 2, h / 2 + BAR / 2, h - ceil, h], // the bars down: 0 32 220 252 440 472
+    up: mid - (BAR + slot) / 2, // the upper crossbar slot's centre: 210
+    lo: mid + (BAR + slot) / 2, // the lower one's: 262
+    bands: [0, ceil, mid - BAR / 2, mid + BAR / 2, h - ceil, h], // the bars down: 0 32 220 252 440 472
   };
 }
 
@@ -137,8 +144,8 @@ const per = (p, i) => ({ ...PER[i], ...(p.per?.[i] ?? {}) });
  * (a foot, the H, an open S's arms), at most a stem.
  */
 export function rounds(p, i) {
-  const { s, up, stem, slot } = block(p);
-  const R0 = Math.min(p.outer ?? 0, stem + slot / 2, up - s);
+  const { s, up, lo, H, stem, slot } = block(p);
+  const R0 = Math.min(p.outer ?? 0, stem + slot / 2, up - s, H - lo - s); // (risen, the upper side the shorter)
   const q = per(p, i);
   const legs = i === 1 || i === 2 || i === 4; // the M, the A and the H stand on stems
   return { Rr: q.round ? (i === 4 || q.open ? Math.min(R0, stem) : R0) : 0, Rb: q.base ? (legs || q.open ? Math.min(R0, stem) : R0) : 0 };
@@ -239,8 +246,11 @@ export function wedges(boxes, h, gap, tension = TENSION, down = false, base = bo
   return out.join('');
 }
 
-/** How far an S's crossbar falls across it (tilt), at most till its ends meet its corners' rounds R, room to spare: never up. */
-const fallOf = (tilt, H, bar, R, room = 8) => Math.max(0, Math.min(tilt ?? 0, H + bar - 2 * R - room));
+/**
+ * How far an S's crossbar falls across it (tilt), at most till its ends meet its corners' rounds R, room to
+ * spare: never up. Risen (rise above H / 2), its high end nears the top first: the fall loses twice the rise.
+ */
+const fallOf = (tilt, H, bar, R, room = 8, rise = 0) => Math.max(0, Math.min(tilt ?? 0, H - 2 * Math.abs(rise) + bar - 2 * R - room));
 
 /**
  * One governing angle (p.lock; the design panel, round 1, 2026-10-12): locked,
@@ -280,14 +290,18 @@ const fallThrough = (tilt, w, bar, d, s) => Math.min(tilt, (w * ((3 * bar) / 4 +
  * and the crossbar between them is a third). open runs its slots out of the
  * top and the bottom, as the S M's. d is its cuts' fall, r and r2 their two
  * corners' rounds; o and ob its outer corners at the top and the base; hi and
- * low its closed ends' corners.
+ * low its closed ends' corners. rise lifts its crossbar above its middle (the
+ * block's, p.rise): the crossbar slots move up with it and the blade pivots
+ * there, so its top counter is the shorter; risen, it is no longer the same
+ * upside down.
  */
-function sLetter({ L, x, xb = x, R, H, y = 0, s, sv = s, bar = BAR, d = 0, r = 0, r2 = 0, o = (X, Y) => [X, Y], ob = o, tilt = 0, split = false, open = false, hi = 0, low = H }) {
+function sLetter({ L, x, xb = x, R, H, y = 0, s, sv = s, bar = BAR, d = 0, r = 0, r2 = 0, o = (X, Y) => [X, Y], ob = o, tilt = 0, split = false, open = false, hi = 0, low = H, rise = 0 }) {
   // At most till a quarter of a bar is left through a slot (fallThrough).
   tilt = fallThrough(tilt, R - L, bar, d, s);
-  const up = H / 2 - (bar + 2 * sv) / 2, lo = H / 2 + (bar + 2 * sv) / 2; // the crossbar slots' centres
+  const cy = H / 2 - rise; // the crossbar's centre
+  const up = cy - (bar + 2 * sv) / 2, lo = cy + (bar + 2 * sv) / 2; // the crossbar slots' centres
   const mid = (x + xb) / 2;
-  const band = (X) => H / 2 + (tilt * (X - mid)) / (R - L); // the crossbar's centre line
+  const band = (X) => cy + (tilt * (X - mid)) / (R - L); // the crossbar's centre line
   const top = (X) => band(X) - bar / 2, bot = (X) => band(X) + bar / 2;
   const tr = top(x + s), bl = bot(xb - s); // where the crossbar meets the slots
   const out = (...pieces) => pieces.map((pts) => poly(y ? pts.map(([X, Y, ...k]) => [X, Y + y, ...k]) : pts)).join('');
@@ -324,7 +338,7 @@ function sLetter({ L, x, xb = x, R, H, y = 0, s, sv = s, bar = BAR, d = 0, r = 0
  * squeezed M's are too thin for the other letters' rounds.
  */
 export function letterPaths(p = SLANT, only = null) {
-  const { s, c, left, right, up, lo, W, H, stem, slot, ceil } = block(p);
+  const { s, c, left, right, up, lo, W, H, stem, slot, ceil, rise } = block(p);
   if (!CASES.includes(p.a ?? 'A')) throw new Error(`slant: no a called ${p.a}`);
   const bar = BAR;
   const hi = ceil; // 32: a top end's high corner, where the round tip was
@@ -345,7 +359,7 @@ export function letterPaths(p = SLANT, only = null) {
       Rb,
       ob: (x, y) => (Rb > 0 ? [x, y, Rb, p.tension ?? TENSION] : [x, y]), // a corner at the base
       // the S's crossbar's fall across its two stems and a slot (locked, at the cuts' slope: tiltOf), at most till its ends meet the corners' rounds
-      tilt: q.tilt ? fallOf(tiltOf(p, 2 * stem + slot, slot), H, bar, Math.max(Rr, Rb)) : 0,
+      tilt: q.tilt ? fallOf(tiltOf(p, 2 * stem + slot, slot), H, bar, Math.max(Rr, Rb), 8, rise) : 0,
       split: q.split && p.split,
       open: !!q.open,
       both: !!q.both,
@@ -361,8 +375,8 @@ export function letterPaths(p = SLANT, only = null) {
    */
   const ends = (k, most) => { const l = Math.min(k.lower, Math.max(0, most(k))); return { ...k, hi: hi + l, low: low - l }; };
 
-  // An S (sLetter, below): its slots' ends at the letter's hi and low.
-  const S = (L, x, R, k) => sLetter({ L, x, R, H, s, ...k });
+  // An S (sLetter, below): its slots' ends at the letter's hi and low, its crossbar risen as the block's.
+  const S = (L, x, R, k) => sLetter({ L, x, R, H, s, ...k, rise });
 
   // The M: two slots from the bottom, their top ends cut.
   const M = (L, R, { d, r, r2, o, ob, hi }) => poly([
@@ -403,10 +417,11 @@ export function letterPaths(p = SLANT, only = null) {
   ]);
 
   // How far each kind of letter's slot ends can come in: an S's to half a
-  // slot from its bends; the M's to two slots from the baseline; the A's
+  // slot from its bends (both ends come in alike, so as far as the shorter
+  // half allows: the upper, when the crossbars rise); the M's to two slots from the baseline; the A's
   // counter to a slot tall; the a's slot to a slot long.
   const most = {
-    S: (k) => up - s - hi - k.d - k.r - slot / 2,
+    S: (k) => Math.min(up - s - hi, low - lo - s) - k.d - k.r - slot / 2,
     M: (k) => H - hi - k.d - 2 * slot,
     A: (k) => up + s - hi - k.d - k.r - slot,
     a: (k) => H - swoop - bar - hi - 2 * k.d - 2 * k.r - slot,
@@ -430,16 +445,17 @@ export const letters = (p = SLANT) => letterPaths(p).join('');
  * the first S, level. Through the middle (p.slashAt), the same slope through
  * the word's middle instead: through the S's blade, a sloped slash runs off
  * the base before the H; through the middle it crosses every letter, its
- * blades parallel to it but no longer on it.
+ * blades parallel to it but no longer on it. Either way at the crossbars'
+ * height: risen (p.rise), the line rises with them.
  */
 export function slashLine(p = SLANT) {
-  const { s, c, left, right, H, W, stem, slot } = block(p);
+  const { s, c, left, right, H, W, stem, slot, rise, mid } = block(p);
   const i = [0, 3].find((k) => per(p, k).tilt) ?? 0;
   const q = per(p, i), { Rr, Rb } = rounds(p, i);
   const L = i ? right(6) : 0, R = i ? left(8) : left(1);
   const d = q.cut ? cutOf(p.drop ?? DROP, slot) : 0;
-  const tilt = q.tilt ? fallThrough(fallOf(tiltOf(p, 2 * stem + slot, slot), H, BAR, Math.max(Rr, Rb)), R - L, BAR, d, s) : 0;
-  return { x: p.slashAt ? W / 2 : c(i ? 7 : 0), y: H / 2, slope: tilt / (R - L) };
+  const tilt = q.tilt ? fallThrough(fallOf(tiltOf(p, 2 * stem + slot, slot), H, BAR, Math.max(Rr, Rb), 8, rise), R - L, BAR, d, s) : 0;
+  return { x: p.slashAt ? W / 2 : c(i ? 7 : 0), y: mid, slope: tilt / (R - L) };
 }
 
 /**

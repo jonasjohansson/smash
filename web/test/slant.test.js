@@ -115,7 +115,7 @@ test('the chapter gives every still as plain vector', () => {
   }
   for (const n of [16, 32, 64]) assert.match(C.favicon({ size: n }), new RegExp(`viewBox="0 0 ${n} ${n}"`));
   // At Jonas's settings: 11 stems of 72, 10 slots and gaps of 20; no dip.
-  assert.deepEqual(C.START, { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: 472, outer: 64, tension: 0.6, tilt: 0, lock: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0, slashAt: 0 });
+  assert.deepEqual(C.START, { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: 472, rise: 0, outer: 64, tension: 0.6, tilt: 0, lock: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0, slashAt: 0 });
   assert.match(C.wordmark(), /viewBox="0 0 992 472"/);
   assert.equal(C.wordmark(), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 992 472" ><path fill="currentColor" fill-rule="evenodd" d="${G.letters({ ...G.SLANT, ...C.START })}"/></svg>`);
   assert.equal(C.info.slug, 'slant');
@@ -123,7 +123,7 @@ test('the chapter gives every still as plain vector', () => {
 
 test('the sliders draw every still at their measures, and back', () => {
   const { slope, stem, height } = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
-  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'ceil', 'height', 'outer', 'tension', 'tilt', 'lock', 'dip', 'split', 'a', 'tips', 'frame', 'frameGap', 'frameWidth', 'slash', 'slashWidth', 'shift', 'slashAt', 'downFit', 'per', 'lower']);
+  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'ceil', 'height', 'rise', 'outer', 'tension', 'tilt', 'lock', 'dip', 'split', 'a', 'tips', 'frame', 'frameGap', 'frameWidth', 'slash', 'slashWidth', 'shift', 'slashAt', 'downFit', 'per', 'lower']);
   const at8 = C.wordmark();
   slope.set(12);
   const S0 = C.START;
@@ -849,4 +849,57 @@ test("the chapter's slash: the wordmark slashed, slid and grown to hold it; Down
   assert.equal(C.wordmark(), start[0]);
   for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value));
   assert.equal(C.wordmark(), start[0]);
+});
+
+test("the crossbars risen: the S's blade, the A's counter and notch and the H's crossbar move up together, the S's top counter the shorter", () => {
+  assert.equal(G.letters({ ...G.SLANT, rise: 0 }), G.letters(G.SLANT)); // unrisen, as before
+  const b = G.block({ ...SQUARE, rise: 24 });
+  assert.deepEqual([b.H, b.mid, b.up, b.lo, b.bands], [472, 212, 186, 238, [0, 32, 196, 228, 440, 472]]);
+  const [S, , A, , Hh] = G.letterPaths({ ...SQUARE, rise: 24 });
+  // The S's top slot 32 to 196 under its blade, its bottom one 228 to 440: 164 against 212.
+  assert.equal(S, 'M0 0L84 0L84 176L52 176L52 40L32 32L32 188L52 196L84 196L84 472L0 472L0 248L32 248L32 432L52 440L52 236L32 228L0 228Z');
+  assert.equal(A, 'M260 0L344 0L344 472L312 472L312 228L292 228L292 472L260 472ZM312 40L292 32L292 196L312 196Z'); // the counter to 196, the notch from 228
+  assert.equal(Hh, 'M468 0L500 0L500 196L520 196L520 0L552 0L552 472L520 472L520 228L500 228L500 472L468 472Z');
+  assert.notDeepEqual(turned(S, 84, 472), corners(S)); // no longer the same upside down
+  for (const rise of [4, 24, 48]) for (const drop of G.DROPS) {
+    const d = cut({ ...SQUARE, drop, rise });
+    for (const q of polys(d)) assert.deepEqual(q.flat().filter((n) => n % 4), [], `rise ${rise} drop ${drop}`);
+    assert.deepEqual(slopes(d).filter((k) => Math.abs(k - drop) > 1e-9), [], `rise ${rise} drop ${drop}`);
+  }
+});
+
+test("risen, the block grows to keep the shorter half's slots clear, and the ends lowered stop at the upper bend", () => {
+  // 2 × 120 + 32 + 3 × 20 + 2 × 8 and twice the rise, to the 8: 400, not 352.
+  assert.equal(G.block({ ...G.SLANT, ceil: 120, height: 240, rise: 24 }).H, 400);
+  assert.equal(G.block({ ...G.SLANT, rise: 48 }).H, 472); // tall enough already
+  const S = G.letterPaths({ ...SQUARE, rise: 24, lower: [999, 0, 0, 999] })[0];
+  assert.match(S, /L52 176L52 166L32 158L/); // the top end half a slot under the upper crossbar slot (176)
+  assert.match(S, /L32 306L52 314L/); // the bottom end lowered as far, its slot the longer
+  // The A's counter at most a slot tall, under the risen crossbar.
+  assert.match(G.letterPaths({ ...SQUARE, rise: 24, lower: [0, 0, 999, 0] })[2], /M312 176L292 168L292 196L312 196Z/);
+  // A blade's high end nears the top first: it falls twice the rise less, 248 - 48 + 32 - 8 across 420.
+  const tall = G.letterPaths({ ...SQUARE, stem: 200, height: 240, drop: 1, lock: 1, rise: 24 })[0];
+  assert.ok(Math.abs(blade(tall) - 224 / 420) < 1e-3, `${blade(tall)}`);
+  assert.equal(crossing(tall), null);
+  const looks = [{ drop: 0, cut: 12, outer: 64, tension: 0.6 }, { drop: 1, cut: 30, tips: 1, outer: 0 }];
+  for (const rise of [24, 48]) for (const stem of [32, 200]) for (const slot of [8, 60]) for (const tilt of [0, 96, 160]) for (const look of looks) for (const height of [240, 472]) for (const open of [0, 1]) {
+    const p = { ...G.SLANT, ...look, rise, stem, stroke: slot, tilt, split: 1, height, lower: [999, 999, 999, 999], per: G.PER.map((o) => ({ ...o, ...('open' in o ? { open } : {}) })) };
+    assert.equal(crossing(G.letters(p)), null, JSON.stringify({ rise, stem, slot, tilt, height, open, ...look }));
+  }
+  // The slash runs at the crossbars' height.
+  assert.equal(G.slashLine({ ...G.SLANT, rise: 24 }).y, 212);
+  assert.equal(G.slashLine({ ...G.SLANT, rise: 24, slashAt: 1 }).y, 212);
+});
+
+test("the chapter's Rise: the wordmark, Down and the lockup's middle line move up with the crossbars; the S M as it was", () => {
+  const K2 = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
+  const start = [C.wordmark(), C.down(), C.symbol(), C.lockup()];
+  K2.rise.set('24');
+  assert.ok(C.wordmark().includes(G.letters({ ...G.SLANT, ...C.START, rise: 24 })));
+  assert.deepEqual(C.gridOf('wordmark').bands, [0, 44, 196, 228, 428, 472]);
+  assert.notEqual(C.down(), start[1]);
+  assert.notEqual(C.lockup(), start[3]);
+  assert.equal(C.symbol(), start[2]); // the S M keeps its rows
+  for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value));
+  assert.deepEqual([C.wordmark(), C.down(), C.symbol(), C.lockup()], start);
 });
