@@ -115,7 +115,7 @@ test('the chapter gives every still as plain vector', () => {
   }
   for (const n of [16, 32, 64]) assert.match(C.favicon({ size: n }), new RegExp(`viewBox="0 0 ${n} ${n}"`));
   // At Jonas's settings: 11 stems of 72, 10 slots and gaps of 20; no dip.
-  assert.deepEqual(C.START, { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: 472, rise: 0, outer: 64, tension: 0.6, corners: 0, endRound: 128, innerRound: 24, tilt: 0, lock: 0, split: 0, blade: 'step', a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0, slashAt: 0, symbol: 'extended' });
+  assert.deepEqual(C.START, { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: 472, rise: 0, outer: 64, tension: 0.6, corners: 0, endRound: 128, innerRound: 24, tilt: 0, lock: 0, split: 0, blade: 'step', a: 'A', dip: 0, downFit: 'fill', downJoin: 'tiles', downKerf: 0, tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0, slashAt: 0, symbol: 'extended' });
   assert.match(C.wordmark(), /viewBox="0 0 992 472"/);
   assert.equal(C.wordmark(), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 992 472" ><path fill="currentColor" fill-rule="evenodd" d="${G.letters({ ...G.SLANT, ...C.START })}"/></svg>`);
   assert.equal(C.info.slug, 'slant');
@@ -123,7 +123,7 @@ test('the chapter gives every still as plain vector', () => {
 
 test('the sliders draw every still at their measures, and back', () => {
   const { slope, stem, height } = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
-  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'ceil', 'height', 'rise', 'outer', 'tension', 'corners', 'endRound', 'innerRound', 'tilt', 'lock', 'dip', 'split', 'blade', 'a', 'tips', 'frame', 'frameGap', 'frameWidth', 'slash', 'slashWidth', 'shift', 'slashAt', 'downFit', 'symbol', 'per', 'lower']);
+  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'ceil', 'height', 'rise', 'outer', 'tension', 'corners', 'endRound', 'innerRound', 'tilt', 'lock', 'dip', 'split', 'blade', 'a', 'tips', 'frame', 'frameGap', 'frameWidth', 'slash', 'slashWidth', 'shift', 'slashAt', 'downFit', 'downJoin', 'downKerf', 'symbol', 'per', 'lower']);
   const at8 = C.wordmark();
   slope.set(12);
   const S0 = C.START;
@@ -1444,4 +1444,90 @@ test("the Letters table dims the A's Tilt while the a is chosen: it waits for th
   assert.equal(C.wordmark(), before);
   reset();
   assert.deepEqual(live(), []);
+});
+
+// Down as one carved block (the design panel, round 2, 2026-10-13): a single stone with cuts in it.
+/** Down's pieces, one a subpath: S, M, the A and its counter, S, H. */
+const downPieces = (p) => G.down(p).d.split('M').filter(Boolean).map((q) => 'M' + q);
+
+test("Down carved as one block: a slot between the letters, their seams square, only the column's four outer corners rounded", () => {
+  const near = (a, b) => Math.abs(a - b) < 1e-6;
+  const tiles = G.down({ ...PAGE, space: 60 }), carved = G.down({ ...PAGE, space: 60, downJoin: 'block' });
+  const gaps = (D) => D.boxes.slice(1).map((b, i) => b.box[1] - D.boxes[i].box[3]);
+  assert.deepEqual(gaps(tiles), [60, 60, 60, 60]); // the Gap slider's, as they were
+  assert.deepEqual(gaps(carved), [20, 20, 20, 20]); // a slot, the Gap slider waiting
+  // Every fit, one tier or two: the top S's top and the H's feet rounded, a pair (the H's Both switch off or on), every seam square.
+  for (const downFit of G.DOWN_FITS) for (const corners of [0, 1]) for (const both of [0, 1]) {
+    const p = { ...PAGE, downFit, corners, per: G.PER.map((q, i) => (i === 4 ? { ...q, both } : { ...q })), downJoin: 'block' };
+    const D = G.down(p), [[a, b, c0, d0], ...rest] = D.boxes.map((x) => x.radii), [h0, h1, h2, h3] = rest.pop();
+    const at = JSON.stringify({ downFit, corners, both });
+    assert.ok(a > 0 && near(a, b) && near(a, h2) && near(a, h3), `${at} ${a} ${b} ${h2} ${h3}`);
+    assert.deepEqual([c0, d0, ...rest.flat(), h0, h1], Array(16).fill(0), at);
+    // The outline rounds only there: its four curves, each ending within that round of the top S's top corners or the H's feet.
+    const [S, Hb] = [D.boxes[0].box, D.boxes[4].box], outer = [[S[0], S[1]], [S[2], S[1]], [Hb[2], Hb[3]], [Hb[0], Hb[3]]];
+    const ends = [...D.d.matchAll(/C([^MLCAZ]*)/g)].map(([, q]) => q.trim().split(/\s+/).slice(-2).map(Number));
+    assert.equal(ends.length, 4, at);
+    for (const [x, y] of ends) assert.ok(outer.some(([X, Y]) => Math.abs(x - X) <= a + 1e-6 && Math.abs(y - Y) <= a + 1e-6), `${at} ${x} ${y}`);
+    assert.equal(crossingFlat(D.d, 2), null, at);
+  }
+  // Tiles, as they were: the kerf switch waits for the block.
+  assert.equal(G.down({ ...PAGE, downJoin: 'tiles', downKerf: 1, drop: 0.4, lock: 1 }).d, G.down({ ...PAGE, drop: 0.4, lock: 1 }).d);
+  assert.throws(() => G.down({ ...PAGE, downJoin: 'glued' }), /no join called glued/);
+});
+
+test("carved, each S's crossbar slots run out through the column's side at its blade's angle, one kerf a slot tall", () => {
+  const near = (a, b, e = 1e-3) => Math.abs(a - b) < e;
+  const P = { ...PAGE, outer: 0, cut: 0, drop: 0.4, lock: 1, downJoin: 'block' };
+  /** An S's points on its side x, their heights down, in order. */
+  const side = (S, x) => polys(S)[0].filter(([X]) => near(X, x)).map(([, y]) => y).sort((m, n) => m - n);
+  for (const downFit of G.DOWN_FITS) {
+    const level = downPieces({ ...P, downFit }), sloped = downPieces({ ...P, downFit, downKerf: 1 });
+    for (const i of [0, 4]) {
+      const S = sloped[i], xs = polys(S)[0].map(([x]) => x), [L, R] = [Math.min(...xs), Math.max(...xs)], k = blade(S);
+      assert.ok(k > 0.3, `${downFit} ${i}: ${k}`);
+      // Every slanted side parallel to the blade: the slots' far sides too, two more of them.
+      assert.deepEqual(slopes(S).filter((m) => !near(m, k)), [], `${downFit} ${i}`);
+      assert.equal(slopes(S).length, slopes(level[i]).length + 2, `${downFit} ${i}`);
+      // Down its right side, the top, the upper slot's far side, the blade's top, the base; its left, the top, the blade's
+      // bottom, the lower slot's far side, the base: each slot as tall where it runs out as where it turns, two half
+      // slots (a slot, unless held: squeezed, taller).
+      const [, u, t] = side(S, R), [, b, l] = side(S, L), [, u0, t0] = side(level[i], R);
+      assert.ok(near(t - u, l - b), `${downFit} ${i}`);
+      if (downFit !== 'squeeze') assert.ok(near(t - u, 20), `${downFit} ${i}: ${t - u}`);
+      assert.ok(t0 - u0 > t - u + 10, `${downFit} ${i}`); // level, a wedge, taller at the side by the blade's fall
+      assert.ok(near(t, t0) && u > u0, `${downFit} ${i}`); // the far side moved down, the blade not
+    }
+    // The other letters as they were, level or sloped.
+    assert.deepEqual([1, 2, 3, 5].map((j) => sloped[j]), [1, 2, 3, 5].map((j) => level[j]), downFit);
+  }
+  // The blade level, the kerf is level: nothing to slope.
+  assert.equal(G.down({ ...P, drop: 0, downKerf: 1 }).d, G.down({ ...P, drop: 0 }).d);
+  // Every proportion, split or whole, open or closed, one tier or two: no outline crosses itself.
+  for (const stem of [32, 200]) for (const slot of [8, 60]) for (const drop of [0.4, 1]) for (const lock of [0, 1]) for (const split of [0, 1]) for (const blade of ['step', 'line']) for (const open of [0, 1]) for (const corners of [0, 1]) for (const downFit of G.DOWN_FITS) {
+    const p = { ...PAGE, stem, stroke: slot, drop, lock, tilt: 160, split, blade, corners, endRound: 200, downFit, downJoin: 'block', downKerf: 1, per: G.PER.map((q, i) => (i === 0 || i === 3 ? { ...q, open } : { ...q })) };
+    const at = JSON.stringify({ stem, slot, drop, lock, split, blade, open, corners, downFit });
+    assert.doesNotThrow(() => G.down(p), at);
+    for (const S of [0, 3]) assert.equal(crossingFlat(G.letterPaths({ ...p, height: 0, ends: 'down', kerf: true, seam: [S > 0, true] }, S)[S], 2), null, at);
+  }
+});
+
+test("the chapter's Down join: Block, Down carved as one stone, and its kerf sloped; the other marks as they were", () => {
+  const K2 = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
+  const reset = () => { for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value)); };
+  reset();
+  const others = () => ['wordmark', 'wordmarkLower', 'symbol', 's', 'lockup', 'lockupSM'].map((fn) => C[fn]()).concat(C.favicon({ size: 32 }));
+  const plain = C.down(), rest = others();
+  K2.downKerf.set('1');
+  assert.equal(C.down(), plain); // tiles: the kerf waits
+  K2.downJoin.set('block');
+  assert.ok(C.down().includes(G.down({ ...PAGE, downJoin: 'block', downKerf: 1 }).d));
+  K2.slope.set('8'); K2.lock.set('1');
+  const sloped = C.down();
+  assert.ok(sloped.includes(G.down({ ...PAGE, drop: 0.4, lock: 1, downJoin: 'block', downKerf: 1 }).d));
+  K2.downKerf.set('0');
+  assert.notEqual(C.down(), sloped);
+  K2.slope.set('0'); K2.lock.set('0');
+  assert.deepEqual(others(), rest);
+  reset();
+  assert.equal(C.down(), plain);
 });

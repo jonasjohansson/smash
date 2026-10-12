@@ -45,7 +45,7 @@ const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${ru
 // ("this is decent settings too for default"): the cuts flat (slope 0), the
 // slot ends' corners rounded, the ceiling 44, the outer corners rounded 64
 // at 60%, no tilt and no dip, the A a capital, Down filled.
-export const START = { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: H, rise: 0, outer: 64, tension: 0.6, corners: 0, endRound: 128, innerRound: 24, tilt: 0, lock: 0, split: 0, blade: 'step', a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0, slashAt: 0, symbol: 'extended' };
+export const START = { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: H, rise: 0, outer: 64, tension: 0.6, corners: 0, endRound: 128, innerRound: 24, tilt: 0, lock: 0, split: 0, blade: 'step', a: 'A', dip: 0, downFit: 'fill', downJoin: 'tiles', downKerf: 0, tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0, slashAt: 0, symbol: 'extended' };
 const at = { ...START, per: PER.map((q) => ({ ...q })), lower: [0, 0, 0, 0, 0] };
 const knob = (key, label, min, max, step, value, text, set) => ({ key, label, min, max, step, value, text, set: (v) => set(Number(v)) });
 /** A switch between a few options (the page draws a button for each): [label, value]. */
@@ -105,6 +105,13 @@ export const KNOBS = [
   knob('shift', 'Shift', 0, 24, 4, START.shift, (v) => `${v}`, (v) => { at.shift = v; }),
   choice('slashAt', 'Slash at', [['S', 0], ['Middle', 1]], START.slashAt),
   choice('downFit', 'Down', [['M wider', 'wider'], ['Fill', 'fill'], ['Squeeze', 'squeeze']], START.downFit),
+  // Down as one carved block (the design panel, round 2, 2026-10-13: a single stone with cuts in it): tiles, each
+  // letter rounded on its own, the Gap slider between them, as it was; block, a slot between them and every
+  // corner where two letters meet square, only the column's four outer corners rounded (the ends, in two tiers).
+  // Carved, each S's crossbar slots can run out through the column's side at its blade's angle, one straight
+  // kerf a slot tall, rather than level (geometry.js: down, sLetter).
+  choice('downJoin', 'Down join', [['Tiles', 'tiles'], ['Block', 'block']], START.downJoin),
+  choice('downKerf', 'Down kerf', [['Level', 0], ['Sloped', 1]], START.downKerf),
   // The S M built from the wordmark's own cells (the design panel, round 2,
   // 2026-10-13): its first S and an M squeezed to the S's width, the
   // wordmark's height, stems and gap, so a crop of it; the extended S M as it

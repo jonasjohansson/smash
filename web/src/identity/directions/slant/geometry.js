@@ -282,11 +282,14 @@ function innerOf(p, i, cap = Infinity) {
   const c = ceil - 1, Rm = i === 1 ? stem + c + Math.sqrt(2 * stem * c) : Infinity;
   const Rr = q.round ? (i === 4 || q.open ? Math.min(R0, stem) : Math.min(R0, Rm)) : 0, Rb = q.base ? (legs || q.open ? Math.min(R0, stem) : R0) : 0;
   const lower = i === 2 && p.a === 'a';
-  const on = i === 4 ? [q.both && q.round, q.round, q.base, q.both && q.base] : lower ? [q.round, 0, q.base, q.round] : [q.round, q.round, q.base, q.base];
-  const radii = on.map((o, k) => (o ? (k < 2 || (lower && k === 3) ? Rr : Rb) : 0));
+  // Down carved as one block (p.seam; down): a side that meets the next letter across a slot squares its corners,
+  // and the H's feet, the column's foot, round as a pair whatever its Both switch says, as the top S's top does.
+  const on = i === 4 ? [q.both && q.round, q.round, q.base, (q.both || p.seam) && q.base] : lower ? [q.round, 0, q.base, q.round] : [q.round, q.round, q.base, q.base];
+  const [top, base] = p.seam ?? [false, false];
+  const radii = on.map((o, k) => (o && !(k < 2 ? top : base) ? (k < 2 || (lower && k === 3) ? Rr : Rb) : 0));
   const E = T && !lower && ENDS[p.ends ?? 'word']?.[i];
-  const drawn = i === 4 ? [q.round, q.round, q.base, q.base] : on;
-  return { Rr, Rb, radii, E, ends: E ? [0, 1, 2, 3].filter((k) => E[k] && drawn[k]) : [] };
+  const drawn = (i === 4 ? [q.round, q.round, q.base, q.base] : on).map((o, k) => o && !(k < 2 ? top : base));
+  return { Rr: top ? 0 : Rr, Rb: base ? 0 : Rb, radii, E, ends: E ? [0, 1, 2, 3].filter((k) => E[k] && drawn[k]) : [] };
 }
 
 /** How far letter i's ends round at most, the least any of them holds (endMost; Infinity with none). */
@@ -538,7 +541,8 @@ const fallThrough = (tilt, w, bar, d, s) => Math.min(tilt, (w * ((3 * bar) / 4 +
  * it, the S in two pieces, as theirs (in the square S, both slots run through
  * and the crossbar between them is a third); line runs the blade along one
  * line across its kerf, its ends on the grid (unless grid is 0), where it
- * would step. open runs its slots out of the
+ * would step; kerf runs its crossbar slots out of its sides parallel to the
+ * blade (Down's kerf: down). open runs its slots out of the
  * top and the bottom, as the S M's. d is its cuts' fall, r and r2 their two
  * corners' rounds (db the fall of its slots' ends at its bends, d unless
  * held); o and ob its outer corners at the top and the base; hi and low its
@@ -547,7 +551,7 @@ const fallThrough = (tilt, w, bar, d, s) => Math.min(tilt, (w * ((3 * bar) / 4 +
  * there, so its top counter is the shorter; risen, it is no longer the same
  * upside down.
  */
-function sLetter({ L, x, xb = x, R, H, y = 0, s, sv = s, bar = BAR, d = 0, db = d, r = 0, r2 = 0, o = (X, Y) => [X, Y], ob = o, tilt = 0, split = false, line = false, grid = 4, open = false, hi = 0, low = H, rise = 0 }) {
+function sLetter({ L, x, xb = x, R, H, y = 0, s, sv = s, bar = BAR, d = 0, db = d, r = 0, r2 = 0, o = (X, Y) => [X, Y], ob = o, tilt = 0, split = false, line = false, kerf = false, grid = 4, open = false, hi = 0, low = H, rise = 0 }) {
   // At most till a quarter of a bar is left through a slot (fallThrough).
   tilt = fallThrough(tilt, R - L, bar, db, s);
   const cy = H / 2 - rise; // the crossbar's centre
@@ -561,6 +565,9 @@ function sLetter({ L, x, xb = x, R, H, y = 0, s, sv = s, bar = BAR, d = 0, db = 
   const y0 = snapFrom(across(L), cy, grid), y1 = snapFrom(across(R), cy, grid);
   const band = split && line ? (X) => y0 + ((y1 - y0) * (X - L)) / (R - L) : across; // the crossbar's centre line
   const top = (X) => band(X) - bar / 2, bot = (X) => band(X) + bar / 2;
+  // The crossbar slots' far sides, where they run out of the S: level, or with kerf parallel to the blade, so
+  // each slot is one straight kerf a slot tall (two half slots, sv) out through the side at the blade's slope.
+  const ku = (X) => up - sv + (kerf ? band(X) - cy : 0), kl = (X) => lo + sv + (kerf ? band(X) - cy : 0);
   const tr = top(x + s), bl = bot(xb - s); // where the crossbar meets the slots
   const out = (...pieces) => pieces.map((pts) => poly(y ? pts.map(([X, Y, ...k]) => [X, Y + y, ...k]) : pts)).join('');
   // Split, the crossbar between the two slots, where they stand apart.
@@ -573,21 +580,21 @@ function sLetter({ L, x, xb = x, R, H, y = 0, s, sv = s, bar = BAR, d = 0, db = 
   if (open) {
     // Its slots run out of the top and the bottom: the two corner blocks
     // stand apart; split, the body comes apart too.
-    const blocks = [[[x + s, 0], o(R, 0), [R, up - sv], [x + s, up - sv]], [[L, lo + sv], [xb - s, lo + sv], [xb - s, H], ob(L, H)]];
+    const blocks = [[[x + s, 0], o(R, 0), [R, ku(R)], [x + s, ku(x + s)]], [[L, kl(L)], [xb - s, kl(xb - s)], [xb - s, H], ob(L, H)]];
     if (split) {
       return out([o(L, 0), [x - s, 0], [x - s, lb(x - s)], [L, lb(L)]], ...between, [[xb + s, rt(xb + s)], [R, rt(R)], ob(R, H), [xb + s, H]], ...blocks);
     }
     return out([o(L, 0), [x - s, 0], [x - s, tr - db, r], [x + s, tr, r2], [R, top(R)], ob(R, H), [xb + s, H], [xb + s, bl + db, r], [xb - s, bl, r2], [L, bot(L)]], ...blocks);
   }
   if (split) {
-    return out([o(L, 0), o(R, 0), [R, up - sv], [x + s, up - sv], [x + s, hi + d, r], [x - s, hi, r2], [x - s, lb(x - s)], [L, lb(L)]], ...between,
-      [[xb + s, rt(xb + s)], [R, rt(R)], ob(R, H), ob(L, H), [L, lo + sv], [xb - s, lo + sv], [xb - s, low - d, r], [xb + s, low, r2]]);
+    return out([o(L, 0), o(R, 0), [R, ku(R)], [x + s, ku(x + s)], [x + s, hi + d, r], [x - s, hi, r2], [x - s, lb(x - s)], [L, lb(L)]], ...between,
+      [[xb + s, rt(xb + s)], [R, rt(R)], ob(R, H), ob(L, H), [L, kl(L)], [xb - s, kl(xb - s)], [xb - s, low - d, r], [xb + s, low, r2]]);
   }
   return out([
-    o(L, 0), o(R, 0), [R, up - sv], [x + s, up - sv],
+    o(L, 0), o(R, 0), [R, ku(R)], [x + s, ku(x + s)],
     [x + s, hi + d, r], [x - s, hi, r2],
     [x - s, tr - db, r], [x + s, tr, r2],
-    [R, top(R)], ob(R, H), ob(L, H), [L, lo + sv], [xb - s, lo + sv],
+    [R, top(R)], ob(R, H), ob(L, H), [L, kl(L)], [xb - s, kl(xb - s)],
     [xb - s, low - d, r], [xb + s, low, r2],
     [xb + s, bl + db, r], [xb - s, bl, r2],
     [L, bot(L)],
@@ -669,6 +676,7 @@ export function letterPaths(p = SLANT, only = null) {
       sv: h ? h.sv : s,
       split: q.split && p.split,
       line: p.blade === 'line', // split, along one line (sLetter)
+      kerf: !!p.kerf, // its crossbar slots run out parallel to its blade (Down's kerf: down, sLetter)
       open: !!q.open,
       both: !!q.both,
       dip: q.dip === 0 ? 0 : p.dip ?? DIP,
@@ -957,6 +965,7 @@ export function move(d, dx, dy, k = 1) {
 }
 
 export const DOWN_FITS = ['wider', 'fill', 'squeeze'];
+export const DOWN_JOINS = ['tiles', 'block'];
 /**
  * SMASH written down (Jonas, 2026-10-12: of the recompositions, "the DOWN
  * looks pretty good, but lets assume no dip"): the five letters in a column,
@@ -971,7 +980,16 @@ export const DOWN_FITS = ['wider', 'fill', 'squeeze'];
  *   their width; its S's held to the angle (holdOf; the design panel, round
  *   2, 2026-10-13), as the symbol's cells: locked, their blades fall exactly
  *   the cuts' slope, and an S grows taller where its counters can't give.
- * { d, w, h }.
+ * How the letters join (p.downJoin; the design panel, round 2, 2026-10-13:
+ * Down as one carved block): tiles, each letter its own, rounded all round,
+ * the gap between them p.space; block, one stone with cuts in it, the gap a
+ * slot (p.stroke) and every corner where a letter meets the next square (its
+ * seams: the bottom corners of S, M, A, S and the top corners of M, A, S, H),
+ * so only the column's four outer corners round (the ends, in two tiers).
+ * Carved, each S's crossbar slots can run out through the column's side
+ * parallel to its blade (p.downKerf: sLetter's kerf), one straight cut at the
+ * governing angle, a slot tall; level, as they were.
+ * { d, w, h, boxes }.
  */
 const STEMS = [2, 3, 2, 2, 2]; // S M A S H: their stems, and one slot fewer
 
@@ -986,10 +1004,14 @@ export function squeezeM(w, slot) {
   return t < BAR / 4 ? { stem: BAR / 4, stroke: (w - (3 * BAR) / 4) / 2 } : { stem: t, stroke: slot };
 }
 export function down(p = SLANT) {
-  const fit = p.downFit ?? 'wider';
+  const fit = p.downFit ?? 'wider', join = p.downJoin ?? 'tiles';
   if (!DOWN_FITS.includes(fit)) throw new Error(`slant: no fit called ${fit}`);
-  const q = { ...p, dip: 0, height: 0, ends: 'down' }; // the least height its slots allow; in two tiers, its top and its feet the ends (ENDS)
-  const slot = p.stroke, stem = p.stem ?? BAR, gap = p.space ?? slot;
+  if (!DOWN_JOINS.includes(join)) throw new Error(`slant: no join called ${join}`);
+  const carved = join === 'block';
+  const q = { ...p, dip: 0, height: 0, ends: 'down', kerf: carved && !!p.downKerf }; // the least height its slots allow; in two tiers, its top and its feet the ends (ENDS)
+  const slot = p.stroke, stem = p.stem ?? BAR, gap = carved ? slot : p.space ?? slot;
+  // Carved as one block, a letter's seams: its top under the letter above, its base over the one below.
+  const seam = (i) => (carved ? { seam: [i > 0, i < STEMS.length - 1] } : {});
   const width = (n, t, sl = slot) => n * t + (n - 1) * sl;
   const widths = STEMS.map((n) => width(n, fit === 'wider' ? stem : 0));
   const w = fit === 'wider' ? Math.max(...widths) : width(fit === 'squeeze' ? 2 : 3, stem);
@@ -998,7 +1020,8 @@ export function down(p = SLANT) {
   const rs = STEMS.map((n, i) => {
     const t = fit === 'wider' ? stem : (w - (n - 1) * slot) / n; // this letter's stems
     // (Squeezed, the A and the H tilt as the held S's blade falls: slashLine, barFall.)
-    return fit === 'squeeze' && (i === 0 || i === 3) ? held({ ...q, stem: t }, i) : fit === 'squeeze' && i === 1 ? { ...q, ...squeezeM(w, slot) } : { ...q, stem: t, ...(fit === 'squeeze' ? { hold: 1 } : {}) };
+    const qi = { ...q, ...seam(i) };
+    return fit === 'squeeze' && (i === 0 || i === 3) ? held({ ...qi, stem: t }, i) : fit === 'squeeze' && i === 1 ? { ...qi, ...squeezeM(w, slot) } : { ...qi, stem: t, ...(fit === 'squeeze' ? { hold: 1 } : {}) };
   });
   // In two tiers, its ends alike, each letter at its own measures: the least they hold (markHeld).
   const endCap = tiers(q) ? Math.min(...rs.map((r, i) => endHeld(r, i))) : undefined;
