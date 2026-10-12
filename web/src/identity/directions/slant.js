@@ -3,13 +3,14 @@
 // instead of the uniform inner curves, i also thought the alternate a was
 // interesting"). The block, the bars, the slots and the crossbars are the
 // original's; the slot ends and the S bends are cut at one slope, 8 in 20
-// (the slope, the stems and the height are sliders on the page, KNOBS), and the A is a single-storey a,
-// its stem standing above its bowl's shoulder, two ways (inside, below). The
-// symbol, the S alone, the lockups and the favicons follow. No motion yet and
-// no pixels: the stage holds the wordmark. Geometry: ./slant/geometry.js.
+// (the slope, the stems, the height and the outer corners are sliders on the
+// page, KNOBS). The A stays a capital: the single-storey a read as an o. The
+// letters' outer corners are rounded, tight. The symbol, the S alone, the
+// lockups and the favicons follow. No motion yet and no pixels: the stage
+// holds the wordmark. Geometry: ./slant/geometry.js.
 
 import { svg, timeline, canvasStage, withCleanup } from '../lib.js';
-import { letters, letterS, symbol as symbolPath, symCols, block, depth, SLANT, DROP, DROPS, BAR, H, PITCH, SYM_H, SYM_ROWS } from './slant/geometry.js';
+import { letters, letterS, symbol as symbolPath, symCols, block, SLANT, DROP, DROPS, BAR, OUTER, TENSION, H, PITCH, SYM_H, SYM_ROWS } from './slant/geometry.js';
 import { BANDS5 } from '../grid.js';
 import { lockPaths } from './original.js';
 
@@ -21,7 +22,7 @@ export const info = {
   slug: 'slant',
   name: 'Slant',
   lane: 'Cut the curves',
-  idea: 'The original mark with every curve cut straight at one slope, and a single-storey a.',
+  idea: 'The original mark with every curve cut straight at one slope, its outer corners rounded tight.',
   story: '',
   dynamism: '',
   keeps: 'The block, the bars, the slots and the crossbars.',
@@ -38,12 +39,16 @@ const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${ru
 // ("maybe this can be a parameter i can slide to choose"); the stems' width
 // and the block's height ("to match a bit the cm latest iteration"). The page
 // sets them and draws the chapter again; the files are made at the defaults.
-const at = { drop: DROP, stem: BAR, height: H };
+// And the outer corners' round and tension ("i also like the roundness how
+// there's a bit of edge and drama to these corners").
+const at = { drop: DROP, stem: BAR, height: H, outer: OUTER, tension: TENSION };
 const knob = (key, label, min, max, step, value, text, set) => ({ key, label, min, max, step, value, text, set });
 export const KNOBS = [
   knob('slope', 'Slope', 0, 20, 4, DROP * 20, (v) => `${v} in 20`, (v) => { at.drop = DROPS.find((k) => Math.abs(k - v / 20) < 1e-9) ?? DROP; }),
   knob('stem', 'Stem', BAR, 160, 4, BAR, (v) => `${v}`, (v) => { at.stem = v; }),
   knob('height', 'Height', 240, 720, 8, H, (v) => `${v}`, (v) => { at.height = v; }),
+  knob('outer', 'Round', 0, 64, 4, OUTER, (v) => `${v}`, (v) => { at.outer = v; }),
+  knob('tension', 'Tension', 55, 100, 5, TENSION * 100, (v) => `${v}%`, (v) => { at.tension = v / 100; }),
 ];
 for (const k of KNOBS) { const set = k.set; k.set = (v) => set(Number(v)); }
 
@@ -51,22 +56,16 @@ for (const k of KNOBS) { const set = k.set; k.set = (v) => set(Number(v)); }
 const now = () => ({ ...SLANT, ...at });
 const box = () => block(now());
 
-// The wordmark, with the a inside, and the a's two versions to compare (the
-// page shows them in a row of their own). Below reaches 12 under the block,
-// so its artboard does too.
-const mark = (a = SLANT.a) => letters({ ...now(), a });
-const wordmarkWith = (a) => { const b = box(); return svg(b.W, b.H + depth(a), path(mark(a))); };
-export const wordmark = () => wordmarkWith(SLANT.a);
-export const wordmarkInside = () => wordmarkWith('inside');
-export const wordmarkBelow = () => wordmarkWith('below');
-export const VERSIONS = [['wordmarkInside', 'a, inside'], ['wordmarkBelow', 'a, below']];
+// The wordmark.
+const mark = () => letters(now());
+export const wordmark = () => { const b = box(); return svg(b.W, b.H, path(mark())); };
 
 // The S M and the S alone, as the original's, their stems as the wordmark's.
 const cols = () => symCols(at.stem);
 const symW = () => cols().reduce((a, n) => a + n);
-const sym = () => symbolPath({ cols: cols(), drop: at.drop });
+const sym = () => symbolPath({ cols: cols(), drop: at.drop, outer: at.outer, tension: at.tension });
 export const symbol = () => svg(symW(), SYM_H, path(sym()));
-const alone = (o) => { const S = letterS({ ...o, drop: at.drop, stem: at.stem }); return svg(S.w, S.h, path(S.d)); };
+const alone = (o) => { const S = letterS({ ...o, drop: at.drop, stem: at.stem, outer: at.outer, tension: at.tension }); return svg(S.w, S.h, path(S.d)); };
 export const s = () => alone({});
 export const sTurned = () => alone({ turn: true });
 export const sSquare = () => alone({ wide: 1 });
@@ -109,7 +108,7 @@ export function favicon({ size = 32 } = {}) {
   const sl = bar / 2;
   const cols = [bar, sl, bar, sl, bar, sl, bar, sl, bar];
   const rows = [bar, sl, bar, sl, bar];
-  const d = symbolPath({ cols, rows, x: (n - (5 * bar + 4 * sl)) / 2, y: (n - (3 * bar + 2 * sl)) / 2, stop: bar, drop: at.drop });
+  const d = symbolPath({ cols, rows, x: (n - (5 * bar + 4 * sl)) / 2, y: (n - (3 * bar + 2 * sl)) / 2, stop: bar, drop: at.drop, outer: (at.outer * bar) / BAR, tension: at.tension });
   return svg(n, n, `<rect width="${n}" height="${n}" fill="${BLACK}"/><path fill="${WHITE}" fill-rule="evenodd" d="${d}"/>`);
 }
 

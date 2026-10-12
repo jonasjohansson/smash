@@ -130,9 +130,10 @@ export function letterS({ wide = 0, turn = false } = {}) {
 
 /** Path data (M, L, A, Z, absolute) turned a quarter clockwise in a box h high: (x, y) to (h − y, x). */
 export function quarterTurn(d, h) {
-  return [...d.matchAll(/([MLAZ])([^MLAZ]*)/g)].map(([, cmd, args]) => {
+  return [...d.matchAll(/([MLAZC])([^MLAZC]*)/g)].map(([, cmd, args]) => {
     if (cmd === 'Z') return 'Z';
     const n = args.trim().split(/[\s,]+/).map(Number);
+    if (cmd === 'C') return cmd + [0, 2, 4].map((i) => `${f(h - n[i + 1])} ${f(n[i])}`).join(' '); // every point of a curve turns (slant.js)
     const [x, y] = n.slice(-2);
     return cmd + [...n.slice(0, -2).map(f), f(h - y), f(x)].join(' ');
   }).join('');

@@ -29,10 +29,8 @@ const slopes = (d) => polys(d).flatMap((p) => p.map(([x, y], i) => {
   const [x2, y2] = p[(i + 1) % p.length];
   return x !== x2 && y !== y2 ? (y2 - y) / (x2 - x) : null;
 }).filter((s) => s !== null));
-const SQUARE = { ...G.SLANT, round: 0 }; // no rounds: corners only, but for the a's swoop
-
-/** The letters but the a's outline (its slot kept): corners only. */
-const cut = (p) => { const [S, M, a, S2, H] = G.letterPaths(p); return [S, M, 'M' + a.split('M')[2], S2, H].join(''); };
+const SQUARE = { ...G.SLANT, round: 0, outer: 0 }; // no rounds: corners only
+const cut = (p) => G.letters(p);
 
 test('every point of the letters is on the grid of 4, and every cut falls 8 in 20', () => {
   const d = cut(SQUARE);
@@ -56,33 +54,35 @@ test('the slope is a parameter: every cut falls 0, 4 … 20 in 20, on the grid',
   assert.ok(!slopes(cut({ ...SQUARE, drop: 0 })).length); // flat: the slot ends square, the bends right angles
 });
 
-test('an a the mark does not have is refused', () => {
-  assert.throws(() => G.letterPaths({ ...G.SLANT, a: 'double' }), /no a called double/);
-});
-
 test('the S is the same upside down', () => {
   const S = G.letterPaths(SQUARE)[0];
   assert.deepEqual(turned(S, 84, 472), corners(S));
 });
 
-test('the slot ends are rounded 4, eight of them', () => {
+test('the slot ends are rounded 4, seven of them', () => {
   const arcs = [...G.letters(G.SLANT).matchAll(/A([\d.]+) ([\d.]+) 0 0 [01]/g)];
-  assert.equal(arcs.length, 8); // two S's ends, the M's two, the a's two
+  assert.equal(arcs.length, 7); // two S's ends, the M's two, the A's one
   for (const [, rx, ry] of arcs) assert.deepEqual([rx, ry], ['4', '4']);
 });
 
-test('the a: its stem stands 40 above its shoulder; inside stays in the block, below dips 12 under it', () => {
-  const outline = (a) => G.letterPaths({ ...G.SLANT, a })[2].split('M')[1];
-  const ys = (a) => [...outline(a).matchAll(/[MLC][^MLCAZ]*/g)].flatMap(([s]) => s.slice(1).trim().split(/\s+/).map(Number).filter((n, i) => i % 2));
-  for (const a of G.A_VERSIONS) {
-    assert.match(outline(a), /^260 40L312 0L344 0/, a); // from the shoulder up to the stem's top, and across it
-    assert.match(outline(a), /C/, a);
+test('the A: its counter from a bar under the top to the crossbar, its notch from the crossbar down', () => {
+  const [outline, counter] = G.letterPaths(SQUARE)[2].split('M').filter(Boolean).map((q) => 'M' + q);
+  assert.equal(counter, 'M312 40L292 32L292 220L312 220Z');
+  assert.equal(outline, 'M260 0L344 0L344 472L312 472L312 252L292 252L292 472L260 472Z');
+});
+
+test('the outer corners: rounded tight, four on an S, the top two on the M and the A, none on the H', () => {
+  const curves = (d) => [...d.matchAll(/C/g)].length;
+  assert.deepEqual(G.letterPaths().map(curves), [4, 2, 2, 4, 0]);
+  assert.match(G.letterPaths()[0], /^M0 16C0 3\.2 3\.2 0 16 0L/); // 16, its handles 80% of the way to the corner
+  assert.match(G.letterPaths({ ...G.SLANT, outer: 64 })[0], /^M0 42C/); // at most half the S's width
+  assert.equal(curves(G.symbol({ outer: 16 })), 6); // the S's four, the M's top two
+  for (const o of [0, 16, 64]) for (const t of [0.55, 1]) assert.doesNotThrow(() => G.letters({ ...G.SLANT, outer: o, tension: t, height: 240, stem: 160 }));
+  for (const S of [G.letterS({ outer: 16 }), G.letterS({ outer: 16, wide: 1 })]) {
+    const ends = (d) => [...d.matchAll(/[MLC]([^MLCAZ]*)/g)].map(([, a]) => a.trim().split(/\s+/).slice(-2).map(Number));
+    const pts = ends(S.d).map(([x, y]) => `${x},${y}`).sort();
+    assert.deepEqual(ends(S.d).map(([x, y]) => `${S.w - x},${S.h - y}`).sort(), pts); // the same upside down, rounds and all
   }
-  assert.equal(Math.max(...ys('inside')), 472);
-  assert.equal(Math.max(...ys('below')), 484);
-  assert.equal(G.depth('below'), 12);
-  assert.equal(G.depth('inside'), 0);
-  assert.deepEqual(G.A_VERSIONS, ['inside', 'below']);
 });
 
 test('the S M and the S alone: on the grid, cut 8 in 20, the S the same upside down', () => {
@@ -104,31 +104,32 @@ test('the S M and the S alone: on the grid, cut 8 in 20, the S the same upside d
 
 const C = await import('../src/identity/directions/slant.js');
 
-test('the chapter gives every still as plain vector, and the a two ways', () => {
-  for (const fn of ['wordmark', 'symbol', 'lockup', 'lockupSM', 's', 'sTurned', 'sSquare', ...C.VERSIONS.map(([v]) => v)]) {
+test('the chapter gives every still as plain vector', () => {
+  for (const fn of ['wordmark', 'symbol', 'lockup', 'lockupSM', 's', 'sTurned', 'sSquare']) {
     const out = C[fn]();
     assert.match(out, /^<svg [^>]*viewBox="0 0 [\d.]+ [\d.]+"/, fn);
     assert.doesNotMatch(out, /<text|style=|filter|mask|transform/, fn);
   }
   for (const n of [16, 32, 64]) assert.match(C.favicon({ size: n }), new RegExp(`viewBox="0 0 ${n} ${n}"`));
-  assert.match(C.wordmarkBelow(), /viewBox="0 0 552 484"/);
+  assert.match(C.wordmark(), /viewBox="0 0 552 472"/);
   assert.equal(C.info.slug, 'slant');
-  assert.equal(C.VERSIONS.length, 2);
 });
 
 test('the sliders draw every still at their measures, and back', () => {
   const [slope, stem, height] = C.KNOBS;
-  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'stem', 'height']);
+  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'stem', 'height', 'outer', 'tension']);
   const at8 = C.wordmark();
   slope.set(12);
-  assert.ok(C.symbol().includes(G.symbol({ drop: 0.6 })));
+  assert.ok(C.symbol().includes(G.symbol({ drop: 0.6, outer: G.OUTER })));
   assert.ok(C.wordmark().includes(G.letters({ ...G.SLANT, drop: 0.6 })));
   assert.equal(slope.text(12), '12 in 20');
   stem.set('96'); height.set('280');
   assert.match(C.wordmark(), /viewBox="0 0 1256 280"/); // 11 stems of 96, 10 slots of 20
   assert.match(C.symbol(), /viewBox="0 0 560 136"/); // 5 stems of 96, 4 slots
   assert.deepEqual(C.gridOf('wordmark'), { w: 1256, h: 280, bands: [0, 32, 124, 156, 248, 280], bar: 96, slot: 20 });
-  for (const fn of ['wordmark', 'wordmarkBelow', 'symbol', 'lockup', 'lockupSM', 's', 'sTurned', 'sSquare']) assert.match(C[fn](), /<path/, fn);
+  C.KNOBS[3].set('40'); C.KNOBS[4].set('100');
+  for (const fn of ['wordmark', 'symbol', 'lockup', 'lockupSM', 's', 'sTurned', 'sSquare']) assert.match(C[fn](), /<path/, fn);
+  assert.match(C.favicon({ size: 16 }), /<path/);
   for (const k of C.KNOBS) k.set(k.value);
   assert.equal(C.wordmark(), at8);
 });
