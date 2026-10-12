@@ -44,7 +44,7 @@ const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${ru
 // ("this is decent settings too for default"): the cuts flat (slope 0), the
 // slot ends' corners rounded, the ceiling 44, the outer corners rounded 64
 // at 60%, no tilt and no dip, the A a capital, Down filled.
-export const START = { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: H, outer: 64, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20 };
+export const START = { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: H, rise: 0, outer: 64, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20 };
 const at = { ...START, per: PER.map((q) => ({ ...q })), lower: [0, 0, 0, 0, 0] };
 const knob = (key, label, min, max, step, value, text, set) => ({ key, label, min, max, step, value, text, set: (v) => set(Number(v)) });
 /** A switch between a few options (the page draws a button for each): [label, value]. */
@@ -61,6 +61,11 @@ export const KNOBS = [
   knob('space', 'Gap', 8, 80, 4, START.space, (v) => `${v}`, (v) => { at.space = v; }),
   knob('ceil', 'Ceiling', 16, 160, 4, START.ceil, (v) => `${v}`, (v) => { at.ceil = v; }),
   knob('height', 'Height', 240, 720, 8, START.height, (v) => `${v}`, (v) => { at.height = v; }),
+  // The crossbars raised above the middle (the design panel, round 1,
+  // 2026-10-12: an optical rise, so the upper halves don't read heavier):
+  // the S's top counter smaller than its bottom, the A's counter and notch and
+  // the H's crossbar up with them. Off, centred.
+  knob('rise', 'Rise', 0, 48, 4, START.rise, (v) => `${v}`, (v) => { at.rise = v; }),
   knob('outer', 'Round', 0, 64, 4, START.outer, (v) => `${v}`, (v) => { at.outer = v; }),
   knob('tension', 'Tension', 55, 100, 5, START.tension * 100, (v) => `${v}%`, (v) => { at.tension = v / 100; }),
   knob('tilt', 'Tilt', 0, 160, 4, START.tilt, (v) => `${v}`, (v) => { at.tilt = v; }),

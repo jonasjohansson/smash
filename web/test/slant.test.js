@@ -115,7 +115,7 @@ test('the chapter gives every still as plain vector', () => {
   }
   for (const n of [16, 32, 64]) assert.match(C.favicon({ size: n }), new RegExp(`viewBox="0 0 ${n} ${n}"`));
   // At Jonas's settings: 11 stems of 72, 10 slots and gaps of 20; no dip.
-  assert.deepEqual(C.START, { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: 472, outer: 64, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20 });
+  assert.deepEqual(C.START, { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: 472, rise: 0, outer: 64, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20 });
   assert.match(C.wordmark(), /viewBox="0 0 992 472"/);
   assert.equal(C.wordmark(), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 992 472" ><path fill="currentColor" fill-rule="evenodd" d="${G.letters({ ...G.SLANT, ...C.START })}"/></svg>`);
   assert.equal(C.info.slug, 'slant');
@@ -123,7 +123,7 @@ test('the chapter gives every still as plain vector', () => {
 
 test('the sliders draw every still at their measures, and back', () => {
   const { slope, stem, height } = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
-  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'ceil', 'height', 'outer', 'tension', 'tilt', 'dip', 'split', 'a', 'tips', 'frame', 'frameGap', 'frameWidth', 'downFit', 'per', 'lower']);
+  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'ceil', 'height', 'rise', 'outer', 'tension', 'tilt', 'dip', 'split', 'a', 'tips', 'frame', 'frameGap', 'frameWidth', 'downFit', 'per', 'lower']);
   const at8 = C.wordmark();
   slope.set(12);
   const S0 = C.START;
@@ -358,4 +358,49 @@ test("the ends rounded both sides: at half a slot and no slope, a round tip, as 
   assert.equal(arcs(G.letters({ ...G.SLANT, tips: 1 })).length, 22); // every cut's two corners: 2 × 11
   assert.equal(arcs(G.symbol({ tips: 1 })).length, 8);
   for (const drop of G.DROPS) for (const stroke of [8, 20, 60]) assert.doesNotThrow(() => G.letters({ ...G.SLANT, drop, stroke, cut: 30, tips: 1, per: [{ open: 1 }, {}, {}, { split: 1 }] }));
+});
+
+test("the crossbars raised: the S's top counter smaller than its bottom, the A's counter and notch and the H's crossbar up with them", () => {
+  assert.equal(G.letters({ ...SQUARE, rise: 0 }), G.letters(SQUARE)); // off, centred
+  const p = { ...SQUARE, rise: 24 };
+  const b = G.block(p);
+  assert.deepEqual([b.H, b.mid, b.up, b.lo, b.bands], [472, 212, 186, 238, [0, 32, 196, 228, 440, 472]]);
+  const [S, , A, , Hh] = G.letterPaths(p);
+  const [outline, counter] = A.split('M').filter(Boolean).map((q) => 'M' + q);
+  assert.equal(counter, 'M312 40L292 32L292 196L312 196Z'); // 24 shorter
+  assert.equal(outline, 'M260 0L344 0L344 472L312 472L312 228L292 228L292 472L260 472Z'); // the notch 24 taller
+  const ys = (d) => [...new Set(polys(d).flat().map(([, y]) => y))].sort((m, n) => m - n);
+  assert.deepEqual(ys(Hh), [0, 196, 228, 472]); // the H's crossbar 196 to 228
+  // The S: its upper arm's foot 176 from the top, its lower arm's head 224 from the base; its top slot 164 long, its bottom one 212.
+  assert.ok(corners(S)[0].includes('84,176') && corners(S)[0].includes('0,248'));
+  assert.match(S, /L52 40L32 32L32 188L52 196L84 196L/);
+  assert.match(S, /L32 432L52 440L52 236L32 228L0 228Z$/);
+  assert.notDeepEqual(turned(S, 84, 472), corners(S)); // no longer the same upside down, as meant
+  for (const rise of [4, 24, 48]) for (const drop of G.DROPS) for (const height of [240, 472]) {
+    const d = G.letters({ ...SQUARE, rise, drop, height });
+    for (const q of polys(d)) assert.deepEqual(q.flat().filter((n) => n % 4), [], `rise ${rise} drop ${drop} height ${height}`);
+    assert.deepEqual(slopes(d).filter((k) => Math.abs(k - drop) > 1e-9), [], `rise ${rise} drop ${drop}`);
+  }
+});
+
+test("raised, the block grows by twice the rise where its upper slots would run out, and the S's ends lower only as far as its upper half lets them", () => {
+  assert.equal(G.block({ ...G.SLANT, ceil: 120, height: 240 }).H, 352);
+  assert.equal(G.block({ ...G.SLANT, ceil: 120, height: 240, rise: 48 }).H, 448); // 352 + 96
+  const b = G.block({ ...G.SLANT, ceil: 120, height: 240, rise: 48 });
+  assert.equal(b.up - b.s - 120 - 8, 10 + 20); // the top end still a slot and a half above its bend (its cut's round 4 and half a slot to spare)
+  const S = G.letterPaths({ ...SQUARE, rise: 24, lower: [999, 0, 0, 0] })[0];
+  assert.match(S, /L52 166L32 158L/); // the top end lowered 126: half a slot above the upper arm's foot, 176
+  assert.match(S, /L32 306L52 314L/); // the bottom end raised as far, with room to spare
+  for (const q of [{ rise: 48, tilt: 160, outer: 64, height: 240, ceil: 160 }, { rise: 48, tilt: 160, split: 1, outer: 64, stem: 32, lower: [999, 999, 999, 999] },
+    { rise: 48, tilt: 160, outer: 64, per: [{ round: 0, base: 1, open: 1 }, {}, {}, { round: 1, base: 1 }] }]) {
+    assert.doesNotThrow(() => G.letters({ ...G.SLANT, ...q }));
+    assert.doesNotThrow(() => G.down({ ...G.SLANT, ...q }));
+  }
+  const K = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
+  const plain = C.wordmark();
+  K.rise.set('24');
+  assert.ok(C.wordmark().includes(G.letters({ ...G.SLANT, ...C.START, rise: 24 })));
+  assert.equal(C.gridOf('wordmark').bands[2], 472 / 2 - 24 - 16);
+  for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value));
+  assert.equal(C.wordmark(), plain);
 });
