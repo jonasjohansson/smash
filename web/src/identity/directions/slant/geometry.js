@@ -114,14 +114,15 @@ export function block(p = SLANT) {
  * off or on some of the tilts and other settings per letter"): its slot ends
  * cut (off: square), its outer corners rounded at the top (round) and at the
  * base (base; Jonas: "so the top and bottom border radius match"), the S's
- * tilt and split, the A's dip. A letter takes a setting only where its switch is on; the H has
+ * tilt and split and its slot open at both ends (open; as the S M's: "the gaps
+ * in the S goes all the way up"), the A's dip. A letter takes a setting only where its switch is on; the H has
  * no slot ends, and its corners start square.
  */
 export const PER = [
-  { cut: 1, round: 1, base: 1, tilt: 1, split: 1 },
+  { cut: 1, round: 1, base: 1, tilt: 1, split: 1, open: 0 },
   { cut: 1, round: 1, base: 0 },
   { cut: 1, round: 1, base: 0, dip: 1 },
-  { cut: 1, round: 1, base: 1, tilt: 1, split: 1 },
+  { cut: 1, round: 1, base: 1, tilt: 1, split: 1, open: 0 },
   { round: 0, base: 0 },
 ];
 const per = (p, i) => ({ ...PER[i], ...(p.per?.[i] ?? {}) });
@@ -139,7 +140,7 @@ export function letterPaths(p = SLANT) {
   /** Letter i's measures, as its switches have them: d its cuts' fall, r their round, o its outer corners. */
   const own = (i) => {
     const q = per(p, i);
-    const Rr = q.round ? (i === 4 ? Math.min(R0, stem) : R0) : 0; // the H's top corners are on its legs too
+    const Rr = q.round ? (i === 4 || q.open ? Math.min(R0, stem) : R0) : 0; // the H's top corners are on its legs too, and an open S's on its arms
     const Rb = q.base ? Math.min(R0, stem) : 0; // at the base, at most a stem: a leg's foot is one wide
     return {
       d: q.cut ? cutOf(p.drop ?? DROP, slot) : 0, // 8
@@ -151,6 +152,7 @@ export function letterPaths(p = SLANT) {
       // the S's crossbar's fall, at most till its ends meet the corners' rounds
       tilt: q.tilt ? Math.max(0, Math.min(p.tilt ?? 0, H + bar - 2 * Rr - 8)) : 0,
       split: q.split && p.split,
+      open: !!q.open,
       dip: q.dip === 0 ? 0 : p.dip ?? DIP,
       lower: Math.max(0, p.lower?.[i] ?? 0),
     };
@@ -169,10 +171,22 @@ export function letterPaths(p = SLANT) {
   // bar between the two, falls tilt across the letter (CM.SUPPLY's long
   // diagonal), so the slots either side of it are wedges; split opens its slot
   // straight through it, the S in two pieces, as theirs.
-  const S = (L, x, R, { d, r, o, ob, tilt, split, hi, low }) => {
+  const S = (L, x, R, { d, r, o, ob, tilt, split, open, hi, low }) => {
     const band = (X) => H / 2 + (tilt * (X - x)) / (R - L); // the crossbar's centre line
     const top = (X) => band(X) - bar / 2, bot = (X) => band(X) + bar / 2;
     const tr = top(x + s), bl = bot(x - s); // where the crossbar meets the slot
+    if (open) {
+      // Its slot runs out of the top and the bottom, as the S M's: the two
+      // corner blocks stand apart; split, the body comes apart too.
+      const blocks = poly([[x + s, 0], o(R, 0), [R, up - s], [x + s, up - s]])
+        + poly([[L, lo + s], [x - s, lo + s], [x - s, H], ob(L, H)]);
+      if (split) {
+        return poly([o(L, 0), [x - s, 0], [x - s, bl], [L, bot(L)]])
+          + poly([[x + s, tr], [R, top(R)], ob(R, H), [x + s, H]]) + blocks;
+      }
+      return poly([o(L, 0), [x - s, 0], [x - s, tr - d, r], [x + s, tr], [R, top(R)], ob(R, H), [x + s, H], [x + s, bl + d, r], [x - s, bl], [L, bot(L)]])
+        + blocks;
+    }
     if (split) {
       return poly([o(L, 0), o(R, 0), [R, up - s], [x + s, up - s], [x + s, hi + d, r], [x - s, hi], [x - s, bl], [L, bot(L)]])
         + poly([[x + s, tr], [R, top(R)], ob(R, H), ob(L, H), [L, lo + s], [x - s, lo + s], [x - s, low - d, r], [x + s, low]]);

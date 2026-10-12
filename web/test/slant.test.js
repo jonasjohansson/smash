@@ -281,3 +281,15 @@ test("each letter lowered on its own: the M's slot tops, the S's ends both ways,
   const at = Object.fromEntries(C.KNOBS.map((k) => [k.key, k])).lower;
   at.set(1, '40'); assert.equal(at.get(1), 40); assert.ok(!at.has(4)); at.reset(); assert.equal(at.get(1), 0);
 });
+
+test("the S open, as the S M's: its slot out of the top and the bottom, three pieces; split, four; the same upside down", () => {
+  const S = (q) => G.letterPaths({ ...SQUARE, ...q, per: [{ open: 1 }] })[0];
+  const pieces = (d) => d.split('M').filter(Boolean).length;
+  assert.equal(pieces(S({})), 3);
+  assert.match(S({}), /^M0 0L32 0L32 /); // the slot from the top edge
+  assert.deepEqual(turned(S({}), 84, 472), corners(S({})));
+  assert.equal(pieces(S({ tilt: 42, split: 1 })), 4);
+  assert.deepEqual(turned(S({ tilt: 42, split: 1 }), 84, 472), corners(S({ tilt: 42, split: 1 })));
+  assert.equal(pieces(G.letterPaths({ ...SQUARE, per: [{ open: 1 }] })[3]), 1); // the second S as it was
+  for (const q of [{}, { outer: 64, round: 1 }, { tilt: 160, split: 1, outer: 36 }]) assert.doesNotThrow(() => G.letters({ ...G.SLANT, ...q, per: [{ open: 1 }, {}, {}, { open: 1 }] }));
+});

@@ -69,7 +69,7 @@ export const KNOBS = [
   // Each letter's own switches (geometry.js: PER): a button where the letter has the setting.
   {
     key: 'per', label: 'Letters', letters: ['S', 'M', 'A', 'S', 'H'],
-    rows: [['cut', 'Cut'], ['round', 'Round'], ['base', 'Base'], ['tilt', 'Tilt'], ['split', 'Split'], ['dip', 'Dip']],
+    rows: [['cut', 'Cut'], ['round', 'Round'], ['base', 'Base'], ['tilt', 'Tilt'], ['split', 'Split'], ['open', 'Open'], ['dip', 'Dip']],
     has: (row, i) => row in PER[i],
     on: (row, i) => !!at.per[i][row],
     set: (row, i, v) => { at.per[i][row] = v ? 1 : 0; },
