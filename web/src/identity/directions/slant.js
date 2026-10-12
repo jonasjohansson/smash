@@ -140,13 +140,17 @@ const cols = () => symCols(at.stem, at.stroke, at.space);
 const rows = () => symRows(at.stroke);
 const symW = () => cols().reduce((t, n) => t + n);
 const symH = () => rows().reduce((t, n) => t + n);
-const sym = () => symbolPath({ cols: cols(), rows: rows(), cut: at.cut, tips: at.tips, drop: at.drop, outer: at.outer, tension: at.tension });
+// The S M's S and the S alone carry the wordmark's blade (the design panel,
+// round 1, 2026-10-12): the first S's tilt and split, as its switches have
+// them, at the same angle; their slots already open, as the S M's.
+const blade = () => ({ tilt: at.per[0].tilt ? at.tilt : 0, split: at.per[0].split ? at.split : 0 });
+const sym = () => symbolPath({ cols: cols(), rows: rows(), cut: at.cut, tips: at.tips, drop: at.drop, outer: at.outer, tension: at.tension, ...blade() });
 export const symbol = () => {
   const c = cols(), [R] = symRadii(at.outer, c, rows()), sw = c[0] + c[1] + c[2];
   const boxes = [{ box: [0, 0, sw, symH()], radii: [R, R, R, R] }, { box: [sw + c[3], 0, symW(), symH()], radii: [R, R, 0, 0] }]; // the S, the M
   return still(framed(symW(), symH(), sym(), symRadii(at.outer, c, rows()), boxes));
 };
-const alone = (o) => { const S = letterS({ ...o, cut: at.cut, tips: at.tips, drop: at.drop, stem: at.stem, slot: at.stroke, outer: at.outer, tension: at.tension }); return svg(S.w, S.h, path(S.d)); };
+const alone = (o) => { const S = letterS({ ...o, cut: at.cut, tips: at.tips, drop: at.drop, stem: at.stem, slot: at.stroke, outer: at.outer, tension: at.tension, ...blade() }); return svg(S.w, S.h, path(S.d)); };
 export const s = () => alone({});
 export const sTurned = () => alone({ turn: true });
 export const sSquare = () => alone({ wide: 1 });
@@ -194,7 +198,9 @@ export function favicon({ size = 32 } = {}) {
   const sl = bar / 2;
   const cols = [bar, sl, bar, sl, bar, sl, bar, sl, bar];
   const rows = [bar, sl, bar, sl, bar];
-  const d = symbolPath({ cols, rows, x: (n - (5 * bar + 4 * sl)) / 2, y: (n - (3 * bar + 2 * sl)) / 2, stop: bar, tips: at.tips, cut: (at.cut * bar) / BAR, drop: at.drop, outer: (at.outer * bar) / BAR, tension: at.tension, grid: 0 });
+  // Its S's crossbar falls at the wordmark S's angle: tilt across that S's width, scaled to this one's.
+  const { tilt, split } = blade(), fall = (tilt * (2 * bar + sl)) / (2 * at.stem + at.stroke);
+  const d = symbolPath({ cols, rows, x: (n - (5 * bar + 4 * sl)) / 2, y: (n - (3 * bar + 2 * sl)) / 2, stop: bar, tips: at.tips, cut: (at.cut * bar) / BAR, drop: at.drop, outer: (at.outer * bar) / BAR, tension: at.tension, grid: 0, tilt: fall, split, room: (8 * bar) / BAR });
   return svg(n, n, `<rect width="${n}" height="${n}" fill="${BLACK}"/><path fill="${WHITE}" fill-rule="evenodd" d="${d}"/>`);
 }
 

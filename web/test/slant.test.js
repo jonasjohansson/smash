@@ -359,3 +359,72 @@ test("the ends rounded both sides: at half a slot and no slope, a round tip, as 
   assert.equal(arcs(G.symbol({ tips: 1 })).length, 8);
   for (const drop of G.DROPS) for (const stroke of [8, 20, 60]) assert.doesNotThrow(() => G.letters({ ...G.SLANT, drop, stroke, cut: 30, tips: 1, per: [{ open: 1 }, {}, {}, { split: 1 }] }));
 });
+
+test("the S M's S carries the wordmark's blade: its crossbar at the wordmark S's angle, split through, the same upside down", () => {
+  const has = (d, k) => slopes(d).some((m) => Math.abs(m - k) < 1e-3); // the points are given to two places
+  assert.equal(G.symbol({ tilt: 0, split: 0 }), G.symbol()); // level and whole, as it was
+  const sym = (q) => G.symbol({ cols: G.symCols(72, 20), rows: G.symRows(20), round: 0, outer: 0, ...q });
+  assert.ok(has(G.letterPaths({ ...SQUARE, stem: 72, tilt: 48 })[0], 48 / 164)); // the wordmark's S: 48 across its 164
+  const t = sym({ tilt: 48 });
+  assert.ok(has(t, 48 / 164)); // the S M's S, as wide, at the same slope
+  assert.deepEqual(slopes(t).filter((k) => Math.abs(k - 48 / 164) > 1e-3 && k !== 0.4), []); // its cuts and the M's slot tops still 8 in 20
+  assert.match(t, /L368 40L348 32L348 136L276 136L276 40L256 32L/); // the M's two slot tops cut, as they were
+  assert.equal(t.split('M').filter(Boolean).length, 4); // the S's body and two blocks, the M
+  const S = G.letterS({ cut: 0, tilt: 42 }); // 84 across: the crossbar falls 1 in 2
+  assert.ok(slopes(S.d).includes(0.5));
+  assert.deepEqual(turned(S.d, S.w, S.h), corners(S.d));
+  const two = G.letterS({ cut: 0, tilt: 42, split: 1 });
+  assert.equal(two.d.split('M').filter(Boolean).length, 4); // the body in two, the two blocks
+  for (const [x] of polys(two.d).flat()) assert.ok(x <= 32 || x >= 52); // the slot straight through, x 32 to 52
+  assert.deepEqual(turned(two.d, two.w, two.h), corners(two.d));
+  for (const p of polys(G.letterS({ cut: 0, tilt: 0 }).d)) assert.deepEqual(p.flat().filter((n) => n % 4), []); // level, on the grid of 4
+});
+
+test("the square S falls at the same angle across its width; split, its crossbar between the slots a third piece", () => {
+  const S = G.letterS({ cut: 0, wide: 1, tilt: 42 }); // 136 across: 42 in 84, as the plain S
+  assert.equal(S.w, 136);
+  assert.ok(slopes(S.d).includes(0.5));
+  assert.deepEqual(turned(S.d, S.w, S.h), corners(S.d));
+  const split = G.letterS({ cut: 0, wide: 1, tilt: 42, split: 1 });
+  assert.equal(split.d.split('M').filter(Boolean).length, 5);
+  assert.deepEqual(turned(split.d, split.w, split.h), corners(split.d));
+  // Steep, its crossbar rises at the top slot only till a quarter of the slot under the top block stays open.
+  const steep = G.letterS({ cut: 0, wide: 1, tilt: 160 });
+  const under = polys(steep.d)[0].find(([x, y]) => x === 52 && y < 68); // where the crossbar meets the top slot's right side
+  assert.ok(under[1] >= 32 + 5 - 1e-9, `${under}`);
+  for (const t of [0, 42, 160]) for (const stem of [32, 200]) for (const slot of [8, 60]) {
+    assert.doesNotThrow(() => G.letterS({ wide: 1, tilt: t, split: 1, stem, slot, drop: 1, cut: 30, tips: 1, outer: 64 }));
+    assert.doesNotThrow(() => G.letterS({ wide: 1, tilt: t, stem, slot, drop: 1, cut: 30, outer: 64 }));
+  }
+});
+
+test("the chapter's S M, S alone and favicons take the first S's tilt and split, as its switches have them", () => {
+  const K = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
+  const S0 = C.START, cols = G.symCols(72, 20), rows = G.symRows(20);
+  const plain = [C.symbol(), C.s(), C.sSquare(), C.favicon({ size: 64 })];
+  K.tilt.set('48'); K.split.set('1');
+  assert.ok(C.symbol().includes(G.symbol({ cols, rows, cut: S0.cut, drop: S0.drop, outer: S0.outer, tension: S0.tension, tilt: 48, split: 1 })));
+  assert.ok(C.s().includes(G.letterS({ cut: S0.cut, drop: S0.drop, stem: 72, slot: 20, outer: S0.outer, tension: S0.tension, tilt: 48, split: 1 }).d));
+  const fav = C.favicon({ size: 64 }).match(/ d="([^"]+)"/)[1];
+  assert.ok(slopes(fav).some((k) => Math.abs(k - 48 / 164) < 2e-3)); // the favicon's S at the wordmark S's angle
+  K.per.set('tilt', 0, 0); K.per.set('split', 0, 0);
+  assert.deepEqual([C.symbol(), C.s(), C.sSquare(), C.favicon({ size: 64 })], plain); // the first S's switches off: level and whole
+  for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value));
+});
+
+test('the framed S M: its ring rounded from the same centres as the mark, square only at the M foot', () => {
+  const K = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
+  K.frame.set('1');
+  const d = C.symbol().match(/ d="([^"]+)"/)[1];
+  assert.match(d, /M40 72C40 52\.8 52\.8 40 72 40L/); // the S's top left: 32 round (72, 72)
+  assert.match(d, /M0 72C0 28\.8 28\.8 0 72 0L448 0C491\.2 0 520 28\.8 520 72L520 216L72 216C28\.8 216 0 187\.2 0 144Z/); // outside: 72 round the same centres
+  assert.match(d, /M20 72C20 40\.8 40\.8 20 72 20L448 20C479\.2 20 500 40\.8 500 72L500 196L72 196/); // inside: 52
+  for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value));
+});
+
+test('Down draws each letter at its own stems: a squeezed M too thin for an S still draws', () => {
+  const p = { ...G.SLANT, stem: 32, stroke: 60, drop: 1, cut: 30, tips: 1, downFit: 'squeeze' };
+  assert.doesNotThrow(() => G.down(p));
+  const one = G.letterPaths(G.SLANT, 1);
+  assert.deepEqual(one, ['', G.letterPaths(G.SLANT)[1], '', '', '']);
+});
