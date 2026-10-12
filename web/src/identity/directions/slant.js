@@ -119,10 +119,13 @@ export const KNOBS = [
   choice('symbol', 'Symbol', [['Extended', 'extended'], ['Cells', 'cells']], START.symbol),
   // Each letter's own switches (geometry.js: PER): a button where the letter has the setting. The A's and the
   // H's Tilt (the design panel, round 2, 2026-10-13; off) carry the S's blade's angle through their crossbars
-  // (geometry.js: barFall), one angle through S, A, S, H without a slash.
+  // (geometry.js: barFall), one angle through S, A, S, H without a slash. The A's Apex and the H's Bar step (the
+  // design panel, round 3, 2026-10-13; off) tell the two apart: the A's counter head peaked at the governing
+  // slope over a crossbar grown to a window, the H's lower slot stepped aside under a bar at least a slot
+  // thick (geometry.js: barOf). The a's slot head peaks too.
   {
     key: 'per', label: 'Letters', letters: ['S', 'M', 'A', 'S', 'H'],
-    rows: [['cut', 'Cut'], ['round', 'Round'], ['base', 'Base'], ['both', 'Both sides'], ['tilt', 'Tilt'], ['split', 'Split'], ['open', 'Open'], ['dip', 'Dip']],
+    rows: [['cut', 'Cut'], ['round', 'Round'], ['base', 'Base'], ['both', 'Both sides'], ['tilt', 'Tilt'], ['split', 'Split'], ['open', 'Open'], ['dip', 'Dip'], ['apex', 'Apex'], ['barStep', 'Bar step']],
     has: (row, i) => row in PER[i],
     // Whether a switch does anything as the other controls stand (the page dims it where not): the A's Tilt
     // waits for the capital, as the a's slot has no crossbar to fall (the design panel's review, round 2, 2026-10-13).

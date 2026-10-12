@@ -1531,3 +1531,139 @@ test("the chapter's Down join: Block, Down carved as one stone, and its kerf slo
   reset();
   assert.equal(C.down(), plain);
 });
+
+// The A and the H told apart (the design panel, round 3, 2026-10-13): the A's apex and window, the H's bar step.
+/** PER with the A's switches a and the H's h. */
+const perWith = (a = {}, h = {}) => G.PER.map((q, i) => ({ ...q, ...(i === 2 ? a : i === 4 ? h : {}) }));
+
+test("the A's apex: its counter head a chevron, two edges at the governing slope meeting on the slot's centre line, its ends on the grid", () => {
+  // At 8 in 20, slots of 20: the head's ends 4 under its point, half a slot either side of it; the floor as it was.
+  const P = { ...SQUARE, per: perWith({ apex: 1 }) }, [, , A] = G.letterPaths(P);
+  assert.equal(A, 'M260 0L344 0L344 472L312 472L312 252L292 252L292 472L260 472ZM312 36L302 32L292 36L292 220L312 220Z');
+  // Only the A's counter changes.
+  assert.deepEqual(G.letterPaths(P).map((d, i) => (i === 2 ? null : d)), G.letterPaths(SQUARE).map((d, i) => (i === 2 ? null : d)));
+  // Off, as PER has it: as before.
+  assert.ok(!G.PER[2].apex);
+  assert.equal(G.letters({ ...SQUARE, per: perWith({ apex: 0 }) }), G.letters(SQUARE));
+  // Every slope and slot: the point on the slot's centre line at the head's top, the two ends level with each other, on the
+  // grid, each half a slot across and the cut's fall over half a slot down (to the grid), the counter cut at that slope
+  // whatever the A's Cut switch says (the governing slope is the mark's).
+  for (const drop of G.DROPS) for (const slot of [8, 20, 40, 60]) for (const cut of [0, 1]) {
+    const p = { ...SQUARE, drop, stroke: slot, per: perWith({ apex: 1, cut }) }, b = G.block(p), x = b.c(5), s = slot / 2;
+    const [r, l, t, ...rest] = ringOf(G.letterPaths(p)[2], 1), e = Math.round((drop * s) / 4) * 4, at = JSON.stringify({ drop, slot, cut });
+    assert.deepEqual([r, t], [[x + s, b.ceil + e], [x - s, b.ceil + e]], at);
+    assert.deepEqual(l, [x, b.ceil], at);
+    assert.deepEqual([r, t, ...rest].flat().filter((n) => n % 4), [], at);
+    assert.ok(Math.abs(e - drop * s) <= 2, at);
+    assert.deepEqual([(r[1] - l[1]) / (r[0] - l[0]), (t[1] - l[1]) / (t[0] - l[0])], [e / s, -e / s], at);
+  }
+  // Rounded (the page's measures), its two ends round alike, its point sharp; lowered, it peaks as far down.
+  const R = G.letterPaths({ ...PAGE, drop: 0.4, per: perWith({ apex: 1 }) })[2].split('M')[2];
+  assert.equal([...R.matchAll(/A10 10 /g)].length, 2);
+  assert.match(R, /L542 44L/);
+  assert.match(G.letterPaths({ ...PAGE, drop: 0.4, lower: [0, 0, 40], per: perWith({ apex: 1 }) })[2], /L542 84L/);
+  // The a's slot head peaks the same.
+  assert.match(G.letterPaths({ ...SQUARE, a: 'a', per: perWith({ apex: 1 }) })[2], /M312 36L302 32L292 36L/);
+});
+
+test("the A's window: its crossbar a slot and a half or 6 in 100 of the height tall, about the crossbars' centre; tilted, both bars a slot thick across", () => {
+  /** The A's counter floor and notch top at its slot's centre, and the H's upper slot floor and lower slot top at its own. */
+  const bars = (p) => {
+    const b = G.block(p), [, , A, , Hh] = G.letterPaths(p), x = b.c(5), s = b.s, mid = (a, c) => (a[1] + c[1]) / 2;
+    const out = ringOf(A), ctr = ringOf(A, 1);
+    const floor = mid(...ctr.filter(([X, Y]) => Y > b.ceil + 1 && Math.abs(Math.abs(X - x) - s) < 1e-9).slice(-2));
+    const notch = mid(...out.filter(([X, Y]) => Y < b.H && Y > 0 && Math.abs(Math.abs(X - x) - s) < 1e-9));
+    return { floor, notch, mid: b.mid, H: Hh };
+  };
+  // Slots of 40: 60 wanted, 64 on the grid's 8, about the middle (236); the H's crossbar a bar, as it was.
+  const p40 = { ...SQUARE, stroke: 40, per: perWith({ apex: 1 }) };
+  assert.deepEqual([bars(p40).floor, bars(p40).notch], [204, 268]);
+  assert.equal(G.letterPaths(p40)[4], G.letterPaths({ ...SQUARE, stroke: 40 })[4]);
+  // 720 tall, slots of 20: 6 in 100 of the height, 43.2, to 48, about 360; risen 48 at slots of 40, about the risen centre.
+  const tall = bars({ ...SQUARE, height: 720, per: perWith({ apex: 1 }) });
+  assert.deepEqual([tall.floor, tall.notch], [336, 384]);
+  const risen = bars({ ...p40, rise: 48 });
+  assert.deepEqual([risen.floor, risen.notch, risen.mid], [156, 220, 188]);
+  // At the page's start (slots of 20, a bar 32 already over 30): the window is the bar, as it was.
+  assert.deepEqual([bars({ ...SQUARE, per: perWith({ apex: 1 }) }).floor, bars({ ...SQUARE, per: perWith({ apex: 1 }) }).notch], [220, 252]);
+  // Locked at 20 in 20, stems 32, slots 60, both tilted: the A's window 96 down at its slot's centre (90 wanted), the H's
+  // bar 88 (60 across at slope 1: 84.9), each falling 30 across half its slot: at least a slot thick square to their fall.
+  const p = { ...SQUARE, stem: 32, stroke: 60, drop: 1, lock: 1, per: perWith({ apex: 1, tilt: 1 }, { barStep: 1, tilt: 1 }) };
+  const [, , A, , Hh] = G.letterPaths(p);
+  assert.match(A, /L552 314L492 254L/); // its notch's top, about 284
+  assert.match(A, /L492 158L552 218Z$/); // its counter's floor, about 188
+  assert.match(Hh, /L860 162L920 222L/); // the H's upper slot's floor, about 192
+  for (const [down, slope] of [[284 - 188, 1], [88, 1]]) assert.ok(down / Math.hypot(1, slope) >= 60, `${down}`);
+  // Short, a high ceiling, wide slots, any slope: the window at least a bar, and never past what leaves the counter a
+  // slot under its peak (its cut's round besides).
+  for (const height of [240, 472]) for (const ceil of [16, 160]) for (const slot of [8, 20, 60]) for (const drop of G.DROPS) for (const rise of [0, 48]) {
+    const q = { ...SQUARE, height, ceil, stroke: slot, drop, rise, per: perWith({ apex: 1 }) }, bq = G.block(q), w = bars(q);
+    const e = Math.round((drop * slot) / 8) * 4, at = JSON.stringify({ height, ceil, slot, drop, rise });
+    assert.ok(w.floor - (bq.ceil + e) >= slot && w.notch - w.floor >= 32, at);
+    assert.equal((w.floor + w.notch) / 2, bq.mid, at);
+  }
+});
+
+test("the H's bar step: its lower slot stands aside where the bar falls, a slot or 3 in 10 of a stem, at most half a stem; on the grid, at the one angle", () => {
+  // Stems 72, slots 20: 21.6 to the grid, 24; the upper slot 900 to 920, the lower 924 to 944.
+  const P = { ...SQUARE, stem: 72, per: perWith({}, { barStep: 1 }) };
+  assert.equal(G.letterPaths(P)[4], 'M828 0L900 0L900 220L920 220L920 0L992 0L992 472L944 472L944 252L924 252L924 472L828 472Z');
+  assert.deepEqual(G.letterPaths(P).slice(0, 4), G.letterPaths({ ...SQUARE, stem: 72 }).slice(0, 4)); // only the H changes
+  assert.ok(!G.PER[4].barStep);
+  /** The H's lower slot's left side less its upper slot's. */
+  const step = (p) => { const [Hh] = G.letterPaths(p).slice(4), xs = ringOf(Hh).filter(([, y]) => y === G.block(p).H).map(([x]) => x).sort((a, b) => a - b); return xs[1] - ringOf(Hh)[1][0]; };
+  for (const [stem, slot, want] of [[72, 20, 24], [200, 20, 60], [32, 20, 16], [72, 60, 36], [32, 8, 12]]) {
+    const p = { ...SQUARE, stem, stroke: slot, per: perWith({}, { barStep: 1 }) };
+    assert.equal(step(p), want, `${stem} ${slot}`); // a slot or 3 in 10 of a stem; at most half a stem (32: 16, 72 with slots of 60: 36)
+    for (const q of polys(G.letterPaths(p)[4])) assert.deepEqual(q.flat().filter((n) => n % 4), [], `${stem} ${slot}`);
+  }
+  // Tilted at 8 in 20: every slanted side of the H at the slope, the lower slot's top on the bar's lower edge where it stands.
+  const T = { ...P, drop: 0.4, lock: 1, per: perWith({}, { barStep: 1, tilt: 1 }) }, Hh = G.letterPaths(T)[4];
+  assert.equal(Hh, 'M828 0L900 0L900 216L920 224L920 0L992 0L992 472L944 472L944 265.6L924 257.6L924 472L828 472Z');
+  assert.deepEqual([...new Set(slopes(Hh).map((k) => +k.toFixed(9)))], [0.4]);
+  // At the page's measures (Round 64 on stems of 72): its right foot 48 wide, its round passes it over the slot's foot as
+  // an end does, keeping clear of the crossbar; in one tier or two, both sides or one; the outline never crosses itself.
+  for (const corners of [0, 1]) for (const both of [0, 1]) {
+    const p = { ...PAGE, corners, endRound: 200, per: perWith({}, { barStep: 1, both }) }, d = G.letterPaths(p)[4];
+    assert.equal(crossingFlat(d, 2), null, `${corners} ${both}`);
+    assert.ok(G.letterRadii(p, 4)[2] > 48, `${corners} ${both}`);
+  }
+});
+
+test("the Letters table's Apex and Bar step: the A's and the H's, off at the start; on, the A and the H change in the wordmark, Down and the lockup", () => {
+  const reset = () => { for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value)); };
+  reset();
+  const letters = C.KNOBS.find((k) => k.key === 'per');
+  assert.deepEqual(['apex', 'barStep'].map((row) => [0, 1, 2, 3, 4].filter((i) => letters.has(row, i))), [[2], [4]]);
+  assert.ok(!letters.on('apex', 2) && !letters.on('barStep', 4));
+  const others = () => ['symbol', 's', 'sSquare', 'lockupSM'].map((fn) => C[fn]()).concat(C.favicon({ size: 32 }));
+  const before = { word: C.wordmark(), down: C.down(), lockup: C.lockup(), others: others() };
+  letters.set('apex', 2, 1);
+  letters.set('barStep', 4, 1);
+  const per = perWith({ apex: 1 }, { barStep: 1 }), p = { ...PAGE, per };
+  assert.ok(C.wordmark().includes(G.letters(p)));
+  assert.notEqual(G.letters(p), G.letters(PAGE));
+  assert.deepEqual(G.letterPaths(p).slice(0, 2), G.letterPaths(PAGE).slice(0, 2));
+  assert.ok(C.down().includes(G.down(p).d) && C.down() !== before.down);
+  assert.ok(C.lockup().includes(G.letters(p)) && C.lockup() !== before.lockup);
+  assert.deepEqual(others(), before.others); // the S M, the S alone and the favicons have no A or H
+  // The a's slot head peaks too: the switch stays live.
+  C.KNOBS.find((k) => k.key === 'a').set('a');
+  assert.ok(letters.live('apex', 2));
+  assert.ok(C.wordmarkLower().includes(G.letters({ ...p, a: 'a' })));
+  reset();
+  assert.deepEqual({ word: C.wordmark(), down: C.down(), lockup: C.lockup(), others: others() }, before);
+});
+
+test("the A's apex and the H's bar step at every extreme: every letter draws, the A and the H never cross themselves", () => {
+  const per = perWith({ apex: 1, tilt: 1 }, { barStep: 1, tilt: 1 });
+  for (const stem of [32, 200]) for (const slot of [8, 60]) for (const drop of [0.4, 1]) for (const lock of [0, 1]) for (const height of [240, 720]) for (const ceil of [16, 160]) for (const rise of [0, 48]) for (const corners of [0, 1]) {
+    const p = { ...PAGE, stem, stroke: slot, drop, lock, tilt: 160, height, ceil, rise, corners, endRound: 200, innerRound: 64, cut: 20, lower: [0, 0, 200, 0, 0], per: per.map((q, i) => (i === 4 ? { ...q, both: corners } : q)) };
+    const at = JSON.stringify({ stem, slot, drop, lock, height, ceil, rise, corners });
+    for (const a of ['A', 'a']) {
+      const L = G.letterPaths({ ...p, a });
+      for (const i of [2, 4]) assert.equal(crossingFlat(L[i], 2), null, `${at} ${a} ${i}`);
+    }
+    for (const downFit of G.DOWN_FITS) assert.doesNotThrow(() => G.down({ ...p, downFit, downJoin: corners ? 'block' : 'tiles' }), at);
+  }
+});

@@ -130,14 +130,17 @@ export function block(p = SLANT) {
  * its right corners, the word's (Jonas: "can the right top and bottom of H
  * also be rounded"), and its left too with both ("setting also for both
  * corners of the H"). The A's and the H's tilt (off) carry the S's angle
- * through their crossbars (barFall).
+ * through their crossbars (barFall). The A's apex and the H's bar step (off;
+ * the design panel, round 3, 2026-10-13: the A and the H told apart) peak the
+ * A's counter head and open a window under it, and step the H's lower slot
+ * aside under a bar at least a slot thick (barOf).
  */
 export const PER = [
   { cut: 1, round: 1, base: 1, tilt: 1, split: 1, open: 0 },
   { cut: 1, round: 1, base: 0 },
-  { cut: 1, round: 1, base: 0, dip: 1, tilt: 0 },
+  { cut: 1, round: 1, base: 0, dip: 1, tilt: 0, apex: 0 },
   { cut: 1, round: 1, base: 1, tilt: 1, split: 1, open: 0 },
-  { round: 1, base: 1, both: 0, tilt: 0 },
+  { round: 1, base: 1, both: 0, tilt: 0, barStep: 0 },
 ];
 const per = (p, i) => ({ ...PER[i], ...(p.per?.[i] ?? {}) });
 /** Whether an S (its switches q) is split along one line (p.blade; sLetter). */
@@ -240,15 +243,21 @@ function endMost(p, i, k, R, E) {
   const across = [1, 0, 3, 2][k], along = [3, 2, 1, 0][k];
   const share = (n, length) => (E[n] ? length / 2 : length - R[n]); // a side two corners round
   const most = [];
-  // (Its crossbar tilted, barFall, the room to its high edge, at either side of the slot.)
-  if (i === 4) most.push(share(across, w), reachTo(stem, (k < 2 ? up + s : H - lo + s) - keep - barFall(p, 4, true), p.tension ?? TENSION));
-  else if (open || (i === 1 && k > 1)) most.push(stem); // on one stem (a foot): a slot runs out beside it
+  // (Its crossbar tilted, barFall, the room to its high edge, at either side of the slot. Its bar a slot thick
+  // and its lower slot stepped aside, barOf: the room to the bar's edge, and at its base the stem beside the
+  // slot, the step narrower at its right and wider at its left, the far corner the step's run lower.)
+  if (i === 4) {
+    const { h: bh, step } = barOf(p, 4), grow = (bh - BAR) / 2, f = barFall(p, 4, true);
+    most.push(share(across, w), reachTo([stem, stem, stem - step, stem + step][k], (k < 2 ? up + s - grow : H - lo + s - grow) - keep - f * (k < 2 ? 1 : 1 + step / s), p.tension ?? TENSION));
+  } else if (open || (i === 1 && k > 1)) most.push(stem); // on one stem (a foot): a slot runs out beside it
   else {
     most.push(share(across, w));
     // The slot head beside the corner, its ends ceil and ceil + d from the top or the base: its high corner
     // under the corner's own stem (an S's tl and br, the M's tl), or both, its cut end falling away from it.
+    // The A's apex (apexOf) peaks on the slot's centre line, its ends both the peak's fall lower.
     const high = k === 0 || (S && k === 2);
-    most.push(high ? clear(stem, ceil, keep) : Math.min(clear(stem, ceil + d, keep), clear(stem + slot, ceil, keep)));
+    if (apexOf(p, i) && k < 2) most.push(Math.min(clear(stem, ceil + peak(p), keep), clear(stem + s, ceil, keep)));
+    else most.push(high ? clear(stem, ceil, keep) : Math.min(clear(stem, ceil + d, keep), clear(stem + slot, ceil, keep)));
   }
   if (S) {
     // Its sides: beside the blade's high (tl) and low (br) end, at least room for it level (split along one
@@ -280,7 +289,12 @@ function innerOf(p, i, cap = Infinity) {
   // at most t + c + sqrt(2tc). A squeezed M's thin stems (the design panel's review, round 2, 2026-10-13: stems 32,
   // slots 60, ceiling 16) would otherwise take the round through its own slots.
   const c = ceil - 1, Rm = i === 1 ? stem + c + Math.sqrt(2 * stem * c) : Infinity;
-  const Rr = q.round ? (i === 4 || q.open ? Math.min(R0, stem) : Math.min(R0, Rm)) : 0, Rb = q.base ? (legs || q.open ? Math.min(R0, stem) : R0) : 0;
+  // (The H's lower slot stepped aside, barOf, its base's right stem the step narrower: its feet round at most a
+  // stem still, the right one passing its stem over the slot's foot as an end does, hEdge, as far as it keeps a
+  // quarter of a bar under the crossbar's edge: endMost.)
+  const t = i === 4 ? barOf(p, 4).step : 0;
+  const foot = t ? Math.min(stem, endMost(p, 4, 2, [0, 0, 0, 0], [0, 0, 0, 0])) : stem;
+  const Rr = q.round ? (i === 4 || q.open ? Math.min(R0, stem) : Math.min(R0, Rm)) : 0, Rb = q.base ? (legs || q.open ? Math.min(R0, foot) : R0) : 0;
   const lower = i === 2 && p.a === 'a';
   // Down carved as one block (p.seam; down): a side that meets the next letter across a slot squares its corners,
   // and the H's feet, the column's foot, round as a pair whatever its Both switch says, as the top S's top does.
@@ -472,18 +486,69 @@ const tiltOf = (p, w, slot) => (p.lock ? (cutOf(p.drop ?? DROP, slot, p.grid) / 
  * the S's blade is not asked, as its rounds ask the H's ends in two tiers).
  */
 const tilted = (p, i) => (i === 4 || (i === 2 && p.a !== 'a')) && !!per(p, i).tilt;
+/**
+ * The steepest the A's or the H's crossbar could fall, tilted (0 unless): the Tilt slider's (or the cuts')
+ * fall across the S, and a step of the grid more for a blade split along one line (its ends snapped to it:
+ * slashLine). The S's blade as drawn is never steeper (its clamps only lessen it), so a bar thick enough at
+ * this slope is at the slope it falls (barOf), and it asks nothing of the S's rounds.
+ */
+function slopeMost(p, i) {
+  if (!tilted(p, i)) return 0;
+  const { stem, slot } = block(p), w = 2 * stem + slot;
+  const snap = lined(p, per(p, [0, 3].find((k) => per(p, k).tilt) ?? 0)) ? p.grid ?? 4 : 0;
+  return (Math.max(0, tiltOf(p, w, slot) ?? 0) + snap) / w;
+}
+
+/**
+ * The A's apex: its counter's head (the top end of its upper slot, lowered or
+ * not) cut as a chevron, two edges at the governing slope (p.drop, the mark's,
+ * whatever the A's Cut switch says) meeting in a point on the slot's centre
+ * line, each half a slot across and the cut's fall over half a slot up, on the
+ * grid (e). The a's slot head peaks the same.
+ */
+const apexOf = (p, i) => i === 2 && !!per(p, i).apex;
+const peak = (p) => cutOf(p.drop ?? DROP, block(p).slot / 2, p.grid);
+
+/**
+ * The A's and the H's crossbars told apart (the design panel, round 3,
+ * 2026-10-13: an A and an H whose crossbars are the same bar at the same angle
+ * read alike). The A's apex on (PER), its crossbar a window, the solid bridge
+ * between its counter and its notch: at least a slot and a half or 6 in 100 of
+ * the block's height tall at the slot's centre, about the crossbars' (risen)
+ * centre; the H's bar step on, its crossbar no window (a bar, the A's alone
+ * opening), and its lower slot stands aside, to the right where the bar falls, at least a slot or 3 in 10 of
+ * a stem (step), so the two slots no longer line up. Either on, its bar is at
+ * least a slot thick across it, square to its fall (slopeMost: the steepest it
+ * could fall), so a tilted bar never thins to a sliver. Each on the grid: the
+ * bar to the 8 (its halves to the 4), the step to the 4. At most what leaves
+ * the A's counter a slot under its peak and room for its round (its fall, then,
+ * none: barRoom), the H's upper slot a bar deep, and the H's lower right stem
+ * half a stem (a slot wider than half a stem then steps less than its width:
+ * the two slots overlap a little rather than leave the foot a sliver). Off, a
+ * bar and no step, as it was. { h, step }.
+ */
+function barOf(p, i) {
+  const q = per(p, i), on = i === 2 ? !!q.apex && p.a !== 'a' : i === 4 && !!q.barStep;
+  if (!on) return { h: BAR, step: 0 };
+  const { s, stem, slot, ceil, mid, H } = block(p), m = slopeMost(p, i);
+  const want = Math.ceil(Math.max(BAR, slot * Math.sqrt(1 + m * m), i === 2 ? Math.max(1.5 * slot, 0.06 * H) : 0) / 8) * 8;
+  const r = q.cut && p.round ? Math.min(p.cut ?? CUT, s) : 0;
+  const room = i === 2 ? 2 * (mid - ceil - peak(p) - r - slot) : 2 * (mid - BAR);
+  const h = Math.max(BAR, Math.min(want, Math.floor(room / 8) * 8));
+  return { h, step: i === 4 ? Math.max(0, Math.min(Math.ceil(Math.max(slot, 0.3 * stem) / 4) * 4, Math.floor(stem / 8) * 4)) : 0 };
+}
+
 function barRoom(p, i) {
-  const { s, slot, up, ceil } = block(p), q = per(p, i);
-  const d = q.cut ? cutOf(p.drop ?? DROP, slot, p.grid) : 0, r = q.cut && p.round ? Math.min(p.cut ?? CUT, s) : 0;
-  return Math.max(0, i === 4 ? up + s - BAR / 4 : up + s - ceil - d - r - slot);
+  const { s, slot, up, lo, H, ceil } = block(p), q = per(p, i), { h: bh, step } = barOf(p, i), grow = (bh - BAR) / 2;
+  const d = apexOf(p, i) ? peak(p) : q.cut ? cutOf(p.drop ?? DROP, slot, p.grid) : 0, r = q.cut && p.round ? Math.min(p.cut ?? CUT, s) : 0;
+  // (The H's lower slot stepped aside, its far corner falls the step's run more: it too keeps a quarter of a bar.)
+  return Math.max(0, i === 4 ? Math.min(up + s - grow - BAR / 4, (H - lo + s - grow - BAR / 4) / (1 + step / s)) : up + s - grow - ceil - d - r - slot);
 }
 function barFall(p, i, most = false) {
   if (!tilted(p, i)) return 0;
-  const { s, stem, slot } = block(p), w = 2 * stem + slot;
-  // At most the Tilt slider's (or the cuts') fall, and a step of the grid more for a blade split along one
-  // line (its ends snapped to it: slashLine).
-  const snap = lined(p, per(p, [0, 3].find((k) => per(p, k).tilt) ?? 0)) ? p.grid ?? 4 : 0;
-  if (most) return Math.min(((Math.max(0, tiltOf(p, w, slot) ?? 0) + snap) / w) * s, barRoom(p, i));
+  const { s } = block(p);
+  // At most the Tilt slider's (or the cuts') fall (slopeMost).
+  if (most) return Math.min(slopeMost(p, i) * s, barRoom(p, i));
   return Math.max(0, Math.min(slashLine(p).slope * s, ...[2, 4].filter((k) => tilted(p, k)).map((k) => barRoom(p, k))));
 }
 
@@ -605,15 +670,15 @@ function sLetter({ L, x, xb = x, R, H, y = 0, s, sv = s, bar = BAR, d = 0, db = 
  * An H's top as poly's points, from its left side to its right (y down from
  * the top), where an end passes its stem (two tiers: endMost): its corners'
  * rounds rl (its left) and rr (its right) at tension k, each from its corner
- * as poly's, carried on over the slot (a to b, open down to deep, the
- * crossbar's top; tilted, barFall, deep less fall at a and more at b) onto
- * the other stem where they reach, so the stem beyond
+ * as poly's, carried on over the slot (a to b, open down to the crossbar's
+ * top, deepA at a and deepB at b: tilted, barFall, the one less and the other
+ * more) onto the other stem where they reach, so the stem beyond
  * is trimmed from the same centre and the H keeps one round across its
  * width (the design panel's review, round 2, 2026-10-13). The two never
  * meet (endMost: they share the top). Its base is the same, turned
  * (turnAbout: a line falling left to right turned a half turn still does).
  */
-function hEdge(L, R, a, b, rl, rr, k, deep, fall = 0) {
+function hEdge(L, R, a, b, rl, rr, k, deepA, deepB) {
   const U = unitRound(k);
   const CL = U.map(([u, v]) => [L + v * rl, u * rl]), CR = U.map(([u, v]) => [R - u * rr, v * rr]); // each from its side across to its top, left to right
   const at = (x) => (x < L + rl ? bez(CL, tAt(CL, 0, x))[1] : x > R - rr ? bez(CR, tAt(CR, 0, x))[1] : 0);
@@ -626,7 +691,7 @@ function hEdge(L, R, a, b, rl, rr, k, deep, fall = 0) {
     if (x0 < x1) out.push(C(CR, x0, x1));
     return out;
   };
-  return [[L, rl], ...run(L, a), [a, deep - fall], [b, deep + fall], [b, at(b)], ...run(b, R)];
+  return [[L, rl], ...run(L, a), [a, deepA], [b, deepB], [b, at(b)], ...run(b, R)];
 }
 
 /** poly's point q (a corner, or a curve's three) turned a half turn about the centre of w × h. */
@@ -682,6 +747,10 @@ export function letterPaths(p = SLANT, only = null) {
       dip: q.dip === 0 ? 0 : p.dip ?? DIP,
       lower: Math.max(0, p.lower?.[i] ?? 0),
       fall: barFall(p, i), // the A's and the H's crossbar's fall across half its slot, tilted (0 unless)
+      apex: apexOf(p, i), e: peak(p), // the A's counter head (or the a's slot head) a chevron, its edges falling e across half a slot
+      // the A's crossbar a window, the H's at least a slot thick, half the extra each side of its centre (barOf); the H's lower slot stepped aside
+      grow: i === 2 || i === 4 ? (barOf(p, i).h - BAR) / 2 : 0,
+      step: i === 4 ? barOf(p, 4).step : 0,
     };
   };
   /**
@@ -720,38 +789,46 @@ export function letterPaths(p = SLANT, only = null) {
   // counter's height at the slot's centre as it was: under a level cut top a trapezoid taller on the right;
   // under a cut at the same slope (locked) a parallelogram. (The design panel asked for one taller on the
   // left, which a floor falling left to right can't give under either: left open, for Jonas.)
-  const A = (L, x, R, k) => poly([k.o(L, 0), k.o(R, 0), k.ob(R, H), [x + s, H], [x + s, lo - s + k.fall], [x - s, lo - s - k.fall],
+  // Its apex (the design panel, round 3, 2026-10-13: apexOf, barOf), the counter's head a chevron, its two
+  // obtuse corners rounded alike and its peak sharp, and its crossbar a window, the counter's floor and the
+  // notch's top each grow further from the crossbars' centre.
+  const head = (k, x) => (k.apex ? [[x + s, k.hi + k.e, k.r], [x, k.hi], [x - s, k.hi + k.e, k.r]] : [[x + s, k.hi + k.d, k.r], [x - s, k.hi, k.r2]]);
+  const A = (L, x, R, k) => poly([k.o(L, 0), k.o(R, 0), k.ob(R, H), [x + s, H], [x + s, lo - s + k.grow + k.fall], [x - s, lo - s + k.grow - k.fall],
     ...(k.dip ? swoopTo(x - s, L, k, k.radii[3], k.ob) : [[x - s, H], k.ob(L, H)])])
-    + poly([[x + s, k.hi + k.d, k.r], [x - s, k.hi, k.r2], [x - s, up + s - k.fall], [x + s, up + s + k.fall]]);
+    + poly([...head(k, x), [x - s, up + s - k.grow - k.fall], [x + s, up + s - k.grow + k.fall]]);
 
   // The a, as CM.SUPPLY's latest (Jonas, 2026-10-12: "lets explore having
   // both capital and lowercase a"): the stem square on the right, the bowl
   // rounded on the left; its slot closed and cut at both ends, a bar above
   // where the bowl meets the stem, and the foot swooping from there.
   const a = (L, x, R, k) => poly([k.o(L, 0), [R, 0], k.ob(R, H), [x + s, H], ...swoopTo(x + s, L, k, k.radii[3], k.o)]) // its bowl's corner rounds with its top
-    + poly([[x + s, k.hi + k.d, k.r], [x - s, k.hi, k.r2], [x - s, H - swoop - bar - k.d, k.r], [x + s, H - swoop - bar, k.r2]]);
+    + poly([...head(k, x), [x - s, H - swoop - bar - k.d, k.r], [x + s, H - swoop - bar, k.r2]]);
 
   // The H, as the original's; its right corners, the word's, rounded (its left square unless both: rounds).
   // An end past its stem (two tiers: endMost) sweeps on over its open slot: hEdge draws it.
   // Tilted (barFall), its crossbar falls left to right through the slot: the upper slot ends on its higher
   // edge, the lower starts on its lower.
-  const Hh = (L, x, R, { o, ob, radii, fall: f }) => (radii.some((r) => r > stem) ? poly([
-    ...hEdge(L, R, x - s, x + s, radii[0], radii[1], p.tension ?? TENSION, up + s, f),
-    ...hEdge(L, R, x - s, x + s, radii[2], radii[3], p.tension ?? TENSION, H - lo + s, f).map((q) => turnAbout(q, L + R, H)),
+  // Its bar step (barOf; the design panel, round 3, 2026-10-13), its crossbar at least a slot thick (grow each
+  // side) and its lower slot stepped right by step, its top on the bar's lower edge where it stands: an end
+  // passes its stem where it rounds past the stem beside it, its base's right the step narrower, its left wider.
+  const Hh = (L, x, R, { o, ob, radii, fall: f, grow: g, step: t }) => (radii.some((r, j) => r > [stem, stem, stem - t, stem + t][j]) ? poly([
+    ...hEdge(L, R, x - s, x + s, radii[0], radii[1], p.tension ?? TENSION, up + s - g - f, up + s - g + f),
+    ...hEdge(L, R, x - t - s, x - t + s, radii[2], radii[3], p.tension ?? TENSION, H - lo + s - g - f * (1 + t / s), H - lo + s - g + f * (1 - t / s)).map((q) => turnAbout(q, L + R, H)),
   ]) : poly([
-    o(L, 0), [x - s, 0], [x - s, up + s - f], [x + s, up + s + f], [x + s, 0], o(R, 0),
-    ob(R, H), [x + s, H], [x + s, lo - s + f], [x - s, lo - s - f], [x - s, H], ob(L, H),
+    o(L, 0), [x - s, 0], [x - s, up + s - g - f], [x + s, up + s - g + f], [x + s, 0], o(R, 0),
+    ob(R, H), [x + t + s, H], [x + t + s, lo - s + g + f * (1 + t / s)], [x + t - s, lo - s + g - f * (1 - t / s)], [x + t - s, H], ob(L, H),
   ]));
 
   // How far each kind of letter's slot ends can come in: an S's to half a
   // slot from its bends (both ends come in alike, so as far as the shorter
   // half allows: the upper, when the crossbars rise; held, less what its crossbar slots grew); the M's
-  // to two slots from the baseline; the A's counter to a slot tall (tilted, at its left, the shorter); the a's slot to a slot long.
+  // to two slots from the baseline; the A's counter to a slot tall (tilted, at its left, the shorter; its
+  // floor raised by its window, under its apex's peak); the a's slot to a slot long.
   const most = {
     S: (k) => Math.min(up - s - hi, low - lo - s) - 2 * (k.sv - s) - k.d - k.r - slot / 2,
     M: (k) => H - hi - k.d - 2 * slot,
-    A: (k) => up + s - hi - k.d - k.r - slot - k.fall,
-    a: (k) => H - swoop - bar - hi - 2 * k.d - 2 * k.r - slot,
+    A: (k) => up + s - k.grow - hi - (k.apex ? k.e : k.d) - k.r - slot - k.fall,
+    a: (k) => H - swoop - bar - hi - (k.apex ? k.e + k.d : 2 * k.d) - 2 * k.r - slot,
   };
   return [
     () => S(0, c(0), left(1), ends(own(0, c(0)), most.S)),
