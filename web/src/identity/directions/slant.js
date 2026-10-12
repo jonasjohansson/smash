@@ -10,7 +10,7 @@
 // holds the wordmark. Geometry: ./slant/geometry.js.
 
 import { svg, timeline, canvasStage, withCleanup } from '../lib.js';
-import { letters, letterS, down as downPath, symbol as symbolPath, symCols, symRows, block, depth, ring, move, wordRadii, symRadii, rounds, SLANT, DROP, DROPS, BAR, PER, H, PITCH } from './slant/geometry.js';
+import { letters, letterS, down as downPath, symbol as symbolPath, symCols, symRows, block, depth, ring, cells, move, wordRadii, letterRadii, symRadii, rounds, SLANT, DROP, DROPS, BAR, PER, H, PITCH } from './slant/geometry.js';
 import { lockPaths } from './original.js';
 
 const BLACK = '#000000';
@@ -67,14 +67,14 @@ export const KNOBS = [
   knob('dip', 'Dip', 0, 24, 4, START.dip, (v) => `${v}`, (v) => { at.dip = v; }),
   choice('split', 'S', [['Whole', 0], ['Split', 1]], START.split),
   choice('a', 'A', [['A', 'A'], ['a', 'a']], START.a),
-  choice('frame', 'Frame', [['Off', 0], ['On', 1]], START.frame),
+  choice('frame', 'Frame', [['Off', 0], ['Around', 1], ['Cells', 2]], START.frame),
   knob('frameGap', 'Frame gap', 0, 80, 4, START.frameGap, (v) => `${v}`, (v) => { at.frameGap = v; }),
   knob('frameWidth', 'Frame width', 4, 64, 4, START.frameWidth, (v) => `${v}`, (v) => { at.frameWidth = v; }),
   choice('downFit', 'Down', [['M wider', 'wider'], ['Fill', 'fill'], ['Squeeze', 'squeeze']], START.downFit),
   // Each letter's own switches (geometry.js: PER): a button where the letter has the setting.
   {
     key: 'per', label: 'Letters', letters: ['S', 'M', 'A', 'S', 'H'],
-    rows: [['cut', 'Cut'], ['round', 'Round'], ['base', 'Base'], ['tilt', 'Tilt'], ['split', 'Split'], ['open', 'Open'], ['dip', 'Dip']],
+    rows: [['cut', 'Cut'], ['round', 'Round'], ['base', 'Base'], ['both', 'Both sides'], ['tilt', 'Tilt'], ['split', 'Split'], ['open', 'Open'], ['dip', 'Dip']],
     has: (row, i) => row in PER[i],
     on: (row, i) => !!at.per[i][row],
     set: (row, i, v) => { at.per[i][row] = v ? 1 : 0; },
@@ -98,17 +98,28 @@ const box = () => block(now());
 // that follows the border"), when it is on: round a mark w × h of path data
 // d, its corners rounded from the same centres as the mark's (radii). The
 // mark and its frame, { w, h, d }.
-function framed(w, h, d, radii) {
+// Cells ("where the frame goes into the gaps"): a cell round each letter, the
+// walls between them the frame's; the letters' gaps widen to hold a wall.
+const CELLS = 2;
+const cellsOn = () => at.frame === CELLS;
+const wallGap = () => 2 * at.frameGap + at.frameWidth;
+function framed(w, h, d, radii, boxes) {
   if (!at.frame) return { w, h, d };
   const m = at.frameGap + at.frameWidth;
-  return { w: w + 2 * m, h: h + 2 * m, d: move(d, m, m) + move(ring(w, h, at.frameGap, at.frameWidth, radii, at.tension), m, m) };
+  const f = cellsOn() && boxes ? cells(w, h, at.frameGap, at.frameWidth, radii, boxes, at.tension) : ring(w, h, at.frameGap, at.frameWidth, radii, at.tension);
+  return { w: w + 2 * m, h: h + 2 * m, d: move(d, m, m) + move(f, m, m) };
 }
 const still = (f) => svg(f.w, f.h, path(f.d));
 
 // The wordmark, with the A or the a as switched; and both, side by side (the
 // page shows them in a row of their own). Either dips under the block, so its
 // artboard does too.
-const markWith = (a) => { const p = { ...now(), a: a ?? at.a }, b = block(p); return framed(b.W, b.H + depth(p), letters(p), wordRadii(p)); };
+const markWith = (a) => {
+  const p = { ...now(), a: a ?? at.a, ...(cellsOn() ? { space: wallGap() } : {}) }, b = block(p), h = b.H + depth(p);
+  const spans = [[0, b.left(1)], [b.right(1), b.left(4)], [b.right(4), b.left(6)], [b.right(6), b.left(8)], [b.right(8), b.W]];
+  const boxes = spans.map(([x0, x1], i) => ({ box: [x0, 0, x1, i === 2 ? h : b.H], radii: letterRadii(p, i) }));
+  return framed(b.W, h, letters(p), wordRadii(p), boxes);
+};
 const wordmarkWith = (a) => still(markWith(a));
 const mark = () => letters(now());
 export const wordmark = () => wordmarkWith();
@@ -119,17 +130,21 @@ export const VERSIONS = [['wordmarkCapital', 'Capital A'], ['wordmarkLower', 'Lo
 // SMASH written down (Jonas, 2026-10-12: "the DOWN looks pretty good, but
 // lets assume no dip"): the letters in a column, each as wide as an S.
 export const down = () => {
-  const p = now(), D = downPath(p), S = rounds(p, 0), Hr = rounds(p, 4);
-  return still(framed(D.w, D.h, D.d, [S.Rr, S.Rr, Hr.Rb, 0])); // the first S's top corners, the H's right foot
+  const p = { ...now(), ...(cellsOn() ? { space: wallGap() } : {}) }, D = downPath(p), [S, , , Hh] = D.boxes;
+  return still(framed(D.w, D.h, D.d, [S.radii[0], S.radii[1], Hh.radii[2], Hh.radii[3]], D.boxes)); // the first S's top corners, the H's feet
 };
 
 // The S M and the S alone, as the original's, their stems and slots as the wordmark's.
-const cols = () => symCols(at.stem, at.stroke, at.space);
+const cols = () => symCols(at.stem, at.stroke, cellsOn() ? wallGap() : at.space);
 const rows = () => symRows(at.stroke);
 const symW = () => cols().reduce((t, n) => t + n);
 const symH = () => rows().reduce((t, n) => t + n);
 const sym = () => symbolPath({ cols: cols(), rows: rows(), cut: at.cut, drop: at.drop, outer: at.outer, tension: at.tension });
-export const symbol = () => still(framed(symW(), symH(), sym(), symRadii(at.outer, cols(), rows())));
+export const symbol = () => {
+  const c = cols(), [R] = symRadii(at.outer, c, rows()), sw = c[0] + c[1] + c[2];
+  const boxes = [{ box: [0, 0, sw, symH()], radii: [R, R, R, R] }, { box: [sw + c[3], 0, symW(), symH()], radii: [R, R, 0, 0] }]; // the S, the M
+  return still(framed(symW(), symH(), sym(), symRadii(at.outer, c, rows()), boxes));
+};
 const alone = (o) => { const S = letterS({ ...o, cut: at.cut, drop: at.drop, stem: at.stem, slot: at.stroke, outer: at.outer, tension: at.tension }); return svg(S.w, S.h, path(S.d)); };
 export const s = () => alone({});
 export const sTurned = () => alone({ turn: true });

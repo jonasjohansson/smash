@@ -118,14 +118,15 @@ export function block(p = SLANT) {
  * in the S goes all the way up"), the A's dip. A letter takes a setting only
  * where its switch is on. The H has no slot ends, and its round and base are
  * its right corners, the word's (Jonas: "can the right top and bottom of H
- * also be rounded").
+ * also be rounded"), and its left too with both ("setting also for both
+ * corners of the H").
  */
 export const PER = [
   { cut: 1, round: 1, base: 1, tilt: 1, split: 1, open: 0 },
   { cut: 1, round: 1, base: 0 },
   { cut: 1, round: 1, base: 0, dip: 1 },
   { cut: 1, round: 1, base: 1, tilt: 1, split: 1, open: 0 },
-  { round: 1, base: 1 },
+  { round: 1, base: 1, both: 0 },
 ];
 const per = (p, i) => ({ ...PER[i], ...(p.per?.[i] ?? {}) });
 
@@ -143,6 +144,14 @@ export function rounds(p, i) {
   return { Rr: q.round ? (i === 4 || q.open ? Math.min(R0, stem) : R0) : 0, Rb: q.base ? (legs || q.open ? Math.min(R0, stem) : R0) : 0 };
 }
 
+/** Letter i's four outer corners' rounds, clockwise from the top left (the box a frame's cell follows). */
+export function letterRadii(p, i) {
+  const { Rr, Rb } = rounds(p, i), q = per(p, i);
+  if (i === 4) return [q.both ? Rr : 0, Rr, Rb, q.both ? Rb : 0]; // the H: its right corners, its left with both
+  if (i === 2 && p.a === 'a') return [Rr, 0, Rb, Rr]; // the a: its stem square at the top, its bowl's corner with its top
+  return [Rr, Rr, Rb, Rb];
+}
+
 /** The word's four outer corners' rounds, clockwise from the top left: the first S's left, the H's right. */
 export function wordRadii(p = SLANT) {
   const S = rounds(p, 0), Hr = rounds(p, 4);
@@ -157,13 +166,26 @@ export function wordRadii(p = SLANT) {
  * subpaths, filled evenodd.
  */
 export function ring(w, h, gap, width, radii, tension = TENSION) {
-  const box = (e) => {
-    const [x0, y0, x1, y1] = [-e, -e, w + e, h + e];
-    const most = Math.min(x1 - x0, y1 - y0) / 2;
-    const at = (x, y, r) => (r > 0 ? [x, y, Math.min(r + e, most), tension] : [x, y]);
-    return poly([at(x0, y0, radii[0]), at(x1, y0, radii[1]), at(x1, y1, radii[2]), at(x0, y1, radii[3])]);
-  };
-  return box(gap + width) + box(gap);
+  return roundBox([0, 0, w, h], gap + width, radii, tension) + roundBox([0, 0, w, h], gap, radii, tension);
+}
+
+/** A box [x0, y0, x1, y1] grown by e, its corners rounded from the same centres as radii (clockwise from the top left; 0 stays square). */
+export function roundBox([x0, y0, x1, y1], e, radii, tension = TENSION) {
+  [x0, y0, x1, y1] = [x0 - e, y0 - e, x1 + e, y1 + e];
+  const most = Math.min(x1 - x0, y1 - y0) / 2;
+  const at = (x, y, r) => (r > 0 ? [x, y, Math.min(r + e, most), tension] : [x, y]);
+  return poly([at(x0, y0, radii[0]), at(x1, y0, radii[1]), at(x1, y1, radii[2]), at(x0, y1, radii[3])]);
+}
+
+/**
+ * A frame that goes into the gaps (Jonas, 2026-10-12: "another setting for
+ * the frame where the frame goes into the gaps"): round the whole (w × h,
+ * radii), gap from it and width thick, and a cell gap round each box (a
+ * letter: { box, radii }), the walls between them the frame's. The letters'
+ * gaps should be 2 gap + width, so the walls are as thick as the frame.
+ */
+export function cells(w, h, gap, width, radii, boxes, tension = TENSION) {
+  return roundBox([0, 0, w, h], gap + width, radii, tension) + boxes.map((b) => roundBox(b.box, gap, b.radii, tension)).join('');
 }
 
 export function letterPaths(p = SLANT) {
@@ -188,6 +210,7 @@ export function letterPaths(p = SLANT) {
       tilt: q.tilt ? Math.max(0, Math.min(p.tilt ?? 0, H + bar - 2 * Rr - 8)) : 0,
       split: q.split && p.split,
       open: !!q.open,
+      both: !!q.both,
       dip: q.dip === 0 ? 0 : p.dip ?? DIP,
       lower: Math.max(0, p.lower?.[i] ?? 0),
     };
@@ -270,9 +293,9 @@ export function letterPaths(p = SLANT) {
     + poly([[x + s, k.hi + k.d, k.r], [x - s, k.hi], [x - s, H - swoop - bar - k.d, k.r], [x + s, H - swoop - bar]]);
 
   // The H, as the original's; its right corners, the word's, rounded.
-  const Hh = (L, x, R, { o, ob }) => poly([
-    [L, 0], [x - s, 0], [x - s, up + s], [x + s, up + s], [x + s, 0], o(R, 0),
-    ob(R, H), [x + s, H], [x + s, lo - s], [x - s, lo - s], [x - s, H], [L, H],
+  const Hh = (L, x, R, { o, ob, both }) => poly([
+    both ? o(L, 0) : [L, 0], [x - s, 0], [x - s, up + s], [x + s, up + s], [x + s, 0], o(R, 0),
+    ob(R, H), [x + s, H], [x + s, lo - s], [x - s, lo - s], [x - s, H], both ? ob(L, H) : [L, H],
   ]);
 
   // How far each kind of letter's slot ends can come in: an S's to half a
@@ -328,16 +351,19 @@ export function down(p = SLANT) {
   const q = { ...p, dip: 0, height: 0 }; // the least height its slots allow
   const slot = p.stroke, stem = p.stem ?? BAR, gap = p.space ?? slot;
   const width = (n, t) => n * t + (n - 1) * slot;
-  const w = width(fit === 'squeeze' ? 2 : 3, stem);
+  const widths = STEMS.map((n) => width(n, fit === 'wider' ? stem : 0));
+  const w = fit === 'wider' ? Math.max(...widths) : width(fit === 'squeeze' ? 2 : 3, stem);
   let y = 0, d = '';
+  const boxes = [];
   STEMS.forEach((n, i) => {
     const t = fit === 'wider' ? stem : (w - (n - 1) * slot) / n; // this letter's stems
-    const r = { ...q, stem: t }, b = block(r);
+    const r = { ...q, stem: t }, b = block(r), lw = width(n, t), x = (w - lw) / 2;
     const x0 = [0, b.right(1), b.right(4), b.right(6), b.right(8)][i];
-    d += move(letterPaths(r)[i], (w - width(n, t)) / 2 - x0, y);
+    d += move(letterPaths(r)[i], x - x0, y);
+    boxes.push({ box: [x, y, x + lw, y + b.H], radii: letterRadii(r, i) });
     y += b.H + gap;
   });
-  return { d, w, h: y - gap };
+  return { d, w, h: y - gap, boxes };
 }
 
 // The symbol, the S M, as the original's (read from the modular mark): 9

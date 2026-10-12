@@ -319,3 +319,20 @@ test('the chapter framed: the wordmark, Down and the S M in a frame round them, 
   for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value));
   assert.equal(C.wordmark(), plain);
 });
+
+test('cells: a frame round each letter, the walls as thick as the frame; the H rounded both sides', () => {
+  const K = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
+  K.frame.set('2'); K.frameGap.set('8'); K.frameWidth.set('12');
+  // the gaps 2 × 8 + 12 = 28: 11 stems of 72, 6 slots of 20, 4 gaps of 28; and 20 each side
+  assert.match(C.wordmark(), /viewBox="0 0 1064 512"/);
+  assert.equal(C.wordmark().match(/M/g).length, G.letters(G.SLANT).match(/M/g).length + 1 + 5); // the frame's outside, a cell a letter
+  assert.equal(C.symbol().match(/M/g).length, G.symbol().match(/M/g).length + 1 + 2);
+  assert.equal(C.down().match(/M/g).length, G.down(G.SLANT).d.match(/M/g).length + 1 + 5);
+  for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value));
+  const c = G.cells(100, 50, 5, 10, [0, 0, 0, 0], [{ box: [0, 0, 40, 50], radii: [0, 0, 0, 0] }, { box: [60, 0, 100, 50], radii: [0, 0, 0, 0] }]);
+  assert.equal(c, 'M-15 -15L115 -15L115 65L-15 65ZM-5 -5L45 -5L45 55L-5 55ZM55 -5L105 -5L105 55L55 55Z'); // a wall of 10 between
+  const H = (both) => G.letterPaths({ ...G.SLANT, outer: 16, per: Object.assign([], { 4: { both } }) })[4];
+  assert.equal(H(0).match(/C/g).length, 2);
+  assert.equal(H(1).match(/C/g).length, 4);
+  assert.deepEqual(G.letterRadii({ ...G.SLANT, outer: 16, per: Object.assign([], { 4: { both: 1 } }) }, 4), [16, 16, 16, 16]);
+});
