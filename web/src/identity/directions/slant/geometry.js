@@ -115,17 +115,56 @@ export function block(p = SLANT) {
  * cut (off: square), its outer corners rounded at the top (round) and at the
  * base (base; Jonas: "so the top and bottom border radius match"), the S's
  * tilt and split and its slot open at both ends (open; as the S M's: "the gaps
- * in the S goes all the way up"), the A's dip. A letter takes a setting only where its switch is on; the H has
- * no slot ends, and its corners start square.
+ * in the S goes all the way up"), the A's dip. A letter takes a setting only
+ * where its switch is on. The H has no slot ends, and its round and base are
+ * its right corners, the word's (Jonas: "can the right top and bottom of H
+ * also be rounded").
  */
 export const PER = [
   { cut: 1, round: 1, base: 1, tilt: 1, split: 1, open: 0 },
   { cut: 1, round: 1, base: 0 },
   { cut: 1, round: 1, base: 0, dip: 1 },
   { cut: 1, round: 1, base: 1, tilt: 1, split: 1, open: 0 },
-  { round: 0, base: 0 },
+  { round: 1, base: 1 },
 ];
 const per = (p, i) => ({ ...PER[i], ...(p.per?.[i] ?? {}) });
+
+/**
+ * Letter i's outer corners' rounds, as its switches have them: Rr at its top,
+ * Rb at its base. At most half a letter's width across the top (two rounds
+ * share it) and the S's sides to its bends; where a corner stands on one stem
+ * (a foot, the H, an open S's arms), at most a stem.
+ */
+export function rounds(p, i) {
+  const { s, up, stem, slot } = block(p);
+  const R0 = Math.min(p.outer ?? 0, stem + slot / 2, up - s);
+  const q = per(p, i);
+  const legs = i === 1 || i === 2 || i === 4; // the M, the A and the H stand on stems
+  return { Rr: q.round ? (i === 4 || q.open ? Math.min(R0, stem) : R0) : 0, Rb: q.base ? (legs || q.open ? Math.min(R0, stem) : R0) : 0 };
+}
+
+/** The word's four outer corners' rounds, clockwise from the top left: the first S's left, the H's right. */
+export function wordRadii(p = SLANT) {
+  const S = rounds(p, 0), Hr = rounds(p, 4);
+  return [S.Rr, Hr.Rr, Hr.Rb, S.Rb];
+}
+
+/**
+ * A frame round a box w × h (Jonas, 2026-10-12: "a border around SMASH and the
+ * SM wordmark that follows the border"): gap from it, width thick, its
+ * corners rounded from the same centres as the mark's (radii, clockwise from
+ * the top left; a square corner stays square), at tension. Path data, two
+ * subpaths, filled evenodd.
+ */
+export function ring(w, h, gap, width, radii, tension = TENSION) {
+  const box = (e) => {
+    const [x0, y0, x1, y1] = [-e, -e, w + e, h + e];
+    const most = Math.min(x1 - x0, y1 - y0) / 2;
+    const at = (x, y, r) => (r > 0 ? [x, y, Math.min(r + e, most), tension] : [x, y]);
+    return poly([at(x0, y0, radii[0]), at(x1, y0, radii[1]), at(x1, y1, radii[2]), at(x0, y1, radii[3])]);
+  };
+  return box(gap + width) + box(gap);
+}
 
 export function letterPaths(p = SLANT) {
   const { s, c, left, right, up, lo, W, H, stem, slot, ceil } = block(p);
@@ -133,15 +172,11 @@ export function letterPaths(p = SLANT) {
   const bar = BAR;
   const hi = ceil; // 32: a top end's high corner, where the round tip was
   const low = H - ceil; // 440: a bottom end's low corner
-  // An outer corner, rounded at the tension; at most half a letter's width
-  // across the top (two rounds share it), and the S's sides, to its bends.
-  const R0 = Math.min(p.outer ?? 0, stem + slot / 2, up - s);
 
   /** Letter i's measures, as its switches have them: d its cuts' fall, r their round, o its outer corners. */
   const own = (i) => {
     const q = per(p, i);
-    const Rr = q.round ? (i === 4 || q.open ? Math.min(R0, stem) : R0) : 0; // the H's top corners are on its legs too, and an open S's on its arms
-    const Rb = q.base ? Math.min(R0, stem) : 0; // at the base, at most a stem: a leg's foot is one wide
+    const { Rr, Rb } = rounds(p, i);
     return {
       d: q.cut ? cutOf(p.drop ?? DROP, slot) : 0, // 8
       r: q.cut && p.round ? Math.min(p.cut ?? CUT, s) : 0, // 4: a cut's obtuse corner, at a slot's end and an S's bend
@@ -234,10 +269,10 @@ export function letterPaths(p = SLANT) {
   const a = (L, x, R, k) => poly([k.o(L, 0), [R, 0], k.ob(R, H), [x + s, H], ...swoopTo(x + s, L, k, k.Rr, k.o)]) // its bowl's corner rounds with its top
     + poly([[x + s, k.hi + k.d, k.r], [x - s, k.hi], [x - s, H - swoop - bar - k.d, k.r], [x + s, H - swoop - bar]]);
 
-  // The H, as the original's: no curves, unless its corners are rounded.
+  // The H, as the original's; its right corners, the word's, rounded.
   const Hh = (L, x, R, { o, ob }) => poly([
-    o(L, 0), [x - s, 0], [x - s, up + s], [x + s, up + s], [x + s, 0], o(R, 0),
-    ob(R, H), [x + s, H], [x + s, lo - s], [x - s, lo - s], [x - s, H], ob(L, H),
+    [L, 0], [x - s, 0], [x - s, up + s], [x + s, up + s], [x + s, 0], o(R, 0),
+    ob(R, H), [x + s, H], [x + s, lo - s], [x - s, lo - s], [x - s, H], [L, H],
   ]);
 
   // How far each kind of letter's slot ends can come in: an S's to half a
@@ -328,6 +363,9 @@ function sPath({ L, R, a, b, r, slot, drop = DROP, o = (x, y) => [x, y], grid = 
 }
 
 /** The S M's outer corners, rounded by outer at tension, at most a bar or a stem: the four of its S, the M's top two. */
+/** The S M's four outer corners' rounds, clockwise from the top left: the S's and the M's top, the S's foot; the M's foot square. */
+export const symRadii = (outer, cols = SYM_COLS, rows = SYM_ROWS) => { const R = Math.min(outer, cols[0], rows[0]); return [R, R, 0, R]; };
+
 const rounder = (outer, tension, cols, rows) => {
   const R = Math.min(outer, cols[0], rows[0]);
   return (x, y) => (R > 0 ? [x, y, R, tension] : [x, y]);

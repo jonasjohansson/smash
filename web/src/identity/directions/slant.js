@@ -10,7 +10,7 @@
 // holds the wordmark. Geometry: ./slant/geometry.js.
 
 import { svg, timeline, canvasStage, withCleanup } from '../lib.js';
-import { letters, letterS, down as downPath, symbol as symbolPath, symCols, symRows, block, depth, SLANT, DROP, DROPS, BAR, PER, H, PITCH } from './slant/geometry.js';
+import { letters, letterS, down as downPath, symbol as symbolPath, symCols, symRows, block, depth, ring, move, wordRadii, symRadii, rounds, SLANT, DROP, DROPS, BAR, PER, H, PITCH } from './slant/geometry.js';
 import { lockPaths } from './original.js';
 
 const BLACK = '#000000';
@@ -44,7 +44,7 @@ const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${ru
 // ("this is decent settings too for default"): the cuts flat (slope 0), the
 // slot ends' corners rounded, the ceiling 44, the outer corners rounded 64
 // at 60%, no tilt and no dip, the A a capital, Down filled.
-export const START = { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: H, outer: 64, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 0, downFit: 'fill' };
+export const START = { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: H, outer: 64, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', frame: 0, frameGap: 20, frameWidth: 20 };
 const at = { ...START, per: PER.map((q) => ({ ...q })), lower: [0, 0, 0, 0, 0] };
 const knob = (key, label, min, max, step, value, text, set) => ({ key, label, min, max, step, value, text, set: (v) => set(Number(v)) });
 /** A switch between a few options (the page draws a button for each): [label, value]. */
@@ -67,6 +67,9 @@ export const KNOBS = [
   knob('dip', 'Dip', 0, 24, 4, START.dip, (v) => `${v}`, (v) => { at.dip = v; }),
   choice('split', 'S', [['Whole', 0], ['Split', 1]], START.split),
   choice('a', 'A', [['A', 'A'], ['a', 'a']], START.a),
+  choice('frame', 'Frame', [['Off', 0], ['On', 1]], START.frame),
+  knob('frameGap', 'Frame gap', 0, 80, 4, START.frameGap, (v) => `${v}`, (v) => { at.frameGap = v; }),
+  knob('frameWidth', 'Frame width', 4, 64, 4, START.frameWidth, (v) => `${v}`, (v) => { at.frameWidth = v; }),
   choice('downFit', 'Down', [['M wider', 'wider'], ['Fill', 'fill'], ['Squeeze', 'squeeze']], START.downFit),
   // Each letter's own switches (geometry.js: PER): a button where the letter has the setting.
   {
@@ -91,10 +94,22 @@ export const KNOBS = [
 const now = () => ({ ...SLANT, ...at });
 const box = () => block(now());
 
+// The frame (Jonas, 2026-10-12: "a border around SMASH and the SM wordmark
+// that follows the border"), when it is on: round a mark w × h of path data
+// d, its corners rounded from the same centres as the mark's (radii). The
+// mark and its frame, { w, h, d }.
+function framed(w, h, d, radii) {
+  if (!at.frame) return { w, h, d };
+  const m = at.frameGap + at.frameWidth;
+  return { w: w + 2 * m, h: h + 2 * m, d: move(d, m, m) + move(ring(w, h, at.frameGap, at.frameWidth, radii, at.tension), m, m) };
+}
+const still = (f) => svg(f.w, f.h, path(f.d));
+
 // The wordmark, with the A or the a as switched; and both, side by side (the
 // page shows them in a row of their own). Either dips under the block, so its
 // artboard does too.
-const wordmarkWith = (a) => { const p = { ...now(), a: a ?? at.a }, b = block(p); return svg(b.W, b.H + depth(p), path(letters(p))); };
+const markWith = (a) => { const p = { ...now(), a: a ?? at.a }, b = block(p); return framed(b.W, b.H + depth(p), letters(p), wordRadii(p)); };
+const wordmarkWith = (a) => still(markWith(a));
 const mark = () => letters(now());
 export const wordmark = () => wordmarkWith();
 export const wordmarkCapital = () => wordmarkWith('A');
@@ -103,7 +118,10 @@ export const VERSIONS = [['wordmarkCapital', 'Capital A'], ['wordmarkLower', 'Lo
 
 // SMASH written down (Jonas, 2026-10-12: "the DOWN looks pretty good, but
 // lets assume no dip"): the letters in a column, each as wide as an S.
-export const down = () => { const D = downPath(now()); return svg(D.w, D.h, path(D.d)); };
+export const down = () => {
+  const p = now(), D = downPath(p), S = rounds(p, 0), Hr = rounds(p, 4);
+  return still(framed(D.w, D.h, D.d, [S.Rr, S.Rr, Hr.Rb, 0])); // the first S's top corners, the H's right foot
+};
 
 // The S M and the S alone, as the original's, their stems and slots as the wordmark's.
 const cols = () => symCols(at.stem, at.stroke, at.space);
@@ -111,7 +129,7 @@ const rows = () => symRows(at.stroke);
 const symW = () => cols().reduce((t, n) => t + n);
 const symH = () => rows().reduce((t, n) => t + n);
 const sym = () => symbolPath({ cols: cols(), rows: rows(), cut: at.cut, drop: at.drop, outer: at.outer, tension: at.tension });
-export const symbol = () => svg(symW(), symH(), path(sym()));
+export const symbol = () => still(framed(symW(), symH(), sym(), symRadii(at.outer, cols(), rows())));
 const alone = (o) => { const S = letterS({ ...o, cut: at.cut, drop: at.drop, stem: at.stem, slot: at.stroke, outer: at.outer, tension: at.tension }); return svg(S.w, S.h, path(S.d)); };
 export const s = () => alone({});
 export const sTurned = () => alone({ turn: true });
@@ -136,6 +154,7 @@ const symColumns = () => cols().reduce((o, n, i, a) => (i % 2 ? [...o, [a.slice(
 
 /** Each still's grid (grid.js), at the sliders' measures: its box, bands, stems and slots, and where its type starts. */
 export function gridOf(kind) {
+  if (at.frame && ['wordmark', 'symbol', 'down'].includes(kind)) return false; // framed, the mark moves in its artboard: no grid
   const b = box(), w = symW(), h = symH(), bar = at.stem, slot = at.stroke;
   const bands5 = rows().reduce((e, n) => [...e, e.at(-1) + n], [0]);
   const sw = 2 * bar + slot;
@@ -167,13 +186,13 @@ export function favicon({ size = 32 } = {}) {
 function draw(ctx, w, h) {
   ctx.fillStyle = BLACK;
   ctx.fillRect(0, 0, w, h);
-  const { W, H } = box();
+  const { w: W, h: H, d } = markWith();
   const k = Math.min((h * 0.64) / H, (w * 0.8) / W);
   ctx.save();
   ctx.translate((w - W * k) / 2, (h - H * k) / 2);
   ctx.scale(k, k);
   ctx.fillStyle = WHITE;
-  ctx.fill(new Path2D(mark()), 'evenodd');
+  ctx.fill(new Path2D(d), 'evenodd');
   ctx.restore();
 }
 

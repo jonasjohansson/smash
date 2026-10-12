@@ -59,7 +59,7 @@ export function circles(d) {
  * (slant.js: gridOf): as KINDS, with its bar and slot.
  */
 export function withGrid(svg, kind, round = svg, own = null) {
-  const K = own ?? KINDS[kind];
+  const K = own === false ? null : own ?? KINDS[kind]; // false: no grid for this still
   const vb = svg.match(/viewBox="\s*([-\d.]+)[\s,]+([-\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)\s*"/);
   if (!K || !vb) return svg;
   const [x0, y0, w, h] = vb.slice(1).map(Number);
