@@ -115,7 +115,7 @@ export function letterPaths(p = SLANT) {
   // bar between the two, falls tilt across the letter (CM.SUPPLY's long
   // diagonal), so the slots either side of it are wedges; split opens its slot
   // straight through it, the S in two pieces, as theirs.
-  const tilt = p.tilt ?? 0;
+  const tilt = Math.max(0, Math.min(p.tilt ?? 0, H + bar - 2 * Rr - 8)); // at most till the crossbar's ends meet the corners' rounds
   const S = (L, x, R) => {
     const band = (X) => H / 2 + (tilt * (X - x)) / (R - L); // the crossbar's centre line
     const top = (X) => band(X) - bar / 2, bot = (X) => band(X) + bar / 2;
