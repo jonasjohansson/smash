@@ -69,21 +69,39 @@ function favicons(d) {
 }
 
 
-/** A chapter's own slider (slant.js: KNOBS): its label, the range, and its value in words. */
-const knobHTML = (k) => `<label class="knob" data-knob="${esc(k.key)}"><span>${esc(k.label)}</span><input type="range" min="${k.min}" max="${k.max}" step="${k.step}" value="${k.value}"><output>${esc(k.text(k.value))}</output></label>`;
+/**
+ * A chapter's own control (slant.js: KNOBS): a slider (its label, the range,
+ * and its value in words), or a switch (a button for each of its options).
+ */
+const knobHTML = (k) => (k.options
+  ? `<span class="knob switch" data-knob="${esc(k.key)}"><span>${esc(k.label)}</span>${k.options.map(([label, v]) => `<button type="button" data-v="${esc(String(v))}"${String(v) === String(k.value) ? ' data-on' : ''}>${esc(label)}</button>`).join('')}</span>`
+  : `<label class="knob" data-knob="${esc(k.key)}"><span>${esc(k.label)}</span><input type="range" min="${k.min}" max="${k.max}" step="${k.step}" value="${k.value}"><output>${esc(k.text(k.value))}</output></label>`);
 
-/** Each slider sets its measure, and the chapter's stills, favicons and stage are drawn again. */
+/** Each control sets its measure, and the chapter's stills, favicons and stage are drawn again. */
 function knobs(d, section) {
+  const redraw = () => {
+    for (const el of section.querySelectorAll('[data-still]')) el.innerHTML = drawn(d, el.dataset.still, el.dataset.ground);
+    const fav = $('.favicons', section);
+    if (fav) fav.outerHTML = favicons(d);
+    d.live?.motion?.redraw?.();
+  };
   for (const k of d.mod.KNOBS ?? []) {
-    const label = $(`.knob[data-knob="${k.key}"]`, section);
-    const input = $('input', label);
+    const el = $(`.knob[data-knob="${k.key}"]`, section);
+    if (k.options) {
+      for (const b of el.querySelectorAll('button')) {
+        b.addEventListener('click', () => {
+          k.set(b.dataset.v);
+          for (const o of el.querySelectorAll('button')) o.toggleAttribute('data-on', o === b);
+          redraw();
+        });
+      }
+      continue;
+    }
+    const input = $('input', el);
     input.addEventListener('input', () => {
       k.set(input.value);
-      $('output', label).textContent = k.text(Number(input.value));
-      for (const el of section.querySelectorAll('[data-still]')) el.innerHTML = drawn(d, el.dataset.still, el.dataset.ground);
-      const fav = $('.favicons', section);
-      if (fav) fav.outerHTML = favicons(d);
-      d.live?.motion?.redraw?.();
+      $('output', el).textContent = k.text(Number(input.value));
+      redraw();
     });
   }
 }

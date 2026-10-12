@@ -84,6 +84,8 @@ h1, h2 { font-weight: 400; margin: 0; }
 .controls .knob { display: flex; align-items: center; gap: 12px; flex: 1 1 240px; min-width: 0; }
 .controls .knob input { flex: 1; min-width: 0; max-width: 320px; accent-color: var(--d-accent, #fff); }
 .controls .knob output { color: var(--text); font-variant-numeric: tabular-nums; min-width: 6ch; }
+.controls .knob.switch { flex: 0 0 auto; gap: 6px; }
+.controls .knob.switch span { margin-right: 6px; }
 .controls :focus-visible { outline: 1px solid var(--text); outline-offset: 2px; }
 .controls .hint { flex: 0 1 40%; text-align: right; }
 @media (max-width: 760px) { .controls { flex-wrap: wrap; } .controls .hint { flex-basis: 100%; text-align: left; } .controls .scrub { flex-basis: 100%; order: -1; height: 32px; } }
