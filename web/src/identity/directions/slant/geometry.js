@@ -253,6 +253,12 @@ const fallOf = (tilt, H, bar, R, room = 8) => Math.max(0, Math.min(tilt ?? 0, H 
  * low its closed ends' corners.
  */
 function sLetter({ L, x, xb = x, R, H, y = 0, s, sv = s, bar = BAR, d = 0, r = 0, r2 = 0, o = (X, Y) => [X, Y], ob = o, tilt = 0, split = false, open = false, hi = 0, low = H }) {
+  // Through a slot, the crossbar is bar and d thick less its fall across the
+  // slot; falling more, the slot's cut end above would pass the one below and
+  // the S cross itself (the design panel's review, round 1, 2026-10-12: wide
+  // slots, steep tilt). So it falls at most till a quarter of a bar is left
+  // there, split or not, so both S's keep one angle.
+  tilt = Math.min(tilt, ((R - L) * ((3 * bar) / 4 + d)) / (2 * s));
   const up = H / 2 - (bar + 2 * sv) / 2, lo = H / 2 + (bar + 2 * sv) / 2; // the crossbar slots' centres
   const mid = (x + xb) / 2;
   const band = (X) => H / 2 + (tilt * (X - mid)) / (R - L); // the crossbar's centre line
@@ -455,6 +461,16 @@ const edges = (sizes, o) => sizes.reduce((a, n) => [...a, a.at(-1) + n], [o]);
  * slot, so a wider S falls at the same angle, at most till its ends meet its
  * corners' rounds (room to spare); split runs its slots through it. Its slots
  * already run out of the top and the bottom, so it has no ends to lower.
+ * The angle holds only so far, as these S's are short for their width: the
+ * fall, at most its height and a bar less its rounds and room, is a lower
+ * slope across a wider S. At the page's start (stems 72, slots 20, Round 64)
+ * the S M's S and the S alone keep the wordmark S's angle to tilt 96 (slope
+ * 0.585), the square S to about 61 (0.375), no steeper beyond. The square
+ * S's crossbar also rises into its top slot, across half a stem, only till a
+ * quarter of that slot stays open: slope 1.5 slot / stem at most, so a thin
+ * slot under wide stems leaves it nearly level (slot 8, stem 200: 0.06, the
+ * wordmark's 0.235 at tilt 96). And every S's crossbar keeps a quarter of a
+ * bar through its slots (sLetter).
  */
 function sPath({ L, R, a, b, r, slot, drop = DROP, o = (x, y) => [x, y], grid = 4, cut = 0, tips = 0, tilt = 0, split = 0, round = 0, room = 8 }) {
   const k = Math.min(cut, slot / 2); // the bends' obtuse corners, and their others with tips

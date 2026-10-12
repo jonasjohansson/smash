@@ -428,3 +428,97 @@ test('Down draws each letter at its own stems: a squeezed M too thin for an S st
   const one = G.letterPaths(G.SLANT, 1);
   assert.deepEqual(one, ['', G.letterPaths(G.SLANT)[1], '', '', '']);
 });
+
+/** Path data (M L C A Z, absolute) as its sides: curves and (circular) arcs in short pieces. */
+const sides = (d, N = 8) => {
+  const out = [];
+  let start, cur;
+  const to = (p) => { if (p[0] !== cur[0] || p[1] !== cur[1]) out.push([cur, p]); cur = p; };
+  for (const [, k, args] of d.matchAll(/([MLCAZ])([^MLCAZ]*)/g)) {
+    const n = args.trim().split(/[\s,]+/).filter(Boolean).map(Number);
+    if (k === 'M') start = cur = n;
+    else if (k === 'Z') to(start);
+    else if (k === 'L') to(n);
+    else if (k === 'C') {
+      const p0 = cur;
+      for (let i = 1; i <= N; i++) { const t = i / N, u = 1 - t; to([0, 1].map((j) => u * u * u * p0[j] + 3 * u * u * t * n[j] + 3 * u * t * t * n[2 + j] + t * t * t * n[4 + j])); }
+    } else {
+      const [r, , , , sweep, x1, y1] = n, p0 = cur, dx = x1 - p0[0], dy = y1 - p0[1], c = Math.hypot(dx, dy);
+      const h = Math.sqrt(Math.max(0, r * r - (c * c) / 4)) * (sweep ? 1 : -1);
+      const cx = (p0[0] + x1) / 2 - (h * dy) / c, cy = (p0[1] + y1) / 2 + (h * dx) / c;
+      const a0 = Math.atan2(p0[1] - cy, p0[0] - cx);
+      let da = Math.atan2(y1 - cy, x1 - cx) - a0;
+      if (sweep && da < 0) da += 2 * Math.PI;
+      if (!sweep && da > 0) da -= 2 * Math.PI;
+      for (let i = 1; i < N; i++) to([cx + r * Math.cos(a0 + (da * i) / N), cy + r * Math.sin(a0 + (da * i) / N)]);
+      to([x1, y1]);
+    }
+  }
+  return out;
+};
+/** Two sides of a path (of any of its subpaths) that cross, or null. */
+const crossing = (d) => {
+  const S = sides(d), turn = (a, b, c) => { const v = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]); return Math.abs(v) < 1e-6 ? 0 : Math.sign(v); };
+  for (let i = 0; i < S.length; i++) for (let j = i + 1; j < S.length; j++) {
+    const [a, b] = S[i], [c, e] = S[j];
+    if (turn(a, b, c) * turn(a, b, e) < 0 && turn(c, e, a) * turn(c, e, b) < 0) return JSON.stringify([S[i], S[j]]);
+  }
+  return null;
+};
+/** The slope of a path's longest straight side that is neither across nor down: an S's crossbar. */
+const blade = (d) => {
+  let best = { l: 0, k: 0 }, start, cur;
+  for (const [, k, args] of d.matchAll(/([MLCAZ])([^MLCAZ]*)/g)) {
+    const n = args.trim().split(/[\s,]+/).filter(Boolean).map(Number);
+    const p = k === 'M' ? (start = n) : k === 'Z' ? start : k === 'L' ? n : n.slice(-2);
+    if (k === 'L' || k === 'Z') {
+      const dx = p[0] - cur[0], dy = p[1] - cur[1];
+      if (Math.abs(dx) > 1e-6 && Math.abs(dy) > 1e-6 && Math.hypot(dx, dy) > best.l) best = { l: Math.hypot(dx, dy), k: dy / dx };
+    }
+    cur = p;
+  }
+  return best.k;
+};
+
+test("a steep tilt in wide slots: no S crosses itself, its crossbar keeping a quarter of a bar through each slot", () => {
+  // Before, falling more across a slot than its bar and cut, the slot's end above passed the one below.
+  assert.ok(crossing('M0 0L10 10L10 0L0 10Z')); // a bowtie crosses
+  assert.equal(crossing(G.letters({ ...G.SLANT, stem: 72 })), null);
+  const looks = [{ drop: 0, cut: 12, outer: 64, tension: 0.6 }, { drop: 1, cut: 30, tips: 1, outer: 0 }];
+  for (const stem of [32, 200]) for (const slot of [8, 60]) for (const tilt of [0, 32, 64, 96, 128, 160]) for (const split of [0, 1]) for (const look of looks) {
+    const q = { stem, slot, tilt, split, ...look };
+    const at = JSON.stringify(q);
+    assert.equal(crossing(G.symbol({ cols: G.symCols(stem, slot), rows: G.symRows(slot), ...q })), null, `S M ${at}`);
+    for (const wide of [0, 1]) for (const turn of [false, true]) assert.equal(crossing(G.letterS({ ...q, wide, turn }).d), null, `S ${wide} ${turn} ${at}`);
+    for (const height of [240, 472]) for (const open of [0, 1]) {
+      const p = { ...G.SLANT, ...q, stroke: slot, height, per: G.PER.map((o) => ({ ...o, ...('open' in o ? { open } : {}) })) };
+      assert.equal(crossing(G.letters(p)), null, `letters ${height} ${open} ${at}`);
+    }
+  }
+  // The reviewer's: slots 60 under stems 32, no slope, tilt 96: every S falls 0.4, 24 in its 60 slot, as the wordmark's.
+  const wide = { stem: 32, drop: 0, cut: 0, outer: 0, tilt: 96 };
+  assert.ok(Math.abs(blade(G.letterPaths({ ...G.SLANT, ...wide, stroke: 60 })[0]) - 0.4) < 1e-3);
+  assert.ok(Math.abs(blade(G.symbol({ cols: G.symCols(32, 60), rows: G.symRows(60), ...wide })) - 0.4) < 1e-3);
+  assert.ok(Math.abs(blade(G.letterS({ ...wide, slot: 60 }).d) - 0.4) < 1e-3);
+});
+
+test("how far the S M's S and the S alone keep the wordmark S's angle: the plain to tilt 96, the square to about 61, less in thin slots", () => {
+  const look = { drop: 0, cut: 12, outer: 64, tension: 0.6 }; // the page's start
+  const word = (stem, slot, tilt) => blade(G.letterPaths({ ...G.SLANT, ...look, stem, stroke: slot, tilt })[0]);
+  const near = (a, b) => Math.abs(a - b) < 1e-3;
+  for (const tilt of [24, 48, 60, 72, 96]) {
+    assert.ok(near(word(72, 20, tilt), tilt / 164)); // the wordmark's S: tilt across its 164
+    assert.ok(near(blade(G.symbol({ cols: G.symCols(72, 20), rows: G.symRows(20), ...look, tilt })), tilt / 164));
+    assert.ok(near(blade(G.letterS({ ...look, stem: 72, slot: 20, tilt }).d), tilt / 164));
+  }
+  // Steeper, they hold at 96 across 164: the fall their 136 allows.
+  assert.ok(near(blade(G.letterS({ ...look, stem: 72, slot: 20, tilt: 160 }).d), 96 / 164));
+  // The square S, 256 across, falls those 96 at most: the wordmark's angle to tilt 61, then 0.375.
+  const sq = (stem, slot, tilt) => blade(G.letterS({ ...look, stem, slot, tilt, wide: 1 }).d);
+  for (const tilt of [24, 48, 60]) assert.ok(near(sq(72, 20, tilt), tilt / 164));
+  for (const tilt of [64, 96, 160]) assert.ok(near(sq(72, 20, tilt), 0.375));
+  // Under stems 200, slots 8 leave its crossbar 1.5 × 8 / 200 at most, 0.06: the wordmark's angle only to tilt 24.
+  assert.ok(near(sq(200, 8, 24), 24 / 408));
+  assert.ok(near(word(200, 8, 96), 96 / 408));
+  assert.ok(near(sq(200, 8, 96), 0.06));
+});
