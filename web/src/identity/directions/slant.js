@@ -44,7 +44,7 @@ const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${ru
 // ("this is decent settings too for default"): the cuts flat (slope 0), the
 // slot ends' corners rounded, the ceiling 44, the outer corners rounded 64
 // at 60%, no tilt and no dip, the A a capital, Down filled.
-export const START = { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: H, outer: 64, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20 };
+export const START = { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: H, outer: 64, tension: 0.6, tilt: 0, lock: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20 };
 const at = { ...START, per: PER.map((q) => ({ ...q })), lower: [0, 0, 0, 0, 0] };
 const knob = (key, label, min, max, step, value, text, set) => ({ key, label, min, max, step, value, text, set: (v) => set(Number(v)) });
 /** A switch between a few options (the page draws a button for each): [label, value]. */
@@ -64,6 +64,10 @@ export const KNOBS = [
   knob('outer', 'Round', 0, 64, 4, START.outer, (v) => `${v}`, (v) => { at.outer = v; }),
   knob('tension', 'Tension', 55, 100, 5, START.tension * 100, (v) => `${v}%`, (v) => { at.tension = v / 100; }),
   knob('tilt', 'Tilt', 0, 160, 4, START.tilt, (v) => `${v}`, (v) => { at.tilt = v; }),
+  // One governing angle (the design panel, round 1, 2026-10-12): locked, every
+  // S's crossbar falls at the cuts' slope, across its own width (geometry.js:
+  // tiltOf), and the Tilt slider waits; free, the slider sets it.
+  choice('lock', 'Angle', [['Free', 0], ['Locked', 1]], START.lock),
   knob('dip', 'Dip', 0, 24, 4, START.dip, (v) => `${v}`, (v) => { at.dip = v; }),
   choice('split', 'S', [['Whole', 0], ['Split', 1]], START.split),
   choice('a', 'A', [['A', 'A'], ['a', 'a']], START.a),
@@ -143,7 +147,8 @@ const symH = () => rows().reduce((t, n) => t + n);
 // The S M's S and the S alone carry the wordmark's blade (the design panel,
 // round 1, 2026-10-12): the first S's tilt and split, as its switches have
 // them, at the same angle; their slots already open, as the S M's.
-const blade = () => ({ tilt: at.per[0].tilt ? at.tilt : 0, split: at.per[0].split ? at.split : 0 });
+// Locked, they fall at their own cuts' slope instead, as the wordmark's S's.
+const blade = () => ({ tilt: at.per[0].tilt ? at.tilt : 0, lock: at.per[0].tilt ? at.lock : 0, split: at.per[0].split ? at.split : 0 });
 const sym = () => symbolPath({ cols: cols(), rows: rows(), cut: at.cut, tips: at.tips, drop: at.drop, outer: at.outer, tension: at.tension, ...blade() });
 export const symbol = () => {
   const c = cols(), [R] = symRadii(at.outer, c, rows()), sw = c[0] + c[1] + c[2];
@@ -199,8 +204,9 @@ export function favicon({ size = 32 } = {}) {
   const cols = [bar, sl, bar, sl, bar, sl, bar, sl, bar];
   const rows = [bar, sl, bar, sl, bar];
   // Its S's crossbar falls at the wordmark S's angle: tilt across that S's width, scaled to this one's.
-  const { tilt, split } = blade(), fall = (tilt * (2 * bar + sl)) / (2 * at.stem + at.stroke);
-  const d = symbolPath({ cols, rows, x: (n - (5 * bar + 4 * sl)) / 2, y: (n - (3 * bar + 2 * sl)) / 2, stop: bar, tips: at.tips, cut: (at.cut * bar) / BAR, drop: at.drop, outer: (at.outer * bar) / BAR, tension: at.tension, grid: 0, tilt: fall, split, room: (8 * bar) / BAR });
+  // Locked, at its own cuts' slope.
+  const { tilt, lock, split } = blade(), fall = (tilt * (2 * bar + sl)) / (2 * at.stem + at.stroke);
+  const d = symbolPath({ cols, rows, x: (n - (5 * bar + 4 * sl)) / 2, y: (n - (3 * bar + 2 * sl)) / 2, stop: bar, tips: at.tips, cut: (at.cut * bar) / BAR, drop: at.drop, outer: (at.outer * bar) / BAR, tension: at.tension, grid: 0, tilt: fall, lock, split, room: (8 * bar) / BAR });
   return svg(n, n, `<rect width="${n}" height="${n}" fill="${BLACK}"/><path fill="${WHITE}" fill-rule="evenodd" d="${d}"/>`);
 }
 

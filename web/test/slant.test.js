@@ -115,7 +115,7 @@ test('the chapter gives every still as plain vector', () => {
   }
   for (const n of [16, 32, 64]) assert.match(C.favicon({ size: n }), new RegExp(`viewBox="0 0 ${n} ${n}"`));
   // At Jonas's settings: 11 stems of 72, 10 slots and gaps of 20; no dip.
-  assert.deepEqual(C.START, { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: 472, outer: 64, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20 });
+  assert.deepEqual(C.START, { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: 472, outer: 64, tension: 0.6, tilt: 0, lock: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20 });
   assert.match(C.wordmark(), /viewBox="0 0 992 472"/);
   assert.equal(C.wordmark(), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 992 472" ><path fill="currentColor" fill-rule="evenodd" d="${G.letters({ ...G.SLANT, ...C.START })}"/></svg>`);
   assert.equal(C.info.slug, 'slant');
@@ -123,7 +123,7 @@ test('the chapter gives every still as plain vector', () => {
 
 test('the sliders draw every still at their measures, and back', () => {
   const { slope, stem, height } = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
-  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'ceil', 'height', 'outer', 'tension', 'tilt', 'dip', 'split', 'a', 'tips', 'frame', 'frameGap', 'frameWidth', 'downFit', 'per', 'lower']);
+  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'ceil', 'height', 'outer', 'tension', 'tilt', 'lock', 'dip', 'split', 'a', 'tips', 'frame', 'frameGap', 'frameWidth', 'downFit', 'per', 'lower']);
   const at8 = C.wordmark();
   slope.set(12);
   const S0 = C.START;
@@ -521,4 +521,103 @@ test("how far the S M's S and the S alone keep the wordmark S's angle: the plain
   assert.ok(near(sq(200, 8, 24), 24 / 408));
   assert.ok(near(word(200, 8, 96), 96 / 408));
   assert.ok(near(sq(200, 8, 96), 0.06));
+});
+
+test("one governing angle: locked, every S's crossbar falls at the cuts' slope across its own width, the Tilt slider waiting", () => {
+  const near = (a, b, e = 1e-3) => Math.abs(a - b) < e;
+  const L = (q) => G.letterPaths({ ...SQUARE, tilt: 120, lock: 1, ...q });
+  for (const drop of G.DROPS.slice(1)) for (const stem of [32, 72, 120]) {
+    for (const i of [0, 3]) {
+      const S = L({ drop, stem })[i];
+      assert.ok(near(blade(S), drop), `S ${i} drop ${drop} stem ${stem}: ${blade(S)}`); // the blade, at the cuts' slope
+      assert.deepEqual(slopes(S).filter((k) => !near(k, drop)), [], `S ${i} drop ${drop} stem ${stem}`); // every slanted side parallel
+    }
+    assert.notEqual(L({ drop, stem, lock: 0 })[0], L({ drop, stem })[0]); // free, the slider's 120 instead
+  }
+  // The cuts' slope as they are drawn, on the grid: 8 in a slot of 24 at 0.4.
+  assert.ok(near(blade(L({ drop: 0.4, stroke: 24 })[0]), 8 / 24));
+  // Level cuts, a level crossbar; a tilt switched off, level too.
+  assert.equal(L({ drop: 0 })[0], G.letterPaths({ ...SQUARE, drop: 0 })[0]);
+  assert.ok(!slopes(G.letterPaths({ ...SQUARE, drop: 0.4, lock: 1, per: Object.assign([], { 3: { tilt: 0 } }) })[3]).some((k) => k !== 0.4 && k !== 0));
+  // At the defaults, nothing changes: unlocked, the slider's tilt.
+  assert.equal(G.letters({ ...G.SLANT, lock: 0, tilt: 48 }), G.letters({ ...G.SLANT, tilt: 48 }));
+});
+
+test("locked, Down's S's keep the cuts' slope however wide their stems: the blade parallel in every fit", () => {
+  const near = (a, b) => Math.abs(a - b) < 1e-3;
+  for (const downFit of G.DOWN_FITS) for (const drop of [0.2, 0.4, 0.8]) {
+    const D = G.down({ ...SQUARE, drop, lock: 1, tilt: 0, downFit });
+    const pieces = D.d.split('M').filter(Boolean).map((q) => 'M' + q); // S, M, the A and its counter, S, H
+    for (const i of [0, 4]) {
+      assert.ok(near(blade(pieces[i]), drop), `${downFit} ${drop} ${i}: ${blade(pieces[i])}`);
+      assert.deepEqual(slopes(pieces[i]).filter((k) => !near(k, drop)), [], `${downFit} ${drop} ${i}`);
+    }
+  }
+  // Filled, the S's 136 across, not the wordmark's 84: the fall grows with it, the angle stays.
+  const S = G.down({ ...SQUARE, drop: 0.4, lock: 1, downFit: 'fill' }).d.split('M')[1];
+  const xs = polys('M' + S)[0].map(([x]) => x);
+  assert.equal(Math.max(...xs) - Math.min(...xs), 136);
+  // At the page's start, filled, the S's 256 across and 200 tall, rounded 64: it falls 96 at most, 0.375 where the cuts fall 0.4.
+  const start = { ...G.SLANT, stem: 72, ceil: 44, outer: 64, tension: 0.6, cut: 12, drop: 0.4, lock: 1, downFit: 'fill' };
+  assert.ok(near(blade(G.down(start).d.split('M').filter(Boolean).map((q) => 'M' + q)[0]), 96 / 256));
+  assert.equal(crossing(G.down(start).d), null);
+});
+
+test("locked, the S M's S, the S alone and the square S fall at their cuts' slope; where one can't, the steepest that fits", () => {
+  const near = (a, b, e = 1e-3) => Math.abs(a - b) < e;
+  for (const drop of [0.2, 0.4]) for (const stem of [32, 72]) {
+    const sym = G.symbol({ cols: G.symCols(stem, 20), rows: G.symRows(20), round: 0, outer: 0, drop, lock: 1, tilt: 3 });
+    assert.ok(near(blade(sym), drop), `S M ${drop} ${stem}`);
+    assert.deepEqual(slopes(sym).filter((k) => !near(k, drop)), [], `S M ${drop} ${stem}`); // its S's cuts, its blade and the M's slot tops, one angle
+    for (const wide of [0, 1]) {
+      const S = G.letterS({ cut: 0, drop, stem, lock: 1, wide });
+      assert.ok(near(blade(S.d), drop), `S ${wide} ${drop} ${stem}`);
+      const two = (d) => d.replace(/[\d.]+/g, (n) => String(+(+n).toFixed(2)));
+      assert.deepEqual(turned(S.d, S.w, S.h).map(two), corners(S.d).map(two)); // the same upside down
+    }
+  }
+  // Too steep for the square S under stems 72: its crossbar rises into the top slot only till a
+  // quarter of it stays open, 15 over 36 across 256, so its blade falls 0.417, not the cuts' 0.6.
+  const sq = G.letterS({ cut: 0, drop: 0.6, stem: 72, lock: 1, wide: 1 });
+  assert.ok(near(blade(sq.d), (15 * 256) / 36 / 256), `${blade(sq.d)}`);
+  assert.equal(crossing(sq.d), null);
+  // And the wordmark's S, short under wide stems: 240 tall, it falls 264 at most, across its 420.
+  const S = G.letterPaths({ ...SQUARE, stem: 200, height: 240, drop: 1, lock: 1 })[0];
+  assert.ok(near(blade(S), 264 / 420), `${blade(S)}`);
+  assert.equal(crossing(S), null);
+});
+
+test("the chapter's Angle: locked, the wordmark, Down, the S M and the favicon's S at the cuts' slope; free, the Tilt slider", () => {
+  const K = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
+  const near = (a, b, e = 1e-3) => Math.abs(a - b) < e;
+  const d = (svg) => svg.match(/ d="([^"]+)"/)[1];
+  K.slope.set(8); K.tilt.set('120'); K.outer.set('0'); K.cut.set('0');
+  const free = [C.wordmark(), C.down(), C.symbol()];
+  K.lock.set('1');
+  assert.ok(C.wordmark().includes(G.letters({ ...G.SLANT, ...C.START, drop: 0.4, tilt: 120, outer: 0, cut: 0, lock: 1 })));
+  const pieces = (svg) => d(svg).split('M').filter(Boolean).map((q) => 'M' + q);
+  assert.ok(near(blade(pieces(C.wordmark())[0]), 0.4)); // the first S, 164 across
+  assert.ok(near(blade(pieces(C.down())[0]), 0.4)); // Down's, filled to the M's 236
+  assert.ok(near(blade(C.symbol()), 0.4));
+  assert.deepEqual(slopes(d(C.symbol())).filter((k) => !near(k, 0.4)), []);
+  for (const size of [16, 32, 64]) assert.deepEqual(slopes(d(C.favicon({ size }))).filter((k) => !near(k, 0.4, 2e-2)), [], `favicon ${size}`);
+  assert.ok(slopes(d(C.favicon({ size: 64 }))).length > 4); // the S's cuts and blade, the M's slot tops
+  K.lock.set('0');
+  assert.deepEqual([C.wordmark(), C.down(), C.symbol()], free);
+  for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value));
+});
+
+test("locked, steep cuts in wide slots under wide stems: no S crosses itself", () => {
+  const looks = [{ cut: 12, outer: 64, tension: 0.6 }, { cut: 30, tips: 1, outer: 0 }];
+  for (const stem of [32, 200]) for (const slot of [8, 60]) for (const drop of [0.2, 1]) for (const split of [0, 1]) for (const look of looks) {
+    const q = { stem, slot, drop, split, lock: 1, ...look };
+    const at = JSON.stringify(q);
+    assert.equal(crossing(G.symbol({ cols: G.symCols(stem, slot), rows: G.symRows(slot), ...q })), null, `S M ${at}`);
+    for (const wide of [0, 1]) assert.equal(crossing(G.letterS({ ...q, wide }).d), null, `S ${wide} ${at}`);
+    for (const height of [240, 472]) for (const open of [0, 1]) {
+      const p = { ...G.SLANT, ...q, stroke: slot, height, per: G.PER.map((o) => ({ ...o, ...('open' in o ? { open } : {}) })) };
+      assert.equal(crossing(G.letters(p)), null, `letters ${height} ${open} ${at}`);
+      assert.equal(crossing(G.down(p).d.split('M').filter(Boolean).map((s) => 'M' + s)[0]), null, `Down ${height} ${open} ${at}`);
+    }
+  }
 });
