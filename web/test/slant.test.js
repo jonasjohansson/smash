@@ -115,7 +115,7 @@ test('the chapter gives every still as plain vector', () => {
   }
   for (const n of [16, 32, 64]) assert.match(C.favicon({ size: n }), new RegExp(`viewBox="0 0 ${n} ${n}"`));
   // At Jonas's settings: 11 stems of 72, 10 slots and gaps of 20; no dip.
-  assert.deepEqual(C.START, { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: 472, rise: 0, outer: 64, tension: 0.6, tilt: 0, lock: 0, split: 0, blade: 'step', a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0, slashAt: 0, symbol: 'extended' });
+  assert.deepEqual(C.START, { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: 472, rise: 0, outer: 64, tension: 0.6, corners: 0, endRound: 128, innerRound: 24, tilt: 0, lock: 0, split: 0, blade: 'step', a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0, slashAt: 0, symbol: 'extended' });
   assert.match(C.wordmark(), /viewBox="0 0 992 472"/);
   assert.equal(C.wordmark(), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 992 472" ><path fill="currentColor" fill-rule="evenodd" d="${G.letters({ ...G.SLANT, ...C.START })}"/></svg>`);
   assert.equal(C.info.slug, 'slant');
@@ -123,7 +123,7 @@ test('the chapter gives every still as plain vector', () => {
 
 test('the sliders draw every still at their measures, and back', () => {
   const { slope, stem, height } = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
-  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'ceil', 'height', 'rise', 'outer', 'tension', 'tilt', 'lock', 'dip', 'split', 'blade', 'a', 'tips', 'frame', 'frameGap', 'frameWidth', 'slash', 'slashWidth', 'shift', 'slashAt', 'downFit', 'symbol', 'per', 'lower']);
+  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'ceil', 'height', 'rise', 'outer', 'tension', 'corners', 'endRound', 'innerRound', 'tilt', 'lock', 'dip', 'split', 'blade', 'a', 'tips', 'frame', 'frameGap', 'frameWidth', 'slash', 'slashWidth', 'shift', 'slashAt', 'downFit', 'symbol', 'per', 'lower']);
   const at8 = C.wordmark();
   slope.set(12);
   const S0 = C.START;
@@ -1151,4 +1151,102 @@ test("along one line, steep: its cut edges half a bar further into the corners' 
     assert.doesNotThrow(() => G.symbolCells(p), at);
     assert.equal(crossing(G.letters({ ...p, outer: 0 })), null, at);
   }
+});
+
+// Two tiers of corners (the design panel, round 2, 2026-10-13): a machined slab, generous ends, tight break edges inside.
+/** Every point a path's commands end on, as "x,y", off the sides of its box w × h (where its outer corners' rounds end). */
+const inside = (d, w, h) => [...d.matchAll(/[MLC]([^MLCAZ]*)/g)].map(([, a]) => a.trim().split(/\s+/).slice(-2).map(Number))
+  .filter(([x, y]) => x !== 0 && x !== w && y !== 0 && y !== h).map(([x, y]) => `${x},${y}`).sort();
+
+test("two tiers: the word's four extreme corners round the ends, every other corner the inside; off, as it was", () => {
+  const two = { ...PAGE, corners: 1, endRound: 128, innerRound: 24 };
+  assert.deepEqual([0, 1, 2, 3, 4].map((i) => G.letterRadii(two, i)), [[128, 24, 24, 128], [24, 24, 0, 0], [24, 24, 0, 0], [24, 24, 24, 24], [0, 72, 72, 0]]); // the H's at most a stem
+  assert.deepEqual(G.wordRadii(two), [128, 72, 72, 128]);
+  const L = G.letterPaths(two);
+  assert.match(L[0], /^M0 128C0 51\.2 51\.2 0 128 0L140 0C/); // the S's top left 128 at 60%, its top right 24 (164 less 140)
+  assert.equal(L[0].match(/C/g).length, 4);
+  // Off, or both at the Round slider's value, the word as it was.
+  assert.equal(G.letters({ ...PAGE, corners: 0, endRound: 200, innerRound: 0 }), G.letters(PAGE));
+  assert.equal(G.letters({ ...PAGE, corners: 1, endRound: 64, innerRound: 64 }), G.letters(PAGE));
+  assert.equal(G.letters({ ...PAGE, corners: 1, endRound: undefined, innerRound: undefined }), G.letters(PAGE)); // unset, each follows outer
+  // Only the corners change: every other point as one tier has it, on the grid of 4 (the cuts square, 8 in 20).
+  const sq = { ...PAGE, cut: 0, drop: 0.4 }, b = G.block(sq);
+  for (const i of [0, 4]) {
+    const [one, tw] = [sq, { ...sq, corners: 1, endRound: 160, innerRound: 16 }].map((p) => G.move(G.letterPaths(p)[i], -(i ? b.right(8) : 0), 0));
+    const pts = inside(tw, 2 * b.stem + b.slot, b.H);
+    assert.ok(pts.length >= (i ? 4 : 10), `${pts.length}`); // the H's crossbar, the S's slots and bends
+    assert.deepEqual(pts, inside(one, 2 * b.stem + b.slot, b.H));
+    assert.deepEqual(pts.flatMap((q) => q.split(',').map(Number)).filter((n) => n % 4), []);
+  }
+  assert.deepEqual(slopes(G.letters({ ...SQUARE, drop: 0.4, corners: 1, endRound: 0, innerRound: 0 })).filter((s) => s !== 0.4), []);
+});
+
+test("an end may pass a stem: across its slot head, as far as the S holds it, a quarter of a bar kept over the slot", () => {
+  // At the page's measures the top is shared with the inner corner: 164 less 24.
+  assert.deepEqual(G.letterRadii({ ...PAGE, corners: 1, endRound: 200, innerRound: 24 }, 0), [140, 24, 24, 140]);
+  // Thin stems, wide slots, a low ceiling: the round passes over the slot's high corner, 8 clear of it,
+  // r = 8 + a + b + √(2ab), a and b the corner's 32 and 16 less the 8.
+  const t = { ...PAGE, corners: 1, endRound: 200, innerRound: 0, stem: 32, stroke: 60, ceil: 16 };
+  const [tl, , , bl] = G.letterRadii(t, 0), r = 8 + 24 + 8 + Math.sqrt(2 * 24 * 8);
+  assert.ok(Math.abs(tl - r) < 1e-9 && tl === bl && tl > 32, `${tl}`);
+  assert.equal(crossingFlat(G.letterPaths(t)[0]), null);
+  // The slot head's high corner (32, 16) stays 8 inside the round's circle (the 60% curve lies outside it).
+  assert.ok(Math.abs(Math.hypot(tl - 32, tl - 16) - (tl - 8)) < 1e-9);
+  // The H's ends stand on one stem; its two share its side.
+  assert.deepEqual(G.letterRadii({ ...PAGE, corners: 1, endRound: 200, innerRound: 24 }, 4), [0, 72, 72, 0]);
+  assert.deepEqual(G.letterRadii({ ...PAGE, corners: 1, endRound: 200, innerRound: 24, stem: 200, height: 240 }, 4), [0, 120, 120, 0]); // half its 240
+  // Every proportion, every end: no outline crosses itself.
+  for (const stem of [32, 72, 200]) for (const slot of [8, 60]) for (const ceil of [16, 160]) for (const innerRound of [0, 64]) {
+    const p = { ...PAGE, corners: 1, endRound: 200, innerRound, stem, stroke: slot, ceil, tension: 0.55 }, at = JSON.stringify({ stem, slot, ceil, innerRound });
+    const L = G.letterPaths(p);
+    for (const i of [0, 4]) assert.equal(crossingFlat(L[i], 2), null, `${i} ${at}`);
+    assert.equal(crossingFlat(G.symbolCells(p).d, 2), null, `cells ${at}`);
+  }
+});
+
+test("two tiers written down: the top S's top and the H's feet the ends, a letter's two alike; the S M's sides", () => {
+  const two = { ...PAGE, corners: 1, endRound: 128, innerRound: 24 };
+  const D = G.down(two);
+  // Down's S's are 184 tall: the top S's top right stops at its crossbar slot, 92 - 16 - 20, its top left with it.
+  assert.deepEqual(D.boxes.map((b) => b.radii), [[56, 56, 24, 24], [24, 24, 0, 0], [24, 24, 0, 0], [24, 24, 24, 24], [0, 24, 118, 0]]); // the H's left foot square (Both off)
+  assert.equal(crossingFlat(D.d, 2), null);
+  // The S M from the wordmark's cells: its S's left, its M's right (over its slot's head, its foot square).
+  const Y = G.symbolCells(two);
+  assert.deepEqual(Y.boxes[0].radii, [128, 24, 24, 128]);
+  const [mtl, mtr, mbr, mbl] = Y.boxes[1].radii;
+  assert.ok(mtl === 24 && mtr > 124 / 3 && mtr < 128 && mbr === 0 && mbl === 0, `${Y.boxes[1].radii}`);
+  // The extended S M: its S's left and its M's right the ends, at most a bar.
+  const e = G.symbol({ outer: 8, ends: 24 }), one = G.symbol({ outer: 8 });
+  assert.match(e, /^M0 24C/);
+  assert.notEqual(e, one);
+  assert.equal(G.symbol({ outer: 8, ends: 8 }), one);
+});
+
+test("the chapter's Corners: two, every mark from the Ends and Inside sliders, the frame round the ends; one, as it was", () => {
+  const K2 = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
+  const reset = () => { for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value)); };
+  reset();
+  const plain = ['wordmark', 'wordmarkLower', 'down', 'symbol', 's', 'lockup', 'lockupSM'].map((fn) => C[fn]()), fav = C.favicon({ size: 32 });
+  K2.endRound.set('160'); K2.innerRound.set('16');
+  assert.equal(C.wordmark(), plain[0]); // one tier: the sliders wait
+  K2.corners.set('1');
+  const two = { ...PAGE, corners: 1, endRound: 160, innerRound: 16 };
+  assert.ok(C.wordmark().includes(G.letters(two)));
+  assert.ok(C.down().includes(G.down(two).d));
+  assert.ok(C.symbol().includes(G.symbol({ cols: G.symCols(72, 20), rows: G.symRows(20), cut: 12, drop: 0, outer: 16, ends: 160, tension: 0.6 })));
+  assert.notEqual(C.favicon({ size: 32 }), fav);
+  // Framed, the ring round the ends: the word's 148 (its top shared with the 16 inside) and the H's 72.
+  assert.deepEqual(G.wordRadii(two), [148, 72, 72, 148]);
+  K2.frame.set('1');
+  assert.ok(C.wordmark().includes(G.move(G.ring(992, 472, 20, 20, [148, 72, 72, 148], 0.6), 40, 40)));
+  assert.match(C.wordmark(), /M0 188C/); // its outside rounded 148 + 40
+  const D = G.down(two);
+  assert.ok(C.down().includes(G.move(G.ring(D.w, D.h, 20, 20, [D.boxes[0].radii[0], D.boxes[0].radii[1], D.boxes[4].radii[2], D.boxes[4].radii[3]], 0.6), 40, 40)));
+  K2.symbol.set('cells');
+  const Y = G.symbolCells(two);
+  assert.ok(C.symbol().includes(G.move(G.ring(Y.w, Y.h, 20, 20, [Y.boxes[0].radii[0], Y.boxes[1].radii[1], Y.boxes[1].radii[2], Y.boxes[0].radii[3]], 0.6), 40, 40)));
+  K2.corners.set('0');
+  K2.frame.set('0'); K2.symbol.set('extended');
+  assert.deepEqual(['wordmark', 'wordmarkLower', 'down', 'symbol', 's', 'lockup', 'lockupSM'].map((fn) => C[fn]()), plain);
+  reset();
 });

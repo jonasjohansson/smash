@@ -45,7 +45,7 @@ const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${ru
 // ("this is decent settings too for default"): the cuts flat (slope 0), the
 // slot ends' corners rounded, the ceiling 44, the outer corners rounded 64
 // at 60%, no tilt and no dip, the A a capital, Down filled.
-export const START = { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: H, rise: 0, outer: 64, tension: 0.6, tilt: 0, lock: 0, split: 0, blade: 'step', a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0, slashAt: 0, symbol: 'extended' };
+export const START = { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: H, rise: 0, outer: 64, tension: 0.6, corners: 0, endRound: 128, innerRound: 24, tilt: 0, lock: 0, split: 0, blade: 'step', a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0, slashAt: 0, symbol: 'extended' };
 const at = { ...START, per: PER.map((q) => ({ ...q })), lower: [0, 0, 0, 0, 0] };
 const knob = (key, label, min, max, step, value, text, set) => ({ key, label, min, max, step, value, text, set: (v) => set(Number(v)) });
 /** A switch between a few options (the page draws a button for each): [label, value]. */
@@ -69,6 +69,14 @@ export const KNOBS = [
   knob('rise', 'Rise', 0, 48, 4, START.rise, (v) => `${v}`, (v) => { at.rise = v; }),
   knob('outer', 'Round', 0, 64, 4, START.outer, (v) => `${v}`, (v) => { at.outer = v; }),
   knob('tension', 'Tension', 55, 100, 5, START.tension * 100, (v) => `${v}%`, (v) => { at.tension = v / 100; }),
+  // Two tiers of corners (the design panel, round 2, 2026-10-13: a machined slab, generous ends, tight break
+  // edges inside): one, every corner the Round slider's, as it was; two, the word's four extreme corners
+  // (Down's top and feet, the S M's sides, the S alone's four) the Ends slider's, every other corner the
+  // Inside slider's, at the one tension. An end may pass a stem, sweeping across the slot head, as far as the
+  // letter holds it (geometry.js: rounds, ENDS). The frame follows the ends.
+  choice('corners', 'Corners', [['One', 0], ['Two', 1]], START.corners),
+  knob('endRound', 'Ends', 0, 200, 4, START.endRound, (v) => `${v}`, (v) => { at.endRound = v; }),
+  knob('innerRound', 'Inside', 0, 64, 4, START.innerRound, (v) => `${v}`, (v) => { at.innerRound = v; }),
   knob('tilt', 'Tilt', 0, 160, 4, START.tilt, (v) => `${v}`, (v) => { at.tilt = v; }),
   // One governing angle (the design panel, round 1, 2026-10-12): locked, every
   // S's crossbar falls at the cuts' slope, across its own width (geometry.js:
@@ -178,6 +186,10 @@ export const down = () => {
 };
 
 // The S M and the S alone, as the original's, their stems and slots as the wordmark's.
+// Their corners in two tiers (Corners): the S M's S's left and its M's right the ends, the rest inside; the S
+// alone all ends, standing alone.
+const ends = () => (at.corners ? at.endRound : at.outer);
+const inner = () => (at.corners ? at.innerRound : at.outer);
 const cols = () => symCols(at.stem, at.stroke, at.space);
 const rows = () => symRows(at.stroke);
 const symW = () => cols().reduce((t, n) => t + n);
@@ -189,18 +201,18 @@ const symH = () => rows().reduce((t, n) => t + n);
 const blade = () => ({ tilt: at.per[0].tilt ? at.tilt : 0, lock: at.per[0].tilt ? at.lock : 0, split: at.per[0].split ? at.split : 0, line: at.blade === 'line' ? 1 : 0 });
 // Cells (symbolCells): the S M from the wordmark's first S and its M squeezed to it, at the sliders' measures.
 const cells = () => (at.symbol === 'cells' ? symbolCells(now()) : null);
-const sym = () => symbolPath({ cols: cols(), rows: rows(), cut: at.cut, tips: at.tips, drop: at.drop, outer: at.outer, tension: at.tension, ...blade() });
+const sym = () => symbolPath({ cols: cols(), rows: rows(), cut: at.cut, tips: at.tips, drop: at.drop, outer: inner(), ends: ends(), tension: at.tension, ...blade() });
 export const symbol = () => {
   const C = cells();
   if (C) {
     const [S, M] = C.boxes;
     return still(framed(C.w, C.h, C.d, [S.radii[0], M.radii[1], M.radii[2], S.radii[3]], C.boxes)); // the S's left corners, the M's right
   }
-  const c = cols(), [R] = symRadii(at.outer, c, rows()), sw = c[0] + c[1] + c[2];
-  const boxes = [{ box: [0, 0, sw, symH()], radii: [R, R, R, R] }, { box: [sw + c[3], 0, symW(), symH()], radii: [R, R, 0, 0] }]; // the S, the M
-  return still(framed(symW(), symH(), sym(), symRadii(at.outer, c, rows()), boxes));
+  const c = cols(), [E] = symRadii(ends(), c, rows()), [R] = symRadii(inner(), c, rows()), sw = c[0] + c[1] + c[2];
+  const boxes = [{ box: [0, 0, sw, symH()], radii: [E, R, R, E] }, { box: [sw + c[3], 0, symW(), symH()], radii: [R, E, 0, 0] }]; // the S, the M
+  return still(framed(symW(), symH(), sym(), symRadii(ends(), c, rows()), boxes)); // the frame round its ends
 };
-const alone = (o) => { const S = letterS({ ...o, cut: at.cut, tips: at.tips, drop: at.drop, stem: at.stem, slot: at.stroke, outer: at.outer, tension: at.tension, ...blade() }); return svg(S.w, S.h, path(S.d)); };
+const alone = (o) => { const S = letterS({ ...o, cut: at.cut, tips: at.tips, drop: at.drop, stem: at.stem, slot: at.stroke, outer: ends(), tension: at.tension, ...blade() }); return svg(S.w, S.h, path(S.d)); };
 export const s = () => alone({});
 export const sTurned = () => alone({ turn: true });
 export const sSquare = () => alone({ wide: 1 });
@@ -262,7 +274,7 @@ export function favicon({ size = 32 } = {}) {
     const k = FAV[n] / BAR, px = BAR / 2, tall = 7 * BAR; // its scale; 16 px of it, a pixel at 16; 7 in 8 of the icon
     const H = box().H, snap = (v) => Math.round((v * tall) / H / px) * px;
     let ceil = Math.max(px, snap(at.ceil)), rise = snap(at.rise), C;
-    const make = () => symbolCells({ ...now(), stem: BAR, stroke: px, space: px, height: tall, ceil, rise, grid: 0, cut: (at.cut * px) / at.stroke, outer: (at.outer * BAR) / at.stem, tilt: (at.tilt * (2 * BAR + px)) / (2 * at.stem + at.stroke), lower: at.lower.map(snap) });
+    const make = () => symbolCells({ ...now(), stem: BAR, stroke: px, space: px, height: tall, ceil, rise, grid: 0, cut: (at.cut * px) / at.stroke, outer: (at.outer * BAR) / at.stem, endRound: (at.endRound * BAR) / at.stem, innerRound: (at.innerRound * BAR) / at.stem, tilt: (at.tilt * (2 * BAR + px)) / (2 * at.stem + at.stroke), lower: at.lower.map(snap) });
     while ((C = make()).h > tall && (ceil > px || rise > 0)) ceil > px ? (ceil -= px) : (rise -= px);
     const x = Math.floor((n - C.w * k) / 2), y = Math.floor((n - C.h * k) / 2);
     return svg(n, n, `<rect width="${n}" height="${n}" fill="${BLACK}"/><path fill="${WHITE}" fill-rule="evenodd" d="${move(C.d, x, y, k)}"/>`);
@@ -274,7 +286,7 @@ export function favicon({ size = 32 } = {}) {
   // Its S's crossbar falls at the wordmark S's angle: tilt across that S's width, scaled to this one's.
   // Locked, at its own cuts' slope.
   const { tilt, lock, split, line } = blade(), fall = (tilt * (2 * bar + sl)) / (2 * at.stem + at.stroke);
-  const d = symbolPath({ cols, rows, x: (n - (5 * bar + 4 * sl)) / 2, y: (n - (3 * bar + 2 * sl)) / 2, stop: bar, tips: at.tips, cut: (at.cut * bar) / BAR, drop: at.drop, outer: (at.outer * bar) / BAR, tension: at.tension, grid: 0, tilt: fall, lock, split, line, room: (8 * bar) / BAR });
+  const d = symbolPath({ cols, rows, x: (n - (5 * bar + 4 * sl)) / 2, y: (n - (3 * bar + 2 * sl)) / 2, stop: bar, tips: at.tips, cut: (at.cut * bar) / BAR, drop: at.drop, outer: (inner() * bar) / BAR, ends: (ends() * bar) / BAR, tension: at.tension, grid: 0, tilt: fall, lock, split, line, room: (8 * bar) / BAR });
   return svg(n, n, `<rect width="${n}" height="${n}" fill="${BLACK}"/><path fill="${WHITE}" fill-rule="evenodd" d="${d}"/>`);
 }
 
