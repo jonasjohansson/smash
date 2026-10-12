@@ -64,6 +64,24 @@ function favicons(d) {
 }
 
 
+/** A chapter's own slider (slant.js: SLOPE): its label, the range, and its value in words. */
+const knobHTML = (k) => `<label class="knob"><span>${esc(k.label)}</span><input type="range" min="${k.min}" max="${k.max}" step="${k.step}" value="${k.value}"><output>${esc(k.text(k.value))}</output></label>`;
+
+/** The slider sets the chapter's measure, and its stills, favicons and stage are drawn again. */
+function knob(d, section) {
+  const input = $('.knob input', section);
+  if (!input) return;
+  const out = $('.knob output', section);
+  input.addEventListener('input', () => {
+    d.mod.SLOPE.set(input.value);
+    out.textContent = d.mod.SLOPE.text(Number(input.value));
+    for (const el of section.querySelectorAll('[data-still]')) el.innerHTML = drawn(d, el.dataset.still, el.dataset.ground);
+    const fav = $('.favicons', section);
+    if (fav) fav.outerHTML = favicons(d);
+    d.live?.motion?.redraw?.();
+  });
+}
+
 function chapter(d) {
   const { info } = d;
   const el = h(`
@@ -75,9 +93,10 @@ function chapter(d) {
       <figure class="stage ground-ink">
         <div class="motion-el" data-live="motion"></div>
         <figcaption class="controls">
-          <button type="button" class="play" aria-label="Play or pause">Pause</button>
-          <input type="range" class="scrub" min="0" max="1000" value="0" aria-label="Scrub the motion">
+          <button type="button" class="play" aria-label="Play or pause"${info.motion === false ? ' hidden' : ''}>Pause</button>
+          <input type="range" class="scrub" min="0" max="1000" value="0" aria-label="Scrub the motion"${info.motion === false ? ' hidden' : ''}>
           ${typeof d.mod.frame === 'function' ? `<button type="button" class="download" title="${SIZES_HINT}">MP4</button>` : ''}
+          ${d.mod.SLOPE ? knobHTML(d.mod.SLOPE) : ''}
         </figcaption>
       </figure>
       <div class="row two">
@@ -253,7 +272,8 @@ async function main() {
   for (const d of directions) {
     const section = chapter(d);
     page.appendChild(section);
-    lives.push(bySlug[d.slug] = live(d, section));
+    lives.push(bySlug[d.slug] = d.live = live(d, section));
+    knob(d, section);
     if (d.slug === 'original' && !ONLY) for (const x of EXTRAS.filter((x) => !x.last)) await addExtra(page, x);
   }
   if (!ONLY) for (const x of EXTRAS.filter((x) => x.last)) await (x.folded ? addFolded(page, x) : addExtra(page, x));

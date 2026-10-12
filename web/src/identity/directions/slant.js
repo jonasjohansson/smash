@@ -2,13 +2,14 @@
 // CM.SUPPLY's round 4; Jonas: "i thought it was interesting with the slants
 // instead of the uniform inner curves, i also thought the alternate a was
 // interesting"). The block, the bars, the slots and the crossbars are the
-// original's; the slot ends and the S bends are cut at one slope, 8 in 20, and
-// the A is a single-storey a, three ways (inside, below, flat). The symbol,
-// the S alone, the lockups and the favicons follow. No motion yet and no
-// pixels: the stage holds the wordmark. Geometry: ./slant/geometry.js.
+// original's; the slot ends and the S bends are cut at one slope, 8 in 20
+// (the slope is a slider on the page, SLOPE), and the A is a single-storey a,
+// its stem standing above its bowl's shoulder, two ways (inside, below). The
+// symbol, the S alone, the lockups and the favicons follow. No motion yet and
+// no pixels: the stage holds the wordmark. Geometry: ./slant/geometry.js.
 
 import { svg, timeline, canvasStage, withCleanup } from '../lib.js';
-import { letters, letterS, symbol as symbolPath, depth, SLANT, W, H, PITCH, SYM_W, SYM_H, SYM_COLS, SYM_ROWS } from './slant/geometry.js';
+import { letters, letterS, symbol as symbolPath, depth, SLANT, DROP, DROPS, W, H, PITCH, SYM_W, SYM_H, SYM_COLS, SYM_ROWS } from './slant/geometry.js';
 import { lockPaths } from './original.js';
 
 const BLACK = '#000000';
@@ -32,36 +33,43 @@ export const info = {
 
 const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${rule}" d="${d}"/>`;
 
-// The wordmark, with the a inside, and the a's three versions to compare (the
+// The slope of every cut, in a slot of 20 (Jonas, 2026-10-12: "maybe this can
+// be a parameter i can slide to choose"): the page's slider sets it and draws
+// the chapter again; the files are cut at the default, 8.
+let drop = DROP;
+export const SLOPE = {
+  label: 'Slope', min: 0, max: 20, step: 4, value: DROP * 20,
+  text: (v) => `${v} in 20`,
+  set(v) { const n = Number(v) / 20; drop = DROPS.find((k) => Math.abs(k - n) < 1e-9) ?? DROP; },
+};
+
+// The wordmark, with the a inside, and the a's two versions to compare (the
 // page shows them in a row of their own). Below reaches 12 under the block,
 // so its artboard does too.
-const MARK = letters(SLANT);
-const wordmarkWith = (a) => svg(W, H + depth(a), path(letters({ ...SLANT, a })));
+const mark = (a = SLANT.a) => letters({ ...SLANT, drop, a });
+const wordmarkWith = (a) => svg(W, H + depth(a), path(mark(a)));
 export const wordmark = () => wordmarkWith(SLANT.a);
 export const wordmarkInside = () => wordmarkWith('inside');
 export const wordmarkBelow = () => wordmarkWith('below');
-export const wordmarkFlat = () => wordmarkWith('flat');
-export const VERSIONS = [['wordmarkInside', 'a, inside'], ['wordmarkBelow', 'a, below'], ['wordmarkFlat', 'a, flat']];
+export const VERSIONS = [['wordmarkInside', 'a, inside'], ['wordmarkBelow', 'a, below']];
 
 // The S M and the S alone, as the original's.
-const SYM = symbolPath();
-export const symbol = () => svg(SYM_W, SYM_H, path(SYM));
-const S = letterS();
-const S_TURNED = letterS({ turn: true });
-const S_SQUARE = letterS({ wide: 1 });
-export const s = () => svg(S.w, S.h, path(S.d));
-export const sTurned = () => svg(S_TURNED.w, S_TURNED.h, path(S_TURNED.d));
-export const sSquare = () => svg(S_SQUARE.w, S_SQUARE.h, path(S_SQUARE.d));
+const sym = () => symbolPath({ drop });
+export const symbol = () => svg(SYM_W, SYM_H, path(sym()));
+const alone = (o) => { const S = letterS({ ...o, drop }); return svg(S.w, S.h, path(S.d)); };
+export const s = () => alone({});
+export const sTurned = () => alone({ turn: true });
+export const sSquare = () => alone({ wide: 1 });
 
 // The lockups, as the original's: three lines whose capitals fill the mark's
 // three solid bands, a pitch after it.
 const CAP = 32;
 const FOOT = SLANT.crossbar + SLANT.gap / 2 - SLANT.stroke / 2;
 const LOCK = lockPaths([['studio', CAP], ['middle', FOOT], ['stockholm', H]], CAP, W + PITCH);
-export const lockup = () => svg(LOCK.width, H, path(MARK) + path(LOCK.d, 'nonzero'));
+export const lockup = () => svg(LOCK.width, H, path(mark()) + path(LOCK.d, 'nonzero'));
 const SM_BARS = [SYM_ROWS[0], SYM_ROWS[0] + SYM_ROWS[1] + SYM_ROWS[2], SYM_H];
 const LOCK_SM = lockPaths([['name', SM_BARS[0]], ['studio', SM_BARS[1]], ['stockholm', SM_BARS[2]]], SYM_ROWS[0], SYM_W + SYM_COLS[1] + SYM_COLS[2]);
-export const lockupSM = () => svg(LOCK_SM.width, SYM_H, path(SYM) + path(LOCK_SM.d, 'nonzero'));
+export const lockupSM = () => svg(LOCK_SM.width, SYM_H, path(sym()) + path(LOCK_SM.d, 'nonzero'));
 
 // Favicons: the S M at the original's measures (bars 8, 4 and 2 px; slots half
 // that), centred. Its cuts are diagonals, so it is drawn smooth, not on pixels.
@@ -72,7 +80,7 @@ export function favicon({ size = 32 } = {}) {
   const sl = bar / 2;
   const cols = [bar, sl, bar, sl, bar, sl, bar, sl, bar];
   const rows = [bar, sl, bar, sl, bar];
-  const d = symbolPath({ cols, rows, x: (n - (5 * bar + 4 * sl)) / 2, y: (n - (3 * bar + 2 * sl)) / 2, stop: bar });
+  const d = symbolPath({ cols, rows, x: (n - (5 * bar + 4 * sl)) / 2, y: (n - (3 * bar + 2 * sl)) / 2, stop: bar, drop });
   return svg(n, n, `<rect width="${n}" height="${n}" fill="${BLACK}"/><path fill="${WHITE}" fill-rule="evenodd" d="${d}"/>`);
 }
 
@@ -85,7 +93,7 @@ function draw(ctx, w, h) {
   ctx.translate((w - W * k) / 2, (h - H * k) / 2);
   ctx.scale(k, k);
   ctx.fillStyle = WHITE;
-  ctx.fill(new Path2D(MARK), 'evenodd');
+  ctx.fill(new Path2D(mark()), 'evenodd');
   ctx.restore();
 }
 
