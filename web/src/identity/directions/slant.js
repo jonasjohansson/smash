@@ -121,15 +121,17 @@ export const KNOBS = [
   // H's Tilt (the design panel, round 2, 2026-10-13; off) carry the S's blade's angle through their crossbars
   // (geometry.js: barFall), one angle through S, A, S, H without a slash. The A's Apex and the H's Bar step (the
   // design panel, round 3, 2026-10-13; off) tell the two apart: the A's counter head peaked at the governing
-  // slope over a crossbar grown to a window, the H's lower slot stepped aside under a bar at least a slot
-  // thick (geometry.js: barOf). The a's slot head peaks too.
+  // slope over a crossbar grown to a window, the H's crossbar then at least a slot thick (geometry.js: barOf);
+  // the H's lower slot stepped aside a slot or 3 in 10 of a stem, the H that much wider so its feet stay a
+  // stem (geometry.js: stepOf).
   {
     key: 'per', label: 'Letters', letters: ['S', 'M', 'A', 'S', 'H'],
     rows: [['cut', 'Cut'], ['round', 'Round'], ['base', 'Base'], ['both', 'Both sides'], ['tilt', 'Tilt'], ['split', 'Split'], ['open', 'Open'], ['dip', 'Dip'], ['apex', 'Apex'], ['barStep', 'Bar step']],
     has: (row, i) => row in PER[i],
     // Whether a switch does anything as the other controls stand (the page dims it where not): the A's Tilt
-    // waits for the capital, as the a's slot has no crossbar to fall (the design panel's review, round 2, 2026-10-13).
-    live: (row, i) => !(row === 'tilt' && i === 2 && at.a === 'a'),
+    // waits for the capital, as the a's slot has no crossbar to fall (the design panel's review, round 2, 2026-10-13),
+    // and so does its Apex, the A's alone (the design panel's review, round 3, 2026-10-13).
+    live: (row, i) => !((row === 'tilt' || row === 'apex') && i === 2 && at.a === 'a'),
     on: (row, i) => !!at.per[i][row],
     set: (row, i, v) => { at.per[i][row] = v ? 1 : 0; },
     reset() { at.per = PER.map((q) => ({ ...q })); },
