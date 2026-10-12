@@ -43,7 +43,7 @@ const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${ru
 // Where they start, and what the files are made at: Jonas's, 2026-10-12
 // ("these default settings look fine"), the A a capital that dips.
 export const START = { cut: 20, drop: DROP, stem: 72, stroke: 24, space: 24, ceil: BAR, height: H, outer: 36, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: DIP, downFit: 'wider' };
-const at = { ...START, per: PER.map((q) => ({ ...q })) };
+const at = { ...START, per: PER.map((q) => ({ ...q })), lower: [0, 0, 0, 0, 0] };
 const knob = (key, label, min, max, step, value, text, set) => ({ key, label, min, max, step, value, text, set: (v) => set(Number(v)) });
 /** A switch between a few options (the page draws a button for each): [label, value]. */
 const choice = (key, label, options, value) => ({ key, label, options, value, set: (v) => { at[key] = options.find(([, o]) => String(o) === String(v))?.[1] ?? value; } });
@@ -69,11 +69,19 @@ export const KNOBS = [
   // Each letter's own switches (geometry.js: PER): a button where the letter has the setting.
   {
     key: 'per', label: 'Letters', letters: ['S', 'M', 'A', 'S', 'H'],
-    rows: [['cut', 'Cut'], ['round', 'Round'], ['tilt', 'Tilt'], ['split', 'Split'], ['dip', 'Dip']],
+    rows: [['cut', 'Cut'], ['round', 'Round'], ['base', 'Base'], ['tilt', 'Tilt'], ['split', 'Split'], ['dip', 'Dip']],
     has: (row, i) => row in PER[i],
     on: (row, i) => !!at.per[i][row],
     set: (row, i, v) => { at.per[i][row] = v ? 1 : 0; },
     reset() { at.per = PER.map((q) => ({ ...q })); },
+  },
+  // Each letter's slot ends lowered past the ceiling (geometry.js: p.lower): a slider a letter, the H has none.
+  {
+    key: 'lower', label: 'Lower', each: ['S', 'M', 'A', 'S', 'H'], min: 0, max: 200, step: 4,
+    has: (i) => i < 4,
+    get: (i) => at.lower[i],
+    set: (i, v) => { at.lower[i] = Number(v); },
+    reset() { at.lower = [0, 0, 0, 0, 0]; },
   },
 ];
 

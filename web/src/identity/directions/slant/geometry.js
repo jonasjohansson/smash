@@ -112,16 +112,17 @@ export function block(p = SLANT) {
 /**
  * Each letter's own switches, S M A S H (Jonas, 2026-10-12: "maybe i can turn
  * off or on some of the tilts and other settings per letter"): its slot ends
- * cut (off: square), its outer corners rounded, the S's tilt and split, the
- * A's dip. A letter takes a setting only where its switch is on; the H has
+ * cut (off: square), its outer corners rounded at the top (round) and at the
+ * base (base; Jonas: "so the top and bottom border radius match"), the S's
+ * tilt and split, the A's dip. A letter takes a setting only where its switch is on; the H has
  * no slot ends, and its corners start square.
  */
 export const PER = [
-  { cut: 1, round: 1, tilt: 1, split: 1 },
-  { cut: 1, round: 1 },
-  { cut: 1, round: 1, dip: 1 },
-  { cut: 1, round: 1, tilt: 1, split: 1 },
-  { round: 0 },
+  { cut: 1, round: 1, base: 1, tilt: 1, split: 1 },
+  { cut: 1, round: 1, base: 0 },
+  { cut: 1, round: 1, base: 0, dip: 1 },
+  { cut: 1, round: 1, base: 1, tilt: 1, split: 1 },
+  { round: 0, base: 0 },
 ];
 const per = (p, i) => ({ ...PER[i], ...(p.per?.[i] ?? {}) });
 
@@ -138,18 +139,29 @@ export function letterPaths(p = SLANT) {
   /** Letter i's measures, as its switches have them: d its cuts' fall, r their round, o its outer corners. */
   const own = (i) => {
     const q = per(p, i);
-    const Rr = q.round ? R0 : 0;
+    const Rr = q.round ? (i === 4 ? Math.min(R0, stem) : R0) : 0; // the H's top corners are on its legs too
+    const Rb = q.base ? Math.min(R0, stem) : 0; // at the base, at most a stem: a leg's foot is one wide
     return {
       d: q.cut ? cutOf(p.drop ?? DROP, slot) : 0, // 8
       r: q.cut && p.round ? Math.min(p.cut ?? CUT, s) : 0, // 4: a cut's obtuse corner, at a slot's end and an S's bend
       Rr,
       o: (x, y) => (Rr > 0 ? [x, y, Rr, p.tension ?? TENSION] : [x, y]),
+      Rb,
+      ob: (x, y) => (Rb > 0 ? [x, y, Rb, p.tension ?? TENSION] : [x, y]), // a corner at the base
       // the S's crossbar's fall, at most till its ends meet the corners' rounds
       tilt: q.tilt ? Math.max(0, Math.min(p.tilt ?? 0, H + bar - 2 * Rr - 8)) : 0,
       split: q.split && p.split,
       dip: q.dip === 0 ? 0 : p.dip ?? DIP,
+      lower: Math.max(0, p.lower?.[i] ?? 0),
     };
   };
+  /**
+   * Letter i's measures with its slot ends lowered (p.lower, Jonas 2026-10-12:
+   * "separate per letter setting to lower it only on them"): hi its top
+   * ends' high corner, low its bottom ends' low corner; at most till a slot
+   * would run into its bend or crossbar (most for its kind, here).
+   */
+  const ends = (k, most) => { const l = Math.min(k.lower, Math.max(0, most(k))); return { ...k, hi: hi + l, low: low - l }; };
 
   // An S: the slot from its closed top end turns right at the upper bend and
   // out; the slot in from the left turns down at the lower bend to its closed
@@ -157,19 +169,19 @@ export function letterPaths(p = SLANT) {
   // bar between the two, falls tilt across the letter (CM.SUPPLY's long
   // diagonal), so the slots either side of it are wedges; split opens its slot
   // straight through it, the S in two pieces, as theirs.
-  const S = (L, x, R, { d, r, o, tilt, split }) => {
+  const S = (L, x, R, { d, r, o, ob, tilt, split, hi, low }) => {
     const band = (X) => H / 2 + (tilt * (X - x)) / (R - L); // the crossbar's centre line
     const top = (X) => band(X) - bar / 2, bot = (X) => band(X) + bar / 2;
     const tr = top(x + s), bl = bot(x - s); // where the crossbar meets the slot
     if (split) {
       return poly([o(L, 0), o(R, 0), [R, up - s], [x + s, up - s], [x + s, hi + d, r], [x - s, hi], [x - s, bl], [L, bot(L)]])
-        + poly([[x + s, tr], [R, top(R)], o(R, H), o(L, H), [L, lo + s], [x - s, lo + s], [x - s, low - d, r], [x + s, low]]);
+        + poly([[x + s, tr], [R, top(R)], ob(R, H), ob(L, H), [L, lo + s], [x - s, lo + s], [x - s, low - d, r], [x + s, low]]);
     }
     return poly([
       o(L, 0), o(R, 0), [R, up - s], [x + s, up - s],
       [x + s, hi + d, r], [x - s, hi],
       [x - s, tr - d, r], [x + s, tr],
-      [R, top(R)], o(R, H), o(L, H), [L, lo + s], [x - s, lo + s],
+      [R, top(R)], ob(R, H), ob(L, H), [L, lo + s], [x - s, lo + s],
       [x - s, low - d, r], [x + s, low],
       [x + s, bl + d, r], [x - s, bl],
       [L, bot(L)],
@@ -177,19 +189,19 @@ export function letterPaths(p = SLANT) {
   };
 
   // The M: two slots from the bottom, their top ends cut.
-  const M = (L, R, { d, r, o }) => poly([
-    o(L, 0), o(R, 0), [R, H],
+  const M = (L, R, { d, r, o, ob, hi }) => poly([
+    o(L, 0), o(R, 0), ob(R, H),
     ...[c(3), c(2)].flatMap((x) => [[x + s, H], [x + s, hi + d, r], [x - s, hi], [x - s, H]]),
-    [L, H],
+    ob(L, H),
   ]);
 
   // A foot that swoops (CM.SUPPLY's a): from a slot above the baseline on
   // the inside edge at x, down and left into the corner at L (rounded, if the
   // letter's corners are), dip under the baseline. Its handles are set by eye.
   const swoop = slot;
-  const swoopTo = (x, L, { o, Rr, dip }) => {
-    const foot = H + dip, to = [L + Rr, foot], w = x - to[0];
-    return [[x, H - swoop], ['C', x - w * 0.45, H - swoop * 0.3, to[0] + w * 0.35, foot, ...to], o(L, foot)];
+  const swoopTo = (x, L, { dip }, R, corner) => {
+    const foot = H + dip, to = [L + R, foot], w = x - to[0];
+    return [[x, H - swoop], ['C', x - w * 0.45, H - swoop * 0.3, to[0] + w * 0.35, foot, ...to], corner(L, foot)];
   };
 
   // The A, as the original's (Jonas, 2026-10-12: the a "should be an
@@ -197,28 +209,37 @@ export function letterPaths(p = SLANT) {
   // to the crossbar, and the counter above it, its top end cut as the M's.
   // With a dip ("can it still have a dip?"), its left leg takes the a's
   // foot; the right leg stands square, as the a's stem.
-  const A = (L, x, R, k) => poly([k.o(L, 0), k.o(R, 0), [R, H], [x + s, H], [x + s, lo - s], [x - s, lo - s],
-    ...(k.dip ? swoopTo(x - s, L, k) : [[x - s, H], [L, H]])])
-    + poly([[x + s, hi + k.d, k.r], [x - s, hi], [x - s, up + s], [x + s, up + s]]);
+  const A = (L, x, R, k) => poly([k.o(L, 0), k.o(R, 0), k.ob(R, H), [x + s, H], [x + s, lo - s], [x - s, lo - s],
+    ...(k.dip ? swoopTo(x - s, L, k, k.Rb, k.ob) : [[x - s, H], k.ob(L, H)])])
+    + poly([[x + s, k.hi + k.d, k.r], [x - s, k.hi], [x - s, up + s], [x + s, up + s]]);
 
   // The a, as CM.SUPPLY's latest (Jonas, 2026-10-12: "lets explore having
   // both capital and lowercase a"): the stem square on the right, the bowl
   // rounded on the left; its slot closed and cut at both ends, a bar above
   // where the bowl meets the stem, and the foot swooping from there.
-  const a = (L, x, R, k) => poly([k.o(L, 0), [R, 0], [R, H], [x + s, H], ...swoopTo(x + s, L, k)])
-    + poly([[x + s, hi + k.d, k.r], [x - s, hi], [x - s, H - swoop - bar - k.d, k.r], [x + s, H - swoop - bar]]);
+  const a = (L, x, R, k) => poly([k.o(L, 0), [R, 0], k.ob(R, H), [x + s, H], ...swoopTo(x + s, L, k, k.Rr, k.o)]) // its bowl's corner rounds with its top
+    + poly([[x + s, k.hi + k.d, k.r], [x - s, k.hi], [x - s, H - swoop - bar - k.d, k.r], [x + s, H - swoop - bar]]);
 
   // The H, as the original's: no curves, unless its corners are rounded.
-  const Hh = (L, x, R, { o }) => poly([
+  const Hh = (L, x, R, { o, ob }) => poly([
     o(L, 0), [x - s, 0], [x - s, up + s], [x + s, up + s], [x + s, 0], o(R, 0),
-    o(R, H), [x + s, H], [x + s, lo - s], [x - s, lo - s], [x - s, H], o(L, H),
+    ob(R, H), [x + s, H], [x + s, lo - s], [x - s, lo - s], [x - s, H], ob(L, H),
   ]);
 
+  // How far each kind of letter's slot ends can come in: an S's to half a
+  // slot from its bends; the M's to two slots from the baseline; the A's
+  // counter to a slot tall; the a's slot to a slot long.
+  const most = {
+    S: (k) => up - s - hi - k.d - k.r - slot / 2,
+    M: (k) => H - hi - k.d - 2 * slot,
+    A: (k) => up + s - hi - k.d - k.r - slot,
+    a: (k) => H - swoop - bar - hi - 2 * k.d - 2 * k.r - slot,
+  };
   return [
-    S(0, c(0), left(1), own(0)),
-    M(right(1), left(4), own(1)),
-    (p.a === 'a' ? a : A)(right(4), c(5), left(6), own(2)),
-    S(right(6), c(7), left(8), own(3)),
+    S(0, c(0), left(1), ends(own(0), most.S)),
+    M(right(1), left(4), ends(own(1), most.M)),
+    (p.a === 'a' ? a : A)(right(4), c(5), left(6), ends(own(2), p.a === 'a' ? most.a : most.A)),
+    S(right(6), c(7), left(8), ends(own(3), most.S)),
     Hh(right(8), c(9), W, own(4)),
   ];
 }

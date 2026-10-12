@@ -82,7 +82,9 @@ function favicons(d) {
  * A chapter's own control (slant.js: KNOBS): a slider (its label, the range,
  * and its value in words), or a switch (a button for each of its options).
  */
-const knobHTML = (k) => (k.rows
+const knobHTML = (k) => (k.each
+  ? `<span class="knob each" data-knob="${esc(k.key)}"><span>${esc(k.label)}</span>${k.each.map((l, i) => (k.has(i) ? `<label><span class="col">${esc(l)}</span><input type="range" data-i="${i}" min="${k.min}" max="${k.max}" step="${k.step}" value="${k.get(i)}"><output>${k.get(i)}</output></label>` : '')).join('')}</span>`
+  : k.rows
   ? `<span class="knob letters" data-knob="${esc(k.key)}" style="--n:${k.letters.length}"><span></span>${k.letters.map((l) => `<span class="col">${esc(l)}</span>`).join('')}${k.rows.map(([row, label]) => `<span>${esc(label)}</span>${k.letters.map((l, i) => (k.has(row, i) ? `<button type="button" data-row="${esc(row)}" data-i="${i}" title="${esc(`${label}, ${l}`)}"${k.on(row, i) ? ' data-on' : ''}></button>` : '<i></i>')).join('')}`).join('')}</span>`
   : k.options
   ? `<span class="knob switch" data-knob="${esc(k.key)}"><span>${esc(k.label)}</span>${k.options.map(([label, v]) => `<button type="button" data-v="${esc(String(v))}"${String(v) === String(k.value) ? ' data-on' : ''}>${esc(label)}</button>`).join('')}</span>`
@@ -98,6 +100,16 @@ function knobs(d, section) {
   };
   for (const k of d.mod.KNOBS ?? []) {
     const el = $(`.knob[data-knob="${k.key}"]`, section);
+    if (k.each) {
+      for (const input of el.querySelectorAll('input')) {
+        input.addEventListener('input', () => {
+          k.set(Number(input.dataset.i), input.value);
+          input.nextElementSibling.textContent = input.value;
+          redraw();
+        });
+      }
+      continue;
+    }
     if (k.rows) {
       for (const b of el.querySelectorAll('button')) {
         b.addEventListener('click', () => {
