@@ -10,6 +10,7 @@
 // single-storey a, tried 2026-10-11, read as an o).
 
 import { W, H, PITCH, REST, smMeasures, quarterTurn, SYM_COLS, SYM_ROWS, SYM_H } from '../original/geometry.js';
+import { flatten, inside, reach, cutRing } from './clip.js';
 
 const f = (n) => String(+n.toFixed(2));
 const P = (x, y) => `${f(x)} ${f(y)}`;
@@ -254,6 +255,15 @@ const fallOf = (tilt, H, bar, R, room = 8) => Math.max(0, Math.min(tilt ?? 0, H 
 const tiltOf = (p, w, slot) => (p.lock ? (cutOf(p.drop ?? DROP, slot) / slot) * w : p.tilt);
 
 /**
+ * Through a slot, an S's crossbar is bar and d thick less its fall across the
+ * slot; falling more, the slot's cut end above would pass the one below and
+ * the S cross itself (the design panel's review, round 1, 2026-10-12: wide
+ * slots, steep tilt). So it falls at most till a quarter of a bar is left
+ * there, split or not, so both S's keep one angle. w the S's width, s half a slot.
+ */
+const fallThrough = (tilt, w, bar, d, s) => Math.min(tilt, (w * ((3 * bar) / 4 + d)) / (2 * s));
+
+/**
  * An S as path data; the wordmark's, the S M's and the S alone are one
  * drawing. The slot from its closed top end turns right at the upper bend and
  * out; the slot in from the left turns down at the lower bend to its closed
@@ -269,12 +279,8 @@ const tiltOf = (p, w, slot) => (p.lock ? (cutOf(p.drop ?? DROP, slot) / slot) * 
  * low its closed ends' corners.
  */
 function sLetter({ L, x, xb = x, R, H, y = 0, s, sv = s, bar = BAR, d = 0, r = 0, r2 = 0, o = (X, Y) => [X, Y], ob = o, tilt = 0, split = false, open = false, hi = 0, low = H }) {
-  // Through a slot, the crossbar is bar and d thick less its fall across the
-  // slot; falling more, the slot's cut end above would pass the one below and
-  // the S cross itself (the design panel's review, round 1, 2026-10-12: wide
-  // slots, steep tilt). So it falls at most till a quarter of a bar is left
-  // there, split or not, so both S's keep one angle.
-  tilt = Math.min(tilt, ((R - L) * ((3 * bar) / 4 + d)) / (2 * s));
+  // At most till a quarter of a bar is left through a slot (fallThrough).
+  tilt = fallThrough(tilt, R - L, bar, d, s);
   const up = H / 2 - (bar + 2 * sv) / 2, lo = H / 2 + (bar + 2 * sv) / 2; // the crossbar slots' centres
   const mid = (x + xb) / 2;
   const band = (X) => H / 2 + (tilt * (X - mid)) / (R - L); // the crossbar's centre line
@@ -412,6 +418,118 @@ export function letterPaths(p = SLANT, only = null) {
 
 /** The letters as one path, filled evenodd. */
 export const letters = (p = SLANT) => letterPaths(p).join('');
+
+/**
+ * The line the slash runs along (below): the S's blade's centre line, through
+ * its middle (x, y) at its slope, its crossbar's fall across it (after the
+ * same clamps as sLetter's). The first S whose tilt is on leads; with neither,
+ * the first S, level.
+ */
+export function slashLine(p = SLANT) {
+  const { s, c, left, right, H, stem, slot } = block(p);
+  const i = [0, 3].find((k) => per(p, k).tilt) ?? 0;
+  const q = per(p, i), { Rr, Rb } = rounds(p, i);
+  const L = i ? right(6) : 0, R = i ? left(8) : left(1);
+  const d = q.cut ? cutOf(p.drop ?? DROP, slot) : 0;
+  const tilt = q.tilt ? fallThrough(fallOf(tiltOf(p, 2 * stem + slot, slot), H, BAR, Math.max(Rr, Rb)), R - L, BAR, d, s) : 0;
+  return { x: c(i ? 7 : 0), y: H / 2, slope: tilt / (R - L) };
+}
+
+/**
+ * The slash (p.slash; the design panel, round 1, 2026-10-12: "one straight
+ * kerf through the whole wordmark along the S blades' line"): a band
+ * p.slashWidth tall (a slot unless set), measured down, centred on the S's
+ * blade (slashLine) and run on across the word, cut out of every letter. The
+ * outlines are flattened (clip.js; curves and arcs in pieces a unit long) and
+ * cut along the band's two sides. Where taking a bite out of a letter would
+ * leave it a sliver thinner than half a stem either side of the band (an S's
+ * blade, the A's and the H's crossbars when the band runs along them), that
+ * bite stays; so does one where the band only runs off a letter's top or its
+ * base, which would chip its edge, not cut through it. p.shift slides all below the band right that much, and down
+ * along the band as it falls, a struck object: the band keeps its width, and
+ * a bite that stays is sheared across it. The letters' path data, and warp,
+ * which moves other path data (a frame) the same way.
+ */
+export function slash(p = SLANT, paths = letterPaths(p)) {
+  if (!p.slash) return { paths, warp: (d) => d };
+  const { H, stem, slot } = block(p);
+  const { x: xs, y: ys, slope: m } = slashLine(p);
+  const h = Math.max(1, p.slashWidth ?? slot) / 2, shift = Math.max(0, p.shift ?? 0);
+  const thin = stem / 2;
+  // The reckoning turned so the band lies level, -h to h; down stays down, so widths measured down stay.
+  const fwd = ([X, Y]) => [X, Y - m * (X - xs) - ys];
+  const back = ([X, u]) => [X, u + m * (X - xs) + ys];
+  const slide = ([X, u], k = Math.min(1, Math.max(0, (u + h) / (2 * h)))) => [X + shift * k, u];
+  // A side that crosses the band's top or bottom bends there as it slides: a corner put in where it crosses.
+  const bend = (ring) => ring.flatMap((a, i) => {
+    const b = ring[(i + 1) % ring.length], at = [-h, h].filter((c) => (a[1] - c) * (b[1] - c) < 0).map((c) => (c - a[1]) / (b[1] - a[1])).sort((s, t) => s - t);
+    return [a, ...at.map((t) => [a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])])];
+  });
+  const draw = (ring, k) => {
+    const pts = bend(ring).map((q) => P(...back(slide(q, k)))).filter((q, i, a) => q !== a[(i + a.length - 1) % a.length]);
+    return pts.length > 2 ? 'M' + pts.join('L') + 'Z' : '';
+  };
+  const warp = (d) => (shift ? flatten(d).map((r) => draw(r.map(fwd))).join('') : d);
+  const onLine = (q, c) => Math.abs(q[1] - c) < 1e-6;
+  return {
+    warp,
+    paths: paths.map((d) => {
+      if (!d) return d;
+      const subs = d.split(/(?=M)/);
+      const rings = subs.map((sub) => flatten(sub)[0].map(fwd));
+      const hole = rings.map((r, i) => rings.filter((o, j) => j !== i && inside([o], r[0])).length % 2 === 1);
+      // Each outline cut along the band's top and its bottom: above it, in it, below it. false: it won't cut.
+      const parts = rings.map((r) => {
+        if (r.every(([, u]) => u <= -h) || r.every(([, u]) => u >= h)) return null;
+        const one = cutRing(r, -h), two = one && one.hi.map((q) => cutRing(q, h));
+        if (!one || two.some((t) => !t)) return false;
+        return { top: one.lo, band: two.flatMap((t) => t.lo).map((ring) => ({ ring })), bottom: two.flatMap((t) => t.hi) };
+      });
+      // The bites: the letter's pieces in the band, each with the counters' pieces inside it.
+      const bites = parts.flatMap((q, i) => (q && !hole[i] ? q.band : []));
+      parts.forEach((q, i) => {
+        if (!q || !hole[i]) return;
+        for (const piece of q.band) {
+          const r = piece.ring, k = r.findIndex((a, j) => Math.abs((a[1] + r[(j + 1) % r.length][1]) / 2) < h - 1e-6);
+          const at = k < 0 ? r[0] : [(r[k][0] + r[(k + 1) % r.length][0]) / 2, (r[k][1] + r[(k + 1) % r.length][1]) / 2];
+          piece.of = bites.find((b) => inside([b.ring], at)) ?? bites[0];
+        }
+      });
+      // A bite stays where, along the band's top or bottom, the letter beyond is thinner than half a stem;
+      // a taper where a side meets the band at a slant, half a stem from the bite's ends, doesn't count.
+      // A bite that meets only one side of the band (where it runs off the letter's top or its base)
+      // would only chip the letter's edge, not cut through it: it stays too, and slides with that side
+      // (move: 0 above, 1 below); a bite that stays between both is sheared across the band.
+      for (const bite of bites) {
+        const r = bite.ring;
+        const sides = [-h, h].filter((c) => r.some((a, j) => onLine(a, c) && onLine(r[(j + 1) % r.length], c)));
+        if (sides.length === 1) bite.move = sides[0] < 0 ? 0 : 1;
+        bite.keep = sides.length < 2 || r.some((a, j) => {
+          const b = r[(j + 1) % r.length];
+          const c = [-h, h].find((y) => onLine(a, y) && onLine(b, y));
+          if (c == null) return false;
+          const dir = Math.sign(c), [x0, x1] = [Math.min(a[0], b[0]), Math.max(a[0], b[0])];
+          const samples = [(x0 + x1) / 2];
+          for (let x = x0 + thin; x <= x1 - thin; x += 2) samples.push(x);
+          return samples.some((x) => {
+            const from = [x, c + dir * 1e-3];
+            if (!inside(rings, from)) return false;
+            return reach(rings, from, dir) < thin;
+          });
+        });
+      }
+      return subs.map((sub, i) => {
+        const q = parts[i];
+        if (q === null) return rings[i][0][1] >= h && shift ? move(sub, shift, m * shift) : sub;
+        const bite = (b) => (hole[i] ? b.of ?? {} : b);
+        const kept = q ? q.band.filter((b) => bite(b).keep) : [];
+        const sheared = kept.every((b) => bite(b).move == null);
+        if (!q || (kept.length === q.band.length && (sheared || !shift))) return shift ? draw(rings[i]) : sub; // whole
+        return [...q.top.map((t) => draw(t)), ...kept.map((b) => draw(b.ring, bite(b).move)), ...q.bottom.map((t) => draw(t))].join('');
+      }).join('');
+    }),
+  };
+}
 
 /** Path data (M, L, C, A, Z, absolute) moved by dx, dy. */
 export function move(d, dx, dy) {
