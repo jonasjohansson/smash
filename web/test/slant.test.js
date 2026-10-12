@@ -1290,3 +1290,82 @@ test("the two-tier sliders and the tips' switch are labelled apart: every contro
   assert.deepEqual(labels.filter((l, i) => labels.indexOf(l) !== i), []);
   assert.deepEqual(['endRound', 'innerRound'].map((key) => C.KNOBS.find((k) => k.key === key).label), ['Round ends', 'Round inside']);
 });
+
+// The A's and the H's tilt (the design panel, round 2, 2026-10-13): the S's angle carried through their crossbars.
+const TILTED = G.PER.map((q, i) => ({ ...q, ...(i === 2 || i === 4 ? { tilt: 1 } : {}) }));
+/** A subpath's corners (path data of corners only), as [x, y]. */
+const ringOf = (d, k = 0) => polys(d)[k];
+
+test("the A's and the H's tilt: their crossbars fall at the S's blade's slope, a bar thick down, about the slot's centre", () => {
+  // Locked at 8 in 20: the A's counter floor 216 to 224 under its cut top 32 to 40, its notch's top 248 to 256;
+  // the H's crossbar the same, its upper slot ending on its higher edge, its lower starting on its lower.
+  const [, , A, , Hh] = G.letterPaths({ ...SQUARE, lock: 1, per: TILTED });
+  assert.equal(A, 'M260 0L344 0L344 472L312 472L312 256L292 248L292 472L260 472ZM312 40L292 32L292 216L312 224Z');
+  assert.equal(Hh, 'M468 0L500 0L500 216L520 224L520 0L552 0L552 472L520 472L520 256L500 248L500 472L468 472Z');
+  // Off, as PER has them, or no fall to take (level cuts locked, the Tilt slider at 0 free): as before.
+  assert.ok(!G.PER[2].tilt && !G.PER[4].tilt);
+  assert.equal(G.letters({ ...SQUARE, drop: 0, lock: 1, per: TILTED }), G.letters({ ...SQUARE, drop: 0, lock: 1 }));
+  assert.equal(G.letters({ ...SQUARE, per: TILTED }), G.letters(SQUARE));
+  // One angle through S, A, S, H: locked, every sloped side of the word at the cuts' slope, for every slope and
+  // rise; the A's three (its cut top, its counter's floor, its notch's top), the H's two. Free, every side at the
+  // Tilt slider's fall across an S: 42 across 84.
+  for (const rise of [0, 24, 48]) for (const drop of G.DROPS) {
+    const p = { ...SQUARE, drop, rise, lock: 1, per: TILTED }, L = G.letterPaths(p), b = G.block(p);
+    assert.deepEqual(slopes(L.join('')).filter((k) => Math.abs(k - drop) > 1e-9), [], `rise ${rise} drop ${drop}`);
+    assert.deepEqual([slopes(L[2]).length, slopes(L[4]).length], drop ? [3, 2] : [0, 0]);
+    // On the grid of 4 where half the cut's fall is (8 and 16 in 20).
+    if (drop === 0.4 || drop === 0.8) for (const q of polys(L[2] + L[4])) assert.deepEqual(q.flat().filter((n) => n % 4), [], `rise ${rise} drop ${drop}`);
+    // A bar thick, measured down, at both sides of the slot; centred on the crossbars' height at the slot's centre.
+    const H = ringOf(L[4]), x = b.c(9), y = (X, top) => H.find(([u, v]) => u === X && (top ? v < b.mid : v > b.mid) && v !== 0 && v !== b.H)[1];
+    for (const X of [x - b.s, x + b.s]) assert.equal(y(X, false) - y(X, true), G.BAR);
+    assert.equal((y(x - b.s, true) + y(x + b.s, true)) / 2, b.mid - G.BAR / 2);
+    // The A's counter as tall as it was at the slot's centre, a trapezoid between its cut top and its floor.
+    const [, counter] = polys(L[2]), [flat] = [polys(G.letterPaths({ ...SQUARE, drop, rise, lock: 1 })[2])[1]];
+    const centre = (r) => (r[2][1] + r[3][1]) / 2 - (r[0][1] + r[1][1]) / 2;
+    assert.equal(centre(counter), centre(flat));
+  }
+  const free = G.letterPaths({ ...SQUARE, drop: 0, tilt: 42, per: TILTED });
+  assert.deepEqual([...new Set(slopes(free.join('')))], [0.5]);
+  assert.match(free[4], /L500 215L520 225L/);
+  // Risen, they pivot at the risen height, with the S's blade.
+  assert.match(G.letterPaths({ ...SQUARE, rise: 24, lock: 1, per: TILTED })[4], /L500 192L520 200L/);
+});
+
+test("tilted, the A and the H hold every slope in every proportion: nothing crosses, the A's counter keeps a slot at its left", () => {
+  const looks = [{ round: 0, outer: 0, cut: 0 }, { cut: 20, tips: 1, outer: 64, tension: 0.6 }, { corners: 1, endRound: 200, innerRound: 16, outer: 64, tension: 0.6 }];
+  for (const stem of [32, 200]) for (const slot of [8, 60]) for (const height of [240, 720]) for (const ceil of [16, 160]) for (const rise of [0, 48])
+    for (const [lock, drop, tilt] of [[1, 1, 0], [1, 0.4, 0], [0, 0, 160], [0, 1, 160]]) for (const look of looks) for (const both of [0, 1]) for (const lowerA of [0, 999]) {
+      const per = TILTED.map((q, i) => (i === 4 ? { ...q, both } : q));
+      const p = { ...G.SLANT, ...look, stem, stroke: slot, height, ceil, rise, lock, drop, tilt, per, lower: [0, 0, lowerA, 0] };
+      const why = JSON.stringify({ stem, slot, height, ceil, rise, lock, drop, tilt, both, lowerA, ...look });
+      const L = G.letterPaths(p);
+      assert.equal(crossingFlat(L[2], 2), null, why);
+      assert.equal(crossingFlat(L[4], 2), null, why);
+      if (look.round === 0) {
+        // The counter's left side, the shorter: a slot at least (and the cut's fall), lowered or not.
+        const [, c] = polys(L[2]), b = G.block(p), left = c.filter(([x]) => x === b.c(5) - b.s).map(([, y]) => y);
+        assert.ok(Math.max(...left) - Math.min(...left) >= slot - 1e-6, why);
+        // The H's crossbar's high corner under the top, its low corner over the base.
+        const H = ringOf(L[4]).filter(([x, y]) => Math.abs(x - b.c(9)) === b.s && y > 0 && y < b.H).map(([, y]) => y);
+        assert.ok(Math.min(...H) >= G.BAR / 4 && Math.max(...H) <= b.H - G.BAR / 4, why);
+      }
+    }
+});
+
+test("the chapter's Letters table: a Tilt for the A and the H, off; on, the wordmark, Down and the lockup carry the angle, the S M as it was", () => {
+  const reset = () => { for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value)); };
+  reset();
+  const K2 = Object.fromEntries(C.KNOBS.map((k) => [k.key, k])), letters = K2.per;
+  assert.deepEqual([0, 1, 2, 3, 4].map((i) => letters.has('tilt', i)), [true, false, true, true, true]);
+  assert.deepEqual([2, 4].map((i) => letters.on('tilt', i)), [false, false]);
+  K2.lock.set(1); K2.slope.set(8);
+  const fns = ['wordmark', 'down', 'lockup', 'symbol', 's', 'lockupSM'], before = fns.map((f) => C[f]());
+  letters.set('tilt', 2, 1); letters.set('tilt', 4, 1);
+  assert.ok(C.wordmark().includes(G.letters({ ...PAGE, drop: 0.4, lock: 1, per: TILTED })));
+  assert.deepEqual(fns.map((f, i) => C[f]() === before[i]), [false, false, false, true, true, true]);
+  // Down's A and H tilt at their own stems (filled, wider than the wordmark's), at the same slope.
+  const D = G.down({ ...SQUARE, drop: 0.4, lock: 1, per: TILTED, downFit: 'fill' });
+  assert.deepEqual([...new Set(slopes(D.d).map((k) => +k.toFixed(9)))], [0.4]);
+  reset();
+  assert.equal(C.wordmark(), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 992 472" ><path fill="currentColor" fill-rule="evenodd" d="${G.letters({ ...G.SLANT, ...C.START })}"/></svg>`);
+});

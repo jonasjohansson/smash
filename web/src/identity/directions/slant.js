@@ -110,7 +110,9 @@ export const KNOBS = [
   // wordmark's height, stems and gap, so a crop of it; the extended S M as it
   // was (geometry.js: symbolCells). The lockup and the favicons follow it.
   choice('symbol', 'Symbol', [['Extended', 'extended'], ['Cells', 'cells']], START.symbol),
-  // Each letter's own switches (geometry.js: PER): a button where the letter has the setting.
+  // Each letter's own switches (geometry.js: PER): a button where the letter has the setting. The A's and the
+  // H's Tilt (the design panel, round 2, 2026-10-13; off) carry the S's blade's angle through their crossbars
+  // (geometry.js: barFall), one angle through S, A, S, H without a slash.
   {
     key: 'per', label: 'Letters', letters: ['S', 'M', 'A', 'S', 'H'],
     rows: [['cut', 'Cut'], ['round', 'Round'], ['base', 'Base'], ['both', 'Both sides'], ['tilt', 'Tilt'], ['split', 'Split'], ['open', 'Open'], ['dip', 'Dip']],
