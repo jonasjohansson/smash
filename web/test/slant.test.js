@@ -115,7 +115,7 @@ test('the chapter gives every still as plain vector', () => {
   }
   for (const n of [16, 32, 64]) assert.match(C.favicon({ size: n }), new RegExp(`viewBox="0 0 ${n} ${n}"`));
   // At Jonas's settings: 11 stems of 72, 10 slots of 24; the A dips 8.
-  assert.deepEqual(C.START, { cut: 20, drop: 0.4, stem: 72, stroke: 24, space: 24, height: 472, outer: 36, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 8, downFit: 'wider' });
+  assert.deepEqual(C.START, { cut: 20, drop: 0.4, stem: 72, stroke: 24, space: 24, ceil: 32, height: 472, outer: 36, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 8, downFit: 'wider' });
   assert.match(C.wordmark(), /viewBox="0 0 1032 480"/);
   assert.equal(C.wordmark(), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1032 480" ><path fill="currentColor" fill-rule="evenodd" d="${G.letters({ ...G.SLANT, ...C.START })}"/></svg>`);
   assert.equal(C.info.slug, 'slant');
@@ -123,7 +123,7 @@ test('the chapter gives every still as plain vector', () => {
 
 test('the sliders draw every still at their measures, and back', () => {
   const { slope, stem, height } = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
-  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'height', 'outer', 'tension', 'tilt', 'dip', 'split', 'a', 'downFit', 'per']);
+  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'ceil', 'height', 'outer', 'tension', 'tilt', 'dip', 'split', 'a', 'downFit', 'per']);
   const at8 = C.wordmark();
   slope.set(12);
   const S0 = C.START;
@@ -250,4 +250,15 @@ test('Down fitted three ways: the M wider, the others filling its width, or the 
     assert.deepEqual([Math.min(...xs), Math.max(...xs)], [0, D.w], f); // every fit fills its column's edges
   }
   assert.throws(() => at('stretch'), /no fit called stretch/);
+});
+
+test("the ceiling: the bars over the slots' top ends and under their bottom ends thicken, the crossbars stay", () => {
+  const at = (ceil) => G.letterPaths({ ...SQUARE, ceil });
+  assert.equal(G.letters({ ...SQUARE, ceil: 32 }), G.letters(SQUARE));
+  assert.match(at(80)[1], /L208 88L188 80L188 472/); // the M's slot ends 80 down, cut 8
+  assert.match(at(80)[2], /M312 88L292 80L292 220L312 220Z/); // the A's counter from 80 to the crossbar
+  assert.deepEqual(G.block({ ...G.SLANT, ceil: 80 }).bands, [0, 80, 220, 252, 392, 472]);
+  for (const q of polys(G.letters({ ...SQUARE, ceil: 80 }))) assert.deepEqual(q.flat().filter((n) => n % 4), []);
+  assert.equal(G.block({ ...G.SLANT, ceil: 120, height: 240 }).H, 352); // the block grows to fit its slots: 2 × 120 + 32 + 3 × 20 + 2 × 8, to the 8
+  assert.ok(G.down({ ...G.SLANT, ceil: 64 }).h > G.down(G.SLANT).h); // and Down's letters with it
 });

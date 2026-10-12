@@ -42,7 +42,7 @@ const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${ru
 // there's a bit of edge and drama to these corners").
 // Where they start, and what the files are made at: Jonas's, 2026-10-12
 // ("these default settings look fine"), the A a capital that dips.
-export const START = { cut: 20, drop: DROP, stem: 72, stroke: 24, space: 24, height: H, outer: 36, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: DIP, downFit: 'wider' };
+export const START = { cut: 20, drop: DROP, stem: 72, stroke: 24, space: 24, ceil: BAR, height: H, outer: 36, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: DIP, downFit: 'wider' };
 const at = { ...START, per: PER.map((q) => ({ ...q })) };
 const knob = (key, label, min, max, step, value, text, set) => ({ key, label, min, max, step, value, text, set: (v) => set(Number(v)) });
 /** A switch between a few options (the page draws a button for each): [label, value]. */
@@ -57,6 +57,7 @@ export const KNOBS = [
   knob('stem', 'Stem', BAR, 200, 4, START.stem, (v) => `${v}`, (v) => { at.stem = v; }),
   knob('slot', 'Slot', 8, 60, 4, START.stroke, (v) => `${v}`, (v) => { at.stroke = v; }),
   knob('space', 'Gap', 8, 80, 4, START.space, (v) => `${v}`, (v) => { at.space = v; }),
+  knob('ceil', 'Ceiling', 16, 160, 4, START.ceil, (v) => `${v}`, (v) => { at.ceil = v; }),
   knob('height', 'Height', 240, 720, 8, START.height, (v) => `${v}`, (v) => { at.height = v; }),
   knob('outer', 'Round', 0, 64, 4, START.outer, (v) => `${v}`, (v) => { at.outer = v; }),
   knob('tension', 'Tension', 55, 100, 5, START.tension * 100, (v) => `${v}%`, (v) => { at.tension = v / 100; }),
@@ -111,7 +112,7 @@ export const sSquare = () => alone({ wide: 1 });
 const CAP = 32;
 export function lockup() {
   const b = box();
-  const L = lockPaths([['studio', CAP], ['middle', b.bands[3]], ['stockholm', b.H]], CAP, b.W + PITCH);
+  const L = lockPaths([['studio', b.bands[1]], ['middle', b.bands[3]], ['stockholm', b.H]], CAP, b.W + PITCH);
   return svg(L.width, b.H + depth(now()), path(mark()) + path(L.d, 'nonzero'));
 }
 export function lockupSM() {

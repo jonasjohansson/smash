@@ -88,11 +88,15 @@ export function block(p = SLANT) {
   // thickness, but change the gap"); as wide as the slots unless set.
   const widths = Array.from({ length: 10 }, (_, i) => (GAPS.includes(i) ? gap : slot));
   const lefts = widths.reduce((e, w, i) => [...e, e[i] + w + stem], [stem]);
-  // At least tall enough that a slot's top end stays half a slot above its bend: 172 at the original's slots.
-  const least = Math.ceil((3 * BAR + 3 * slot + 2 * cutOf(p.drop ?? DROP, slot)) / 8) * 8;
+  // The bars over the slots' top ends and under their bottom ends (p.ceil,
+  // Jonas 2026-10-12: "lower the gaps, ie increase the ceiling"); the
+  // crossbars stay a bar.
+  const ceil = p.ceil ?? BAR;
+  // At least tall enough that a slot's top end stays half a slot above its bend: 176 at the original's slots.
+  const least = Math.ceil((2 * ceil + BAR + 3 * slot + 2 * cutOf(p.drop ?? DROP, slot)) / 8) * 8;
   const h = Math.max(p.height ?? H, least);
   return {
-    s, stem, slot, gap,
+    s, stem, slot, gap, ceil,
     c: (i) => lefts[i] + widths[i] / 2, // the columns' centres, left to right: 42, 94 …
     left: (i) => lefts[i], right: (i) => lefts[i] + widths[i], // and their edges
     columns: widths.map((w, i) => [lefts[i], w]),
@@ -100,7 +104,7 @@ export function block(p = SLANT) {
     H: h,
     up: h / 2 - (BAR + slot) / 2, // the upper crossbar slot's centre: 210
     lo: h / 2 + (BAR + slot) / 2, // the lower one's: 262
-    bands: [0, BAR, h / 2 - BAR / 2, h / 2 + BAR / 2, h - BAR, h], // the bars down: 0 32 220 252 440 472
+    bands: [0, ceil, h / 2 - BAR / 2, h / 2 + BAR / 2, h - ceil, h], // the bars down: 0 32 220 252 440 472
   };
 }
 
@@ -122,11 +126,11 @@ export const PER = [
 const per = (p, i) => ({ ...PER[i], ...(p.per?.[i] ?? {}) });
 
 export function letterPaths(p = SLANT) {
-  const { s, c, left, right, up, lo, W, H, stem, slot } = block(p);
+  const { s, c, left, right, up, lo, W, H, stem, slot, ceil } = block(p);
   if (!CASES.includes(p.a ?? 'A')) throw new Error(`slant: no a called ${p.a}`);
   const bar = BAR;
-  const hi = bar; // 32: a top end's high corner, where the round tip was
-  const low = H - bar; // 440: a bottom end's low corner
+  const hi = ceil; // 32: a top end's high corner, where the round tip was
+  const low = H - ceil; // 440: a bottom end's low corner
   // An outer corner, rounded at the tension; at most half a letter's width
   // across the top (two rounds share it), and the S's sides, to its bends.
   const R0 = Math.min(p.outer ?? 0, stem + slot / 2, up - s);
