@@ -71,12 +71,14 @@ export const KNOBS = [
   knob('tension', 'Tension', 55, 100, 5, START.tension * 100, (v) => `${v}%`, (v) => { at.tension = v / 100; }),
   // Two tiers of corners (the design panel, round 2, 2026-10-13: a machined slab, generous ends, tight break
   // edges inside): one, every corner the Round slider's, as it was; two, the word's four extreme corners
-  // (Down's top and feet, the S M's sides, the S alone's four) the Ends slider's, every other corner the
-  // Inside slider's, at the one tension. An end may pass a stem, sweeping across the slot head, as far as the
-  // letter holds it (geometry.js: rounds, ENDS). The frame follows the ends.
+  // (Down's top and feet, the S M's sides, the S alone's four) the Round ends slider's, every other corner
+  // the Round inside slider's, at the one tension. An end may pass a stem, sweeping across the slot head (the
+  // H's open slot onto its other stem), as far as the letter holds it, a mark's ends alike and its inner
+  // corners never past them (geometry.js: rounds, ENDS). The frame follows the ends. (Labelled apart from
+  // the tips' Ends switch: the design panel's review, round 2, 2026-10-13.)
   choice('corners', 'Corners', [['One', 0], ['Two', 1]], START.corners),
-  knob('endRound', 'Ends', 0, 200, 4, START.endRound, (v) => `${v}`, (v) => { at.endRound = v; }),
-  knob('innerRound', 'Inside', 0, 64, 4, START.innerRound, (v) => `${v}`, (v) => { at.innerRound = v; }),
+  knob('endRound', 'Round ends', 0, 200, 4, START.endRound, (v) => `${v}`, (v) => { at.endRound = v; }),
+  knob('innerRound', 'Round inside', 0, 64, 4, START.innerRound, (v) => `${v}`, (v) => { at.innerRound = v; }),
   knob('tilt', 'Tilt', 0, 160, 4, START.tilt, (v) => `${v}`, (v) => { at.tilt = v; }),
   // One governing angle (the design panel, round 1, 2026-10-12): locked, every
   // S's crossbar falls at the cuts' slope, across its own width (geometry.js:

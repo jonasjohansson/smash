@@ -149,8 +149,10 @@ const lined = (p, q) => !!(q.split && p.split && p.blade === 'line');
  * p.innerRound, each following p.outer where unset, at the one tension. Which
  * corners are the ends, by p.ends, a letter's clockwise from its top left (0:
  * none): the word's, the first S's left and the H's right; Down's, its top
- * S's top and its H's feet; the S M from the wordmark's cells, its S's left and
- * its M's right. Off, every corner rounds p.outer, as it was.
+ * S's top and its H's feet (both, whatever its Both switch says); the S M
+ * from the wordmark's cells, its S's left and its M's right (its foot as its
+ * Base switch says). A mark's ends round alike (markHeld), and its inner
+ * corners never past them. Off, every corner rounds p.outer, as it was.
  */
 export const ENDS = {
   word: [[1, 0, 0, 1], 0, 0, 0, [0, 1, 1, 0]],
@@ -172,6 +174,47 @@ const tiers = (p) => (p.corners ? { end: p.endRound ?? p.outer ?? 0, inner: p.in
 const clear = (a, b, keep = 0) => keep + Math.max(0, a - keep) + Math.max(0, b - keep) + Math.sqrt(2 * Math.max(0, a - keep) * Math.max(0, b - keep));
 
 /**
+ * A corner's round at tension k (poly's), as a cubic one unit across: in from
+ * the corner u along the side it leaves and v down the side it meets, from
+ * (1, 0) to (0, 1), its handles k of the way to the corner. bez a cubic's
+ * point at t; tAt where its coordinate j (running one way) reaches c; piece
+ * its part from t0 to t1, as its four points.
+ */
+const unitRound = (k) => [[1, 0], [1 - k, 0], [0, 1 - k], [0, 1]];
+const bez = (Q, t) => { const u = 1 - t; return [0, 1].map((j) => u * u * u * Q[0][j] + 3 * u * u * t * Q[1][j] + 3 * u * t * t * Q[2][j] + t * t * t * Q[3][j]); };
+function tAt(Q, j, c) {
+  const up = Q[3][j] > Q[0][j];
+  if (up ? c <= Q[0][j] : c >= Q[0][j]) return 0;
+  if (up ? c >= Q[3][j] : c <= Q[3][j]) return 1;
+  let lo = 0, hi = 1;
+  for (let n = 0; n < 60; n++) { const m = (lo + hi) / 2; if ((bez(Q, m)[j] < c) === up) lo = m; else hi = m; }
+  return (lo + hi) / 2;
+}
+const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+const split = ([a, b, c, d], t) => { const ab = lerp(a, b, t), bc = lerp(b, c, t), cd = lerp(c, d, t), m = lerp(ab, bc, t), n = lerp(bc, cd, t), e = lerp(m, n, t); return [[a, ab, m, e], [e, n, cd, d]]; };
+const piece = (Q, t0, t1) => { const R = t0 > 0 ? split(Q, t0)[1] : Q; return t1 < 1 ? split(R, (t1 - t0) / (1 - t0))[0] : R; };
+
+/** How deep a round r at tension k cuts d in from the side it meets (0 past its reach). */
+function cutAt(r, d, k) {
+  if (d >= r) return 0;
+  const Q = unitRound(k);
+  return r * bez(Q, tAt(Q, 0, d / r))[1];
+}
+
+/**
+ * The largest round at tension k that cuts at most deep, d in from the side
+ * it meets (at least d, which cuts nothing there): the deeper the larger,
+ * so found by halving.
+ */
+function reachTo(d, deep, k) {
+  if (deep <= 0) return d;
+  let lo = d, hi = 2 * d + 2 * deep;
+  while (cutAt(hi, d, k) <= deep && hi < 1e6) hi *= 2;
+  for (let n = 0; n < 60; n++) { const m = (lo + hi) / 2; if (cutAt(m, d, k) <= deep) lo = m; else hi = m; }
+  return lo;
+}
+
+/**
  * End corner k (clockwise from the top left) of letter i: how far it rounds,
  * at most (two tiers). Unlike the inner corners' it may pass a stem: then it
  * sweeps across the letter's slot head, as far as the outline holds it
@@ -179,18 +222,25 @@ const clear = (a, b, keep = 0) => keep + Math.max(0, a - keep) + Math.max(0, b -
  * end. An S's top and base are shared with the corner across them, its sides
  * run to its crossbar slots (the long one, beside the blade's end, room for it
  * level: the blade gives way, fallOf); the M's and the H's sides run the
- * height, shared with the corner along them; an open S's or an H's corner
- * stands on one stem. R the letter's other corners, E which are ends.
+ * height, shared with the corner along them. The H's slots are open at its
+ * top and its base, so its end sweeps on over the slot onto its other stem
+ * (the design panel's review, round 2, 2026-10-13: at one stem, the word's
+ * right ends were half its left), trimming that stem's corner from the same
+ * centre (Hh); it is shared with the corner across the H, and its own stem's
+ * inner side keeps a quarter of a bar beside the crossbar. An open S's or
+ * the M's foot stands on one stem. R the letter's other corners, E which are
+ * ends.
  */
 function endMost(p, i, k, R, E) {
-  const { stem, slot, ceil, H, mid, rise, s } = block(p), q = per(p, i);
+  const { stem, slot, ceil, H, mid, rise, s, up, lo } = block(p), q = per(p, i);
   const h = holdOf(p, i), sv = h ? h.sv : s, keep = BAR / 4;
   const S = i === 0 || i === 3, open = S && !!q.open, w = i === 1 ? 3 * stem + 2 * slot : 2 * stem + slot;
   const d = !open && q.cut ? cutOf(p.drop ?? DROP, slot, p.grid) : 0;
   const across = [1, 0, 3, 2][k], along = [3, 2, 1, 0][k];
   const share = (n, length) => (E[n] ? length / 2 : length - R[n]); // a side two corners round
   const most = [];
-  if (i === 4 || open || (i === 1 && k > 1)) most.push(stem); // on one stem (a foot): a slot runs out beside it
+  if (i === 4) most.push(share(across, w), reachTo(stem, (k < 2 ? up + s : H - lo + s) - keep, p.tension ?? TENSION));
+  else if (open || (i === 1 && k > 1)) most.push(stem); // on one stem (a foot): a slot runs out beside it
   else {
     most.push(share(across, w));
     // The slot head beside the corner, its ends ceil and ceil + d from the top or the base: its high corner
@@ -210,21 +260,17 @@ function endMost(p, i, k, R, E) {
 }
 
 /**
- * Letter i's outer corners' rounds, as its switches have them: Rr at its top,
- * Rb at its base. At most half a letter's width across the top (two rounds
- * share it) and the S's sides to its bends; where a corner stands on one stem
- * (a foot, the H, an open S's arms), at most a stem. radii, all four,
- * clockwise from the top left (the box a frame's cell follows): the H's right
- * corners, its left with both; the a's stem square at its top, its bowl's
- * corner with its top. In two tiers (tiers), Rr and Rb are the inner corners',
- * and the ends (endMost) round on their own.
+ * Letter i's corners in one tier, or its inner corners in two, each at most
+ * cap: Rr at its top, Rb at its base, radii all four (rounds); ends, which
+ * of its corners are the mark's ends and drawn (ENDS: an H's left ones as its
+ * right ones, whatever Both says, as they are the mark's extreme corners).
  */
-export function rounds(p, i) {
+function innerOf(p, i, cap = Infinity) {
   const { s, up, lo, H, stem, slot, ceil } = block(p);
   // Held (holdOf), an S's corners at most till its grown crossbar slots: its top one's top, the shorter side.
   const h = holdOf(p, i);
   const T = tiers(p);
-  const R0 = Math.min(T ? T.inner : p.outer ?? 0, stem + slot / 2, up - s, H - lo - s, h ? h.top : Infinity); // (risen, the upper side the shorter)
+  const R0 = Math.min(T ? T.inner : p.outer ?? 0, cap, stem + slot / 2, up - s, H - lo - s, h ? h.top : Infinity); // (risen, the upper side the shorter)
   const q = per(p, i);
   const legs = i === 1 || i === 2 || i === 4; // the M, the A and the H stand on stems
   // The M's top corners pass over its slots' tops only where the round stays above them: a round R over a stem t
@@ -236,14 +282,44 @@ export function rounds(p, i) {
   const lower = i === 2 && p.a === 'a';
   const on = i === 4 ? [q.both && q.round, q.round, q.base, q.both && q.base] : lower ? [q.round, 0, q.base, q.round] : [q.round, q.round, q.base, q.base];
   const radii = on.map((o, k) => (o ? (k < 2 || (lower && k === 3) ? Rr : Rb) : 0));
-  const E = T && ENDS[p.ends ?? 'word']?.[i];
-  if (E && !lower) {
-    // The ends, each at most what the letter's outline holds, the inner corners as they are; a letter's two
-    // alike, as one tier rounds an S's four (a short S's top right stops at its crossbar slot: Down's left too).
-    const ks = [0, 1, 2, 3].filter((k) => E[k] && on[k]);
-    const end = Math.min(T.end, ...ks.map((k) => endMost(p, i, k, radii, E)));
-    for (const k of ks) radii[k] = end;
-  }
+  const E = T && !lower && ENDS[p.ends ?? 'word']?.[i];
+  const drawn = i === 4 ? [q.round, q.round, q.base, q.base] : on;
+  return { Rr, Rb, radii, E, ends: E ? [0, 1, 2, 3].filter((k) => E[k] && drawn[k]) : [] };
+}
+
+/** How far letter i's ends round at most, the least any of them holds (endMost; Infinity with none). */
+function endHeld(p, i) {
+  const { radii, E, ends } = innerOf(p, i);
+  return Math.min(...ends.map((k) => endMost(p, i, k, radii, E)));
+}
+
+/**
+ * How far the mark's ends round at most, all alike (as one tier rounds an
+ * S's four; the design panel's review, round 2, 2026-10-13: the word's left
+ * ends 148 and its right 72, Down's top 56 and its feet 118): the least its
+ * letters' ends hold. p.endCap where the mark sets it (Down, the S M from the
+ * cells: their letters drawn each at its own measures).
+ */
+const markHeld = (p) => p.endCap ?? Math.min(...(ENDS[p.ends ?? 'word'] ?? []).map((E, j) => (E ? endHeld(p, j) : Infinity)));
+
+/**
+ * Letter i's outer corners' rounds, as its switches have them: Rr at its top,
+ * Rb at its base. At most half a letter's width across the top (two rounds
+ * share it) and the S's sides to its bends; where a corner stands on one stem
+ * (a foot, the H, an open S's arms), at most a stem. radii, all four,
+ * clockwise from the top left (the box a frame's cell follows): the H's right
+ * corners, its left with both; the a's stem square at its top, its bowl's
+ * corner with its top. In two tiers (tiers), Rr and Rb are the inner corners',
+ * and the ends round on their own, the mark's all alike (markHeld). The inner
+ * corners round at most what the ends hold, so the outline never makes the
+ * ends the tighter (the design panel's review, round 2, 2026-10-13: thin
+ * stems, wide slots, ends 59.6 against inner corners of 62); set lower by
+ * hand, they are.
+ */
+export function rounds(p, i) {
+  const T = tiers(p), held = T ? markHeld(p) : Infinity;
+  const { Rr, Rb, radii, ends } = innerOf(p, i, held);
+  for (const k of ends) radii[k] = Math.min(T.end, held);
   return { Rr, Rb, radii };
 }
 
@@ -476,6 +552,36 @@ function sLetter({ L, x, xb = x, R, H, y = 0, s, sv = s, bar = BAR, d = 0, db = 
 }
 
 /**
+ * An H's top as poly's points, from its left side to its right (y down from
+ * the top), where an end passes its stem (two tiers: endMost): its corners'
+ * rounds rl (its left) and rr (its right) at tension k, each from its corner
+ * as poly's, carried on over the slot (a to b, open down to deep, the
+ * crossbar's top) onto the other stem where they reach, so the stem beyond
+ * is trimmed from the same centre and the H keeps one round across its
+ * width (the design panel's review, round 2, 2026-10-13). The two never
+ * meet (endMost: they share the top). Its base is the same, turned
+ * (turnAbout).
+ */
+function hEdge(L, R, a, b, rl, rr, k, deep) {
+  const U = unitRound(k);
+  const CL = U.map(([u, v]) => [L + v * rl, u * rl]), CR = U.map(([u, v]) => [R - u * rr, v * rr]); // each from its side across to its top, left to right
+  const at = (x) => (x < L + rl ? bez(CL, tAt(CL, 0, x))[1] : x > R - rr ? bez(CR, tAt(CR, 0, x))[1] : 0);
+  const C = (Q, x0, x1) => ['C', ...piece(Q, tAt(Q, 0, x0), tAt(Q, 0, x1)).slice(1).flat()];
+  // Along the top from x0 (drawn) to x1: the left round, the flat between them, the right round.
+  const run = (x0, x1) => {
+    const out = [];
+    if (x0 < L + rl && x0 < x1) { const e = Math.min(x1, L + rl); out.push(C(CL, x0, e)); x0 = e; }
+    if (x0 < R - rr && x0 < x1) { const e = Math.min(x1, R - rr); out.push([e, 0]); x0 = e; }
+    if (x0 < x1) out.push(C(CR, x0, x1));
+    return out;
+  };
+  return [[L, rl], ...run(L, a), [a, deep], [b, deep], [b, at(b)], ...run(b, R)];
+}
+
+/** poly's point q (a corner, or a curve's three) turned a half turn about the centre of w × h. */
+const turnAbout = (q, w, h) => (q[0] === 'C' ? ['C', ...q.slice(1).map((v, j) => (j % 2 ? h - v : w - v))] : [w - q[0], h - q[1], ...q.slice(2)]);
+
+/**
  * The letters as path data, one closed outline each (the A's counter a
  * second subpath): S, M, A, S, H. only, when given, draws that letter
  * alone (the others empty): Down draws each letter at its own stems, and a
@@ -569,10 +675,14 @@ export function letterPaths(p = SLANT, only = null) {
     + poly([[x + s, k.hi + k.d, k.r], [x - s, k.hi, k.r2], [x - s, H - swoop - bar - k.d, k.r], [x + s, H - swoop - bar, k.r2]]);
 
   // The H, as the original's; its right corners, the word's, rounded (its left square unless both: rounds).
-  const Hh = (L, x, R, { o, ob }) => poly([
+  // An end past its stem (two tiers: endMost) sweeps on over its open slot: hEdge draws it.
+  const Hh = (L, x, R, { o, ob, radii }) => (radii.some((r) => r > stem) ? poly([
+    ...hEdge(L, R, x - s, x + s, radii[0], radii[1], p.tension ?? TENSION, up + s),
+    ...hEdge(L, R, x - s, x + s, radii[2], radii[3], p.tension ?? TENSION, H - lo + s).map((q) => turnAbout(q, L + R, H)),
+  ]) : poly([
     o(L, 0), [x - s, 0], [x - s, up + s], [x + s, up + s], [x + s, 0], o(R, 0),
     ob(R, H), [x + s, H], [x + s, lo - s], [x - s, lo - s], [x - s, H], ob(L, H),
-  ]);
+  ]));
 
   // How far each kind of letter's slot ends can come in: an S's to half a
   // slot from its bends (both ends come in alike, so as far as the shorter
@@ -833,9 +943,14 @@ export function down(p = SLANT) {
   const w = fit === 'wider' ? Math.max(...widths) : width(fit === 'squeeze' ? 2 : 3, stem);
   let y = 0, d = '';
   const boxes = [];
-  STEMS.forEach((n, i) => {
+  const rs = STEMS.map((n, i) => {
     const t = fit === 'wider' ? stem : (w - (n - 1) * slot) / n; // this letter's stems
-    const r = fit === 'squeeze' && (i === 0 || i === 3) ? held({ ...q, stem: t }, i) : fit === 'squeeze' && i === 1 ? { ...q, ...squeezeM(w, slot) } : { ...q, stem: t };
+    return fit === 'squeeze' && (i === 0 || i === 3) ? held({ ...q, stem: t }, i) : fit === 'squeeze' && i === 1 ? { ...q, ...squeezeM(w, slot) } : { ...q, stem: t };
+  });
+  // In two tiers, its ends alike, each letter at its own measures: the least they hold (markHeld).
+  const endCap = tiers(q) ? Math.min(...rs.map((r, i) => endHeld(r, i))) : undefined;
+  STEMS.forEach((n, i) => {
+    const r = { ...rs[i], endCap };
     const b = block(r), lw = width(n, r.stem, r.stroke), x = (w - lw) / 2;
     const x0 = [0, b.right(1), b.right(4), b.right(6), b.right(8)][i];
     d += move(letterPaths(r, i)[i], x - x0, y);
@@ -941,8 +1056,11 @@ export function symbol({ cols = SYM_COLS, rows = SYM_ROWS, x = 0, y = 0, stop = 
  * the S's then the M's, and its slots and its gap, as [left, width].
  */
 export function symbolCells(p = SLANT) {
-  const S = held({ ...p, ends: 'cells' }, 0), b = block(S), { stem, slot, gap } = b, sw = 2 * stem + slot; // in two tiers, its S's left and its M's right the ends (ENDS)
-  const M = { ...S, ...squeezeM(sw, slot), height: b.H }, m = block(M), dx = sw + gap - m.right(1);
+  const S0 = held({ ...p, ends: 'cells' }, 0), b = block(S0), { stem, slot, gap } = b, sw = 2 * stem + slot; // in two tiers, its S's left and its M's right the ends (ENDS)
+  const M0 = { ...S0, ...squeezeM(sw, slot), height: b.H };
+  // In two tiers, its ends alike, the M at its own stems: the least the two hold (markHeld).
+  const endCap = tiers(S0) ? Math.min(endHeld(S0, 0), endHeld(M0, 1)) : undefined;
+  const S = { ...S0, endCap }, M = { ...M0, endCap }, m = block(M), dx = sw + gap - m.right(1);
   const d = letterPaths(S, 0)[0] + move(letterPaths(M, 1)[1], dx, 0);
   return {
     d, w: 2 * sw + gap, h: b.H, bands: b.bands,

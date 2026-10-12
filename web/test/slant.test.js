@@ -1160,8 +1160,8 @@ const inside = (d, w, h) => [...d.matchAll(/[MLC]([^MLCAZ]*)/g)].map(([, a]) => 
 
 test("two tiers: the word's four extreme corners round the ends, every other corner the inside; off, as it was", () => {
   const two = { ...PAGE, corners: 1, endRound: 128, innerRound: 24 };
-  assert.deepEqual([0, 1, 2, 3, 4].map((i) => G.letterRadii(two, i)), [[128, 24, 24, 128], [24, 24, 0, 0], [24, 24, 0, 0], [24, 24, 24, 24], [0, 72, 72, 0]]); // the H's at most a stem
-  assert.deepEqual(G.wordRadii(two), [128, 72, 72, 128]);
+  assert.deepEqual([0, 1, 2, 3, 4].map((i) => G.letterRadii(two, i)), [[128, 24, 24, 128], [24, 24, 0, 0], [24, 24, 0, 0], [24, 24, 24, 24], [0, 128, 128, 0]]); // the H's as the S's, over its slot
+  assert.deepEqual(G.wordRadii(two), [128, 128, 128, 128]);
   const L = G.letterPaths(two);
   assert.match(L[0], /^M0 128C0 51\.2 51\.2 0 128 0L140 0C/); // the S's top left 128 at 60%, its top right 24 (164 less 140)
   assert.equal(L[0].match(/C/g).length, 4);
@@ -1170,12 +1170,14 @@ test("two tiers: the word's four extreme corners round the ends, every other cor
   assert.equal(G.letters({ ...PAGE, corners: 1, endRound: 64, innerRound: 64 }), G.letters(PAGE));
   assert.equal(G.letters({ ...PAGE, corners: 1, endRound: undefined, innerRound: undefined }), G.letters(PAGE)); // unset, each follows outer
   // Only the corners change: every other point as one tier has it, on the grid of 4 (the cuts square, 8 in 20).
-  const sq = { ...PAGE, cut: 0, drop: 0.4 }, b = G.block(sq);
+  // The H's ends pass its stem, so its round also meets its slot's sides (72 and 92 across), off the grid.
+  const sq = { ...PAGE, cut: 0, drop: 0.4 }, b = G.block(sq), w = 2 * b.stem + b.slot;
   for (const i of [0, 4]) {
     const [one, tw] = [sq, { ...sq, corners: 1, endRound: 160, innerRound: 16 }].map((p) => G.move(G.letterPaths(p)[i], -(i ? b.right(8) : 0), 0));
-    const pts = inside(tw, 2 * b.stem + b.slot, b.H);
+    const pts = inside(tw, w, b.H).filter((q) => !(i && [b.stem, b.stem + b.slot].includes(+q.split(',')[0]) && !inside(one, w, b.H).includes(q)));
+    assert.equal(inside(tw, w, b.H).length - pts.length, i ? 4 : 0);
     assert.ok(pts.length >= (i ? 4 : 10), `${pts.length}`); // the H's crossbar, the S's slots and bends
-    assert.deepEqual(pts, inside(one, 2 * b.stem + b.slot, b.H));
+    assert.deepEqual(pts, inside(one, w, b.H));
     assert.deepEqual(pts.flatMap((q) => q.split(',').map(Number)).filter((n) => n % 4), []);
   }
   assert.deepEqual(slopes(G.letters({ ...SQUARE, drop: 0.4, corners: 1, endRound: 0, innerRound: 0 })).filter((s) => s !== 0.4), []);
@@ -1192,28 +1194,42 @@ test("an end may pass a stem: across its slot head, as far as the S holds it, a 
   assert.equal(crossingFlat(G.letterPaths(t)[0]), null);
   // The slot head's high corner (32, 16) stays 8 inside the round's circle (the 60% curve lies outside it).
   assert.ok(Math.abs(Math.hypot(tl - 32, tl - 16) - (tl - 8)) < 1e-9);
-  // The H's ends stand on one stem; its two share its side.
-  assert.deepEqual(G.letterRadii({ ...PAGE, corners: 1, endRound: 200, innerRound: 24 }, 4), [0, 72, 72, 0]);
-  assert.deepEqual(G.letterRadii({ ...PAGE, corners: 1, endRound: 200, innerRound: 24, stem: 200, height: 240 }, 4), [0, 120, 120, 0]); // half its 240
-  // Every proportion, every end: no outline crosses itself.
-  for (const stem of [32, 72, 200]) for (const slot of [8, 60]) for (const ceil of [16, 160]) for (const innerRound of [0, 64]) {
-    const p = { ...PAGE, corners: 1, endRound: 200, innerRound, stem, stroke: slot, ceil, tension: 0.55 }, at = JSON.stringify({ stem, slot, ceil, innerRound });
-    const L = G.letterPaths(p);
+  // The word's ends alike: the H's as the S's (the S's top shared with its 24 inside), and the S's sides holding both
+  // where the H is short and its stems wide.
+  assert.deepEqual(G.letterRadii({ ...PAGE, corners: 1, endRound: 200, innerRound: 24 }, 4), [0, 140, 140, 0]);
+  assert.deepEqual(G.wordRadii({ ...PAGE, corners: 1, endRound: 200, innerRound: 24, stem: 200, height: 240 }), [84, 84, 84, 84]);
+  // Every proportion, every end: no outline crosses itself; the H's inner sides keep a quarter of a bar beside its
+  // crossbar where its round crosses them; the inner corners never round past the ends.
+  for (const stem of [32, 72, 200]) for (const slot of [8, 60]) for (const ceil of [16, 160]) for (const innerRound of [0, 64]) for (const rise of [0, 48]) {
+    const p = { ...PAGE, corners: 1, endRound: 200, innerRound, stem, stroke: slot, ceil, rise, tension: 0.55 }, at = JSON.stringify({ stem, slot, ceil, innerRound, rise });
+    const L = G.letterPaths(p), b = G.block(p), x = b.c(9);
     for (const i of [0, 4]) assert.equal(crossingFlat(L[i], 2), null, `${i} ${at}`);
+    for (const [X, Y] of polys(L[4]).flat().filter(([X, Y]) => Math.abs(Math.abs(X - x) - b.slot / 2) < 1e-9 && Y > 0 && Y < b.H)) {
+      assert.ok(Y <= b.up + b.slot / 2 - 8 + 0.01 || Y >= b.lo - b.slot / 2 + 8 - 0.01 || [b.up + b.slot / 2, b.lo - b.slot / 2].includes(Y), `${X} ${Y} ${at}`);
+    }
     assert.equal(crossingFlat(G.symbolCells(p).d, 2), null, `cells ${at}`);
+    const [e] = G.wordRadii(p);
+    assert.ok([0, 1, 2, 3, 4].every((i) => G.letterRadii(p, i).every((r) => r <= e)), at);
+    assert.ok(G.down(p).boxes.every(({ radii }) => radii.every((r) => r <= G.down(p).boxes[0].radii[0])), `down ${at}`);
   }
 });
 
 test("two tiers written down: the top S's top and the H's feet the ends, a letter's two alike; the S M's sides", () => {
   const two = { ...PAGE, corners: 1, endRound: 128, innerRound: 24 };
   const D = G.down(two);
-  // Down's S's are 184 tall: the top S's top right stops at its crossbar slot, 92 - 16 - 20, its top left with it.
-  assert.deepEqual(D.boxes.map((b) => b.radii), [[56, 56, 24, 24], [24, 24, 0, 0], [24, 24, 0, 0], [24, 24, 24, 24], [0, 24, 118, 0]]); // the H's left foot square (Both off)
+  // Down's S's are 184 tall: the top S's top right stops at its crossbar slot, 92 - 16 - 20, its top left with it,
+  // and the H's feet with them, a pair whatever its Both switch says (they are the column's extreme corners).
+  assert.deepEqual(D.boxes.map((b) => b.radii), [[56, 56, 24, 24], [24, 24, 0, 0], [24, 24, 0, 0], [24, 24, 24, 24], [0, 24, 56, 56]]);
   assert.equal(crossingFlat(D.d, 2), null);
-  // The S M from the wordmark's cells: its S's left, its M's right (over its slot's head, its foot square).
+  // Thin stems, wide: the S's top holds 52, and the H's feet take it past its stems of 32, each half its 104 across,
+  // sweeping over its slot from either side to meet at its middle; the column's frame with them.
+  const D2 = G.down({ ...PAGE, corners: 1, endRound: 200, innerRound: 24, stem: 32, stroke: 40, ceil: 44, downFit: 'wider' });
+  assert.deepEqual(D2.boxes.map((b) => b.radii), [[52, 52, 24, 24], [24, 24, 0, 0], [24, 24, 0, 0], [24, 24, 24, 24], [0, 24, 52, 52]]);
+  assert.equal(crossingFlat(D2.d, 2), null);
+  // The S M from the wordmark's cells: its S's left, its M's right (over its slot's head, its foot square), alike.
   const Y = G.symbolCells(two);
-  assert.deepEqual(Y.boxes[0].radii, [128, 24, 24, 128]);
   const [mtl, mtr, mbr, mbl] = Y.boxes[1].radii;
+  assert.deepEqual(Y.boxes[0].radii, [mtr, 24, 24, mtr]);
   assert.ok(mtl === 24 && mtr > 124 / 3 && mtr < 128 && mbr === 0 && mbl === 0, `${Y.boxes[1].radii}`);
   // The extended S M: its S's left and its M's right the ends, at most a bar.
   const e = G.symbol({ outer: 8, ends: 24 }), one = G.symbol({ outer: 8 });
@@ -1222,7 +1238,7 @@ test("two tiers written down: the top S's top and the H's feet the ends, a lette
   assert.equal(G.symbol({ outer: 8, ends: 8 }), one);
 });
 
-test("the chapter's Corners: two, every mark from the Ends and Inside sliders, the frame round the ends; one, as it was", () => {
+test("the chapter's Corners: two, every mark from the Round ends and Round inside sliders, the frame round the ends; one, as it was", () => {
   const K2 = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
   const reset = () => { for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value)); };
   reset();
@@ -1235,10 +1251,10 @@ test("the chapter's Corners: two, every mark from the Ends and Inside sliders, t
   assert.ok(C.down().includes(G.down(two).d));
   assert.ok(C.symbol().includes(G.symbol({ cols: G.symCols(72, 20), rows: G.symRows(20), cut: 12, drop: 0, outer: 16, ends: 160, tension: 0.6 })));
   assert.notEqual(C.favicon({ size: 32 }), fav);
-  // Framed, the ring round the ends: the word's 148 (its top shared with the 16 inside) and the H's 72.
-  assert.deepEqual(G.wordRadii(two), [148, 72, 72, 148]);
+  // Framed, the ring round the ends: the word's 148 (the S's top shared with the 16 inside), the H's alike.
+  assert.deepEqual(G.wordRadii(two), [148, 148, 148, 148]);
   K2.frame.set('1');
-  assert.ok(C.wordmark().includes(G.move(G.ring(992, 472, 20, 20, [148, 72, 72, 148], 0.6), 40, 40)));
+  assert.ok(C.wordmark().includes(G.move(G.ring(992, 472, 20, 20, [148, 148, 148, 148], 0.6), 40, 40)));
   assert.match(C.wordmark(), /M0 188C/); // its outside rounded 148 + 40
   const D = G.down(two);
   assert.ok(C.down().includes(G.move(G.ring(D.w, D.h, 20, 20, [D.boxes[0].radii[0], D.boxes[0].radii[1], D.boxes[4].radii[2], D.boxes[4].radii[3]], 0.6), 40, 40)));
@@ -1249,4 +1265,28 @@ test("the chapter's Corners: two, every mark from the Ends and Inside sliders, t
   K2.frame.set('0'); K2.symbol.set('extended');
   assert.deepEqual(['wordmark', 'wordmarkLower', 'down', 'symbol', 's', 'lockup', 'lockupSM'].map((fn) => C[fn]()), plain);
   reset();
+});
+
+test("an H's end past its stem sweeps over its open slot onto its other stem, one round from one centre", () => {
+  // At the page's measures, Round ends 160: the H's right ends 148, as the S's; its stems 72, its slot 20.
+  const p = { ...PAGE, corners: 1, endRound: 160, innerRound: 16 }, b = G.block(p), d = G.move(G.letterPaths(p)[4], -b.right(8), 0);
+  const k = 0.6, r = 148, w = 164, Q = [[w - r, 0], [w - r + k * r, 0], [w, r - k * r], [w, r]];
+  const at = (t) => [0, 1].map((j) => (1 - t) ** 3 * Q[0][j] + 3 * (1 - t) ** 2 * t * Q[1][j] + 3 * (1 - t) * t * t * Q[2][j] + t ** 3 * Q[3][j]);
+  const yAt = (x) => { let lo = 0, hi = 1; for (let n = 0; n < 60; n++) { const m = (lo + hi) / 2; if (at(m)[0] < x) lo = m; else hi = m; } return at(lo)[1]; };
+  // The left stem's top runs flat to 16 (164 less 148), then the round down to its inner side; the right stem's
+  // inner side from where the same round meets it, out to the H's side 148 down; the crossbar as it was.
+  assert.match(d, /^M0 0L16 0C[\d. ]+ 72 (\S+)L72 220L92 220L92 (\S+)C[\d. ]+ 164 148L164 324C/);
+  const [, y72, y92] = d.match(/^M0 0L16 0C[\d. ]+ 72 (\S+)L72 220L92 220L92 (\S+)C/).map(Number);
+  assert.ok(Math.abs(y72 - yAt(72)) < 0.01 && Math.abs(y92 - yAt(92)) < 0.01 && y92 < 220 - 8, `${y72} ${y92}`);
+  // Its base the same round, turned: where it meets the slot's sides as far from the base.
+  const [, z92, z72] = d.match(/L164 324C[\d. ]+ 92 (\S+)L92 252L72 252L72 (\S+)C[\d. ]+ 16 472L0 472Z$/).map(Number);
+  assert.deepEqual([b.H - z92, b.H - z72].map((v) => +v.toFixed(2)), [y92, y72]);
+  // At most a stem, the H as it was: its corners rounded by poly, its slot's sides straight to its top.
+  assert.match(G.letterPaths({ ...p, endRound: 72 })[4], /L900 0L900 220L920 220L920 0L920 0C/);
+});
+
+test("the two-tier sliders and the tips' switch are labelled apart: every control's label its own", () => {
+  const labels = C.KNOBS.map((k) => k.label).filter(Boolean);
+  assert.deepEqual(labels.filter((l, i) => labels.indexOf(l) !== i), []);
+  assert.deepEqual(['endRound', 'innerRound'].map((key) => C.KNOBS.find((k) => k.key === key).label), ['Round ends', 'Round inside']);
 });
