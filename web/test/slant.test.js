@@ -115,7 +115,7 @@ test('the chapter gives every still as plain vector', () => {
   }
   for (const n of [16, 32, 64]) assert.match(C.favicon({ size: n }), new RegExp(`viewBox="0 0 ${n} ${n}"`));
   // At Jonas's settings: 11 stems of 72, 10 slots and gaps of 20; no dip.
-  assert.deepEqual(C.START, { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: 472, rise: 0, outer: 64, tension: 0.6, tilt: 0, lock: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0, slashAt: 0, symbol: 'extended' });
+  assert.deepEqual(C.START, { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: 472, rise: 0, outer: 64, tension: 0.6, tilt: 0, lock: 0, split: 0, blade: 'step', a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0, slashAt: 0, symbol: 'extended' });
   assert.match(C.wordmark(), /viewBox="0 0 992 472"/);
   assert.equal(C.wordmark(), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 992 472" ><path fill="currentColor" fill-rule="evenodd" d="${G.letters({ ...G.SLANT, ...C.START })}"/></svg>`);
   assert.equal(C.info.slug, 'slant');
@@ -123,7 +123,7 @@ test('the chapter gives every still as plain vector', () => {
 
 test('the sliders draw every still at their measures, and back', () => {
   const { slope, stem, height } = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
-  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'ceil', 'height', 'rise', 'outer', 'tension', 'tilt', 'lock', 'dip', 'split', 'a', 'tips', 'frame', 'frameGap', 'frameWidth', 'slash', 'slashWidth', 'shift', 'slashAt', 'downFit', 'symbol', 'per', 'lower']);
+  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'ceil', 'height', 'rise', 'outer', 'tension', 'tilt', 'lock', 'dip', 'split', 'blade', 'a', 'tips', 'frame', 'frameGap', 'frameWidth', 'slash', 'slashWidth', 'shift', 'slashAt', 'downFit', 'symbol', 'per', 'lower']);
   const at8 = C.wordmark();
   slope.set(12);
   const S0 = C.START;
@@ -1066,4 +1066,89 @@ test("the cells favicons: built at favicon measures, every stem and slot on whol
     assert.ok(xs.slice(1).every((x, i) => x - xs[i] >= size / 16), at); // a pixel at 16 at least
   }
   reset();
+});
+
+/** The sloped sides of corners-only path data, each with its subpath: [[a, b], subpath index]. */
+const sloped = (d) => polys(d).flatMap((p, n) => p.map((a, i) => [[a, p[(i + 1) % p.length]], n])).filter(([[a, b]]) => a[0] !== b[0] && a[1] !== b[1]);
+/** Whether point c is on the line through a and b (the points are given to two places). */
+const onLine = ([a, b], c) => Math.abs((b[1] - a[1]) * (c[0] - a[0]) - (c[1] - a[1]) * (b[0] - a[0])) / Math.hypot(b[0] - a[0], b[1] - a[1]) < 0.01;
+/** As turned, to two places, as the points are given. */
+const turned2 = (d, w, h) => polys(d).map((p) => p.map(([x, y]) => `${+(w - x).toFixed(2)},${+(h - y).toFixed(2)}`).sort().join(' ')).sort();
+/** Whether every sloped side runs on, across a kerf, in another piece: one line through both. */
+const across = (d) => sloped(d).every(([s, n]) => sloped(d).some(([t, m]) => m !== n && onLine(s, t[0]) && onLine(s, t[1])));
+
+test("the split S's blade along one line: one straight cut across the kerf, its ends on the grid, the S the same upside down", () => {
+  const S = (q) => G.letterPaths({ ...SQUARE, drop: 0, tilt: 42, split: 1, ...q })[0];
+  assert.equal(S({ blade: 'step' }), S({})); // stepping, as it was
+  assert.throws(() => G.letterPaths({ ...G.SLANT, blade: 'curve' }), /no blade called curve/);
+  assert.ok(!across(S({}))); // stepping: the left piece's bottom edge a bar under the right piece's top edge
+  const one = S({ blade: 'line' });
+  assert.equal(one.split('M').filter(Boolean).length, 2);
+  assert.ok(across(one));
+  // Its centre line from 215 to 257 across the S's 84, its ends on the grid (a tie away from the centre): 216 and 256.
+  assert.deepEqual(sloped(one).map(([s]) => s), [[[32, 231.24], [0, 216]], [[52, 240.76], [84, 256]]]); // the kerf's sides on it, between
+  for (const [[a, b]] of sloped(one)) for (const [x, y] of [a, b]) if (x === 0 || x === 84) assert.equal(y % 4, 0);
+  assert.deepEqual(turned2(one, 84, 472), corners(one));
+  assert.ok(polys(one).flat().every(([X]) => X <= 32 || X >= 52)); // the kerf straight through, x 32 to 52
+  // Unsplit, the line changes nothing.
+  assert.equal(S({ split: 0, blade: 'line' }), S({ split: 0 }));
+  // Open, as the S M's: the same.
+  const open = G.letterPaths({ ...SQUARE, drop: 0, tilt: 42, split: 1, blade: 'line', per: [{ open: 1 }] })[0];
+  assert.equal(open.split('M').filter(Boolean).length, 4);
+  assert.ok(across(open));
+  assert.deepEqual(turned2(open, 84, 472), corners(open));
+});
+
+test("along one line, the S M's S, the S alone and Down's S's too; the square S's crossbar keeps its bar between its kerfs", () => {
+  const sym = (q) => G.symbol({ cols: G.symCols(72, 20), rows: G.symRows(20), round: 0, outer: 0, drop: 0, tilt: 48, split: 1, ...q });
+  assert.equal(sym({ line: 0 }), sym({}));
+  assert.ok(!across(sym({})));
+  assert.ok(across(sym({ line: 1 })));
+  const S = G.letterS({ cut: 0, drop: 0, tilt: 42, split: 1, line: 1 });
+  assert.ok(across(S.d));
+  assert.deepEqual(turned2(S.d, S.w, S.h), corners(S.d));
+  assert.ok(!across(G.letterS({ cut: 0, drop: 0, tilt: 42, split: 1 }).d));
+  // The square S: its crossbar between the kerfs a bar thick, its edges running on across both, its ends on the grid.
+  const sq = G.letterS({ cut: 0, drop: 0, wide: 1, tilt: 42, split: 1, line: 1 });
+  assert.equal(sq.d.split('M').filter(Boolean).length, 5);
+  assert.ok(across(sq.d));
+  assert.deepEqual(turned2(sq.d, sq.w, sq.h), corners(sq.d));
+  for (const [[a, b]] of sloped(sq.d)) for (const [x, y] of [a, b]) if (x === 0 || x === sq.w) assert.equal(y % 4, 0, `${x} ${y}`);
+  for (const downFit of ['wider', 'squeeze']) {
+    const D = (q) => G.down({ ...SQUARE, drop: 0, tilt: 42, split: 1, downFit, ...q }).d;
+    assert.ok(!across(D({})), downFit);
+    assert.ok(across(D({ blade: 'line' })), downFit);
+  }
+});
+
+test("along one line, the chapter's Blade switch: its S M, S alone and favicons follow; the slash runs along the snapped line", () => {
+  const K = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
+  const S0 = C.START, cols = G.symCols(72, 20), rows = G.symRows(20);
+  assert.deepEqual(K.blade.options, [['Step', 'step'], ['Line', 'line']]);
+  const plain = [C.wordmark(), C.symbol(), C.s(), C.down(), C.favicon({ size: 64 })];
+  K.blade.set('line');
+  assert.deepEqual([C.wordmark(), C.symbol(), C.s(), C.down(), C.favicon({ size: 64 })], plain); // whole: nothing to run across
+  K.tilt.set('48'); K.split.set('1');
+  assert.ok(C.symbol().includes(G.symbol({ cols, rows, cut: S0.cut, drop: S0.drop, outer: S0.outer, tension: S0.tension, tilt: 48, split: 1, line: 1 })));
+  assert.ok(C.s().includes(G.letterS({ cut: S0.cut, drop: S0.drop, stem: 72, slot: 20, outer: S0.outer, tension: S0.tension, tilt: 48, split: 1, line: 1 }).d));
+  for (const size of [16, 32, 64]) assert.doesNotThrow(() => C.favicon({ size }));
+  K.symbol.set('cells');
+  for (const size of [16, 32, 64]) assert.doesNotThrow(() => C.favicon({ size }));
+  for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value));
+  // The slash along the S's blade: its slope between the line's ends on the grid, 216 and 256 across 84.
+  const p = { ...SQUARE, drop: 0, tilt: 42, split: 1, blade: 'line' };
+  assert.ok(Math.abs(G.slashLine(p).slope - 40 / 84) < 1e-9);
+  assert.ok(Math.abs(G.slashLine({ ...p, blade: 'step' }).slope - 42 / 84) < 1e-9);
+});
+
+test("along one line, steep: its cut edges half a bar further into the corners' rounds, the fall clamped to clear them", () => {
+  // Down's S's least height, Round 64: the step's fall left its edges at the rounds; the line's would pass them.
+  for (const stem of [32, 72, 200]) for (const slot of [8, 20, 60]) for (const tilt of [96, 160]) for (const downFit of ['wider', 'fill', 'squeeze']) for (const lock of [0, 1]) {
+    const p = { ...G.SLANT, ...C.START, stem, stroke: slot, tilt, lock, drop: 1, split: 1, blade: 'line', downFit, per: G.PER.map((q) => ({ ...q })) };
+    const at = JSON.stringify({ stem, slot, tilt, downFit, lock });
+    assert.doesNotThrow(() => G.letters(p), at);
+    assert.doesNotThrow(() => G.down(p), at);
+    assert.doesNotThrow(() => G.symbolCells(p), at);
+    assert.equal(crossing(G.letters({ ...p, outer: 0 })), null, at);
+  }
 });

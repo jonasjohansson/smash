@@ -45,7 +45,7 @@ const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${ru
 // ("this is decent settings too for default"): the cuts flat (slope 0), the
 // slot ends' corners rounded, the ceiling 44, the outer corners rounded 64
 // at 60%, no tilt and no dip, the A a capital, Down filled.
-export const START = { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: H, rise: 0, outer: 64, tension: 0.6, tilt: 0, lock: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0, slashAt: 0, symbol: 'extended' };
+export const START = { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: H, rise: 0, outer: 64, tension: 0.6, tilt: 0, lock: 0, split: 0, blade: 'step', a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0, slashAt: 0, symbol: 'extended' };
 const at = { ...START, per: PER.map((q) => ({ ...q })), lower: [0, 0, 0, 0, 0] };
 const knob = (key, label, min, max, step, value, text, set) => ({ key, label, min, max, step, value, text, set: (v) => set(Number(v)) });
 /** A switch between a few options (the page draws a button for each): [label, value]. */
@@ -76,6 +76,10 @@ export const KNOBS = [
   choice('lock', 'Angle', [['Free', 0], ['Locked', 1]], START.lock),
   knob('dip', 'Dip', 0, 24, 4, START.dip, (v) => `${v}`, (v) => { at.dip = v; }),
   choice('split', 'S', [['Whole', 0], ['Split', 1]], START.split),
+  // Split, its blade along one line (the design panel, round 2, 2026-10-13): stepping a bar across the kerf,
+  // as it was, or one straight cut through the S, its ends on the grid; the S M's S, the S alone and Down's
+  // S's too (geometry.js: sLetter).
+  choice('blade', 'Blade', [['Step', 'step'], ['Line', 'line']], START.blade),
   choice('a', 'A', [['A', 'A'], ['a', 'a']], START.a),
   choice('tips', 'Ends', [['One corner', 0], ['Both', 1]], START.tips),
   choice('frame', 'Frame', [['Off', 0], ['Around', 1], ['Fitted', 2]], START.frame),
@@ -180,9 +184,9 @@ const symW = () => cols().reduce((t, n) => t + n);
 const symH = () => rows().reduce((t, n) => t + n);
 // The S M's S and the S alone carry the wordmark's blade (the design panel,
 // round 1, 2026-10-12): the first S's tilt and split, as its switches have
-// them, at the same angle; their slots already open, as the S M's.
+// them, at the same angle; their slots already open, as the S M's; split along one line, as the wordmark's.
 // Locked, they fall at their own cuts' slope instead, as the wordmark's S's.
-const blade = () => ({ tilt: at.per[0].tilt ? at.tilt : 0, lock: at.per[0].tilt ? at.lock : 0, split: at.per[0].split ? at.split : 0 });
+const blade = () => ({ tilt: at.per[0].tilt ? at.tilt : 0, lock: at.per[0].tilt ? at.lock : 0, split: at.per[0].split ? at.split : 0, line: at.blade === 'line' ? 1 : 0 });
 // Cells (symbolCells): the S M from the wordmark's first S and its M squeezed to it, at the sliders' measures.
 const cells = () => (at.symbol === 'cells' ? symbolCells(now()) : null);
 const sym = () => symbolPath({ cols: cols(), rows: rows(), cut: at.cut, tips: at.tips, drop: at.drop, outer: at.outer, tension: at.tension, ...blade() });
@@ -269,8 +273,8 @@ export function favicon({ size = 32 } = {}) {
   const rows = [bar, sl, bar, sl, bar];
   // Its S's crossbar falls at the wordmark S's angle: tilt across that S's width, scaled to this one's.
   // Locked, at its own cuts' slope.
-  const { tilt, lock, split } = blade(), fall = (tilt * (2 * bar + sl)) / (2 * at.stem + at.stroke);
-  const d = symbolPath({ cols, rows, x: (n - (5 * bar + 4 * sl)) / 2, y: (n - (3 * bar + 2 * sl)) / 2, stop: bar, tips: at.tips, cut: (at.cut * bar) / BAR, drop: at.drop, outer: (at.outer * bar) / BAR, tension: at.tension, grid: 0, tilt: fall, lock, split, room: (8 * bar) / BAR });
+  const { tilt, lock, split, line } = blade(), fall = (tilt * (2 * bar + sl)) / (2 * at.stem + at.stroke);
+  const d = symbolPath({ cols, rows, x: (n - (5 * bar + 4 * sl)) / 2, y: (n - (3 * bar + 2 * sl)) / 2, stop: bar, tips: at.tips, cut: (at.cut * bar) / BAR, drop: at.drop, outer: (at.outer * bar) / BAR, tension: at.tension, grid: 0, tilt: fall, lock, split, line, room: (8 * bar) / BAR });
   return svg(n, n, `<rect width="${n}" height="${n}" fill="${BLACK}"/><path fill="${WHITE}" fill-rule="evenodd" d="${d}"/>`);
 }
 

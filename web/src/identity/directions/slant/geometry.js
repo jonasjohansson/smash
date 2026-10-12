@@ -59,6 +59,9 @@ export const OUTER = 16; // the letters' outer corners (CM.SUPPLY's round 4; Jon
 export const TENSION = 0.8; // and this tight: their curves' handles reach this far to the corner
 export const DIP = 8; // the a: how far its bowl dips under the baseline, as CM.SUPPLY's latest
 export const CASES = ['A', 'a'];
+// A split S's blade (p.blade; the design panel, round 2, 2026-10-13): stepping a bar across its kerf, as it
+// was, or along one line straight through it (sLetter).
+export const BLADES = ['step', 'line'];
 /**
  * The mark's parameters: the original's (its slots, stroke, 20), the slot ends
  * rounded, cut 8 in 20, the outer corners rounded; its stems a bar wide, the
@@ -136,6 +139,8 @@ export const PER = [
   { round: 1, base: 1, both: 0 },
 ];
 const per = (p, i) => ({ ...PER[i], ...(p.per?.[i] ?? {}) });
+/** Whether an S (its switches q) is split along one line (p.blade; sLetter). */
+const lined = (p, q) => !!(q.split && p.split && p.blade === 'line');
 
 /**
  * Letter i's outer corners' rounds, as its switches have them: Rr at its top,
@@ -260,6 +265,12 @@ export function wedges(boxes, h, gap, tension = TENSION, down = false, base = bo
 const fallOf = (tilt, H, bar, R, room = 8, rise = 0) => Math.max(0, Math.min(tilt ?? 0, H - 2 * Math.abs(rise) + bar - 2 * R - room));
 
 /**
+ * v on the grid (unless grid is 0), a tie away from c: a split S's blade's ends along one line (sLetter), so
+ * the S stays the same upside down about its centre c.
+ */
+const snapFrom = (v, c, grid) => (!grid ? v : v < c ? -Math.round(-v / grid) * grid : Math.round(v / grid) * grid);
+
+/**
  * One governing angle (p.lock; the design panel, round 1, 2026-10-12): locked,
  * an S's crossbar falls at the slot ends' cut slope, the cut's fall over its
  * slot (on the grid, as the cuts are), across its own width w, so the blade
@@ -327,7 +338,9 @@ const fallThrough = (tilt, w, bar, d, s) => Math.min(tilt, (w * ((3 * bar) / 4 +
  * bar thick, falls tilt across the letter (CM.SUPPLY's long diagonal), so the
  * slots either side of it are wedges; split opens its slot straight through
  * it, the S in two pieces, as theirs (in the square S, both slots run through
- * and the crossbar between them is a third). open runs its slots out of the
+ * and the crossbar between them is a third); line runs the blade along one
+ * line across its kerf, its ends on the grid (unless grid is 0), where it
+ * would step. open runs its slots out of the
  * top and the bottom, as the S M's. d is its cuts' fall, r and r2 their two
  * corners' rounds (db the fall of its slots' ends at its bends, d unless
  * held); o and ob its outer corners at the top and the base; hi and low its
@@ -336,30 +349,41 @@ const fallThrough = (tilt, w, bar, d, s) => Math.min(tilt, (w * ((3 * bar) / 4 +
  * there, so its top counter is the shorter; risen, it is no longer the same
  * upside down.
  */
-function sLetter({ L, x, xb = x, R, H, y = 0, s, sv = s, bar = BAR, d = 0, db = d, r = 0, r2 = 0, o = (X, Y) => [X, Y], ob = o, tilt = 0, split = false, open = false, hi = 0, low = H, rise = 0 }) {
+function sLetter({ L, x, xb = x, R, H, y = 0, s, sv = s, bar = BAR, d = 0, db = d, r = 0, r2 = 0, o = (X, Y) => [X, Y], ob = o, tilt = 0, split = false, line = false, grid = 4, open = false, hi = 0, low = H, rise = 0 }) {
   // At most till a quarter of a bar is left through a slot (fallThrough).
   tilt = fallThrough(tilt, R - L, bar, db, s);
   const cy = H / 2 - rise; // the crossbar's centre
   const up = cy - (bar + 2 * sv) / 2, lo = cy + (bar + 2 * sv) / 2; // the crossbar slots' centres
   const mid = (x + xb) / 2;
-  const band = (X) => cy + (tilt * (X - mid)) / (R - L); // the crossbar's centre line
+  const across = (X) => cy + (tilt * (X - mid)) / (R - L);
+  // Split along one line (the design panel, round 2, 2026-10-13: the blade steps a bar where the kerf cuts
+  // it): its centre line from its two ends, each on the grid (unless grid is 0, the favicons'; a tie away
+  // from the centre, so the S stays the same upside down), the points at the kerf on that line between
+  // them, not rounded, so the pieces' cut edges stay collinear.
+  const y0 = snapFrom(across(L), cy, grid), y1 = snapFrom(across(R), cy, grid);
+  const band = split && line ? (X) => y0 + ((y1 - y0) * (X - L)) / (R - L) : across; // the crossbar's centre line
   const top = (X) => band(X) - bar / 2, bot = (X) => band(X) + bar / 2;
   const tr = top(x + s), bl = bot(xb - s); // where the crossbar meets the slots
   const out = (...pieces) => pieces.map((pts) => poly(y ? pts.map(([X, Y, ...k]) => [X, Y + y, ...k]) : pts)).join('');
   // Split, the crossbar between the two slots, where they stand apart.
   const between = split && xb - s > x + s ? [[[x + s, top(x + s)], [xb - s, top(xb - s)], [xb - s, bot(xb - s)], [x + s, bot(x + s)]]] : [];
+  // Where they don't, the kerf takes the whole crossbar: the left piece shows its bottom edge, the right its
+  // top, a bar apart, so the blade steps across the kerf. Along one line, both on its centre line instead:
+  // one straight cut through the S, the counters either side half a bar taller, the S the same upside down.
+  // (Between the square S's slots its crossbar stands, its edges already running on across both kerfs.)
+  const lb = line && !between.length ? band : bot, rt = line && !between.length ? band : top;
   if (open) {
     // Its slots run out of the top and the bottom: the two corner blocks
     // stand apart; split, the body comes apart too.
     const blocks = [[[x + s, 0], o(R, 0), [R, up - sv], [x + s, up - sv]], [[L, lo + sv], [xb - s, lo + sv], [xb - s, H], ob(L, H)]];
     if (split) {
-      return out([o(L, 0), [x - s, 0], [x - s, bot(x - s)], [L, bot(L)]], ...between, [[xb + s, top(xb + s)], [R, top(R)], ob(R, H), [xb + s, H]], ...blocks);
+      return out([o(L, 0), [x - s, 0], [x - s, lb(x - s)], [L, lb(L)]], ...between, [[xb + s, rt(xb + s)], [R, rt(R)], ob(R, H), [xb + s, H]], ...blocks);
     }
     return out([o(L, 0), [x - s, 0], [x - s, tr - db, r], [x + s, tr, r2], [R, top(R)], ob(R, H), [xb + s, H], [xb + s, bl + db, r], [xb - s, bl, r2], [L, bot(L)]], ...blocks);
   }
   if (split) {
-    return out([o(L, 0), o(R, 0), [R, up - sv], [x + s, up - sv], [x + s, hi + d, r], [x - s, hi, r2], [x - s, bot(x - s)], [L, bot(L)]], ...between,
-      [[xb + s, top(xb + s)], [R, top(R)], ob(R, H), ob(L, H), [L, lo + sv], [xb - s, lo + sv], [xb - s, low - d, r], [xb + s, low, r2]]);
+    return out([o(L, 0), o(R, 0), [R, up - sv], [x + s, up - sv], [x + s, hi + d, r], [x - s, hi, r2], [x - s, lb(x - s)], [L, lb(L)]], ...between,
+      [[xb + s, rt(xb + s)], [R, rt(R)], ob(R, H), ob(L, H), [L, lo + sv], [xb - s, lo + sv], [xb - s, low - d, r], [xb + s, low, r2]]);
   }
   return out([
     o(L, 0), o(R, 0), [R, up - sv], [x + s, up - sv],
@@ -381,6 +405,7 @@ function sLetter({ L, x, xb = x, R, H, y = 0, s, sv = s, bar = BAR, d = 0, db = 
 export function letterPaths(p = SLANT, only = null) {
   const { s, c, left, right, up, lo, W, H, stem, slot, ceil, rise } = block(p);
   if (!CASES.includes(p.a ?? 'A')) throw new Error(`slant: no a called ${p.a}`);
+  if (!BLADES.includes(p.blade ?? 'step')) throw new Error(`slant: no blade called ${p.blade}`);
   const bar = BAR;
   const hi = ceil; // 32: a top end's high corner, where the round tip was
   const low = H - ceil; // 440: a bottom end's low corner
@@ -405,9 +430,11 @@ export function letterPaths(p = SLANT, only = null) {
       Rb,
       ob: (x, y) => (Rb > 0 ? [x, y, Rb, p.tension ?? TENSION] : [x, y]), // a corner at the base
       // the S's crossbar's fall across its two stems and a slot (locked, at the cuts' slope: tiltOf), at most till its ends meet the corners' rounds
-      tilt: h ? h.D : q.tilt ? fallOf(tiltOf(p, 2 * stem + slot, slot), H, bar, Math.max(Rr, Rb), 8, rise) : 0,
+      // (split along one line, its cut edges are its centre line's, half a bar further into its corners' rounds)
+      tilt: h ? h.D : q.tilt ? fallOf(tiltOf(p, 2 * stem + slot, slot), H, lined(p, q) ? 0 : bar, Math.max(Rr, Rb), 8, rise) : 0,
       sv: h ? h.sv : s,
       split: q.split && p.split,
+      line: p.blade === 'line', // split, along one line (sLetter)
       open: !!q.open,
       both: !!q.both,
       dip: q.dip === 0 ? 0 : p.dip ?? DIP,
@@ -423,7 +450,7 @@ export function letterPaths(p = SLANT, only = null) {
   const ends = (k, most) => { const l = Math.min(k.lower, Math.max(0, most(k))); return { ...k, hi: hi + l, low: low - l }; };
 
   // An S (sLetter, below): its slots' ends at the letter's hi and low, its crossbar risen as the block's.
-  const S = (L, x, R, k) => sLetter({ L, x, R, H, s, ...k, rise });
+  const S = (L, x, R, k) => sLetter({ L, x, R, H, s, ...k, rise, grid: p.grid ?? 4 });
 
   // The M: two slots from the bottom, their top ends cut.
   const M = (L, R, { d, r, r2, o, ob, hi }) => poly([
@@ -501,8 +528,10 @@ export function slashLine(p = SLANT) {
   const q = per(p, i), { Rr, Rb } = rounds(p, i);
   const L = i ? right(6) : 0, R = i ? left(8) : left(1);
   const d = q.cut ? cutOf(p.drop ?? DROP, slot, p.grid) : 0;
-  const tilt = q.tilt ? fallThrough(fallOf(tiltOf(p, 2 * stem + slot, slot), H, BAR, Math.max(Rr, Rb), 8, rise), R - L, BAR, d, s) : 0;
-  return { x: p.slashAt ? W / 2 : c(i ? 7 : 0), y: mid, slope: tilt / (R - L) };
+  const tilt = q.tilt ? fallThrough(fallOf(tiltOf(p, 2 * stem + slot, slot), H, lined(p, q) ? 0 : BAR, Math.max(Rr, Rb), 8, rise), R - L, BAR, d, s) : 0;
+  // Split along one line, its ends on the grid (sLetter): the slope between them.
+  const g = p.grid ?? 4, slope = lined(p, q) ? (snapFrom(mid + tilt / 2, mid, g) - snapFrom(mid - tilt / 2, mid, g)) / (R - L) : tilt / (R - L);
+  return { x: p.slashAt ? W / 2 : c(i ? 7 : 0), y: mid, slope };
 }
 
 /**
@@ -747,7 +776,8 @@ const edges = (sizes, o) => sizes.reduce((a, n) => [...a, a.at(-1) + n], [o]);
  * outside, sharp inside. Its crossbar carries the wordmark's blade (the
  * design panel, round 1, 2026-10-12): tilt is its fall across an S of two stems and a
  * slot, so a wider S falls at the same angle, at most till its ends meet its
- * corners' rounds (room to spare); split runs its slots through it. Its slots
+ * corners' rounds (room to spare); split runs its slots through it (line: its
+ * blade along one line across them, sLetter). Its slots
  * already run out of the top and the bottom, so it has no ends to lower.
  * The angle holds only so far, as these S's are short for their width: the
  * fall, at most its height and a bar less its rounds and room, is a lower
@@ -760,7 +790,7 @@ const edges = (sizes, o) => sizes.reduce((a, n) => [...a, a.at(-1) + n], [o]);
  * wordmark's 0.235 at tilt 96). And every S's crossbar keeps a quarter of a
  * bar through its slots (sLetter).
  */
-function sPath({ L, R, a, b, r, slot, drop = DROP, o = (x, y) => [x, y], grid = 4, cut = 0, tips = 0, tilt = 0, lock = 0, split = 0, round = 0, room = 8 }) {
+function sPath({ L, R, a, b, r, slot, drop = DROP, o = (x, y) => [x, y], grid = 4, cut = 0, tips = 0, tilt = 0, lock = 0, split = 0, line = 0, round = 0, room = 8 }) {
   const k = Math.min(cut, slot / 2); // the bends' obtuse corners, and their others with tips
   const H = r[5] - r[0], bar = r[3] - r[2], s = slot / 2, sv = (r[2] - r[1]) / 2;
   const d = cutOf(drop, slot, grid);
@@ -770,8 +800,9 @@ function sPath({ L, R, a, b, r, slot, drop = DROP, o = (x, y) => [x, y], grid = 
   // right), where the crossbar rises: at most till a quarter of the slot
   // under the top block stays open and the slot's cut end clear of the top.
   const rise = (b - a - slot) / 2, lift = Math.max(0, Math.min(1.5 * sv, H / 2 - bar / 2 - d - k - room / 2));
-  const fall = Math.min(fallOf((tilt * (R - L)) / (2 * (a - L) + slot), H, bar, round, room), rise > 0 ? (lift * (R - L)) / rise : Infinity);
-  return sLetter({ L, x: a + s, xb: b + s, R, H, y: r[0], s, sv, bar, d, r: k, r2: tips ? k : 0, o, tilt: fall, split: !!split, open: true });
+  // (Split along one line, the plain S's cut edges are its centre line's, half a bar further into its corners' rounds.)
+  const fall = Math.min(fallOf((tilt * (R - L)) / (2 * (a - L) + slot), H, split && line && b === a ? 0 : bar, round, room), rise > 0 ? (lift * (R - L)) / rise : Infinity);
+  return sLetter({ L, x: a + s, xb: b + s, R, H, y: r[0], s, sv, bar, d, r: k, r2: tips ? k : 0, o, tilt: fall, split: !!split, line: !!line, grid, open: true });
 }
 
 /** The S M's outer corners, rounded by outer at tension, at most a bar or a stem: the four of its S, the M's top two. */
@@ -792,9 +823,10 @@ export const symRows = (slot = SYM_ROWS[1]) => SYM_ROWS.map((n, i) => (i % 2 ? s
  * The S M as path data; cols and rows its bands, x and y its top left, stop
  * where the M's slots end (from the top), drop its cuts' slope; its S's
  * crossbar falling tilt across it (or, locked, at its cuts' slope) and split
- * as the wordmark's (sPath), room the least it leaves its corners' rounds.
+ * (along one line, line) as the wordmark's (sPath), room the least it leaves
+ * its corners' rounds.
  */
-export function symbol({ cols = SYM_COLS, rows = SYM_ROWS, x = 0, y = 0, stop = SM_STOP, round = 1, cut = CUT, tips = 0, drop = DROP, outer = 0, tension = TENSION, grid = 4, tilt = 0, lock = 0, split = 0, room = 8 } = {}) {
+export function symbol({ cols = SYM_COLS, rows = SYM_ROWS, x = 0, y = 0, stop = SM_STOP, round = 1, cut = CUT, tips = 0, drop = DROP, outer = 0, tension = TENSION, grid = 4, tilt = 0, lock = 0, split = 0, line = 0, room = 8 } = {}) {
   const e = edges(cols, x);
   const r = edges(rows, y);
   const slot = cols[1];
@@ -803,7 +835,7 @@ export function symbol({ cols = SYM_COLS, rows = SYM_ROWS, x = 0, y = 0, stop = 
   const top = y + stop;
   const o = rounder(outer, tension, cols, rows);
   const k2 = tips ? k : 0;
-  return sPath({ L: e[0], R: e[3], a: e[1], b: e[1], r, slot, drop, o, grid, cut: k, tips, tilt, lock, split, round: o.R, room })
+  return sPath({ L: e[0], R: e[3], a: e[1], b: e[1], r, slot, drop, o, grid, cut: k, tips, tilt, lock, split, line, round: o.R, room })
     + poly([o(e[4], r[0]), o(e[9], r[0]), [e[9], r[5]],
       ...[[e[7], e[8]], [e[5], e[6]]].flatMap(([a, b]) => [[b, r[5]], [b, top + d, k], [a, top, k2], [a, r[5]]]),
       [e[4], r[5]]]);
@@ -836,14 +868,14 @@ export function symbolCells(p = SLANT) {
 /**
  * The S alone, as the original's: 84 × 136; wide draws it out by pitches (1:
  * a square); turn lays it on its side; drop its cuts' slope; stem its stems'
- * width; tilt and split its crossbar's, as the S M's (sPath: the square S's
+ * width; tilt and split (and line) its crossbar's, as the S M's (sPath: the square S's
  * falls at the same angle, across its width), lock its cuts' slope instead.
  */
-export function letterS({ wide = 0, turn = false, drop = DROP, stem = BAR, slot = SYM_COLS[1], outer = 0, tension = TENSION, cut = CUT, tips = 0, tilt = 0, lock = 0, split = 0 } = {}) {
+export function letterS({ wide = 0, turn = false, drop = DROP, stem = BAR, slot = SYM_COLS[1], outer = 0, tension = TENSION, cut = CUT, tips = 0, tilt = 0, lock = 0, split = 0, line = 0 } = {}) {
   const [bar] = symCols(stem, slot);
   const rows = symRows(slot), h = rows.reduce((t, n) => t + n);
   const o = rounder(outer, tension, [bar], rows);
   const w = 2 * bar + slot + wide * (bar + slot);
-  const d = sPath({ L: 0, R: w, a: bar, b: bar + wide * (bar + slot), r: edges(rows, 0), slot, drop, o, cut, tips, tilt, lock, split, round: o.R });
+  const d = sPath({ L: 0, R: w, a: bar, b: bar + wide * (bar + slot), r: edges(rows, 0), slot, drop, o, cut, tips, tilt, lock, split, line, round: o.R });
   return turn ? { d: quarterTurn(d, h), w: h, h: w } : { d, w, h };
 }
