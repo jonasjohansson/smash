@@ -10,7 +10,7 @@
 // single-storey a, tried 2026-10-11, read as an o).
 
 import { W, H, PITCH, REST, smMeasures, quarterTurn, SYM_COLS, SYM_ROWS, SYM_H } from '../original/geometry.js';
-import { flatten, inside, reach, cutRing } from './clip.js';
+import { flatten, inside, reach, strip, area, clearance } from './clip.js';
 
 const f = (n) => String(+n.toFixed(2));
 const P = (x, y) => `${f(x)} ${f(y)}`;
@@ -183,14 +183,17 @@ export function roundBox([x0, y0, x1, y1], e, radii, tension = TENSION) {
  * gaps", the red part in his drawing, but "shouldn't go between the gaps of
  * the letters"): it keeps gap from both corners, down to where their gaps
  * meet. boxes ({ box: [x0, y0, x1, y1], radii }) run left to right in a row
- * on y 0 to h; for a column (Down), down turns the reckoning a quarter. Path
- * data, a closed wedge for each meeting at the top and at the base.
+ * on y 0 to h; for a column (Down), down turns the reckoning a quarter. The
+ * base's wedges sit between base's boxes, the same unless the letters' feet
+ * moved (a slash's shift). Path data, a closed wedge for each meeting at the
+ * top and at the base.
  */
-export function wedges(boxes, h, gap, tension = TENSION, down = false) {
+export function wedges(boxes, h, gap, tension = TENSION, down = false, base = boxes) {
   const N = 24;
   const swap = ([x, y]) => [y, x];
   // As a row: a column's boxes turned onto their sides, its corners with them.
-  const row = down ? boxes.map(({ box: [x0, y0, x1, y1], radii: [a, b, c, d] }) => ({ box: [y0, x0, y1, x1], radii: [a, d, c, b] })) : boxes;
+  const rowOf = (bs) => (down ? bs.map(({ box: [x0, y0, x1, y1], radii: [a, b, c, d] }) => ({ box: [y0, x0, y1, x1], radii: [a, d, c, b] })) : bs);
+  const rows = [rowOf(boxes), rowOf(base)];
   const cubic = (p0, p1, p2, p3) => Array.from({ length: N + 1 }, (_, k) => {
     const t = k / N, u = 1 - t;
     return [0, 1].map((i) => u * u * u * p0[i] + 3 * u * u * t * p1[i] + 3 * u * t * t * p2[i] + t * t * t * p3[i]);
@@ -216,6 +219,7 @@ export function wedges(boxes, h, gap, tension = TENSION, down = false) {
   };
   const out = [];
   for (const [flip, ra, rb] of [[false, 1, 0], [true, 2, 3]]) { // the top (each box's top right, the next's top left), and the base
+    const row = rows[+flip];
     for (let k = 0; k < row.length - 1; k++) {
       const A = row[k], B = row[k + 1];
       const edge = flip ? [A.box[3], B.box[3]].every((y) => Math.abs(y - h) < 1e-6) : [A.box[1], B.box[1]].every((y) => Math.abs(y) < 1e-6);
@@ -423,112 +427,185 @@ export const letters = (p = SLANT) => letterPaths(p).join('');
  * The line the slash runs along (below): the S's blade's centre line, through
  * its middle (x, y) at its slope, its crossbar's fall across it (after the
  * same clamps as sLetter's). The first S whose tilt is on leads; with neither,
- * the first S, level.
+ * the first S, level. Through the middle (p.slashAt), the same slope through
+ * the word's middle instead: through the S's blade, a sloped slash runs off
+ * the base before the H; through the middle it crosses every letter, its
+ * blades parallel to it but no longer on it.
  */
 export function slashLine(p = SLANT) {
-  const { s, c, left, right, H, stem, slot } = block(p);
+  const { s, c, left, right, H, W, stem, slot } = block(p);
   const i = [0, 3].find((k) => per(p, k).tilt) ?? 0;
   const q = per(p, i), { Rr, Rb } = rounds(p, i);
   const L = i ? right(6) : 0, R = i ? left(8) : left(1);
   const d = q.cut ? cutOf(p.drop ?? DROP, slot) : 0;
   const tilt = q.tilt ? fallThrough(fallOf(tiltOf(p, 2 * stem + slot, slot), H, BAR, Math.max(Rr, Rb)), R - L, BAR, d, s) : 0;
-  return { x: c(i ? 7 : 0), y: H / 2, slope: tilt / (R - L) };
+  return { x: p.slashAt ? W / 2 : c(i ? 7 : 0), y: H / 2, slope: tilt / (R - L) };
 }
 
 /**
  * The slash (p.slash; the design panel, round 1, 2026-10-12: "one straight
  * kerf through the whole wordmark along the S blades' line"): a band
  * p.slashWidth tall (a slot unless set), measured down, centred on the S's
- * blade (slashLine) and run on across the word, cut out of every letter. The
- * outlines are flattened (clip.js; curves and arcs in pieces a unit long) and
- * cut along the band's two sides. Where taking a bite out of a letter would
- * leave it a sliver thinner than half a stem either side of the band (an S's
- * blade, the A's and the H's crossbars when the band runs along them), that
- * bite stays; so does one where the band only runs off a letter's top or its
- * base, which would chip its edge, not cut through it. p.shift slides all below the band right that much, and down
- * along the band as it falls, a struck object: the band keeps its width, and
- * a bite that stays is sheared across it. The letters' path data, and warp,
- * which moves other path data (a frame) the same way.
+ * blade (slashLine; or the word's middle) and run on across the word, cut
+ * out of every letter. The outlines are flattened (clip.js; curves and arcs
+ * in pieces a unit long) and cut along the band's two sides (clip.js: strip)
+ * into pieces above it, in it (the bites) and below it.
+ *
+ * A bite stays, the letter whole across the band there, where cutting it
+ * would leave a sliver thinner than half a stem: where, along the band's top
+ * or bottom, the letter beyond is that thin (an S's blade, the A's and the
+ * H's crossbars when the band runs along them), or where a piece above or
+ * below the band has no room for a disc half a stem across (clip.js:
+ * clearance; a crumb off a corner, a wedge where the band runs off the
+ * base). A bite that meets only one side of the band, where it runs off a
+ * letter's top or its base, stays too: it would only chip the letter's edge.
+ *
+ * p.shift (the design panel: "everything below the band slides right by
+ * that much") slides every part below the band right, level and rigid, never
+ * sheared: a part a bite holds together across the band slides with the side
+ * that holds most of it, or stays. Where the band falls to the right, the
+ * part below closes on the part above as it slides: the shift stops where
+ * the kerf keeps half its width. Where a part holds the band, it stops at
+ * half a gap and half a slot, so that part keeps clear of its neighbours,
+ * slid or not. { paths, shift, at }: the letters' path data, the shift as
+ * drawn, and at(point), how far the part there slid (a frame's wedges
+ * follow it).
  */
 export function slash(p = SLANT, paths = letterPaths(p)) {
-  if (!p.slash) return { paths, warp: (d) => d };
-  const { H, stem, slot } = block(p);
+  if (!p.slash) return { paths, shift: 0, at: () => 0 };
+  const { stem, slot, gap } = block(p);
   const { x: xs, y: ys, slope: m } = slashLine(p);
-  const h = Math.max(1, p.slashWidth ?? slot) / 2, shift = Math.max(0, p.shift ?? 0);
-  const thin = stem / 2;
+  const h = Math.max(1, p.slashWidth ?? slot) / 2, thin = stem / 2;
   // The reckoning turned so the band lies level, -h to h; down stays down, so widths measured down stay.
   const fwd = ([X, Y]) => [X, Y - m * (X - xs) - ys];
   const back = ([X, u]) => [X, u + m * (X - xs) + ys];
-  const slide = ([X, u], k = Math.min(1, Math.max(0, (u + h) / (2 * h)))) => [X + shift * k, u];
-  // A side that crosses the band's top or bottom bends there as it slides: a corner put in where it crosses.
-  const bend = (ring) => ring.flatMap((a, i) => {
-    const b = ring[(i + 1) % ring.length], at = [-h, h].filter((c) => (a[1] - c) * (b[1] - c) < 0).map((c) => (c - a[1]) / (b[1] - a[1])).sort((s, t) => s - t);
-    return [a, ...at.map((t) => [a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])])];
-  });
-  const draw = (ring, k) => {
-    const pts = bend(ring).map((q) => P(...back(slide(q, k)))).filter((q, i, a) => q !== a[(i + a.length - 1) % a.length]);
+  const draw = (ring, dx) => {
+    const pts = ring.map((q) => { const [X, Y] = back(q); return P(X + dx, Y); }).filter((q, i, a) => q !== a[(i + a.length - 1) % a.length]);
     return pts.length > 2 ? 'M' + pts.join('L') + 'Z' : '';
   };
-  const warp = (d) => (shift ? flatten(d).map((r) => draw(r.map(fwd))).join('') : d);
   const onLine = (q, c) => Math.abs(q[1] - c) < 1e-6;
-  return {
-    warp,
-    paths: paths.map((d) => {
-      if (!d) return d;
-      const subs = d.split(/(?=M)/);
-      const rings = subs.map((sub) => flatten(sub)[0].map(fwd));
-      const hole = rings.map((r, i) => rings.filter((o, j) => j !== i && inside([o], r[0])).length % 2 === 1);
-      // Each outline cut along the band's top and its bottom: above it, in it, below it. false: it won't cut.
-      const parts = rings.map((r) => {
-        if (r.every(([, u]) => u <= -h) || r.every(([, u]) => u >= h)) return null;
-        const one = cutRing(r, -h), two = one && one.hi.map((q) => cutRing(q, h));
-        if (!one || two.some((t) => !t)) return false;
-        return { top: one.lo, band: two.flatMap((t) => t.lo).map((ring) => ({ ring })), bottom: two.flatMap((t) => t.hi) };
-      });
-      // The bites: the letter's pieces in the band, each with the counters' pieces inside it.
-      const bites = parts.flatMap((q, i) => (q && !hole[i] ? q.band : []));
-      parts.forEach((q, i) => {
-        if (!q || !hole[i]) return;
-        for (const piece of q.band) {
-          const r = piece.ring, k = r.findIndex((a, j) => Math.abs((a[1] + r[(j + 1) % r.length][1]) / 2) < h - 1e-6);
-          const at = k < 0 ? r[0] : [(r[k][0] + r[(k + 1) % r.length][0]) / 2, (r[k][1] + r[(k + 1) % r.length][1]) / 2];
-          piece.of = bites.find((b) => inside([b.ring], at)) ?? bites[0];
-        }
-      });
-      // A bite stays where, along the band's top or bottom, the letter beyond is thinner than half a stem;
-      // a taper where a side meets the band at a slant, half a stem from the bite's ends, doesn't count.
-      // A bite that meets only one side of the band (where it runs off the letter's top or its base)
-      // would only chip the letter's edge, not cut through it: it stays too, and slides with that side
-      // (move: 0 above, 1 below); a bite that stays between both is sheared across the band.
-      for (const bite of bites) {
-        const r = bite.ring;
-        const sides = [-h, h].filter((c) => r.some((a, j) => onLine(a, c) && onLine(r[(j + 1) % r.length], c)));
-        if (sides.length === 1) bite.move = sides[0] < 0 ? 0 : 1;
-        bite.keep = sides.length < 2 || r.some((a, j) => {
-          const b = r[(j + 1) % r.length];
-          const c = [-h, h].find((y) => onLine(a, y) && onLine(b, y));
-          if (c == null) return false;
-          const dir = Math.sign(c), [x0, x1] = [Math.min(a[0], b[0]), Math.max(a[0], b[0])];
-          const samples = [(x0 + x1) / 2];
-          for (let x = x0 + thin; x <= x1 - thin; x += 2) samples.push(x);
-          return samples.some((x) => {
-            const from = [x, c + dir * 1e-3];
-            if (!inside(rings, from)) return false;
-            return reach(rings, from, dir) < thin;
-          });
-        });
+  // A side along the band's top or bottom, more than a point (a corner just on a line leaves one of none).
+  const along = (a, b, c) => onLine(a, c) && onLine(b, c) && Math.abs(a[0] - b[0]) > 1e-6;
+  const parts = []; // every part drawn, as { rings, slides, mixed }: its outline, whether it slides, whether it holds the band
+  // Each letter, cut: its path data drawn at a shift.
+  const drawAt = paths.map((d) => {
+    if (!d) return () => d;
+    const subs = d.split(/(?=M)/);
+    const rings = subs.map((sub) => flatten(sub)[0].map(fwd));
+    const hole = rings.map((r, i) => rings.filter((o, j) => j !== i && inside([o], r[0])).length % 2 === 1);
+    const cuts = rings.map((r) => strip(r, -h, h));
+    // A ring that won't cut (it crosses itself): the letter stays whole, sliding with most of it.
+    if (cuts.some((q) => !q)) {
+      const all = rings.flat(), u = all.reduce((t, [, v]) => t + v, 0) / all.length;
+      const part = { rings: rings.filter((r, i) => !hole[i]), slides: u > 0, mixed: true };
+      parts.push(part);
+      return (shift) => (part.slides && shift ? move(d, shift, 0) : d);
+    }
+    // Every piece, a whole ring as one; the bites, a letter's pieces in the band.
+    const pieces = (i) => (cuts[i].pieces ?? [{ zone: cuts[i].zone, ring: rings[i], chords: [] }]);
+    cuts.forEach((q, i) => { q.all = pieces(i); });
+    const bites = cuts.flatMap((q, i) => (hole[i] ? [] : q.all.filter((b) => b.zone === 1)));
+    // A counter's pieces in the band go with the bite round them.
+    cuts.forEach((q, i) => {
+      if (!hole[i]) return;
+      for (const piece of q.all.filter((b) => b.zone === 1)) {
+        const r = piece.ring, k = r.findIndex((a, j) => Math.abs((a[1] + r[(j + 1) % r.length][1]) / 2) < h - 1e-6);
+        const at = k < 0 ? r[0] : [(r[k][0] + r[(k + 1) % r.length][0]) / 2, (r[k][1] + r[(k + 1) % r.length][1]) / 2];
+        piece.of = bites.find((b) => inside([b.ring], at)) ?? bites[0];
       }
-      return subs.map((sub, i) => {
-        const q = parts[i];
-        if (q === null) return rings[i][0][1] >= h && shift ? move(sub, shift, m * shift) : sub;
-        const bite = (b) => (hole[i] ? b.of ?? {} : b);
-        const kept = q ? q.band.filter((b) => bite(b).keep) : [];
-        const sheared = kept.every((b) => bite(b).move == null);
-        if (!q || (kept.length === q.band.length && (sheared || !shift))) return shift ? draw(rings[i]) : sub; // whole
-        return [...q.top.map((t) => draw(t)), ...kept.map((b) => draw(b.ring, bite(b).move)), ...q.bottom.map((t) => draw(t))].join('');
-      }).join('');
-    }),
-  };
+    });
+    // The bites that stay: one that meets one side of the band only (a chip), or where the letter
+    // beyond the band's top or bottom is thinner than half a stem (a taper where a side meets the
+    // band at a slant, half a stem from the bite's ends, doesn't count).
+    for (const bite of bites) {
+      const r = bite.ring;
+      const sides = [-h, h].filter((c) => r.some((a, j) => along(a, r[(j + 1) % r.length], c)));
+      bite.keep = sides.length < 2 || r.some((a, j) => {
+        const b = r[(j + 1) % r.length];
+        const c = [-h, h].find((y) => along(a, b, y));
+        if (c == null) return false;
+        const dir = Math.sign(c), [x0, x1] = [Math.min(a[0], b[0]), Math.max(a[0], b[0])];
+        const samples = [(x0 + x1) / 2];
+        for (let x = x0 + thin; x <= x1 - thin; x += 2) samples.push(x);
+        return samples.some((x) => {
+          const from = [x, c + dir * 1e-3];
+          if (!inside(rings, from)) return false;
+          return reach(rings, from, dir) < thin;
+        });
+      });
+    }
+    // And every bite next to a piece above or below the band with no room for a disc half a stem
+    // across (its counters' pieces cut out of it): cut, it would be a crumb.
+    cuts.forEach((q, i) => {
+      if (hole[i] || !q.pieces) return;
+      for (const piece of q.pieces) {
+        if (piece.zone === 1 || Math.abs(area(piece.ring)) < 1) continue; // (a point where a corner meets a line: nothing)
+        const counters = cuts.flatMap((o, j) => (hole[j] ? o.all.filter((c) => c.zone === piece.zone && inside([piece.ring], c.ring.find(([, u]) => Math.abs(Math.abs(u) - h) > 1e-6) ?? c.ring[0])) : []));
+        if (clearance([piece.ring, ...counters.map((c) => c.ring)], thin / 2)) continue;
+        for (const c of piece.chords) for (const k of q.chords[c].pieces) q.pieces[k].keep = true;
+      }
+    });
+    for (const q of cuts) for (const b of q.all) if (b.zone === 1) b.out = !(b.of ?? b).keep;
+    // What's left: each outline its kept pieces, cut apart only where a bite is out. Each part slides
+    // with the side that holds most of it: its area above the band (a bite's half) against below.
+    const drawn = cuts.map((q, i) => (q.pieces ? q.trace().map(({ ring, pieces: ks }) => ({ ring, ks: ks.map((k) => q.pieces[k]) })) : q.all[0].out ? [] : [{ ring: rings[i], ks: q.all }]));
+    const outer = drawn.flatMap((rs, i) => (hole[i] ? [] : rs));
+    for (const o of outer) o.weigh = [0, 0];
+    const weigh = (o, ks, sign) => ks.forEach((k) => {
+      const a = Math.abs(area(k.ring)) * sign;
+      if (k.zone === 1) { o.weigh[0] += a / 2; o.weigh[1] += a / 2; } else o.weigh[k.zone / 2] += a;
+    });
+    for (const o of outer) weigh(o, o.ks, 1);
+    drawn.forEach((rs, i) => {
+      if (!hole[i]) return;
+      for (const r of rs) {
+        const pt = r.ring.find(([, u]) => Math.abs(Math.abs(u) - h) > 1e-6) ?? r.ring[0];
+        r.in = outer.find((o) => inside([o.ring], pt)) ?? outer[0];
+        if (r.in) weigh(r.in, r.ks, -1);
+      }
+    });
+    // A counter cut open by the band (its slot run into the kerf) shares its cut side with its letter's: the
+    // letter's outline goes round it instead, so no two sides lie on each other (a hairline, drawn).
+    drawn.forEach((rs, i) => {
+      if (!hole[i]) return;
+      for (const r of rs) {
+        const H = r.ring, n = H.length, ks = H.map((a, k) => k).filter((k) => [-h, h].some((c) => along(H[k], H[(k + 1) % n], c)));
+        if (ks.length !== 1 || !r.in) continue;
+        const k = ks[0], c = H[k], d = H[(k + 1) % n], O = r.in.ring;
+        const j = O.findIndex((a, t) => {
+          const b = O[(t + 1) % O.length];
+          return Math.abs(a[1] - c[1]) < 1e-6 && Math.abs(b[1] - c[1]) < 1e-6 && [c, d].every(([x]) => (x - a[0]) * (x - b[0]) < 0);
+        });
+        if (j < 0) continue;
+        const a = O[j], near = Math.abs(c[0] - a[0]) < Math.abs(d[0] - a[0]);
+        // From the end nearer a, round the counter the other way from its cut side, to its other end.
+        const round = near ? Array.from({ length: n }, (_, t) => H[(k - t + n) % n]) : Array.from({ length: n }, (_, t) => H[(k + 1 + t) % n]);
+        r.in.ring = [...O.slice(0, j + 1), ...round, ...O.slice(j + 1)];
+        r.merged = true;
+      }
+    });
+    // (An even split, as an S's or an H's about its middle, stays.)
+    for (const o of outer) {
+      const [up, down] = o.weigh, zones = new Set(o.ks.map((k) => k.zone));
+      o.part = { rings: [o.ring], slides: down - up > 0.02 * (up + down), mixed: zones.has(1) || zones.size > 1 };
+      parts.push(o.part);
+    }
+    // A ring nothing was cut out of keeps its path data, moved with its part; the others, their pieces.
+    return (shift) => subs.map((sub, i) => {
+      const dxOf = (r) => ((hole[i] ? r.in?.part : r.part)?.slides ? shift : 0);
+      if (cuts[i].all.every((b) => !b.out) && drawn[i].length === 1) {
+        const dx = dxOf(drawn[i][0]);
+        return dx ? move(sub, dx, 0) : sub;
+      }
+      return drawn[i].filter((r) => !r.merged).map((r) => draw(r.ring, dxOf(r))).join('');
+    }).join('');
+  });
+  // The shift: where the band falls to the right, at most till the kerf keeps half its width; where
+  // a part holds the band, at most half a gap and half a slot, so it keeps clear of its neighbours.
+  const room = parts.some((o) => o.mixed) ? Math.min(gap, slot) / 2 : Infinity;
+  const shift = Math.max(0, Math.min(p.shift ?? 0, room, m > 0 ? h / m : Infinity));
+  const at = (pt) => { const q = fwd(pt), o = parts.find((r) => inside(r.rings, q)); return (o ? o.slides : q[1] > 0) ? shift : 0; };
+  return { paths: drawAt.map((f) => f(shift)), shift, at };
 }
 
 /** Path data (M, L, C, A, Z, absolute) moved by dx, dy. */

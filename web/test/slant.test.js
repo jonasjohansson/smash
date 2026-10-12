@@ -115,7 +115,7 @@ test('the chapter gives every still as plain vector', () => {
   }
   for (const n of [16, 32, 64]) assert.match(C.favicon({ size: n }), new RegExp(`viewBox="0 0 ${n} ${n}"`));
   // At Jonas's settings: 11 stems of 72, 10 slots and gaps of 20; no dip.
-  assert.deepEqual(C.START, { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: 472, outer: 64, tension: 0.6, tilt: 0, lock: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0 });
+  assert.deepEqual(C.START, { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: 472, outer: 64, tension: 0.6, tilt: 0, lock: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0, slashAt: 0 });
   assert.match(C.wordmark(), /viewBox="0 0 992 472"/);
   assert.equal(C.wordmark(), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 992 472" ><path fill="currentColor" fill-rule="evenodd" d="${G.letters({ ...G.SLANT, ...C.START })}"/></svg>`);
   assert.equal(C.info.slug, 'slant');
@@ -123,7 +123,7 @@ test('the chapter gives every still as plain vector', () => {
 
 test('the sliders draw every still at their measures, and back', () => {
   const { slope, stem, height } = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
-  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'ceil', 'height', 'outer', 'tension', 'tilt', 'lock', 'dip', 'split', 'a', 'tips', 'frame', 'frameGap', 'frameWidth', 'slash', 'slashWidth', 'shift', 'downFit', 'per', 'lower']);
+  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'ceil', 'height', 'outer', 'tension', 'tilt', 'lock', 'dip', 'split', 'a', 'tips', 'frame', 'frameGap', 'frameWidth', 'slash', 'slashWidth', 'shift', 'slashAt', 'downFit', 'per', 'lower']);
   const at8 = C.wordmark();
   slope.set(12);
   const S0 = C.START;
@@ -690,22 +690,142 @@ test("the slash locked to the blade: its sides at the cuts' slope through the M 
   assert.equal(G.slash(wide).paths[3], G.letterPaths(wide)[3]);
 });
 
-test('the shift slides all below the slash right, and down along it, the band its width; a bite left whole is sheared across it', () => {
-  const p = { ...SQUARE, slash: 1, slashWidth: 24 };
-  const at0 = G.slash(p).paths, at12 = G.slash({ ...p, shift: 12 }).paths;
-  const legs = (d) => polys(d).filter((r) => r.every(([, y]) => y >= 248));
-  assert.deepEqual(legs(at12[1]).map((r) => r.map(([x, y]) => [x - 12, y])), legs(at0[1])); // level: right 12, not down
-  assert.deepEqual(polys(at12[1]).filter((r) => r.every(([, y]) => y <= 224)), polys(at0[1]).filter((r) => r.every(([, y]) => y <= 224)));
-  // The A, whole: above the band where it was, below it 12 right, in it sheared (its sides cornered at the band's edges).
-  const A = polys(at12[2])[0], A0 = polys(at0[2])[0];
-  assert.deepEqual(A.filter(([, y]) => y < 224), A0.filter(([, y]) => y < 224));
-  assert.deepEqual(A.filter(([, y]) => y > 248).map(([x, y]) => [x - 12, y]), A0.filter(([, y]) => y > 248));
-  // Locked at 0.4, below the band moves 12 right and 4.8 down: along it.
-  const q = { ...SQUARE, drop: 0.4, lock: 1, slash: 1 };
-  const m0 = polys(G.slash(q).paths[1]), m12 = polys(G.slash({ ...q, shift: 12 }).paths[1]);
-  const low = (r) => Math.max(...r.map(([, y]) => y)) >= 472; // the legs, to the base
-  assert.ok(m0.filter(low).length >= 2);
-  assert.deepEqual(m12.filter(low).map((r) => r.map(([x, y]) => [+(x - 12).toFixed(2), +(y - 4.8).toFixed(2)])), m0.filter(low));
+// The page's measures (START), with the switches as PER has them.
+const PAGE = { ...G.SLANT, ...C.START, per: G.PER.map((q) => ({ ...q })), lower: [0, 0, 0, 0, 0] };
+/** Path data's outlines, flattened: [outer ring, its counters] for each part. */
+const regions = (d) => {
+  const rings = K.flatten(d);
+  // A point just inside each (a counter may share a cut side with its letter): beside its longest side.
+  const within = (r) => {
+    const k = r.reduce((best, a, i) => (Math.hypot(...[0, 1].map((j) => r[(i + 1) % r.length][j] - a[j])) > Math.hypot(...[0, 1].map((j) => r[(best + 1) % r.length][j] - r[best][j])) ? i : best), 0);
+    const [a, b] = [r[k], r[(k + 1) % r.length]], len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], n = [(a[1] - b[1]) / len * 0.01, (b[0] - a[0]) / len * 0.01];
+    return [[mid[0] + n[0], mid[1] + n[1]], [mid[0] - n[0], mid[1] - n[1]]].find((q) => K.inside([r], q));
+  };
+  const pts = rings.map(within), depth = (i) => rings.filter((o, j) => j !== i && K.inside([o], pts[i])).length;
+  const outer = rings.map((r, i) => depth(i) % 2 === 0);
+  return rings.filter((r, i) => outer[i]).map((r) => [r, ...rings.filter((o, j) => !outer[j] && K.inside([r], pts[j]))]);
+};
+/** Whether a disc r in radius fits in rings (evenodd): probed every 12 units, then 6, 3 and 1.5, so to within one. */
+const fits = (rings, r) => {
+  const pts = rings.flat(), sides = rings.flatMap((q) => q.map((a, i) => [a, q[(i + 1) % q.length]]));
+  const to = ([x, y], [ax, ay], [bx, by]) => {
+    const dx = bx - ax, dy = by - ay, t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy || 1)));
+    return Math.hypot(x - ax - t * dx, y - ay - t * dy);
+  };
+  const [x0, x1] = [Math.min(...pts.map(([x]) => x)), Math.max(...pts.map(([x]) => x))];
+  const [y0, y1] = [Math.min(...pts.map(([, y]) => y)), Math.max(...pts.map(([, y]) => y))];
+  for (const g of [12, 6, 3, 1.5]) {
+    for (let y = y0 + g / 2; y < y1; y += g) for (let x = x0 + g / 2; x < x1; x += g) {
+      if (sides.every(([a, b]) => to([x, y], a, b) >= r) && K.inside(rings, [x, y])) return true;
+    }
+  }
+  return false;
+};
+/** Whether every outline of after is one of before's, moved right 0 or dx whole: its points off the band's sides on before's sides. */
+const rigid = (before, after, dx, onBand) => {
+  const sides = K.flatten(before).flatMap((r) => r.map((a, i) => [a, r[(i + 1) % r.length]]));
+  const on = ([x, y]) => sides.some(([[ax, ay], [bx, by]]) => {
+    const len = Math.hypot(bx - ax, by - ay), t = ((x - ax) * (bx - ax) + (y - ay) * (by - ay)) / (len * len || 1);
+    return t > -1e-3 && t < 1 + 1e-3 && Math.abs((x - ax) * (by - ay) - (y - ay) * (bx - ax)) / (len || 1) < 0.02;
+  });
+  return K.flatten(after).every((r) => {
+    const own = r.filter((q) => !onBand(q));
+    return [0, dx].some((m) => own.every(([x, y]) => on([x - m, y])));
+  });
+};
+
+test('the shift slides each part below the slash right whole, level, never sheared: its sides at their own slopes', () => {
+  // The review's cases: level; locked steep and wide; free and steep; through the middle.
+  for (const set of [{ shift: 16 }, { drop: 1, lock: 1, slashWidth: 60, shift: 24 }, { tilt: 80, shift: 24 }, { drop: 0.4, lock: 1, slashAt: 1, shift: 24 }]) {
+    const p = { ...PAGE, slash: 1, ...set }, S = G.slash(p), before = G.letterPaths(p);
+    const { x, y, slope } = G.slashLine(p), h = (p.slashWidth ?? 20) / 2;
+    const u = ([X, Y]) => Y - y - slope * (X - x);
+    // Where a cut side runs, and slid along it: on either side of the band, the slide's height above it.
+    const onBand = (q) => [-h, h, h - slope * S.shift].some((c) => Math.abs(u(q) - c) < 0.05) || [-h, h].some((c) => Math.abs(u([q[0] - S.shift, q[1]]) - c) < 0.05);
+    assert.ok(S.shift > 0, JSON.stringify(set));
+    S.paths.forEach((d, i) => assert.ok(rigid(before[i], d, S.shift, onBand), `${JSON.stringify(set)} letter ${i}`));
+    // Level: nothing drops under the baseline, and the parts below the band slide right, none down.
+    const all = K.flatten(S.paths.join('')).flat();
+    assert.ok(Math.max(...all.map(([, Y]) => Y)) <= G.block(p).H + 1e-6, JSON.stringify(set));
+  }
+  // Level at the page's measures: the M's legs right, the S's, the A and the H, held by their crossbars, stay where they were.
+  const p = { ...PAGE, slash: 1, shift: 16 }, S = G.slash(p), before = G.letterPaths(p);
+  for (const i of [0, 2, 3, 4]) assert.equal(S.paths[i], before[i], `letter ${i}`);
+  assert.equal(S.shift, 10); // half a gap: the M's legs keep clear of the A, which stayed
+  const legs = (d) => regions(d).filter(([r]) => Math.min(...r.map(([, Y]) => Y)) > G.block(p).H / 2);
+  assert.deepEqual(legs(S.paths[1]).map(([r]) => Math.round(Math.min(...r.map(([X]) => X)))).sort((a, b) => a - b), [184, 276, 368].map((X) => X + 10)); // its three legs, 10 right
+  // Where the band falls, the slide stops where the kerf keeps half its width: locked at 20 in 20, a band 20 tall, 10.
+  assert.equal(G.slash({ ...PAGE, slash: 1, drop: 1, lock: 1, shift: 24 }).shift, 10);
+});
+
+test("slashed, no piece left above or below the band is thinner than half a stem, at the page's measures", () => {
+  // The review's: level, tilt 16, a slash 44 tall (a 40 × 4 crumb of the second S); tilt 40 in a slash 8 tall (a wedge
+  // off the H's foot); tilt 80, shifted 24 (6 of the A). And a grid of tilts and widths, free, locked and through the middle.
+  const sets = [{ tilt: 16, slashWidth: 44 }, { tilt: 40, slashWidth: 8 }, { tilt: 80, slashWidth: 20, shift: 24 }];
+  for (const tilt of [0, 24, 48, 80, 120, 160]) for (const slashWidth of [8, 20, 32, 44, 60]) sets.push({ tilt, slashWidth });
+  for (const drop of [0.2, 0.4, 0.6, 1]) for (const slashWidth of [8, 20, 44]) for (const slashAt of [0, 1]) sets.push({ drop, lock: 1, slashWidth, slashAt });
+  // Thin slots under a low ceiling, locked at 8 in 20: the band's bottom just meets the A's foot at its corner, a chip.
+  sets.push({ drop: 0.4, lock: 1, slashWidth: 44, stroke: 8, ceil: 16 });
+  for (const set of sets) {
+    const p = { ...PAGE, slash: 1, ...set }, before = G.letterPaths(p);
+    G.slash(p).paths.forEach((d, i) => {
+      if (d === before[i]) return;
+      for (const rings of regions(d)) assert.ok(fits(rings, p.stem / 4 - 2), `${JSON.stringify(set)} letter ${i}: a piece thinner than half a stem`);
+    });
+  }
+  assert.ok(G.slash({ ...PAGE, slash: 1, stroke: 8, ceil: 16, drop: 0.4, lock: 1, slashWidth: 44 }).paths[2] === G.letterPaths({ ...PAGE, stroke: 8, ceil: 16, drop: 0.4, lock: 1 })[2]);
+  // A piece the band's sides don't show thin: a block on a tail 10 wide, the band across where they meet. Cut, the tail
+  // would hang on its own; it stays, the outline whole. A tail half a stem wide is cut.
+  const p = { ...PAGE, slash: 1 }, H2 = G.block(p).H / 2;
+  const tail = (w) => G.poly([[0, 0], [72, 0], [72, H2], [30 + w, H2], [30 + w, 2 * H2], [30, 2 * H2], [30, H2], [0, H2]]);
+  assert.deepEqual(G.slash(p, [tail(10)]).paths, [tail(10)]);
+  assert.equal(regions(G.slash(p, [tail(40)]).paths[0]).length, 2);
+});
+
+test('through the middle, a sloped slash crosses every letter, S to H; through the S, it runs off the base at the second S', () => {
+  const p = { ...PAGE, slash: 1, drop: 0.4, lock: 1, slashAt: 1 }, b = G.block(p);
+  const { x, y, slope } = G.slashLine(p);
+  assert.deepEqual([x, y], [b.W / 2, b.H / 2]);
+  assert.ok(Math.abs(slope - G.slashLine({ ...p, slashAt: 0 }).slope) < 1e-9); // the S's blade's slope
+  const crossed = (q) => {
+    const u = ([X, Y]) => Y - (q.y + q.slope * (X - q.x));
+    return G.letterPaths(p).map((d) => { const pts = K.flatten(d).flat(); return pts.some((r) => u(r) < -10) && pts.some((r) => u(r) > 10); });
+  };
+  assert.deepEqual(crossed({ x, y, slope }), [true, true, true, true, true]);
+  assert.deepEqual(crossed(G.slashLine({ ...p, slashAt: 0 })), [true, true, true, false, false]);
+  // Cut, all but the A: its crossbar is where the band runs through its middle, and would leave slivers.
+  const before = G.letterPaths(p), after = G.slash(p).paths;
+  assert.deepEqual(after.map((d, i) => d !== before[i]), [true, true, false, true, true]);
+});
+
+test('framed and shifted, the frame goes round the slid mark whole: its sides across and down, the wedges clear of the letters', () => {
+  const K2 = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
+  for (const [set, fit] of [[{ shift: 16 }, 1], [{ shift: 16 }, 2], [{ slope: 8, lock: 1, shift: 24 }, 2], [{ slope: 8, lock: 1, slashAt: 1, shift: 24 }, 2]]) {
+    for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value));
+    K2.slash.set(1); K2.frame.set(fit);
+    for (const [k, v] of Object.entries(set)) K2[k].set(v);
+    const p = { ...PAGE, slash: 1, ...set, drop: (set.slope ?? 0) / 20 };
+    const m = C.START.frameGap + C.START.frameWidth, S = G.slash(p), letters = G.move(S.paths.join(''), m, m);
+    const out = C.wordmark(), d = out.match(/ d="([^"]+)"/)[1];
+    assert.ok(S.shift > 0 && d.startsWith(letters), JSON.stringify(set));
+    const frame = d.slice(letters.length).split(/(?=M)/);
+    // The ring: its two outlines, square to the page but for their rounds; round the slid mark, a gap clear.
+    for (const sub of frame.slice(0, 2)) {
+      for (const [, a, b] of sub.matchAll(/(?<=[ML])([\d.-]+ [\d.-]+)(?=L([\d.-]+ [\d.-]+))/g)) {
+        const [[x1, y1], [x2, y2]] = [a, b].map((q) => q.split(' ').map(Number));
+        assert.ok(x1 === x2 || y1 === y2, `${JSON.stringify(set)}: ${a} to ${b}`);
+      }
+    }
+    const [ix0, iy0, ix1, iy1] = K.extent(frame[1]), [lx0, ly0, lx1, ly1] = K.extent(letters);
+    assert.ok(lx0 - ix0 >= C.START.frameGap - 1e-6 && ix1 - lx1 >= C.START.frameGap - 1e-6 && ly0 - iy0 >= C.START.frameGap - 1e-6 && iy1 - ly1 >= C.START.frameGap - 1e-6, JSON.stringify(set));
+    const [, vw, vh] = out.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/).map(Number);
+    assert.ok(Math.abs(vw - (lx1 + m)) < 0.01 && vh === 472 + 2 * m, `${JSON.stringify(set)}: ${vw} × ${vh}`); // as wide as the slid mark, no taller
+    // The wedges: none inside a letter.
+    const glyphs = K.flatten(letters);
+    for (const w of frame.slice(2)) for (const q of K.flatten(w)[0]) assert.ok(!K.inside(glyphs, q), `${JSON.stringify(set)}: a wedge in a letter at ${q}`);
+  }
+  for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value));
 });
 
 test("the chapter's slash: the wordmark slashed, slid and grown to hold it; Down and the S M not; off, as before", () => {
@@ -716,8 +836,11 @@ test("the chapter's slash: the wordmark slashed, slid and grown to hold it; Down
   assert.deepEqual([C.down(), C.symbol(), C.lockup()], start.slice(1));
   assert.match(C.wordmark(), /viewBox="0 0 992 472"/);
   K2.shift.set('24');
-  assert.match(C.wordmark(), /viewBox="0 0 1016 472"/); // level: the H's legs 24 right
+  assert.match(C.wordmark(), /viewBox="0 0 992 472"/); // level: the M's legs slide, the H stays
   assert.equal(C.gridOf('wordmark'), false);
+  K2.slope.set(8); K2.lock.set('1'); K2.slashAt.set('1');
+  assert.match(C.wordmark(), /viewBox="0 0 994.16 472"/); // through the middle: the H's foot 10 right, its round cut
+  K2.slashAt.set('0'); K2.slope.set(0); K2.lock.set('0');
   K2.slope.set(8); K2.lock.set('1'); K2.frame.set('2');
   assert.match(C.wordmark(), /<path/);
   assert.equal(crossing(C.wordmark().match(/ d="([^"]+)"/)[1].split('M').filter(Boolean).map((q) => 'M' + q)[1]), null);

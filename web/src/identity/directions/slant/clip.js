@@ -153,3 +153,113 @@ export function cutRing(ring, c) {
   const lo = trace(true), hi = trace(false);
   return lo && hi ? { lo, hi } : null;
 }
+
+/** A ring's area, signed by the way it turns. */
+export const area = (r) => r.reduce((t, [x, y], i) => { const [x2, y2] = r[(i + 1) % r.length]; return t + x * y2 - x2 * y; }, 0) / 2;
+
+/**
+ * A closed ring (simple) cut along a strip, the lines y = lo and y = hi (lo
+ * above): its zones are 0 above the strip, 1 in it, 2 below it, each line
+ * taken a hair (1e-7) above, as cutRing's. Without a crossing, { zone }.
+ * Otherwise { pieces, chords, trace }: the pieces the two lines cut it into,
+ * each { zone, ring, chords } (the chords along its cut sides); the chords,
+ * each { line, pieces } (the two pieces either side); and trace(), the ring
+ * without the pieces marked out (piece.out), as closed rings, each
+ * { ring, pieces }: cut only along the chords next to a piece left out, so
+ * the pieces kept either side of any other chord stay one. null where the
+ * crossings won't pair up.
+ */
+export function strip(ring, lo, hi) {
+  const lines = [lo - 1e-7, hi - 1e-7];
+  const zone = ([, y]) => (y < lines[0] ? 0 : y < lines[1] ? 1 : 2);
+  const n = ring.length, z = ring.map(zone);
+  // The ring with a point put in where it crosses a line, each crossing noted.
+  const pts = [], cross = [];
+  for (let i = 0; i < n; i++) {
+    const a = ring[i], b = ring[(i + 1) % n], za = z[i], zb = z[(i + 1) % n];
+    pts.push(a);
+    for (let k = za; k !== zb; k += Math.sign(zb - za)) {
+      const to = k + Math.sign(zb - za), line = Math.min(k, to), t = (lines[line] - a[1]) / (b[1] - a[1]);
+      cross.push({ at: pts.length, line, to, pt: [a[0] + t * (b[0] - a[0]), lines[line]] });
+      pts.push(cross.at(-1).pt);
+    }
+  }
+  const K = cross.length;
+  if (!K) return { zone: z[0] };
+  // Along each line, the crossings pair off into chords: the ring's inside runs between each pair.
+  const partner = [], chordOf = [], chords = [];
+  for (const line of [0, 1]) {
+    const on = cross.map((c, k) => k).filter((k) => cross[k].line === line).sort((a, b) => cross[a].pt[0] - cross[b].pt[0]);
+    for (let j = 0; j < on.length; j += 2) {
+      const [a, b] = [on[j], on[j + 1]];
+      if (b == null || cross[a].to === cross[b].to) return null;
+      partner[a] = b; partner[b] = a;
+      chordOf[a] = chordOf[b] = chords.length;
+      chords.push({ line, pieces: [] });
+    }
+  }
+  // The arcs: the ring from each crossing to the next, in the zone it crosses into.
+  const arc = (k) => {
+    const out = [], end = cross[(k + 1) % K].at;
+    for (let i = cross[k].at; ; i = (i + 1) % pts.length) { out.push(pts[i]); if (i === end) break; }
+    return out;
+  };
+  // Every arc runs on to the next, or along a chord cut to its partner's: closed rings, each its arcs.
+  const cycles = (cut, use) => {
+    const seen = new Set(), out = [];
+    for (let k = 0; k < K; k++) {
+      if (seen.has(k) || !use(k)) continue;
+      const arcs = [];
+      let j = k;
+      do {
+        seen.add(j); arcs.push(j);
+        const e = (j + 1) % K;
+        j = cut(chordOf[e]) ? partner[e] : e;
+        if (arcs.length > K) return null;
+      } while (j !== k);
+      out.push(arcs);
+    }
+    return out;
+  };
+  // Its ends are corners where the ring turns along a chord cut; on a chord not cut, only points along a side.
+  const ringOf = (arcs, cut) => arcs.flatMap((k) => arc(k).filter((q, i, a) => (i === 0 ? cut(chordOf[k]) : i < a.length - 1 || cut(chordOf[(k + 1) % K]))));
+  const all = () => true;
+  const pieces = cycles(all, all).map((arcs) => ({ zone: cross[arcs[0]].to, arcs, ring: ringOf(arcs, all), chords: [] }));
+  const pieceOf = [];
+  pieces.forEach((q, i) => q.arcs.forEach((k) => { pieceOf[k] = i; }));
+  // Each chord: the pieces either side, the arcs that leave from its ends.
+  partner.forEach((b, a) => { const c = chords[chordOf[a]]; if (!c.pieces.includes(pieceOf[a])) c.pieces.push(pieceOf[a]); });
+  chords.forEach((c, i) => c.pieces.forEach((q) => pieces[q].chords.push(i)));
+  const trace = () => {
+    const cut = (c) => chords[c].pieces.some((q) => pieces[q].out), kept = (k) => !pieces[pieceOf[k]].out;
+    return (cycles(cut, kept) ?? []).map((arcs) => ({ ring: ringOf(arcs, cut), pieces: [...new Set(arcs.map((k) => pieceOf[k]))] }));
+  };
+  pieces.forEach((q) => delete q.arcs);
+  return { pieces, chords, trace };
+}
+
+/** The distance from q to the segment a b. */
+const toSegment = ([x, y], [ax, ay], [bx, by]) => {
+  const dx = bx - ax, dy = by - ay, len = dx * dx + dy * dy;
+  const t = len ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / len)) : 0;
+  return Math.hypot(x - ax - t * dx, y - ay - t * dy);
+};
+
+/**
+ * Whether some point inside rings (evenodd) stands at least need from every
+ * side: whether a disc need in radius fits in them. Probed on a grid, coarse
+ * to fine (down to 2 apart), so it is need less a unit and a half.
+ */
+export function clearance(rings, need) {
+  const pts = rings.flat();
+  if (!pts.length) return false;
+  const xs = pts.map(([x]) => x), ys = pts.map(([, y]) => y);
+  const [x0, y0, x1, y1] = [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+  const sides = rings.flatMap((r) => r.map((a, i) => [a, r[(i + 1) % r.length]]));
+  const far = need - 1.5;
+  const fits = (q) => sides.every(([a, b]) => toSegment(q, a, b) >= far) && inside(rings, q);
+  for (let g = Math.max(2, 2 ** Math.ceil(Math.log2(Math.max(2, need)))); g >= 2; g /= 2) {
+    for (let y = y0 + g / 2; y < y1; y += g) for (let x = x0 + g / 2; x < x1; x += g) if (fits([x, y])) return true;
+  }
+  return false;
+}

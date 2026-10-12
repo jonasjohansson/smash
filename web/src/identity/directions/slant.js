@@ -45,7 +45,7 @@ const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${ru
 // ("this is decent settings too for default"): the cuts flat (slope 0), the
 // slot ends' corners rounded, the ceiling 44, the outer corners rounded 64
 // at 60%, no tilt and no dip, the A a capital, Down filled.
-export const START = { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: H, outer: 64, tension: 0.6, tilt: 0, lock: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0 };
+export const START = { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: H, outer: 64, tension: 0.6, tilt: 0, lock: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0, slashAt: 0 };
 const at = { ...START, per: PER.map((q) => ({ ...q })), lower: [0, 0, 0, 0, 0] };
 const knob = (key, label, min, max, step, value, text, set) => ({ key, label, min, max, step, value, text, set: (v) => set(Number(v)) });
 /** A switch between a few options (the page draws a button for each): [label, value]. */
@@ -79,9 +79,12 @@ export const KNOBS = [
   // The slash (the design panel, round 1, 2026-10-12): one straight kerf
   // through the wordmark along the S's blade, as wide as a slot to start; the
   // shift slides all below it right, a struck object (geometry.js: slash).
+  // Sloped, through the S's blade it runs off the base before the H; through
+  // the middle, the same slope crosses every letter (slashLine).
   choice('slash', 'Slash', [['Off', 0], ['On', 1]], START.slash),
   knob('slashWidth', 'Slash width', 8, 60, 4, START.slashWidth, (v) => `${v}`, (v) => { at.slashWidth = v; }),
   knob('shift', 'Shift', 0, 24, 4, START.shift, (v) => `${v}`, (v) => { at.shift = v; }),
+  choice('slashAt', 'Slash at', [['S', 0], ['Middle', 1]], START.slashAt),
   choice('downFit', 'Down', [['M wider', 'wider'], ['Fill', 'fill'], ['Squeeze', 'squeeze']], START.downFit),
   // Each letter's own switches (geometry.js: PER): a button where the letter has the setting.
   {
@@ -113,23 +116,17 @@ const box = () => block(now());
 // Fitted ("the frame goes into the gaps", the red part in Jonas's drawing):
 // where two letters' rounded corners meet, the frame fills the wedge they
 // leave, keeping its gap from both; never between the letters.
-// Slashed (warp, below), the mark's lower part slid along the slash: its
-// frame slides with it, and the artboard grows to hold them both.
+// Slashed and shifted (markWith), the mark is as wide as its slid feet: the
+// frame goes round that, whole, never cut or bent; the wedges at the base sit
+// between the feet where they slid (base).
 const FITTED = 2;
 const upTo = (a, b) => Math.max(a, Math.ceil(b * 100) / 100);
-function framed(w, h, d, radii, boxes, down = false, warp = null) {
-  if (!at.frame) {
-    if (!warp) return { w, h, d };
-    const [, , x1, y1] = extent(d);
-    return { w: upTo(w, x1), h: upTo(h, y1), d };
-  }
+function framed(w, h, d, radii, boxes, down = false, base = boxes) {
+  if (!at.frame) return { w, h, d };
   const m = at.frameGap + at.frameWidth;
   let f = ring(w, h, at.frameGap, at.frameWidth, radii, at.tension);
-  if (at.frame === FITTED && boxes) f += wedges(boxes, down ? w : h, at.frameGap, at.tension, down);
-  if (!warp) return { w: w + 2 * m, h: h + 2 * m, d: move(d, m, m) + move(f, m, m) };
-  f = warp(f);
-  const [, , x1, y1] = extent(d + f);
-  return { w: upTo(w + 2 * m, x1 + m), h: upTo(h + 2 * m, y1 + m), d: move(d, m, m) + move(f, m, m) };
+  if (at.frame === FITTED && boxes) f += wedges(boxes, down ? w : h, at.frameGap, at.tension, down, base);
+  return { w: Math.round((w + 2 * m) * 100) / 100, h: h + 2 * m, d: move(d, m, m) + move(f, m, m) };
 }
 const still = (f) => svg(f.w, f.h, path(f.d));
 
@@ -141,8 +138,16 @@ const markWith = (a) => {
   const spans = [[0, b.left(1)], [b.right(1), b.left(4)], [b.right(4), b.left(6)], [b.right(6), b.left(8)], [b.right(8), b.W]];
   const boxes = spans.map(([x0, x1], i) => ({ box: [x0, 0, x1, i === 2 ? h : b.H], radii: letterRadii(p, i) }));
   if (!p.slash) return framed(b.W, h, letters(p), wordRadii(p), boxes);
-  const S = slash(p); // the wordmark alone is slashed: not Down, not the S M
-  return framed(b.W, h, S.paths.join(''), wordRadii(p), boxes, false, S.warp);
+  const S = slash(p), d = S.paths.join(''); // the wordmark alone is slashed: not Down, not the S M
+  if (!S.shift) return framed(b.W, h, d, wordRadii(p), boxes);
+  // Shifted: the artboard as wide as the feet that slid; each letter's corners where its parts went
+  // (a point inside each, in from its round).
+  const into = (x, y, r, dx, dy) => [x + dx * (0.4 * r + 1), y + dy * (0.4 * r + 1)];
+  const slid = (side) => boxes.map(({ box: [x0, y0, x1, y1], radii }) => {
+    const y = side ? y1 : y0, dy = side ? -1 : 1, [rl, rr] = side ? [radii[3], radii[2]] : [radii[0], radii[1]];
+    return { box: [x0 + S.at(into(x0, y, rl, 1, dy)), y0, x1 + S.at(into(x1, y, rr, -1, dy)), y1], radii };
+  });
+  return framed(upTo(b.W, extent(d)[2]), h, d, wordRadii(p), slid(0), false, slid(1));
 };
 const wordmarkWith = (a) => still(markWith(a));
 const mark = () => letters(now());
