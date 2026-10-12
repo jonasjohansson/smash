@@ -1369,3 +1369,79 @@ test("the chapter's Letters table: a Tilt for the A and the H, off; on, the word
   reset();
   assert.equal(C.wordmark(), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 992 472" ><path fill="currentColor" fill-rule="evenodd" d="${G.letters({ ...G.SLANT, ...C.START })}"/></svg>`);
 });
+
+/**
+ * The slope of the A's or the H's crossbar edges (letter i's), every one there is: the sides from its slot's
+ * left side to its right that pivot at the crossbars' height (b.up + b.s, b.lo - b.s), read off the path data.
+ */
+const barSlopes = (p, i) => {
+  const b = G.block(p), x = b.c(i === 2 ? 5 : 9), f = (n) => String(+n.toFixed(2)), [l, r] = [f(x - b.s), f(x + b.s)];
+  const n = '(-?[\\d.]+)', re = new RegExp(`(?:^|[ML])${l} ${n}L${r} ${n}|(?:^|[ML])${r} ${n}L${l} ${n}`, 'g');
+  return [...G.letterPaths(p)[i].matchAll(re)]
+    .map((m) => (m[1] != null ? [+m[1], +m[2]] : [+m[4], +m[3]]))
+    .filter(([y0, y1]) => [b.up + b.s, b.lo - b.s].some((v) => Math.abs((y0 + y1) / 2 - v) < 0.02))
+    .map(([y0, y1]) => (y1 - y0) / (2 * b.s));
+};
+
+test("the A's and the H's tilt fall as the S's blade is drawn: where it gives way, they give way with it", () => {
+  const near = (a, b, s) => Math.abs(a - b) <= 0.01 / s; // the path data's two decimals, across a slot
+  // Free, the S's blade held back (its slots: fallThrough; its rounds: fallOf), the Tilt slider steeper than it:
+  // 96 across 204 (0.47) drawn at 0.4; 160 across 104 (1.54) at 0.6; risen in two tiers at slots of 8, level.
+  for (const [set, raw, slope] of [
+    [{ stroke: 60, tilt: 96 }, 96 / 204, 0.4],
+    [{ stem: 32, stroke: 40, tilt: 160 }, 160 / 104, 0.6],
+    [{ corners: 1, stroke: 8, height: 240, rise: 48, tilt: 160 }, 160 / 152, 0],
+  ]) {
+    const p = { ...PAGE, ...set, per: TILTED }, s = G.block(p).s, S = G.slashLine(p).slope;
+    assert.ok(near(S, slope, s) && raw > S + 0.05, JSON.stringify(set));
+    for (const i of [2, 4]) {
+      const k = barSlopes(p, i);
+      assert.equal(k.length, 2, JSON.stringify(set)); // the A's floor and its notch's top; the H's two edges
+      assert.ok(k.every((m) => near(m, S, s)), `${JSON.stringify(set)} ${i}: ${k} against ${S}`);
+    }
+  }
+  // Every proportion: the A's and the H's four edges at one slope, never steeper than the S's blade (less only
+  // where their own room gives way: below).
+  for (const stem of [32, 200]) for (const slot of [8, 60]) for (const height of [240, 720]) for (const ceil of [16, 160]) for (const rise of [-48, 48])
+    for (const [lock, drop, tilt] of [[1, 1, 0], [1, 0.4, 0], [0, 0, 160], [0, 1, 96]]) for (const corners of [0, 1]) for (const [split, blade] of [[0, 'step'], [1, 'line']]) {
+      const p = { ...PAGE, corners, endRound: 200, innerRound: 16, stem, stroke: slot, height, ceil, rise, lock, drop, tilt, split, blade, per: TILTED };
+      const why = JSON.stringify({ stem, slot, height, ceil, rise, lock, drop, tilt, corners, split, blade });
+      const s = G.block(p).s, S = G.slashLine(p).slope, k = [...barSlopes(p, 2), ...barSlopes(p, 4)];
+      assert.equal(k.length, 4, why);
+      assert.ok(k.every((m) => near(m, k[0], s)) && k[0] <= S + 0.01 / s, `${why}: ${k} against ${S}`);
+    }
+  // Down's squeezed S's held to the cuts' slope exactly, and its A and H with them.
+  for (const stroke of [20, 60]) {
+    const D = G.down({ ...SQUARE, stroke, drop: 0.8, lock: 1, per: TILTED, downFit: 'squeeze' });
+    assert.deepEqual([...new Set(slopes(D.d).map((k) => +k.toFixed(9)))], [0.8]);
+  }
+});
+
+test("both tilted, the A and the H share the smaller room: where the A gives way before the S, the H does too", () => {
+  // Locked at 20 in 20, 240 tall, ceiling 160, risen 48, stems 32, slots 60: the S's blade at 1, the A's counter
+  // only room for 20 across half its slot, its floor 292 to 332 (2/3); the H with it, 292 to 332.
+  const p = { ...PAGE, lock: 1, drop: 1, height: 240, ceil: 160, rise: 48, stem: 32, stroke: 60, per: TILTED };
+  assert.equal(G.slashLine(p).slope, 1);
+  assert.deepEqual([barSlopes(p, 2), barSlopes(p, 4)], [[2 / 3, 2 / 3], [2 / 3, 2 / 3]]);
+  assert.match(G.letterPaths(p)[2], /L412 292L472 332Z$/);
+  assert.match(G.letterPaths(p)[4], /L700 292L760 332L/);
+  // The A level, or the a (no crossbar to fall), the H takes its own room, at the S's slope.
+  assert.deepEqual(barSlopes({ ...p, per: TILTED.map((q, i) => (i === 2 ? { ...q, tilt: 0 } : q)) }, 4), [1, 1]);
+  assert.deepEqual(barSlopes({ ...p, a: 'a' }, 4), [1, 1]);
+});
+
+test("the Letters table dims the A's Tilt while the a is chosen: it waits for the capital", () => {
+  const reset = () => { for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value)); };
+  reset();
+  const K2 = Object.fromEntries(C.KNOBS.map((k) => [k.key, k])), letters = K2.per;
+  const live = () => letters.rows.flatMap(([row]) => [0, 1, 2, 3, 4].filter((i) => letters.has(row, i) && !letters.live(row, i)).map((i) => `${row} ${i}`));
+  assert.deepEqual(live(), []);
+  K2.a.set('a');
+  assert.deepEqual(live(), ['tilt 2']);
+  // And it does nothing there: the a's wordmark the same, its Tilt on or off.
+  const before = C.wordmark();
+  letters.set('tilt', 2, 1);
+  assert.equal(C.wordmark(), before);
+  reset();
+  assert.deepEqual(live(), []);
+});

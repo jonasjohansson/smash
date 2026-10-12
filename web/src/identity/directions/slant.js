@@ -117,6 +117,9 @@ export const KNOBS = [
     key: 'per', label: 'Letters', letters: ['S', 'M', 'A', 'S', 'H'],
     rows: [['cut', 'Cut'], ['round', 'Round'], ['base', 'Base'], ['both', 'Both sides'], ['tilt', 'Tilt'], ['split', 'Split'], ['open', 'Open'], ['dip', 'Dip']],
     has: (row, i) => row in PER[i],
+    // Whether a switch does anything as the other controls stand (the page dims it where not): the A's Tilt
+    // waits for the capital, as the a's slot has no crossbar to fall (the design panel's review, round 2, 2026-10-13).
+    live: (row, i) => !(row === 'tilt' && i === 2 && at.a === 'a'),
     on: (row, i) => !!at.per[i][row],
     set: (row, i, v) => { at.per[i][row] = v ? 1 : 0; },
     reset() { at.per = PER.map((q) => ({ ...q })); },

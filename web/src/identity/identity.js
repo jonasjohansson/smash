@@ -85,7 +85,7 @@ function favicons(d) {
 const knobHTML = (k) => (k.each
   ? `<span class="knob each" data-knob="${esc(k.key)}"><span>${esc(k.label)}</span>${k.each.map((l, i) => (k.has(i) ? `<label><span class="col">${esc(l)}</span><input type="range" data-i="${i}" min="${k.min}" max="${k.max}" step="${k.step}" value="${k.get(i)}"><output>${k.get(i)}</output></label>` : '')).join('')}</span>`
   : k.rows
-  ? `<span class="knob letters" data-knob="${esc(k.key)}" style="--n:${k.letters.length}"><span></span>${k.letters.map((l) => `<span class="col">${esc(l)}</span>`).join('')}${k.rows.map(([row, label]) => `<span>${esc(label)}</span>${k.letters.map((l, i) => (k.has(row, i) ? `<button type="button" data-row="${esc(row)}" data-i="${i}" title="${esc(`${label}, ${l}`)}"${k.on(row, i) ? ' data-on' : ''}></button>` : '<i></i>')).join('')}`).join('')}</span>`
+  ? `<span class="knob letters" data-knob="${esc(k.key)}" style="--n:${k.letters.length}"><span></span>${k.letters.map((l) => `<span class="col">${esc(l)}</span>`).join('')}${k.rows.map(([row, label]) => `<span>${esc(label)}</span>${k.letters.map((l, i) => (k.has(row, i) ? `<button type="button" data-row="${esc(row)}" data-i="${i}" title="${esc(`${label}, ${l}`)}"${k.on(row, i) ? ' data-on' : ''}${k.live && !k.live(row, i) ? ' disabled' : ''}></button>` : '<i></i>')).join('')}`).join('')}</span>`
   : k.options
   ? `<span class="knob switch" data-knob="${esc(k.key)}"><span>${esc(k.label)}</span>${k.options.map(([label, v]) => `<button type="button" data-v="${esc(String(v))}"${String(v) === String(k.value) ? ' data-on' : ''}>${esc(label)}</button>`).join('')}</span>`
   : `<label class="knob" data-knob="${esc(k.key)}"><span>${esc(k.label)}</span><input type="range" min="${k.min}" max="${k.max}" step="${k.step}" value="${k.value}"><output>${esc(k.text(k.value))}</output></label>`);
@@ -96,6 +96,8 @@ function knobs(d, section) {
     for (const el of section.querySelectorAll('[data-still]')) el.innerHTML = drawn(d, el.dataset.still, el.dataset.ground);
     const fav = $('.favicons', section);
     if (fav) fav.outerHTML = favicons(d);
+    // A table's switches that do nothing as the other controls now stand (k.live), dimmed.
+    for (const k of d.mod.KNOBS ?? []) if (k.rows && k.live) for (const b of section.querySelectorAll(`.knob[data-knob="${k.key}"] button`)) b.disabled = !k.live(b.dataset.row, Number(b.dataset.i));
     d.live?.motion?.redraw?.();
   };
   for (const k of d.mod.KNOBS ?? []) {

@@ -241,7 +241,7 @@ function endMost(p, i, k, R, E) {
   const share = (n, length) => (E[n] ? length / 2 : length - R[n]); // a side two corners round
   const most = [];
   // (Its crossbar tilted, barFall, the room to its high edge, at either side of the slot.)
-  if (i === 4) most.push(share(across, w), reachTo(stem, (k < 2 ? up + s : H - lo + s) - keep - barFall(p, 4), p.tension ?? TENSION));
+  if (i === 4) most.push(share(across, w), reachTo(stem, (k < 2 ? up + s : H - lo + s) - keep - barFall(p, 4, true), p.tension ?? TENSION));
   else if (open || (i === 1 && k > 1)) most.push(stem); // on one stem (a foot): a slot runs out beside it
   else {
     most.push(share(across, w));
@@ -448,25 +448,40 @@ const tiltOf = (p, w, slot) => (p.lock ? (cutOf(p.drop ?? DROP, slot, p.grid) / 
  * design panel, round 2, 2026-10-13: one angle swept through S, A, S, H
  * without a slash): on, the H's crossbar, and the A's counter floor and its
  * notch's top, fall left to right as the S's blade does, the same drop for
- * each unit across: locked, the cuts' slope; free, the Tilt slider's fall
- * across an S of two stems and a slot (tiltOf). Each pivots at its slot's
- * centre, at the crossbars' (risen) height, and stays a bar thick measured
- * down: the H's upper slot ends on the higher edge on the left, its lower one
- * starts on the lower edge on the right; the A's counter keeps its height at
- * the slot's centre. How far each falls across half its slot: the H's at most
- * till its high corner keeps a quarter of a bar under the top, where its slot
- * runs out; the A's till its counter's left side, the shorter under its cut
- * top, keeps a slot and the cut's fall and round, as a lowered counter does
- * (letterPaths: most.A). Off, or the a (its slot has no crossbar to fall), 0.
+ * each unit across: the blade as it is drawn, after its clamps (slashLine:
+ * its corners' rounds, its slots), so where the S gives way the A and the H
+ * give way with it (the design panel's review, round 2, 2026-10-13: a free
+ * Tilt of 160 at stems 32 and slots 40 had the S at 0.6 and the A and the H
+ * at 1.54). Locked and unclamped, that is the cuts' slope; free, the Tilt
+ * slider's fall across the S; neither S tilted, level, as its blade is. Each
+ * pivots at its slot's centre, at the crossbars' (risen) height, and stays a
+ * bar thick measured down: the H's upper slot ends on the higher edge on the
+ * left, its lower one starts on the lower edge on the right; the A's counter
+ * keeps its height at the slot's centre. How far each falls across half its
+ * slot (room): the H's at most till its high corner keeps a quarter of a bar
+ * under the top, where its slot runs out; the A's till its counter's left
+ * side, the shorter under its cut top, keeps a slot and the cut's fall and
+ * round, as a lowered counter does (letterPaths: most.A). Both tilted, they
+ * share the smaller room, so the two keep one angle where the A gives way
+ * before the S (locked at 20 in 20, height 240, ceiling 160: the A and the H
+ * at 0.64, the S at 1). Off, or the a (its slot has no crossbar to fall), 0.
+ * most, the most it could fall (the H's end corners leave room for it, endMost:
+ * the S's blade is not asked, as its rounds ask the H's ends in two tiers).
  */
-function barFall(p, i) {
-  if ((i !== 2 && i !== 4) || (i === 2 && p.a === 'a')) return 0;
-  const q = per(p, i);
-  if (!q.tilt) return 0;
-  const { s, stem, slot, up, ceil } = block(p), w = 2 * stem + slot;
+const tilted = (p, i) => (i === 4 || (i === 2 && p.a !== 'a')) && !!per(p, i).tilt;
+function barRoom(p, i) {
+  const { s, slot, up, ceil } = block(p), q = per(p, i);
   const d = q.cut ? cutOf(p.drop ?? DROP, slot, p.grid) : 0, r = q.cut && p.round ? Math.min(p.cut ?? CUT, s) : 0;
-  const room = i === 4 ? up + s - BAR / 4 : up + s - ceil - d - r - slot;
-  return Math.max(0, Math.min((Math.max(0, tiltOf(p, w, slot) ?? 0) / w) * s, room));
+  return Math.max(0, i === 4 ? up + s - BAR / 4 : up + s - ceil - d - r - slot);
+}
+function barFall(p, i, most = false) {
+  if (!tilted(p, i)) return 0;
+  const { s, stem, slot } = block(p), w = 2 * stem + slot;
+  // At most the Tilt slider's (or the cuts') fall, and a step of the grid more for a blade split along one
+  // line (its ends snapped to it: slashLine).
+  const snap = lined(p, per(p, [0, 3].find((k) => per(p, k).tilt) ?? 0)) ? p.grid ?? 4 : 0;
+  if (most) return Math.min(((Math.max(0, tiltOf(p, w, slot) ?? 0) + snap) / w) * s, barRoom(p, i));
+  return Math.max(0, Math.min(slashLine(p).slope * s, ...[2, 4].filter((k) => tilted(p, k)).map((k) => barRoom(p, k))));
 }
 
 /**
@@ -693,8 +708,10 @@ export function letterPaths(p = SLANT, only = null) {
   // to the crossbar, and the counter above it, its top end cut as the M's.
   // With a dip ("can it still have a dip?"), its left leg takes the a's
   // foot; the right leg stands square, as the a's stem.
-  // Tilted (barFall), its counter's floor and its notch's top fall left to right, a bar apart down: the
-  // counter a trapezoid, its height at the slot's centre as it was.
+  // Tilted (barFall), its counter's floor and its notch's top fall left to right, a bar apart down, the
+  // counter's height at the slot's centre as it was: under a level cut top a trapezoid taller on the right;
+  // under a cut at the same slope (locked) a parallelogram. (The design panel asked for one taller on the
+  // left, which a floor falling left to right can't give under either: left open, for Jonas.)
   const A = (L, x, R, k) => poly([k.o(L, 0), k.o(R, 0), k.ob(R, H), [x + s, H], [x + s, lo - s + k.fall], [x - s, lo - s - k.fall],
     ...(k.dip ? swoopTo(x - s, L, k, k.radii[3], k.ob) : [[x - s, H], k.ob(L, H)])])
     + poly([[x + s, k.hi + k.d, k.r], [x - s, k.hi, k.r2], [x - s, up + s - k.fall], [x + s, up + s + k.fall]]);
@@ -755,8 +772,9 @@ export function slashLine(p = SLANT) {
   const i = [0, 3].find((k) => per(p, k).tilt) ?? 0;
   const q = per(p, i), [tl, , br] = rounds(p, i).radii;
   const L = i ? right(6) : 0, R = i ? left(8) : left(1);
-  const d = q.cut ? cutOf(p.drop ?? DROP, slot, p.grid) : 0;
-  const tilt = q.tilt ? fallThrough(fallOf(tiltOf(p, 2 * stem + slot, slot), H, lined(p, q) ? 0 : BAR, Math.max(tl, br), 8, rise), R - L, BAR, d, s) : 0;
+  const d = q.cut ? cutOf(p.drop ?? DROP, slot, p.grid) : 0, h = holdOf(p, i);
+  // Held (holdOf), the blade falls the cuts' slope exactly, never clamped (letterPaths: own).
+  const tilt = h ? h.D : q.tilt ? fallThrough(fallOf(tiltOf(p, 2 * stem + slot, slot), H, lined(p, q) ? 0 : BAR, Math.max(tl, br), 8, rise), R - L, BAR, d, s) : 0;
   // Split along one line, its ends on the grid (sLetter): the slope between them.
   const g = p.grid ?? 4, slope = lined(p, q) ? (snapFrom(mid + tilt / 2, mid, g) - snapFrom(mid - tilt / 2, mid, g)) / (R - L) : tilt / (R - L);
   return { x: p.slashAt ? W / 2 : c(i ? 7 : 0), y: mid, slope };
@@ -979,7 +997,8 @@ export function down(p = SLANT) {
   const boxes = [];
   const rs = STEMS.map((n, i) => {
     const t = fit === 'wider' ? stem : (w - (n - 1) * slot) / n; // this letter's stems
-    return fit === 'squeeze' && (i === 0 || i === 3) ? held({ ...q, stem: t }, i) : fit === 'squeeze' && i === 1 ? { ...q, ...squeezeM(w, slot) } : { ...q, stem: t };
+    // (Squeezed, the A and the H tilt as the held S's blade falls: slashLine, barFall.)
+    return fit === 'squeeze' && (i === 0 || i === 3) ? held({ ...q, stem: t }, i) : fit === 'squeeze' && i === 1 ? { ...q, ...squeezeM(w, slot) } : { ...q, stem: t, ...(fit === 'squeeze' ? { hold: 1 } : {}) };
   });
   // In two tiers, its ends alike, each letter at its own measures: the least they hold (markHeld).
   const endCap = tiers(q) ? Math.min(...rs.map((r, i) => endHeld(r, i))) : undefined;
