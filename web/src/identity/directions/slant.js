@@ -10,7 +10,7 @@
 // holds the wordmark. Geometry: ./slant/geometry.js.
 
 import { svg, timeline, canvasStage, withCleanup } from '../lib.js';
-import { letters, slash, letterS, down as downPath, symbol as symbolPath, symCols, symRows, block, depth, ring, wedges, move, wordRadii, letterRadii, symRadii, rounds, SLANT, DROP, DROPS, BAR, PER, H, PITCH } from './slant/geometry.js';
+import { letters, slash, letterS, down as downPath, symbol as symbolPath, symbolCells, symCols, symRows, block, depth, ring, wedges, move, wordRadii, letterRadii, symRadii, rounds, SLANT, DROP, DROPS, BAR, PER, H, PITCH } from './slant/geometry.js';
 import { lockPaths } from './original.js';
 import { extent } from './slant/clip.js';
 
@@ -45,7 +45,7 @@ const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${ru
 // ("this is decent settings too for default"): the cuts flat (slope 0), the
 // slot ends' corners rounded, the ceiling 44, the outer corners rounded 64
 // at 60%, no tilt and no dip, the A a capital, Down filled.
-export const START = { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: H, rise: 0, outer: 64, tension: 0.6, tilt: 0, lock: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0, slashAt: 0 };
+export const START = { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: H, rise: 0, outer: 64, tension: 0.6, tilt: 0, lock: 0, split: 0, a: 'A', dip: 0, downFit: 'fill', tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0, slashAt: 0, symbol: 'extended' };
 const at = { ...START, per: PER.map((q) => ({ ...q })), lower: [0, 0, 0, 0, 0] };
 const knob = (key, label, min, max, step, value, text, set) => ({ key, label, min, max, step, value, text, set: (v) => set(Number(v)) });
 /** A switch between a few options (the page draws a button for each): [label, value]. */
@@ -91,6 +91,11 @@ export const KNOBS = [
   knob('shift', 'Shift', 0, 24, 4, START.shift, (v) => `${v}`, (v) => { at.shift = v; }),
   choice('slashAt', 'Slash at', [['S', 0], ['Middle', 1]], START.slashAt),
   choice('downFit', 'Down', [['M wider', 'wider'], ['Fill', 'fill'], ['Squeeze', 'squeeze']], START.downFit),
+  // The S M built from the wordmark's own cells (the design panel, round 2,
+  // 2026-10-13): its first S and an M squeezed to the S's width, the
+  // wordmark's height, stems and gap, so a crop of it; the extended S M as it
+  // was (geometry.js: symbolCells). The lockup and the favicons follow it.
+  choice('symbol', 'Symbol', [['Extended', 'extended'], ['Cells', 'cells']], START.symbol),
   // Each letter's own switches (geometry.js: PER): a button where the letter has the setting.
   {
     key: 'per', label: 'Letters', letters: ['S', 'M', 'A', 'S', 'H'],
@@ -178,8 +183,15 @@ const symH = () => rows().reduce((t, n) => t + n);
 // them, at the same angle; their slots already open, as the S M's.
 // Locked, they fall at their own cuts' slope instead, as the wordmark's S's.
 const blade = () => ({ tilt: at.per[0].tilt ? at.tilt : 0, lock: at.per[0].tilt ? at.lock : 0, split: at.per[0].split ? at.split : 0 });
+// Cells (symbolCells): the S M from the wordmark's first S and its M squeezed to it, at the sliders' measures.
+const cells = () => (at.symbol === 'cells' ? symbolCells(now()) : null);
 const sym = () => symbolPath({ cols: cols(), rows: rows(), cut: at.cut, tips: at.tips, drop: at.drop, outer: at.outer, tension: at.tension, ...blade() });
 export const symbol = () => {
+  const C = cells();
+  if (C) {
+    const [S, M] = C.boxes;
+    return still(framed(C.w, C.h, C.d, [S.radii[0], M.radii[1], M.radii[2], S.radii[3]], C.boxes)); // the S's left corners, the M's right
+  }
   const c = cols(), [R] = symRadii(at.outer, c, rows()), sw = c[0] + c[1] + c[2];
   const boxes = [{ box: [0, 0, sw, symH()], radii: [R, R, R, R] }, { box: [sw + c[3], 0, symW(), symH()], radii: [R, R, 0, 0] }]; // the S, the M
   return still(framed(symW(), symH(), sym(), symRadii(at.outer, c, rows()), boxes));
@@ -198,6 +210,11 @@ export function lockup() {
   return svg(L.width, b.H + depth(now()), path(mark()) + path(L.d, 'nonzero'));
 }
 export function lockupSM() {
+  const C = cells();
+  if (C) { // its lines in the wordmark's bands, as the lockup's
+    const L = lockPaths([['name', C.bands[1]], ['studio', C.bands[3]], ['stockholm', C.h]], CAP, C.w + PITCH);
+    return svg(L.width, C.h, path(C.d) + path(L.d, 'nonzero'));
+  }
   const r = rows(), bars = [r[0], r[0] + r[1] + r[2], symH()];
   const L = lockPaths([['name', bars[0]], ['studio', bars[1]], ['stockholm', bars[2]]], r[0], symW() + PITCH);
   return svg(L.width, symH(), path(sym()) + path(L.d, 'nonzero'));
@@ -212,12 +229,13 @@ export function gridOf(kind) {
   if (at.slash && at.shift && kind === 'wordmark') return false; // slid along its slash, the wordmark leaves the grid
   const b = box(), w = symW(), h = symH(), bar = at.stem, slot = at.stroke;
   const bands5 = rows().reduce((e, n) => [...e, e.at(-1) + n], [0]);
-  const sw = 2 * bar + slot;
+  const sw = 2 * bar + slot, C = cells();
+  const sm = C ? { w: C.w, h: C.h, bands: C.bands, bar, slot, columns: C.columns } : { w, h, bands: bands5, bar, slot, columns: symColumns() };
   return {
     wordmark: { w: b.W, h: b.H, bands: b.bands, bar, slot, columns: b.columns },
     lockup: { w: b.W, h: b.H, bands: b.bands, type: b.W + PITCH, bar, slot, columns: b.columns },
-    symbol: { w, h, bands: bands5, bar, slot, columns: symColumns() },
-    lockupSM: { w, h, bands: bands5, type: w + PITCH, bar, slot, columns: symColumns() },
+    symbol: sm,
+    lockupSM: { ...sm, type: sm.w + PITCH },
     s: { w: sw, h, bands: bands5, bar, slot },
     sTurned: { w: h, h: sw, bands: bands5, turn: true, bar, slot },
     sSquare: { w: sw + bar + slot, h, bands: bands5, bar, slot },
@@ -229,6 +247,12 @@ export function gridOf(kind) {
 const FAV = { 64: 8, 32: 4, 16: 2 };
 export function favicon({ size = 32 } = {}) {
   const n = FAV[size] ? size : 32;
+  // Cells: that S M scaled to the original's 7 in 8 of the icon at its longer side, centred.
+  const C = cells();
+  if (C) {
+    const k = (0.875 * n) / Math.max(C.w, C.h);
+    return svg(n, n, `<rect width="${n}" height="${n}" fill="${BLACK}"/><path fill="${WHITE}" fill-rule="evenodd" d="${move(C.d, (n - C.w * k) / 2, (n - C.h * k) / 2, k)}"/>`);
+  }
   const bar = FAV[n];
   const sl = bar / 2;
   const cols = [bar, sl, bar, sl, bar, sl, bar, sl, bar];

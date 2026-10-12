@@ -145,7 +145,9 @@ const per = (p, i) => ({ ...PER[i], ...(p.per?.[i] ?? {}) });
  */
 export function rounds(p, i) {
   const { s, up, lo, H, stem, slot } = block(p);
-  const R0 = Math.min(p.outer ?? 0, stem + slot / 2, up - s, H - lo - s); // (risen, the upper side the shorter)
+  // Held (holdOf), an S's corners at most till its grown crossbar slots: its top one's top, the shorter side.
+  const h = holdOf(p, i);
+  const R0 = Math.min(p.outer ?? 0, stem + slot / 2, up - s, H - lo - s, h ? h.top : Infinity); // (risen, the upper side the shorter)
   const q = per(p, i);
   const legs = i === 1 || i === 2 || i === 4; // the M, the A and the H stand on stems
   return { Rr: q.round ? (i === 4 || q.open ? Math.min(R0, stem) : R0) : 0, Rb: q.base ? (legs || q.open ? Math.min(R0, stem) : R0) : 0 };
@@ -269,6 +271,37 @@ const fallOf = (tilt, H, bar, R, room = 8, rise = 0) => Math.max(0, Math.min(til
 const tiltOf = (p, w, slot) => (p.lock ? (cutOf(p.drop ?? DROP, slot) / slot) * w : p.tilt);
 
 /**
+ * An S held to the angle (p.hold; the design panel, round 2, 2026-10-13: the
+ * symbol built from the wordmark's cells, and Down's squeezed S's): locked,
+ * its blade falls exactly the cuts' slope across its run, D, never clamped.
+ * Its blade band, the two crossbar slots and the crossbar between its
+ * counters (a bar and two slots, level), holds that fall when it is at least
+ * D and a slot tall: the blade's centre line keeps half a slot inside it at
+ * both ends. Where it can't, the band grows to D and a slot, its crossbar
+ * slots taller (sv, half of one), and the extra comes equally out of the top
+ * and the bottom counters, each at least a bar (BAR; and its cut end, d and
+ * half a slot); where they can't give that much, the S grows taller (least,
+ * the height that holds it, to the 8). Its corners' rounds give way rather
+ * than the angle (top: at most the top crossbar slot's top). Only the first
+ * and the second S (i 0, 3) are held, only where their tilt is on.
+ * { D, sv, top, least } or null.
+ */
+export function holdOf(p, i = 0) {
+  if (!p.hold || !p.lock || (i !== 0 && i !== 3) || !per(p, i).tilt) return null;
+  const { s, stem, slot, ceil, rise, mid } = block(p);
+  const D = tiltOf(p, 2 * stem + slot, slot);
+  const grow = Math.max(0, D + slot - (BAR + 2 * slot));
+  const sv = s + grow / 4, floor = Math.max(BAR, cutOf(p.drop ?? DROP, slot) + s);
+  return { D, sv, top: mid - BAR / 2 - 2 * sv, least: grow ? Math.ceil((2 * (floor + ceil + rise) + D + slot) / 8) * 8 : 0 };
+}
+
+/** p with S i held (holdOf), as tall as that needs. */
+export function held(p, i = 0) {
+  const q = { ...p, hold: 1 }, h = holdOf(q, i);
+  return h && h.least > block(q).H ? { ...q, height: h.least } : q;
+}
+
+/**
  * Through a slot, an S's crossbar is bar and d thick less its fall across the
  * slot; falling more, the slot's cut end above would pass the one below and
  * the S cross itself (the design panel's review, round 1, 2026-10-12: wide
@@ -348,6 +381,7 @@ export function letterPaths(p = SLANT, only = null) {
   const own = (i) => {
     const q = per(p, i);
     const { Rr, Rb } = rounds(p, i);
+    const h = holdOf(p, i); // held, an S's blade at the angle exactly, its crossbar slots grown to hold it
     return {
       d: q.cut ? cutOf(p.drop ?? DROP, slot) : 0, // 8
       r: q.cut && p.round ? Math.min(p.cut ?? CUT, s) : 0, // 4: a cut's obtuse corner, at a slot's end and an S's bend
@@ -359,7 +393,8 @@ export function letterPaths(p = SLANT, only = null) {
       Rb,
       ob: (x, y) => (Rb > 0 ? [x, y, Rb, p.tension ?? TENSION] : [x, y]), // a corner at the base
       // the S's crossbar's fall across its two stems and a slot (locked, at the cuts' slope: tiltOf), at most till its ends meet the corners' rounds
-      tilt: q.tilt ? fallOf(tiltOf(p, 2 * stem + slot, slot), H, bar, Math.max(Rr, Rb), 8, rise) : 0,
+      tilt: h ? h.D : q.tilt ? fallOf(tiltOf(p, 2 * stem + slot, slot), H, bar, Math.max(Rr, Rb), 8, rise) : 0,
+      sv: h ? h.sv : s,
       split: q.split && p.split,
       open: !!q.open,
       both: !!q.both,
@@ -418,10 +453,10 @@ export function letterPaths(p = SLANT, only = null) {
 
   // How far each kind of letter's slot ends can come in: an S's to half a
   // slot from its bends (both ends come in alike, so as far as the shorter
-  // half allows: the upper, when the crossbars rise); the M's to two slots from the baseline; the A's
-  // counter to a slot tall; the a's slot to a slot long.
+  // half allows: the upper, when the crossbars rise; held, less what its crossbar slots grew); the M's
+  // to two slots from the baseline; the A's counter to a slot tall; the a's slot to a slot long.
   const most = {
-    S: (k) => Math.min(up - s - hi, low - lo - s) - k.d - k.r - slot / 2,
+    S: (k) => Math.min(up - s - hi, low - lo - s) - 2 * (k.sv - s) - k.d - k.r - slot / 2,
     M: (k) => H - hi - k.d - 2 * slot,
     A: (k) => up + s - hi - k.d - k.r - slot,
     a: (k) => H - swoop - bar - hi - 2 * k.d - 2 * k.r - slot,
@@ -624,13 +659,13 @@ export function slash(p = SLANT, paths = letterPaths(p)) {
   return { paths: drawAt.map((f) => f(shift)), shift, at };
 }
 
-/** Path data (M, L, C, A, Z, absolute) moved by dx, dy. */
-export function move(d, dx, dy) {
+/** Path data (M, L, C, A, Z, absolute) scaled by k (the favicons' cells), then moved by dx, dy. */
+export function move(d, dx, dy, k = 1) {
   return [...d.matchAll(/([MLCAZ])([^MLCAZ]*)/g)].map(([, cmd, args]) => {
     if (cmd === 'Z') return 'Z';
     const n = args.trim().split(/[\s,]+/).map(Number);
-    const from = cmd === 'A' ? 5 : 0; // an arc's radii and flags stay
-    return cmd + n.map((v, i) => (i < from ? f(v) : f(v + ((i - from) % 2 ? dy : dx)))).join(' ');
+    const from = cmd === 'A' ? 5 : 0; // an arc's flags stay, its radii scale
+    return cmd + n.map((v, i) => (i < from ? f(i < 2 ? v * k : v) : f(v * k + ((i - from) % 2 ? dy : dx)))).join(' ');
   }).join('');
 }
 
@@ -646,7 +681,9 @@ export const DOWN_FITS = ['wider', 'fill', 'squeeze'];
  *   width ("the stem width increases of the other characters so they fit
  *   all in same width");
  * - squeeze: the others have the wordmark's stems, and the M's narrow to
- *   their width.
+ *   their width; its S's held to the angle (holdOf; the design panel, round
+ *   2, 2026-10-13), as the symbol's cells: locked, their blades fall exactly
+ *   the cuts' slope, and an S grows taller where its counters can't give.
  * { d, w, h }.
  */
 const STEMS = [2, 3, 2, 2, 2]; // S M A S H: their stems, and one slot fewer
@@ -662,7 +699,8 @@ export function down(p = SLANT) {
   const boxes = [];
   STEMS.forEach((n, i) => {
     const t = fit === 'wider' ? stem : (w - (n - 1) * slot) / n; // this letter's stems
-    const r = { ...q, stem: t }, b = block(r), lw = width(n, t), x = (w - lw) / 2;
+    const r = fit === 'squeeze' && (i === 0 || i === 3) ? held({ ...q, stem: t }, i) : { ...q, stem: t };
+    const b = block(r), lw = width(n, t), x = (w - lw) / 2;
     const x0 = [0, b.right(1), b.right(4), b.right(6), b.right(8)][i];
     d += move(letterPaths(r, i)[i], x - x0, y);
     boxes.push({ box: [x, y, x + lw, y + b.H], radii: letterRadii(r, i) });
@@ -746,6 +784,30 @@ export function symbol({ cols = SYM_COLS, rows = SYM_ROWS, x = 0, y = 0, stop = 
     + poly([o(e[4], r[0]), o(e[9], r[0]), [e[9], r[5]],
       ...[[e[7], e[8]], [e[5], e[6]]].flatMap(([a, b]) => [[b, r[5]], [b, top + d, k], [a, top, k2], [a, r[5]]]),
       [e[4], r[5]]]);
+}
+
+/**
+ * The S M from the wordmark's own cells (p.symbol 'cells'; the design panel,
+ * round 2, 2026-10-13: the extended S M's S is open and nearly flat, it
+ * ignores the height and the stems, and its blade is shallower than its M's
+ * slot heads): the first S as the wordmark draws it (letterPaths), its height,
+ * stems, slots, ceiling, corners, rise and its own switches, closed or open
+ * as they say; the wordmark's gap; and the M squeezed to the S's width, as
+ * Down's squeeze, so the two are equal cells and the symbol a crop of the
+ * wordmark. Its S is held to the angle (holdOf): locked, its blade falls the
+ * cuts' slope exactly, and the S M grows taller where the S needs it.
+ * { d, w, h, bands, boxes, columns }: its boxes and their corners' rounds,
+ * the S's then the M's, and its slots and its gap, as [left, width].
+ */
+export function symbolCells(p = SLANT) {
+  const S = held(p, 0), b = block(S), { stem, slot, gap } = b, sw = 2 * stem + slot;
+  const M = { ...S, stem: (sw - 2 * slot) / 3, height: b.H }, m = block(M), dx = sw + gap - m.right(1);
+  const d = letterPaths(S, 0)[0] + move(letterPaths(M, 1)[1], dx, 0);
+  return {
+    d, w: 2 * sw + gap, h: b.H, bands: b.bands,
+    boxes: [{ box: [0, 0, sw, b.H], radii: letterRadii(S, 0) }, { box: [sw + gap, 0, 2 * sw + gap, b.H], radii: letterRadii(M, 1) }],
+    columns: [[stem, slot], [sw, gap], [m.left(2) + dx, slot], [m.left(3) + dx, slot]],
+  };
 }
 
 /**
