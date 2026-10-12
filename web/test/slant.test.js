@@ -114,7 +114,10 @@ test('the chapter gives every still as plain vector', () => {
     assert.doesNotMatch(out, /<text|style=|filter|mask|transform/, fn);
   }
   for (const n of [16, 32, 64]) assert.match(C.favicon({ size: n }), new RegExp(`viewBox="0 0 ${n} ${n}"`));
-  assert.match(C.wordmark(), /viewBox="0 0 552 472"/);
+  // At Jonas's settings: 11 stems of 72, 10 slots of 24; the A dips 8.
+  assert.deepEqual(C.START, { cut: 20, drop: 0.4, stem: 72, stroke: 24, height: 472, outer: 36, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 8 });
+  assert.match(C.wordmark(), /viewBox="0 0 1032 480"/);
+  assert.equal(C.wordmark(), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1032 480" ><path fill="currentColor" fill-rule="evenodd" d="${G.letters({ ...G.SLANT, ...C.START })}"/></svg>`);
   assert.equal(C.info.slug, 'slant');
 });
 
@@ -123,13 +126,14 @@ test('the sliders draw every still at their measures, and back', () => {
   assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'height', 'outer', 'tension', 'tilt', 'dip', 'split', 'a']);
   const at8 = C.wordmark();
   slope.set(12);
-  assert.ok(C.symbol().includes(G.symbol({ drop: 0.6, outer: G.OUTER })));
-  assert.ok(C.wordmark().includes(G.letters({ ...G.SLANT, drop: 0.6 })));
+  const S0 = C.START;
+  assert.ok(C.symbol().includes(G.symbol({ cols: G.symCols(72, 24), rows: G.symRows(24), cut: S0.cut, drop: 0.6, outer: S0.outer, tension: S0.tension })));
+  assert.ok(C.wordmark().includes(G.letters({ ...G.SLANT, ...S0, drop: 0.6 })));
   assert.equal(slope.text(12), '12 in 20');
   stem.set('96'); height.set('280');
-  assert.match(C.wordmark(), /viewBox="0 0 1256 280"/); // 11 stems of 96, 10 slots of 20
-  assert.match(C.symbol(), /viewBox="0 0 560 136"/); // 5 stems of 96, 4 slots
-  assert.deepEqual(C.gridOf('wordmark'), { w: 1256, h: 280, bands: [0, 32, 124, 156, 248, 280], bar: 96, slot: 20 });
+  assert.match(C.wordmark(), /viewBox="0 0 1296 288"/); // 11 stems of 96, 10 slots of 24; the A dips 8
+  assert.match(C.symbol(), /viewBox="0 0 576 144"/); // 5 stems of 96, 4 slots of 24; 3 bars and 2 slots down
+  assert.deepEqual(C.gridOf('wordmark'), { w: 1296, h: 280, bands: [0, 32, 124, 156, 248, 280], bar: 96, slot: 24 });
   const byKey = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
   byKey.outer.set('40'); byKey.tension.set('100'); byKey.slot.set('32'); byKey.tilt.set('48'); byKey.split.set('1'); byKey.a.set('a');
   assert.match(C.wordmark(), /viewBox="0 0 1376 288"/); // 11 stems of 96, 10 slots of 32; the a dips 8
@@ -181,7 +185,7 @@ test("the S's crossbar tilted: the slots either side wedges, the S the same upsi
 });
 
 test("the A or the a: the a's stem square, its bowl rounded, its foot dipping under the baseline", () => {
-  const a = G.letterPaths({ ...G.SLANT, a: 'a' })[2];
+  const a = G.letterPaths({ ...G.SLANT, a: 'a', dip: 8 })[2];
   assert.match(a, /^M260 16C/); // the bowl's top left rounded
   assert.match(a, /L344 0L344 472L312 472L312 452C/); // the stem square, the swoop from a slot above its foot
   assert.match(a, / 276 480L276 480C/); // into the round of the bowl's corner (16), 8 under

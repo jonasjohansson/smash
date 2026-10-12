@@ -64,13 +64,13 @@ export const CASES = ['A', 'a'];
  * block 472 tall; the S's crossbar level (tilt 0) and whole (split 0); the A a
  * capital (the a dips DIP).
  */
-export const SLANT = { ...REST, round: 1, cut: CUT, drop: DROP, outer: OUTER, tension: TENSION, stem: BAR, height: H, tilt: 0, split: 0, a: 'A', dip: DIP };
+export const SLANT = { ...REST, round: 1, cut: CUT, drop: DROP, outer: OUTER, tension: TENSION, stem: BAR, height: H, tilt: 0, split: 0, a: 'A', dip: 0 };
 
 /** How far a cut falls across a slot: drop of its width, on the grid (of 4) unless grid is 0 (the favicons' tiny slots). */
 const cutOf = (drop, slot, grid = 4) => (grid ? Math.round((drop * slot) / grid) * grid : drop * slot);
 
-/** How far the mark reaches below its block: the a's dip. */
-export const depth = (p = SLANT) => (p.a === 'a' ? p.dip ?? DIP : 0);
+/** How far the mark reaches below its block: the a's dip, or the A's when it has one. */
+export const depth = (p = SLANT) => (p.a === 'a' || p.dip ? p.dip ?? DIP : 0);
 
 /**
  * The block's measures (Jonas, 2026-10-12: stems wider, "to match a bit"
@@ -142,26 +142,30 @@ export function letterPaths(p = SLANT) {
     [L, H],
   ]);
 
+  // A foot that swoops (CM.SUPPLY's a): from a slot above the baseline on
+  // the inside edge at x, down and left into the rounded corner at L, p.dip
+  // under the baseline. Its handles are set by eye.
+  const swoop = slot, foot = H + (p.dip ?? DIP);
+  const swoopTo = (x, L) => {
+    const to = [L + (Rr > 0 ? Rr : 0), foot], w = x - to[0];
+    return [[x, H - swoop], ['C', x - w * 0.45, H - swoop * 0.3, to[0] + w * 0.35, foot, ...to], o(L, foot)];
+  };
+
   // The A, as the original's (Jonas, 2026-10-12: the a "should be an
   // uppercase, it's too illegible as lowercase"): a notch from the bottom up
   // to the crossbar, and the counter above it, its top end cut as the M's.
-  const A = (L, x, R) => poly([o(L, 0), o(R, 0), [R, H], [x + s, H], [x + s, lo - s], [x - s, lo - s], [x - s, H], [L, H]])
+  // With a dip ("can it still have a dip?"), its left leg takes the a's
+  // foot; the right leg stands square, as the a's stem.
+  const A = (L, x, R) => poly([o(L, 0), o(R, 0), [R, H], [x + s, H], [x + s, lo - s], [x - s, lo - s],
+    ...(p.dip ? swoopTo(x - s, L) : [[x - s, H], [L, H]])])
     + poly([[x + s, hi + d, r], [x - s, hi], [x - s, up + s], [x + s, up + s]]);
 
   // The a, as CM.SUPPLY's latest (Jonas, 2026-10-12: "lets explore having
   // both capital and lowercase a"): the stem square on the right, the bowl
   // rounded on the left; its slot closed and cut at both ends, a bar above
-  // where the bowl meets the stem, a slot (swoop) up from the foot; from there
-  // the bowl's base swoops down and left into its corner, dipping p.dip under
-  // the baseline. The swoop's handles are set by eye.
-  const a = (L, x, R) => {
-    const swoop = slot, foot = H + (p.dip ?? DIP);
-    const from = [x + s, H - swoop], to = [L + (Rr > 0 ? Rr : 0), foot];
-    const w = from[0] - to[0];
-    return poly([o(L, 0), [R, 0], [R, H], [x + s, H], from,
-      ['C', from[0] - w * 0.45, H - swoop * 0.3, to[0] + w * 0.35, foot, ...to], o(L, foot)])
-      + poly([[x + s, hi + d, r], [x - s, hi], [x - s, H - swoop - bar - d, r], [x + s, H - swoop - bar]]);
-  };
+  // where the bowl meets the stem, and the foot swooping from there.
+  const a = (L, x, R) => poly([o(L, 0), [R, 0], [R, H], [x + s, H], ...swoopTo(x + s, L)])
+    + poly([[x + s, hi + d, r], [x - s, hi], [x - s, H - swoop - bar - d, r], [x + s, H - swoop - bar]]);
 
   // The H, as the original's: no curves.
   const Hh = (L, x, R) => poly([

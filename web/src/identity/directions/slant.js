@@ -10,7 +10,7 @@
 // holds the wordmark. Geometry: ./slant/geometry.js.
 
 import { svg, timeline, canvasStage, withCleanup } from '../lib.js';
-import { letters, letterS, symbol as symbolPath, symCols, symRows, block, depth, SLANT, CUT, DROP, DROPS, BAR, OUTER, TENSION, DIP, H, PITCH } from './slant/geometry.js';
+import { letters, letterS, symbol as symbolPath, symCols, symRows, block, depth, SLANT, DROP, DROPS, BAR, DIP, H, PITCH } from './slant/geometry.js';
 import { lockPaths } from './original.js';
 
 const BLACK = '#000000';
@@ -40,7 +40,10 @@ const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${ru
 // sets them and draws the chapter again; the files are made at the defaults.
 // And the outer corners' round and tension ("i also like the roundness how
 // there's a bit of edge and drama to these corners").
-const at = { cut: CUT, drop: DROP, stem: BAR, stroke: SLANT.stroke, height: H, outer: OUTER, tension: TENSION, tilt: 0, split: 0, a: 'A', dip: DIP };
+// Where they start, and what the files are made at: Jonas's, 2026-10-12
+// ("these default settings look fine"), the A a capital that dips.
+export const START = { cut: 20, drop: DROP, stem: 72, stroke: 24, height: H, outer: 36, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: DIP };
+const at = { ...START };
 const knob = (key, label, min, max, step, value, text, set) => ({ key, label, min, max, step, value, text, set: (v) => set(Number(v)) });
 /** A switch between a few options (the page draws a button for each): [label, value]. */
 const choice = (key, label, options, value) => ({ key, label, options, value, set: (v) => { at[key] = options.find(([, o]) => String(o) === String(v))?.[1] ?? value; } });
@@ -50,16 +53,16 @@ const choice = (key, label, options, value) => ({ key, label, options, value, se
 // lowercase a"), the a dipping under the baseline.
 export const KNOBS = [
   knob('slope', 'Slope', 0, 20, 4, DROP * 20, (v) => `${v} in 20`, (v) => { at.drop = DROPS.find((k) => Math.abs(k - v / 20) < 1e-9) ?? DROP; }),
-  knob('cut', 'Cut round', 0, 20, 1, CUT, (v) => `${v}`, (v) => { at.cut = v; }),
-  knob('stem', 'Stem', BAR, 160, 4, BAR, (v) => `${v}`, (v) => { at.stem = v; }),
-  knob('slot', 'Slot', 12, 60, 4, SLANT.stroke, (v) => `${v}`, (v) => { at.stroke = v; }),
-  knob('height', 'Height', 240, 720, 8, H, (v) => `${v}`, (v) => { at.height = v; }),
-  knob('outer', 'Round', 0, 64, 4, OUTER, (v) => `${v}`, (v) => { at.outer = v; }),
-  knob('tension', 'Tension', 55, 100, 5, TENSION * 100, (v) => `${v}%`, (v) => { at.tension = v / 100; }),
-  knob('tilt', 'Tilt', 0, 96, 4, 0, (v) => `${v}`, (v) => { at.tilt = v; }),
-  knob('dip', 'Dip', 0, 24, 4, DIP, (v) => `${v}`, (v) => { at.dip = v; }),
-  choice('split', 'S', [['Whole', 0], ['Split', 1]], 0),
-  choice('a', 'A', [['A', 'A'], ['a', 'a']], 'A'),
+  knob('cut', 'Cut round', 0, 20, 1, START.cut, (v) => `${v}`, (v) => { at.cut = v; }),
+  knob('stem', 'Stem', BAR, 160, 4, START.stem, (v) => `${v}`, (v) => { at.stem = v; }),
+  knob('slot', 'Slot', 12, 60, 4, START.stroke, (v) => `${v}`, (v) => { at.stroke = v; }),
+  knob('height', 'Height', 240, 720, 8, START.height, (v) => `${v}`, (v) => { at.height = v; }),
+  knob('outer', 'Round', 0, 64, 4, START.outer, (v) => `${v}`, (v) => { at.outer = v; }),
+  knob('tension', 'Tension', 55, 100, 5, START.tension * 100, (v) => `${v}%`, (v) => { at.tension = v / 100; }),
+  knob('tilt', 'Tilt', 0, 96, 4, START.tilt, (v) => `${v}`, (v) => { at.tilt = v; }),
+  knob('dip', 'Dip', 0, 24, 4, START.dip, (v) => `${v}`, (v) => { at.dip = v; }),
+  choice('split', 'S', [['Whole', 0], ['Split', 1]], START.split),
+  choice('a', 'A', [['A', 'A'], ['a', 'a']], START.a),
 ];
 
 /** The marks' measures, as the sliders have them. */
@@ -67,7 +70,7 @@ const now = () => ({ ...SLANT, ...at });
 const box = () => block(now());
 
 // The wordmark, with the A or the a as switched; and both, side by side (the
-// page shows them in a row of their own). The a dips under the block, so its
+// page shows them in a row of their own). Either dips under the block, so its
 // artboard does too.
 const wordmarkWith = (a) => { const p = { ...now(), a: a ?? at.a }, b = block(p); return svg(b.W, b.H + depth(p), path(letters(p))); };
 const mark = () => letters(now());
