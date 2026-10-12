@@ -226,3 +226,14 @@ test('each letter its own switches: cut, round, tilt, split, dip', () => {
   assert.equal(G.depth(off(2, 'dip')), 0);
   assert.match(L(off(2, 'dip'))[2], /L292 472L260 472Z/); // the A's foot square
 });
+
+test('SMASH written down: five letters in a column, each as wide as an S, no dip', () => {
+  const D = G.down(G.SLANT);
+  assert.deepEqual([D.w, D.h], [84, 5 * 176 + 4 * 20]); // as short as the slots allow, a gap between
+  assert.equal(D.d.split('M').filter(Boolean).length, 6); // five letters, the A's counter
+  const xs = [...D.d.matchAll(/[ML]([-\d.]+) ([-\d.]+)/g)].map((m) => [+m[1], +m[2]]);
+  assert.ok(xs.every(([x, y]) => x >= 0 && x <= 84 && y >= 0 && y <= D.h));
+  assert.equal(G.down({ ...G.SLANT, dip: 12 }).d, D.d); // never dips
+  assert.match(C.down(), /^<svg [^>]*viewBox="0 0 168 /); // at Jonas's settings: an S of stems 72, slot 24
+  assert.equal(G.move('M0 0L10 0A4 4 0 0 1 14 4Z', 1, 2), 'M1 2L11 2A4 4 0 0 1 15 6Z');
+});

@@ -143,6 +143,10 @@ function chapter(d) {
       ${d.mod.VERSIONS ? `<div class="row three">${d.mod.VERSIONS.map(([fn, label]) => `
         <figure class="panel ground-paper">${markHTML(d, fn, 'paper', 'wm')}<figcaption class="label">${esc(label)}</figcaption></figure>`).join('')}
       </div>` : ''}
+      ${typeof d.mod.down === 'function' ? `<div class="row three">
+        <figure class="panel ground-ink square">${markHTML(d, 'down', 'ink', 'sym')}<figcaption class="label">Down</figcaption></figure>
+        <figure class="panel ground-paper square">${markHTML(d, 'down', 'paper', 'sym')}<figcaption class="label">Down</figcaption></figure>
+      </div>` : ''}
       <div class="row three">
         <figure class="panel ground-ink square">${markHTML(d, 'symbol', 'ink', 'sym')}<figcaption class="label">Symbol</figcaption></figure>
         <figure class="panel ground-mid square">${favicons(d)}<figcaption class="label">Favicon 64 · 32 · 16</figcaption></figure>

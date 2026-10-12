@@ -222,6 +222,36 @@ export function letterPaths(p = SLANT) {
 /** The letters as one path, filled evenodd. */
 export const letters = (p = SLANT) => letterPaths(p).join('');
 
+/** Path data (M, L, C, A, Z, absolute) moved by dx, dy. */
+export function move(d, dx, dy) {
+  return [...d.matchAll(/([MLCAZ])([^MLCAZ]*)/g)].map(([, cmd, args]) => {
+    if (cmd === 'Z') return 'Z';
+    const n = args.trim().split(/[\s,]+/).map(Number);
+    const from = cmd === 'A' ? 5 : 0; // an arc's radii and flags stay
+    return cmd + n.map((v, i) => (i < from ? f(v) : f(v + ((i - from) % 2 ? dy : dx)))).join(' ');
+  }).join('');
+}
+
+const STEMS = [2, 3, 2, 2, 2]; // S M A S H: their stems, and their slots one fewer
+/**
+ * SMASH written down (Jonas, 2026-10-12: of the recompositions, "the DOWN
+ * looks pretty good, but lets assume no dip"): the five letters in a column,
+ * each as wide as an S and as short as its slots allow (the M's three stems
+ * narrower, to fit), a gap between; no dip. { d, w, h }.
+ */
+export function down(p = SLANT) {
+  const slot = p.stroke, stem = p.stem ?? BAR, w = 2 * stem + slot, gap = p.space ?? slot;
+  const q = { ...p, dip: 0, height: 0 }; // the least height its slots allow
+  let y = 0, d = '';
+  STEMS.forEach((n, i) => {
+    const b = block({ ...q, stem: (w - (n - 1) * slot) / n });
+    const x0 = [0, b.right(1), b.right(4), b.right(6), b.right(8)][i];
+    d += move(letterPaths({ ...q, stem: (w - (n - 1) * slot) / n })[i], -x0, y);
+    y += b.H + gap;
+  });
+  return { d, w, h: y - gap };
+}
+
 // The symbol, the S M, as the original's (read from the modular mark): 9
 // columns by 5 rows of bars and slots, 240 × 136. The S's slots run out of
 // the top and the bottom, so its only curves are its bends, cut; the M's

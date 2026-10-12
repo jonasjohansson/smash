@@ -10,7 +10,7 @@
 // holds the wordmark. Geometry: ./slant/geometry.js.
 
 import { svg, timeline, canvasStage, withCleanup } from '../lib.js';
-import { letters, letterS, symbol as symbolPath, symCols, symRows, block, depth, SLANT, DROP, DROPS, BAR, DIP, PER, H, PITCH } from './slant/geometry.js';
+import { letters, letterS, down as downPath, symbol as symbolPath, symCols, symRows, block, depth, SLANT, DROP, DROPS, BAR, DIP, PER, H, PITCH } from './slant/geometry.js';
 import { lockPaths } from './original.js';
 
 const BLACK = '#000000';
@@ -88,6 +88,10 @@ export const wordmark = () => wordmarkWith();
 export const wordmarkCapital = () => wordmarkWith('A');
 export const wordmarkLower = () => wordmarkWith('a');
 export const VERSIONS = [['wordmarkCapital', 'Capital A'], ['wordmarkLower', 'Lowercase a']];
+
+// SMASH written down (Jonas, 2026-10-12: "the DOWN looks pretty good, but
+// lets assume no dip"): the letters in a column, each as wide as an S.
+export const down = () => { const D = downPath(now()); return svg(D.w, D.h, path(D.d)); };
 
 // The S M and the S alone, as the original's, their stems and slots as the wordmark's.
 const cols = () => symCols(at.stem, at.stroke, at.space);
