@@ -123,7 +123,7 @@ test('the chapter gives every still as plain vector', () => {
 
 test('the sliders draw every still at their measures, and back', () => {
   const { slope, stem, height } = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
-  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'height', 'outer', 'tension', 'tilt', 'dip', 'split', 'a']);
+  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'height', 'outer', 'tension', 'tilt', 'dip', 'split', 'a', 'per']);
   const at8 = C.wordmark();
   slope.set(12);
   const S0 = C.START;
@@ -141,7 +141,11 @@ test('the sliders draw every still at their measures, and back', () => {
   assert.match(C.wordmark(), /viewBox="0 0 1344 288"/); // 11 stems of 96, 6 slots of 32, 4 gaps of 24; the a dips 8
   for (const fn of ['wordmark', 'symbol', 'lockup', 'lockupSM', 's', 'sTurned', 'sSquare']) assert.match(C[fn](), /<path/, fn);
   assert.match(C.favicon({ size: 16 }), /<path/);
-  for (const k of C.KNOBS) k.set(k.value);
+  const letters = byKey.per;
+  letters.set('cut', 2, 0); letters.set('round', 4, 1);
+  assert.ok(!letters.on('cut', 2) && letters.on('round', 4));
+  assert.ok(!letters.has('tilt', 1) && letters.has('dip', 2));
+  for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value));
   assert.equal(C.wordmark(), at8);
 });
 
@@ -206,4 +210,19 @@ test('the gap between letters apart from the slots: the letters keep their width
   const d = G.letters({ ...SQUARE, space: 60 });
   for (const q of polys(d)) assert.deepEqual(q.flat().filter((n) => n % 4), []);
   assert.deepEqual(G.symCols(32, 20, 44), [32, 20, 32, 44, 32, 20, 32, 20, 32]);
+});
+
+test('each letter its own switches: cut, round, tilt, split, dip', () => {
+  const P = { ...G.SLANT, outer: 16, tilt: 42, split: 1, dip: 8 };
+  const off = (i, row) => ({ ...P, per: Object.assign([], { [i]: { [row]: 0 } }) });
+  const L = (p) => G.letterPaths(p);
+  assert.deepEqual(L(P).map((d, i) => (i === 2 ? null : d)), L(off(2, 'cut')).map((d, i) => (i === 2 ? null : d))); // only the A changes
+  assert.match(L(off(2, 'cut'))[2], /M312 32L292 32L292 220L312 220Z/); // the A's counter square at the top
+  assert.doesNotMatch(L(off(1, 'round'))[1], /C/); // the M's corners square
+  assert.equal(L({ ...P, per: Object.assign([], { 4: { round: 1 } }) })[4].match(/C/g).length, 4); // the H rounded
+  assert.equal(L(off(0, 'split'))[0].split('M').filter(Boolean).length, 1); // the first S whole, the second split
+  assert.equal(L(off(0, 'split'))[3].split('M').filter(Boolean).length, 2);
+  assert.ok(!slopes(L({ ...off(3, 'tilt'), round: 0, outer: 0, split: 0 })[3]).some((k) => Math.abs(k - 0.5) < 1e-9)); // the second S level
+  assert.equal(G.depth(off(2, 'dip')), 0);
+  assert.match(L(off(2, 'dip'))[2], /L292 472L260 472Z/); // the A's foot square
 });

@@ -10,7 +10,7 @@
 // holds the wordmark. Geometry: ./slant/geometry.js.
 
 import { svg, timeline, canvasStage, withCleanup } from '../lib.js';
-import { letters, letterS, symbol as symbolPath, symCols, symRows, block, depth, SLANT, DROP, DROPS, BAR, DIP, H, PITCH } from './slant/geometry.js';
+import { letters, letterS, symbol as symbolPath, symCols, symRows, block, depth, SLANT, DROP, DROPS, BAR, DIP, PER, H, PITCH } from './slant/geometry.js';
 import { lockPaths } from './original.js';
 
 const BLACK = '#000000';
@@ -43,7 +43,7 @@ const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${ru
 // Where they start, and what the files are made at: Jonas's, 2026-10-12
 // ("these default settings look fine"), the A a capital that dips.
 export const START = { cut: 20, drop: DROP, stem: 72, stroke: 24, space: 24, height: H, outer: 36, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: DIP };
-const at = { ...START };
+const at = { ...START, per: PER.map((q) => ({ ...q })) };
 const knob = (key, label, min, max, step, value, text, set) => ({ key, label, min, max, step, value, text, set: (v) => set(Number(v)) });
 /** A switch between a few options (the page draws a button for each): [label, value]. */
 const choice = (key, label, options, value) => ({ key, label, options, value, set: (v) => { at[key] = options.find(([, o]) => String(o) === String(v))?.[1] ?? value; } });
@@ -64,6 +64,15 @@ export const KNOBS = [
   knob('dip', 'Dip', 0, 24, 4, START.dip, (v) => `${v}`, (v) => { at.dip = v; }),
   choice('split', 'S', [['Whole', 0], ['Split', 1]], START.split),
   choice('a', 'A', [['A', 'A'], ['a', 'a']], START.a),
+  // Each letter's own switches (geometry.js: PER): a button where the letter has the setting.
+  {
+    key: 'per', label: 'Letters', letters: ['S', 'M', 'A', 'S', 'H'],
+    rows: [['cut', 'Cut'], ['round', 'Round'], ['tilt', 'Tilt'], ['split', 'Split'], ['dip', 'Dip']],
+    has: (row, i) => row in PER[i],
+    on: (row, i) => !!at.per[i][row],
+    set: (row, i, v) => { at.per[i][row] = v ? 1 : 0; },
+    reset() { at.per = PER.map((q) => ({ ...q })); },
+  },
 ];
 
 /** The marks' measures, as the sliders have them. */
