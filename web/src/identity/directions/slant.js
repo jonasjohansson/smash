@@ -42,7 +42,7 @@ const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${ru
 // there's a bit of edge and drama to these corners").
 // Where they start, and what the files are made at: Jonas's, 2026-10-12
 // ("these default settings look fine"), the A a capital that dips.
-export const START = { cut: 20, drop: DROP, stem: 72, stroke: 24, height: H, outer: 36, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: DIP };
+export const START = { cut: 20, drop: DROP, stem: 72, stroke: 24, space: 24, height: H, outer: 36, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: DIP };
 const at = { ...START };
 const knob = (key, label, min, max, step, value, text, set) => ({ key, label, min, max, step, value, text, set: (v) => set(Number(v)) });
 /** A switch between a few options (the page draws a button for each): [label, value]. */
@@ -55,7 +55,8 @@ export const KNOBS = [
   knob('slope', 'Slope', 0, 20, 4, DROP * 20, (v) => `${v} in 20`, (v) => { at.drop = DROPS.find((k) => Math.abs(k - v / 20) < 1e-9) ?? DROP; }),
   knob('cut', 'Cut round', 0, 20, 1, START.cut, (v) => `${v}`, (v) => { at.cut = v; }),
   knob('stem', 'Stem', BAR, 200, 4, START.stem, (v) => `${v}`, (v) => { at.stem = v; }),
-  knob('slot', 'Slot', 12, 60, 4, START.stroke, (v) => `${v}`, (v) => { at.stroke = v; }),
+  knob('slot', 'Slot', 8, 60, 4, START.stroke, (v) => `${v}`, (v) => { at.stroke = v; }),
+  knob('space', 'Gap', 8, 80, 4, START.space, (v) => `${v}`, (v) => { at.space = v; }),
   knob('height', 'Height', 240, 720, 8, START.height, (v) => `${v}`, (v) => { at.height = v; }),
   knob('outer', 'Round', 0, 64, 4, START.outer, (v) => `${v}`, (v) => { at.outer = v; }),
   knob('tension', 'Tension', 55, 100, 5, START.tension * 100, (v) => `${v}%`, (v) => { at.tension = v / 100; }),
@@ -80,7 +81,7 @@ export const wordmarkLower = () => wordmarkWith('a');
 export const VERSIONS = [['wordmarkCapital', 'Capital A'], ['wordmarkLower', 'Lowercase a']];
 
 // The S M and the S alone, as the original's, their stems and slots as the wordmark's.
-const cols = () => symCols(at.stem, at.stroke);
+const cols = () => symCols(at.stem, at.stroke, at.space);
 const rows = () => symRows(at.stroke);
 const symW = () => cols().reduce((t, n) => t + n);
 const symH = () => rows().reduce((t, n) => t + n);
@@ -105,16 +106,19 @@ export function lockupSM() {
   return svg(L.width, symH(), path(sym()) + path(L.d, 'nonzero'));
 }
 
+/** The S M's slots and its gap, as [left, width]. */
+const symColumns = () => cols().reduce((o, n, i, a) => (i % 2 ? [...o, [a.slice(0, i).reduce((t, m) => t + m, 0), n]] : o), []);
+
 /** Each still's grid (grid.js), at the sliders' measures: its box, bands, stems and slots, and where its type starts. */
 export function gridOf(kind) {
   const b = box(), w = symW(), h = symH(), bar = at.stem, slot = at.stroke;
   const bands5 = rows().reduce((e, n) => [...e, e.at(-1) + n], [0]);
   const sw = 2 * bar + slot;
   return {
-    wordmark: { w: b.W, h: b.H, bands: b.bands, bar, slot },
-    lockup: { w: b.W, h: b.H, bands: b.bands, type: b.W + PITCH, bar, slot },
-    symbol: { w, h, bands: bands5, bar, slot },
-    lockupSM: { w, h, bands: bands5, type: w + PITCH, bar, slot },
+    wordmark: { w: b.W, h: b.H, bands: b.bands, bar, slot, columns: b.columns },
+    lockup: { w: b.W, h: b.H, bands: b.bands, type: b.W + PITCH, bar, slot, columns: b.columns },
+    symbol: { w, h, bands: bands5, bar, slot, columns: symColumns() },
+    lockupSM: { w, h, bands: bands5, type: w + PITCH, bar, slot, columns: symColumns() },
     s: { w: sw, h, bands: bands5, bar, slot },
     sTurned: { w: h, h: sw, bands: bands5, turn: true, bar, slot },
     sSquare: { w: sw + bar + slot, h, bands: bands5, bar, slot },

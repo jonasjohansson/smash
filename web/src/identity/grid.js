@@ -68,7 +68,9 @@ export function withGrid(svg, kind, round = svg, own = null) {
   const [from, span] = K.turn ? [y0, h] : [x0, w];
   const first = Math.ceil((from - bar) / pitch), last = Math.ceil((from + span - bar) / pitch) - 1; // those that start on the artboard
   let cols = '';
-  for (let i = first; i <= last; i++) {
+  // A chapter whose columns are uneven (slant.js: its gaps between letters apart from its slots) gives them: the mark's own.
+  if (K.columns) cols = K.columns.map(([x, cw]) => `<rect x="${f(x)}" y="${f(y0)}" width="${f(cw)}" height="${f(h)}"/>`).join('');
+  else for (let i = first; i <= last; i++) {
     cols += K.turn ? `<rect x="${f(x0)}" y="${bar + pitch * i}" width="${f(w)}" height="${slot}"/>` : `<rect x="${bar + pitch * i}" y="${f(y0)}" width="${slot}" height="${f(h)}"/>`;
   }
   const bands = K.bands.map((v) => (K.turn ? `M${v} ${f(y0)}V${f(y0 + h)}` : `M${f(x0)} ${v}H${f(x0 + w)}`)).join('');

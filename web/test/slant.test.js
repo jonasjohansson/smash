@@ -115,7 +115,7 @@ test('the chapter gives every still as plain vector', () => {
   }
   for (const n of [16, 32, 64]) assert.match(C.favicon({ size: n }), new RegExp(`viewBox="0 0 ${n} ${n}"`));
   // At Jonas's settings: 11 stems of 72, 10 slots of 24; the A dips 8.
-  assert.deepEqual(C.START, { cut: 20, drop: 0.4, stem: 72, stroke: 24, height: 472, outer: 36, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 8 });
+  assert.deepEqual(C.START, { cut: 20, drop: 0.4, stem: 72, stroke: 24, space: 24, height: 472, outer: 36, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 8 });
   assert.match(C.wordmark(), /viewBox="0 0 1032 480"/);
   assert.equal(C.wordmark(), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1032 480" ><path fill="currentColor" fill-rule="evenodd" d="${G.letters({ ...G.SLANT, ...C.START })}"/></svg>`);
   assert.equal(C.info.slug, 'slant');
@@ -123,7 +123,7 @@ test('the chapter gives every still as plain vector', () => {
 
 test('the sliders draw every still at their measures, and back', () => {
   const { slope, stem, height } = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
-  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'height', 'outer', 'tension', 'tilt', 'dip', 'split', 'a']);
+  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'height', 'outer', 'tension', 'tilt', 'dip', 'split', 'a']);
   const at8 = C.wordmark();
   slope.set(12);
   const S0 = C.START;
@@ -133,10 +133,12 @@ test('the sliders draw every still at their measures, and back', () => {
   stem.set('96'); height.set('280');
   assert.match(C.wordmark(), /viewBox="0 0 1296 288"/); // 11 stems of 96, 10 slots of 24; the A dips 8
   assert.match(C.symbol(), /viewBox="0 0 576 144"/); // 5 stems of 96, 4 slots of 24; 3 bars and 2 slots down
-  assert.deepEqual(C.gridOf('wordmark'), { w: 1296, h: 280, bands: [0, 32, 124, 156, 248, 280], bar: 96, slot: 24 });
+  const g = C.gridOf('wordmark');
+  assert.deepEqual([g.w, g.h, g.bands, g.bar, g.slot], [1296, 280, [0, 32, 124, 156, 248, 280], 96, 24]);
+  assert.deepEqual(g.columns.slice(0, 2), [[96, 24], [216, 24]]); // the S's slot, and the gap after it
   const byKey = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
   byKey.outer.set('40'); byKey.tension.set('100'); byKey.slot.set('32'); byKey.tilt.set('48'); byKey.split.set('1'); byKey.a.set('a');
-  assert.match(C.wordmark(), /viewBox="0 0 1376 288"/); // 11 stems of 96, 10 slots of 32; the a dips 8
+  assert.match(C.wordmark(), /viewBox="0 0 1344 288"/); // 11 stems of 96, 6 slots of 32, 4 gaps of 24; the a dips 8
   for (const fn of ['wordmark', 'symbol', 'lockup', 'lockupSM', 's', 'sTurned', 'sSquare']) assert.match(C[fn](), /<path/, fn);
   assert.match(C.favicon({ size: 16 }), /<path/);
   for (const k of C.KNOBS) k.set(k.value);
@@ -193,4 +195,15 @@ test("the A or the a: the a's stem square, its bowl rounded, its foot dipping un
   assert.equal(G.depth({ a: 'A' }), 0);
   assert.throws(() => G.letterPaths({ ...G.SLANT, a: 'b' }), /no a called b/);
   assert.doesNotThrow(() => G.letters({ ...G.SLANT, a: 'a', outer: 0, stem: 160, height: 240, stroke: 60, dip: 24 }));
+});
+
+test('the gap between letters apart from the slots: the letters keep their widths, the word spreads', () => {
+  const at = (space) => G.letterPaths({ ...SQUARE, space });
+  const widths = (ls) => ls.map((d) => { const xs = polys(d).flat().map(([x]) => x); return Math.max(...xs) - Math.min(...xs); });
+  assert.deepEqual(widths(at(60)), widths(at(20)));
+  assert.equal(G.block({ ...G.SLANT, space: 60 }).W, 552 + 4 * 40);
+  assert.equal(G.letters({ ...SQUARE, space: 20 }), G.letters(SQUARE)); // unset, as wide as the slots
+  const d = G.letters({ ...SQUARE, space: 60 });
+  for (const q of polys(d)) assert.deepEqual(q.flat().filter((n) => n % 4), []);
+  assert.deepEqual(G.symCols(32, 20, 44), [32, 20, 32, 44, 32, 20, 32, 20, 32]);
 });

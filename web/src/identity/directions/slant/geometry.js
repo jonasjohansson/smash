@@ -79,15 +79,24 @@ export const depth = (p = SLANT) => (p.a === 'a' || p.dip ? p.dip ?? DIP : 0);
  * the crossbars centred in p.height (in steps of 8), so every point stays on
  * the grid of 4. At the original's, 552 × 472.
  */
+export const GAPS = [1, 4, 6, 8]; // the columns between letters (the rest are slots in them): S | M M | A | S | H
+
 export function block(p = SLANT) {
-  const stem = p.stem ?? BAR, slot = p.stroke, s = slot / 2;
+  const stem = p.stem ?? BAR, slot = p.stroke, s = slot / 2, gap = p.space ?? slot; // (p.gap is the original's crossbar gap, 52)
+  // The ten columns, left to right, each after a stem: the letters' slots, or
+  // the gaps between them (p.gap, Jonas 2026-10-12: "keep the height and stem
+  // thickness, but change the gap"); as wide as the slots unless set.
+  const widths = Array.from({ length: 10 }, (_, i) => (GAPS.includes(i) ? gap : slot));
+  const lefts = widths.reduce((e, w, i) => [...e, e[i] + w + stem], [stem]);
   // At least tall enough that a slot's top end stays half a slot above its bend: 172 at the original's slots.
   const least = Math.ceil((3 * BAR + 3 * slot + 2 * cutOf(p.drop ?? DROP, slot)) / 8) * 8;
   const h = Math.max(p.height ?? H, least);
   return {
-    s, stem, slot,
-    c: (i) => stem + s + (stem + slot) * i, // the slots' centres, left to right: 42, 94 …
-    W: 11 * stem + 10 * slot,
+    s, stem, slot, gap,
+    c: (i) => lefts[i] + widths[i] / 2, // the columns' centres, left to right: 42, 94 …
+    left: (i) => lefts[i], right: (i) => lefts[i] + widths[i], // and their edges
+    columns: widths.map((w, i) => [lefts[i], w]),
+    W: 11 * stem + 6 * slot + 4 * gap,
     H: h,
     up: h / 2 - (BAR + slot) / 2, // the upper crossbar slot's centre: 210
     lo: h / 2 + (BAR + slot) / 2, // the lower one's: 262
@@ -97,7 +106,7 @@ export function block(p = SLANT) {
 
 /** The letters as path data, one closed outline each (the A's counter a second subpath): S, M, A, S, H. */
 export function letterPaths(p = SLANT) {
-  const { s, c, up, lo, W, H, stem, slot } = block(p);
+  const { s, c, left, right, up, lo, W, H, stem, slot } = block(p);
   if (!CASES.includes(p.a ?? 'A')) throw new Error(`slant: no a called ${p.a}`);
   const d = cutOf(p.drop ?? DROP, slot); // 8
   const r = p.round ? Math.min(p.cut ?? CUT, s) : 0; // 4: a cut's obtuse corner, at a slot's end and an S's bend
@@ -174,11 +183,11 @@ export function letterPaths(p = SLANT) {
   ]);
 
   return [
-    S(0, c(0), c(1) - s),
-    M(c(1) + s, c(4) - s),
-    (p.a === 'a' ? a : A)(c(4) + s, c(5), c(6) - s),
-    S(c(6) + s, c(7), c(8) - s),
-    Hh(c(8) + s, c(9), W),
+    S(0, c(0), left(1)),
+    M(right(1), left(4)),
+    (p.a === 'a' ? a : A)(right(4), c(5), left(6)),
+    S(right(6), c(7), left(8)),
+    Hh(right(8), c(9), W),
   ];
 }
 
@@ -213,8 +222,8 @@ const rounder = (outer, tension, cols, rows) => {
   return (x, y) => (R > 0 ? [x, y, R, tension] : [x, y]);
 };
 
-/** The S M's columns with its stems widened, and its slots: bar, slot, bar … */
-export const symCols = (stem = BAR, slot = SYM_COLS[1]) => SYM_COLS.map((n, i) => (i % 2 ? slot : stem));
+/** The S M's columns with its stems widened, its slots, and the gap between the S and the M: bar, slot, bar, gap, bar … */
+export const symCols = (stem = BAR, slot = SYM_COLS[1], gap = slot) => SYM_COLS.map((n, i) => (i === 3 ? gap : i % 2 ? slot : stem));
 /** Its rows, its slots as the wordmark's: bar, slot, bar, slot, bar. */
 export const symRows = (slot = SYM_ROWS[1]) => SYM_ROWS.map((n, i) => (i % 2 ? slot : n));
 
