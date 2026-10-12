@@ -42,7 +42,7 @@ const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${ru
 // there's a bit of edge and drama to these corners").
 // Where they start, and what the files are made at: Jonas's, 2026-10-12
 // ("these default settings look fine"), the A a capital that dips.
-export const START = { cut: 20, drop: DROP, stem: 72, stroke: 24, space: 24, height: H, outer: 36, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: DIP };
+export const START = { cut: 20, drop: DROP, stem: 72, stroke: 24, space: 24, height: H, outer: 36, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: DIP, downFit: 'wider' };
 const at = { ...START, per: PER.map((q) => ({ ...q })) };
 const knob = (key, label, min, max, step, value, text, set) => ({ key, label, min, max, step, value, text, set: (v) => set(Number(v)) });
 /** A switch between a few options (the page draws a button for each): [label, value]. */
@@ -64,6 +64,7 @@ export const KNOBS = [
   knob('dip', 'Dip', 0, 24, 4, START.dip, (v) => `${v}`, (v) => { at.dip = v; }),
   choice('split', 'S', [['Whole', 0], ['Split', 1]], START.split),
   choice('a', 'A', [['A', 'A'], ['a', 'a']], START.a),
+  choice('downFit', 'Down', [['M wider', 'wider'], ['Fill', 'fill'], ['Squeeze', 'squeeze']], START.downFit),
   // Each letter's own switches (geometry.js: PER): a button where the letter has the setting.
   {
     key: 'per', label: 'Letters', letters: ['S', 'M', 'A', 'S', 'H'],

@@ -115,7 +115,7 @@ test('the chapter gives every still as plain vector', () => {
   }
   for (const n of [16, 32, 64]) assert.match(C.favicon({ size: n }), new RegExp(`viewBox="0 0 ${n} ${n}"`));
   // At Jonas's settings: 11 stems of 72, 10 slots of 24; the A dips 8.
-  assert.deepEqual(C.START, { cut: 20, drop: 0.4, stem: 72, stroke: 24, space: 24, height: 472, outer: 36, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 8 });
+  assert.deepEqual(C.START, { cut: 20, drop: 0.4, stem: 72, stroke: 24, space: 24, height: 472, outer: 36, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 8, downFit: 'wider' });
   assert.match(C.wordmark(), /viewBox="0 0 1032 480"/);
   assert.equal(C.wordmark(), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1032 480" ><path fill="currentColor" fill-rule="evenodd" d="${G.letters({ ...G.SLANT, ...C.START })}"/></svg>`);
   assert.equal(C.info.slug, 'slant');
@@ -123,7 +123,7 @@ test('the chapter gives every still as plain vector', () => {
 
 test('the sliders draw every still at their measures, and back', () => {
   const { slope, stem, height } = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
-  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'height', 'outer', 'tension', 'tilt', 'dip', 'split', 'a', 'per']);
+  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'height', 'outer', 'tension', 'tilt', 'dip', 'split', 'a', 'downFit', 'per']);
   const at8 = C.wordmark();
   slope.set(12);
   const S0 = C.START;
@@ -238,4 +238,16 @@ test("SMASH written down: five letters in a column, the stems all as the wordmar
   assert.equal(G.down({ ...G.SLANT, dip: 12 }).d, D.d); // never dips
   assert.match(C.down(), /^<svg [^>]*viewBox="0 0 264 /); // at Jonas's settings: an M of stems 72, slots 24
   assert.equal(G.move('M0 0L10 0A4 4 0 0 1 14 4Z', 1, 2), 'M1 2L11 2A4 4 0 0 1 15 6Z');
+});
+
+test('Down fitted three ways: the M wider, the others filling its width, or the M squeezed to theirs', () => {
+  const at = (downFit) => G.down({ ...G.SLANT, downFit });
+  assert.equal(at('wider').w, 136);
+  assert.equal(at('fill').w, 136); // the S, A and H's stems (136 - 20) / 2 = 58
+  assert.equal(at('squeeze').w, 84); // the M's stems (84 - 40) / 3
+  for (const f of G.DOWN_FITS) {
+    const D = at(f), xs = [...D.d.matchAll(/[ML]([-\d.]+) /g)].map((m) => +m[1]);
+    assert.deepEqual([Math.min(...xs), Math.max(...xs)], [0, D.w], f); // every fit fills its column's edges
+  }
+  assert.throws(() => at('stretch'), /no fit called stretch/);
 });
