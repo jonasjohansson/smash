@@ -10,7 +10,7 @@
 // holds the wordmark. Geometry: ./slant/geometry.js.
 
 import { svg, timeline, canvasStage, withCleanup } from '../lib.js';
-import { letters, letterS, down as downPath, symbol as symbolPath, symCols, symRows, block, depth, SLANT, DROP, DROPS, BAR, DIP, PER, H, PITCH } from './slant/geometry.js';
+import { letters, letterS, down as downPath, symbol as symbolPath, symCols, symRows, block, depth, SLANT, DROP, DROPS, BAR, PER, H, PITCH } from './slant/geometry.js';
 import { lockPaths } from './original.js';
 
 const BLACK = '#000000';
@@ -41,8 +41,10 @@ const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${ru
 // And the outer corners' round and tension ("i also like the roundness how
 // there's a bit of edge and drama to these corners").
 // Where they start, and what the files are made at: Jonas's, 2026-10-12
-// ("these default settings look fine"), the A a capital that dips.
-export const START = { cut: 20, drop: DROP, stem: 72, stroke: 24, space: 24, ceil: BAR, height: H, outer: 36, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: DIP, downFit: 'wider' };
+// ("this is decent settings too for default"): the cuts flat (slope 0), the
+// slot ends' corners rounded, the ceiling 44, the outer corners rounded 64
+// at 60%, no tilt and no dip, the A a capital, Down filled.
+export const START = { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: H, outer: 64, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 0, downFit: 'fill' };
 const at = { ...START, per: PER.map((q) => ({ ...q })), lower: [0, 0, 0, 0, 0] };
 const knob = (key, label, min, max, step, value, text, set) => ({ key, label, min, max, step, value, text, set: (v) => set(Number(v)) });
 /** A switch between a few options (the page draws a button for each): [label, value]. */
@@ -52,7 +54,7 @@ const choice = (key, label, options, value) => ({ key, label, options, value, se
 // through it, and the A or their a ("lets explore having both capital and
 // lowercase a"), the a dipping under the baseline.
 export const KNOBS = [
-  knob('slope', 'Slope', 0, 20, 4, DROP * 20, (v) => `${v} in 20`, (v) => { at.drop = DROPS.find((k) => Math.abs(k - v / 20) < 1e-9) ?? DROP; }),
+  knob('slope', 'Slope', 0, 20, 4, START.drop * 20, (v) => `${v} in 20`, (v) => { at.drop = DROPS.find((k) => Math.abs(k - v / 20) < 1e-9) ?? DROP; }),
   knob('cut', 'Cut round', 0, 20, 1, START.cut, (v) => `${v}`, (v) => { at.cut = v; }),
   knob('stem', 'Stem', BAR, 200, 4, START.stem, (v) => `${v}`, (v) => { at.stem = v; }),
   knob('slot', 'Slot', 8, 60, 4, START.stroke, (v) => `${v}`, (v) => { at.stroke = v; }),

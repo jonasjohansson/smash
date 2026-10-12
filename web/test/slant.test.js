@@ -114,10 +114,10 @@ test('the chapter gives every still as plain vector', () => {
     assert.doesNotMatch(out, /<text|style=|filter|mask|transform/, fn);
   }
   for (const n of [16, 32, 64]) assert.match(C.favicon({ size: n }), new RegExp(`viewBox="0 0 ${n} ${n}"`));
-  // At Jonas's settings: 11 stems of 72, 10 slots of 24; the A dips 8.
-  assert.deepEqual(C.START, { cut: 20, drop: 0.4, stem: 72, stroke: 24, space: 24, ceil: 32, height: 472, outer: 36, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 8, downFit: 'wider' });
-  assert.match(C.wordmark(), /viewBox="0 0 1032 480"/);
-  assert.equal(C.wordmark(), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1032 480" ><path fill="currentColor" fill-rule="evenodd" d="${G.letters({ ...G.SLANT, ...C.START })}"/></svg>`);
+  // At Jonas's settings: 11 stems of 72, 10 slots and gaps of 20; no dip.
+  assert.deepEqual(C.START, { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: 472, outer: 64, tension: 0.6, tilt: 0, split: 0, a: 'A', dip: 0, downFit: 'fill' });
+  assert.match(C.wordmark(), /viewBox="0 0 992 472"/);
+  assert.equal(C.wordmark(), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 992 472" ><path fill="currentColor" fill-rule="evenodd" d="${G.letters({ ...G.SLANT, ...C.START })}"/></svg>`);
   assert.equal(C.info.slug, 'slant');
 });
 
@@ -127,18 +127,18 @@ test('the sliders draw every still at their measures, and back', () => {
   const at8 = C.wordmark();
   slope.set(12);
   const S0 = C.START;
-  assert.ok(C.symbol().includes(G.symbol({ cols: G.symCols(72, 24), rows: G.symRows(24), cut: S0.cut, drop: 0.6, outer: S0.outer, tension: S0.tension })));
+  assert.ok(C.symbol().includes(G.symbol({ cols: G.symCols(72, 20), rows: G.symRows(20), cut: S0.cut, drop: 0.6, outer: S0.outer, tension: S0.tension })));
   assert.ok(C.wordmark().includes(G.letters({ ...G.SLANT, ...S0, drop: 0.6 })));
   assert.equal(slope.text(12), '12 in 20');
   stem.set('96'); height.set('280');
-  assert.match(C.wordmark(), /viewBox="0 0 1296 288"/); // 11 stems of 96, 10 slots of 24; the A dips 8
-  assert.match(C.symbol(), /viewBox="0 0 576 144"/); // 5 stems of 96, 4 slots of 24; 3 bars and 2 slots down
+  assert.match(C.wordmark(), /viewBox="0 0 1256 280"/); // 11 stems of 96, 10 slots of 20
+  assert.match(C.symbol(), /viewBox="0 0 560 136"/); // 5 stems of 96, 4 slots of 20; 3 bars and 2 slots down
   const g = C.gridOf('wordmark');
-  assert.deepEqual([g.w, g.h, g.bands, g.bar, g.slot], [1296, 280, [0, 32, 124, 156, 248, 280], 96, 24]);
-  assert.deepEqual(g.columns.slice(0, 2), [[96, 24], [216, 24]]); // the S's slot, and the gap after it
+  assert.deepEqual([g.w, g.h, g.bands, g.bar, g.slot], [1256, 280, [0, 44, 124, 156, 236, 280], 96, 20]);
+  assert.deepEqual(g.columns.slice(0, 2), [[96, 20], [212, 20]]); // the S's slot, and the gap after it
   const byKey = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
   byKey.outer.set('40'); byKey.tension.set('100'); byKey.slot.set('32'); byKey.tilt.set('48'); byKey.split.set('1'); byKey.a.set('a');
-  assert.match(C.wordmark(), /viewBox="0 0 1344 288"/); // 11 stems of 96, 6 slots of 32, 4 gaps of 24; the a dips 8
+  assert.match(C.wordmark(), /viewBox="0 0 1328 280"/); // 11 stems of 96, 6 slots of 32, 4 gaps of 20; no dip
   for (const fn of ['wordmark', 'symbol', 'lockup', 'lockupSM', 's', 'sTurned', 'sSquare']) assert.match(C[fn](), /<path/, fn);
   assert.match(C.favicon({ size: 16 }), /<path/);
   const letters = byKey.per;
@@ -239,7 +239,7 @@ test("SMASH written down: five letters in a column, the stems all as the wordmar
   const S = pts.filter(([, y]) => y <= 176).map(([x]) => x);
   assert.deepEqual([Math.min(...S), Math.max(...S)], [26, 110]); // the S, 84 wide, centred on the M's 136
   assert.equal(G.down({ ...G.SLANT, dip: 12 }).d, D.d); // never dips
-  assert.match(C.down(), /^<svg [^>]*viewBox="0 0 264 /); // at Jonas's settings: an M of stems 72, slots 24
+  assert.match(C.down(), /^<svg [^>]*viewBox="0 0 256 /); // at Jonas's settings: an M of stems 72, slots 20
   assert.equal(G.move('M0 0L10 0A4 4 0 0 1 14 4Z', 1, 2), 'M1 2L11 2A4 4 0 0 1 15 6Z');
 });
 
