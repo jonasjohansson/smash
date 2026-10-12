@@ -51,7 +51,8 @@ export function poly(pts) {
 export { W, H, PITCH };
 export const DROP = 0.4; // a cut falls this much of a slot's width across it: 8 in 20
 export const DROPS = [0, 0.2, 0.4, 0.6, 0.8, 1]; // the slopes that keep every point on the grid of 4: 0, 4 … 20 in 20
-export const ROUND = 0.2; // a slot end's obtuse corner, rounded by this much of the slot: 4 in 20
+export const ROUND = 0.2; // a cut's obtuse corner (a slot's end, an S's bend), rounded by this much of the slot: 4 in 20
+export const CUT = 4; // that round, as the page's slider sets it (Jonas, 2026-10-12: "a slider for the roundedness in the slants"); at most half a slot
 export const BAR = 32; // a bar, across and down
 export const OUTER = 16; // the letters' outer corners (CM.SUPPLY's round 4; Jonas: "a bit of edge and drama"), rounded this much
 export const TENSION = 0.8; // and this tight: their curves' handles reach this far to the corner
@@ -63,7 +64,7 @@ export const CASES = ['A', 'a'];
  * block 472 tall; the S's crossbar level (tilt 0) and whole (split 0); the A a
  * capital (the a dips DIP).
  */
-export const SLANT = { ...REST, round: 1, drop: DROP, outer: OUTER, tension: TENSION, stem: BAR, height: H, tilt: 0, split: 0, a: 'A', dip: DIP };
+export const SLANT = { ...REST, round: 1, cut: CUT, drop: DROP, outer: OUTER, tension: TENSION, stem: BAR, height: H, tilt: 0, split: 0, a: 'A', dip: DIP };
 
 /** How far a cut falls across a slot: drop of its width, on the grid (of 4) unless grid is 0 (the favicons' tiny slots). */
 const cutOf = (drop, slot, grid = 4) => (grid ? Math.round((drop * slot) / grid) * grid : drop * slot);
@@ -99,7 +100,7 @@ export function letterPaths(p = SLANT) {
   const { s, c, up, lo, W, H, stem, slot } = block(p);
   if (!CASES.includes(p.a ?? 'A')) throw new Error(`slant: no a called ${p.a}`);
   const d = cutOf(p.drop ?? DROP, slot); // 8
-  const r = p.round ? ROUND * 2 * s : 0; // 4
+  const r = p.round ? Math.min(p.cut ?? CUT, s) : 0; // 4: a cut's obtuse corner, at a slot's end and an S's bend
   const bar = BAR;
   const hi = bar; // 32: a top end's high corner, where the round tip was
   const low = H - bar; // 440: a bottom end's low corner
@@ -126,10 +127,10 @@ export function letterPaths(p = SLANT) {
     return poly([
       o(L, 0), o(R, 0), [R, up - s], [x + s, up - s],
       [x + s, hi + d, r], [x - s, hi],
-      [x - s, tr - d], [x + s, tr],
+      [x - s, tr - d, r], [x + s, tr],
       [R, top(R)], o(R, H), o(L, H), [L, lo + s], [x - s, lo + s],
       [x - s, low - d, r], [x + s, low],
-      [x + s, bl + d], [x - s, bl],
+      [x + s, bl + d, r], [x - s, bl],
       [L, bot(L)],
     ]);
   };
@@ -193,10 +194,11 @@ const edges = (sizes, o) => sizes.reduce((a, n) => [...a, a.at(-1) + n], [o]);
  * L and R its edges; a and b the left edges of its top slot and its bottom
  * one; r its six row edges. The bends are cut outside, sharp inside.
  */
-function sPath({ L, R, a, b, r, slot, drop = DROP, o = (x, y) => [x, y], grid = 4 }) {
+function sPath({ L, R, a, b, r, slot, drop = DROP, o = (x, y) => [x, y], grid = 4, cut = 0 }) {
   const d = cutOf(drop, slot, grid);
-  return poly([o(L, r[0]), [a, r[0]], [a, r[2] - d], [a + slot, r[2]], [R, r[2]], o(R, r[5]),
-    [b + slot, r[5]], [b + slot, r[3] + d], [b, r[3]], [L, r[3]]])
+  const k = Math.min(cut, slot / 2); // the bends' obtuse corners
+  return poly([o(L, r[0]), [a, r[0]], [a, r[2] - d, k], [a + slot, r[2]], [R, r[2]], o(R, r[5]),
+    [b + slot, r[5]], [b + slot, r[3] + d, k], [b, r[3]], [L, r[3]]])
     + poly([[a + slot, r[0]], o(R, r[0]), [R, r[1]], [a + slot, r[1]]])
     + poly([[L, r[4]], [b, r[4]], [b, r[5]], o(L, r[5])]);
 }
@@ -213,26 +215,26 @@ export const symCols = (stem = BAR, slot = SYM_COLS[1]) => SYM_COLS.map((n, i) =
 export const symRows = (slot = SYM_ROWS[1]) => SYM_ROWS.map((n, i) => (i % 2 ? slot : n));
 
 /** The S M as path data; cols and rows its bands, x and y its top left, stop where the M's slots end (from the top), drop its cuts' slope. */
-export function symbol({ cols = SYM_COLS, rows = SYM_ROWS, x = 0, y = 0, stop = SM_STOP, round = 1, drop = DROP, outer = 0, tension = TENSION, grid = 4 } = {}) {
+export function symbol({ cols = SYM_COLS, rows = SYM_ROWS, x = 0, y = 0, stop = SM_STOP, round = 1, cut = CUT, drop = DROP, outer = 0, tension = TENSION, grid = 4 } = {}) {
   const e = edges(cols, x);
   const r = edges(rows, y);
   const slot = cols[1];
   const d = cutOf(drop, slot, grid);
-  const k = round ? ROUND * slot : 0;
+  const k = round ? Math.min(cut, slot / 2) : 0;
   const top = y + stop;
   const o = rounder(outer, tension, cols, rows);
-  return sPath({ L: e[0], R: e[3], a: e[1], b: e[1], r, slot, drop, o, grid })
+  return sPath({ L: e[0], R: e[3], a: e[1], b: e[1], r, slot, drop, o, grid, cut: k })
     + poly([o(e[4], r[0]), o(e[9], r[0]), [e[9], r[5]],
       ...[[e[7], e[8]], [e[5], e[6]]].flatMap(([a, b]) => [[b, r[5]], [b, top + d, k], [a, top], [a, r[5]]]),
       [e[4], r[5]]]);
 }
 
 /** The S alone, as the original's: 84 × 136; wide draws it out by pitches (1: a square); turn lays it on its side; drop its cuts' slope; stem its stems' width. */
-export function letterS({ wide = 0, turn = false, drop = DROP, stem = BAR, slot = SYM_COLS[1], outer = 0, tension = TENSION } = {}) {
+export function letterS({ wide = 0, turn = false, drop = DROP, stem = BAR, slot = SYM_COLS[1], outer = 0, tension = TENSION, cut = CUT } = {}) {
   const [bar] = symCols(stem, slot);
   const rows = symRows(slot), h = rows.reduce((t, n) => t + n);
   const o = rounder(outer, tension, [bar], rows);
   const w = 2 * bar + slot + wide * (bar + slot);
-  const d = sPath({ L: 0, R: w, a: bar, b: bar + wide * (bar + slot), r: edges(rows, 0), slot, drop, o });
+  const d = sPath({ L: 0, R: w, a: bar, b: bar + wide * (bar + slot), r: edges(rows, 0), slot, drop, o, cut });
   return turn ? { d: quarterTurn(d, h), w: h, h: w } : { d, w, h };
 }

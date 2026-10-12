@@ -10,7 +10,7 @@
 // holds the wordmark. Geometry: ./slant/geometry.js.
 
 import { svg, timeline, canvasStage, withCleanup } from '../lib.js';
-import { letters, letterS, symbol as symbolPath, symCols, symRows, block, depth, SLANT, DROP, DROPS, BAR, OUTER, TENSION, DIP, H, PITCH } from './slant/geometry.js';
+import { letters, letterS, symbol as symbolPath, symCols, symRows, block, depth, SLANT, CUT, DROP, DROPS, BAR, OUTER, TENSION, DIP, H, PITCH } from './slant/geometry.js';
 import { lockPaths } from './original.js';
 
 const BLACK = '#000000';
@@ -40,7 +40,7 @@ const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${ru
 // sets them and draws the chapter again; the files are made at the defaults.
 // And the outer corners' round and tension ("i also like the roundness how
 // there's a bit of edge and drama to these corners").
-const at = { drop: DROP, stem: BAR, stroke: SLANT.stroke, height: H, outer: OUTER, tension: TENSION, tilt: 0, split: 0, a: 'A', dip: DIP };
+const at = { cut: CUT, drop: DROP, stem: BAR, stroke: SLANT.stroke, height: H, outer: OUTER, tension: TENSION, tilt: 0, split: 0, a: 'A', dip: DIP };
 const knob = (key, label, min, max, step, value, text, set) => ({ key, label, min, max, step, value, text, set: (v) => set(Number(v)) });
 /** A switch between a few options (the page draws a button for each): [label, value]. */
 const choice = (key, label, options, value) => ({ key, label, options, value, set: (v) => { at[key] = options.find(([, o]) => String(o) === String(v))?.[1] ?? value; } });
@@ -50,6 +50,7 @@ const choice = (key, label, options, value) => ({ key, label, options, value, se
 // lowercase a"), the a dipping under the baseline.
 export const KNOBS = [
   knob('slope', 'Slope', 0, 20, 4, DROP * 20, (v) => `${v} in 20`, (v) => { at.drop = DROPS.find((k) => Math.abs(k - v / 20) < 1e-9) ?? DROP; }),
+  knob('cut', 'Cut round', 0, 20, 1, CUT, (v) => `${v}`, (v) => { at.cut = v; }),
   knob('stem', 'Stem', BAR, 160, 4, BAR, (v) => `${v}`, (v) => { at.stem = v; }),
   knob('slot', 'Slot', 12, 60, 4, SLANT.stroke, (v) => `${v}`, (v) => { at.stroke = v; }),
   knob('height', 'Height', 240, 720, 8, H, (v) => `${v}`, (v) => { at.height = v; }),
@@ -80,9 +81,9 @@ const cols = () => symCols(at.stem, at.stroke);
 const rows = () => symRows(at.stroke);
 const symW = () => cols().reduce((t, n) => t + n);
 const symH = () => rows().reduce((t, n) => t + n);
-const sym = () => symbolPath({ cols: cols(), rows: rows(), drop: at.drop, outer: at.outer, tension: at.tension });
+const sym = () => symbolPath({ cols: cols(), rows: rows(), cut: at.cut, drop: at.drop, outer: at.outer, tension: at.tension });
 export const symbol = () => svg(symW(), symH(), path(sym()));
-const alone = (o) => { const S = letterS({ ...o, drop: at.drop, stem: at.stem, slot: at.stroke, outer: at.outer, tension: at.tension }); return svg(S.w, S.h, path(S.d)); };
+const alone = (o) => { const S = letterS({ ...o, cut: at.cut, drop: at.drop, stem: at.stem, slot: at.stroke, outer: at.outer, tension: at.tension }); return svg(S.w, S.h, path(S.d)); };
 export const s = () => alone({});
 export const sTurned = () => alone({ turn: true });
 export const sSquare = () => alone({ wide: 1 });
@@ -126,7 +127,7 @@ export function favicon({ size = 32 } = {}) {
   const sl = bar / 2;
   const cols = [bar, sl, bar, sl, bar, sl, bar, sl, bar];
   const rows = [bar, sl, bar, sl, bar];
-  const d = symbolPath({ cols, rows, x: (n - (5 * bar + 4 * sl)) / 2, y: (n - (3 * bar + 2 * sl)) / 2, stop: bar, drop: at.drop, outer: (at.outer * bar) / BAR, tension: at.tension, grid: 0 });
+  const d = symbolPath({ cols, rows, x: (n - (5 * bar + 4 * sl)) / 2, y: (n - (3 * bar + 2 * sl)) / 2, stop: bar, cut: (at.cut * bar) / BAR, drop: at.drop, outer: (at.outer * bar) / BAR, tension: at.tension, grid: 0 });
   return svg(n, n, `<rect width="${n}" height="${n}" fill="${BLACK}"/><path fill="${WHITE}" fill-rule="evenodd" d="${d}"/>`);
 }
 
