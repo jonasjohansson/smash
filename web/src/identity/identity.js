@@ -320,9 +320,10 @@ const EXTRAS = [
   { id: 'typeface', name: 'The SMASH typeface', last: true, folded: true, load: async () => { const m = await import('./typeface.js'); return { html: m.HTML, mount: m.mount }; } },
   // The palette at the very bottom, after the sequence (Jonas, 2026-09-30).
   { id: 'colour', name: 'Colour', last: true, load: async () => { const m = await import('./colour.js'); return { html: m.HTML, mount: m.mount }; } },
-  // Folded, under the colour (Jonas, 2026-09-30: not so important any more): a line each, loaded when opened.
+  // Folded, under the colour (Jonas, 2026-09-30: not so important any more): a line, loaded when opened.
   { id: 'mapping', name: 'Mapping', last: true, folded: true, load: async () => { const m = await import('./mapping.js'); return { html: m.HTML, mount: m.mount }; } },
-  { id: 'sculpture', name: 'Sculpture', last: true, folded: true, load: async () => { const m = await import('./sculpture.js'); return { html: m.HTML, mount: m.mount }; } },
+  // Hidden since 2026-10-14 (Jonas): off the page and its bar, still there alone at ?d=sculpture.
+  { id: 'sculpture', name: 'Sculpture', last: true, hidden: true, load: async () => { const m = await import('./sculpture.js'); return { html: m.HTML, mount: m.mount }; } },
   // Slant's best presets, in the palette's colours: a section of its own at the bottom of the page (Jonas, 2026-10-14).
   { id: 'slant-best', name: 'Slant, best of', last: true, load: async () => { const m = await import('./slant-best.js'); return { html: m.HTML, mount: m.mount }; } },
 ];
@@ -416,7 +417,7 @@ async function main() {
     knobs(d, section);
     if (d.slug === 'original' && !ONLY) for (const x of EXTRAS.filter((x) => !x.last)) await addExtra(page, x);
   }
-  if (!ONLY) for (const x of EXTRAS.filter((x) => x.last)) await (x.folded ? addFolded(page, x) : addExtra(page, x));
+  if (!ONLY) for (const x of EXTRAS.filter((x) => x.last && !x.hidden)) await (x.folded ? addFolded(page, x) : addExtra(page, x));
   for (const x of EXTRAS.filter((x) => x.id === ONLY)) await addExtra(page, x);
   if (!ONLY) sectionNav(page);
   // The grid, previewed on the marks (grid.js): a button, and G; kept in this browser. Its lines one device pixel wide.

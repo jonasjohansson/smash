@@ -22,7 +22,7 @@
 }
 
 * { box-sizing: border-box; }
-html { background: var(--page); color: var(--text); -webkit-font-smoothing: antialiased; scrollbar-width: none; } /* no scrollbar, as the site's landing; it still scrolls */
+html { overflow-x: clip; background: var(--page); color: var(--text); -webkit-font-smoothing: antialiased; scrollbar-width: none; } /* no scrollbar, as the site's landing; it still scrolls, but never sideways: only the section bar does (2026-10-14) */
 html::-webkit-scrollbar { display: none; }
 body { margin: 0; font: 400 16px/1.45 "Neue Montreal", "Helvetica Neue", Arial, sans-serif; }
 a { color: inherit; text-decoration: none; }
@@ -56,6 +56,7 @@ h1, h2 { font-weight: 400; margin: 0; }
 
 /* A chapter */
 .chapter { padding-top: clamp(80px, 12vw, 180px); display: grid; gap: var(--gap); }
+.chapter > * { min-width: 0; } /* nothing in a chapter widens it past the window */
 .ch-head { display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--gap); row-gap: 8px; margin-bottom: clamp(16px, 3vw, 40px); border-top: 1px solid var(--line); padding-top: 16px; }
 .ch-lane { font-size: 13px; color: var(--dim); grid-column: 2; grid-row: 1; }
 .ch-name { grid-column: 1; font-size: clamp(44px, 7vw, 112px); line-height: 0.95; letter-spacing: -0.03em; }
@@ -84,7 +85,7 @@ h1, h2 { font-weight: 400; margin: 0; }
 .controls .knob { display: flex; align-items: center; gap: 12px; flex: 1 1 240px; min-width: 0; }
 .controls .knob input { flex: 1; min-width: 0; max-width: 320px; accent-color: var(--d-accent, #fff); }
 .controls .knob output { color: var(--text); font-variant-numeric: tabular-nums; min-width: 6ch; }
-.controls .knob.switch { flex: 0 0 auto; gap: 6px; }
+.controls .knob.switch { flex: 0 1 auto; flex-wrap: wrap; gap: 6px; max-width: 100%; } /* a long row (Slant's presets) wraps */
 .controls .knob.each { flex: 1 1 100%; gap: 16px; }
 .controls .knob.each label { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
 .controls .knob.each .col { color: var(--text); }

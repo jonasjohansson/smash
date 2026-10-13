@@ -35,7 +35,8 @@ also draws the favicons, on whole pixels). The stills, the motion and its MP4, a
   letter's own measures.
 - `mapping.js`: a mapping grid for warping the mark. Folded at the very bottom, under the colour, since 2026-09-30
   (Jonas: not so important any more): one line, its module loaded only when it is opened.
-- `sculpture.js`: one object that reads SMASH from the front and the S from the side. Folded at the bottom too.
+- `sculpture.js` (hidden since 2026-10-14, at Jonas's word: off the page, still at `?d=sculpture`): one object that reads SMASH from the front and
+  the S from the side.
 - `illusion.js` and `illusion/` (off the page since 2026-09-30, at Jonas's word: it didn't give anything; Field was the one he liked): the mark as op art (the logo is already stripes, so it goes the other way): fifteen
   optical illusions, each with the mark as its figure, live, in black and white: Field (its slots run on out of it,
   so the letters are only where the stripes stop), Phase (an illusory contour), Grain (orientation), Ouchi, Current
