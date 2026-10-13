@@ -1746,3 +1746,20 @@ test("the design loop's winners as presets: each sets the controls and draws eve
     assert.equal(C.wordmark(), plain, `${key}: back to the defaults`);
   }
 });
+
+test('a preset drawn for the best-of: as the preset sets the chapter, and the chapter left as it was', () => {
+  const values = Object.fromEntries(C.KNOBS.map((k) => [k.key, k.value]));
+  const reset = () => C.KNOBS.forEach((k) => { k.value = values[k.key]; if (k.reset) k.reset(); else if (k.key !== 'preset') k.set(k.value); });
+  reset();
+  const K = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
+  K.stem.set(100); K.per.set('bend', 1, 1); // the page's own settings, which the best-of must not touch
+  const page = { word: C.wordmark(), down: C.down(), stem: K.stem.value };
+  for (const [key, , set] of C.PRESETS) {
+    const best = { word: C.drawWith(set, C.wordmark), down: C.drawWith(set, C.down) };
+    assert.deepEqual({ word: C.wordmark(), down: C.down(), stem: K.stem.value }, page, `${key}: the page as it was`);
+    reset(); C.applyPreset(set);
+    assert.deepEqual({ word: C.wordmark(), down: C.down() }, best, `${key}: as the preset`);
+    reset(); K.stem.set(100); K.per.set('bend', 1, 1);
+  }
+  reset();
+});

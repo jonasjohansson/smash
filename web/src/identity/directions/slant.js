@@ -47,6 +47,7 @@ const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${ru
 // at 60%, no tilt and no dip, the A a capital, Down filled.
 export const START = { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: H, rise: 0, outer: 64, tension: 0.6, corners: 0, endRound: 128, innerRound: 24, tilt: 0, lock: 0, split: 0, blade: 'step', a: 'A', dip: 0, downFit: 'fill', downJoin: 'tiles', downKerf: 0, tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0, slashAt: 0, symbol: 'extended' };
 const at = { ...START, per: PER.map((q) => ({ ...q })), downPer: PER.map((q) => ({ ...q })), lower: [0, 0, 0, 0, 0] };
+const AT = structuredClone(at); // the chapter as it starts, before a preset in the address
 const knob = (key, label, min, max, step, value, text, set) => ({ key, label, min, max, step, value, text, set: (v) => set(Number(v)) });
 /** A switch between a few options (the page draws a button for each): [label, value]. */
 const choice = (key, label, options, value) => ({ key, label, options, value, set: (v) => { at[key] = options.find(([, o]) => String(o) === String(v))?.[1] ?? value; } });
@@ -221,6 +222,22 @@ export function applyPreset(set) {
     });
     else if (key === 'lower') v.forEach((n, i) => { if (byKey.lower.has(i)) byKey.lower.set(i, n); });
     else if (byKey[key]) { byKey[key].set(v); byKey[key].value = v; }
+  }
+}
+/**
+ * What draw (one of the stills below) returns with the chapter set as a preset, from the defaults, the page's
+ * own controls left as they are (the best-of: ../slant-best.js).
+ */
+export function drawWith(set, draw) {
+  const saved = structuredClone(at), values = KNOBS.map((k) => k.value);
+  try {
+    Object.assign(at, structuredClone(AT));
+    applyPreset(set);
+    return draw();
+  } finally {
+    for (const key of Object.keys(at)) delete at[key];
+    Object.assign(at, saved);
+    KNOBS.forEach((k, i) => { k.value = values[i]; });
   }
 }
 const chosen = PRESETS.find(([k]) => k === new URLSearchParams(globalThis.location?.search ?? '').get('preset'));
