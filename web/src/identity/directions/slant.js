@@ -144,6 +144,38 @@ export const KNOBS = [
   },
 ];
 
+// The design loop's winners as presets (2026-10-13; Jonas: "do you have the winner settings as presets?"), each
+// in the controls' own units (Slope in 20, Tension in %), as the panel left them: rounds 1 to 3, and round 3 with
+// the A's apex and the H's bar step from the build that was stopped. ?preset=<key> starts the chapter there, every
+// control set to match; the Preset switch reloads the page with it.
+export const PRESETS = [
+  ['start', 'Defaults', {}],
+  ['r1-locked-blade', 'R1 Locked Blade', {"height": 352, "stem": 128, "slot": 20, "space": 28, "ceil": 20, "tilt": 160, "split": 1, "outer": 64, "tension": 100, "slope": 12, "cut": 0, "downFit": "squeeze", "per": [{}, {}, {}, {}, {"both": 1}]}],
+  ['r1-open-blade', 'R1 Open Blade', {"height": 352, "stem": 128, "slot": 20, "space": 36, "ceil": 20, "tilt": 160, "split": 1, "outer": 64, "tension": 100, "slope": 12, "cut": 0, "downFit": "squeeze", "per": [{"open": 1}, {}, {}, {"open": 1}, {"both": 1}]}],
+  ['r2-column-blade', 'R2 Column Blade', {"lock": 1, "split": 1, "tension": 100, "cut": 0, "downFit": "squeeze", "ceil": 16, "outer": 64, "per": [{}, {}, {}, {}, {"both": 1}], "height": 480, "stem": 152, "slot": 28, "space": 40, "slope": 12, "rise": 16}],
+  ['r2-steep-column', 'R2 Steep Column', {"lock": 1, "split": 1, "tension": 100, "cut": 0, "downFit": "squeeze", "ceil": 16, "outer": 64, "per": [{}, {}, {}, {}, {"both": 1}], "height": 480, "stem": 144, "slot": 24, "space": 40, "slope": 16, "rise": 16}],
+  ['r2-kanban', 'R2 Kanban', {"lock": 1, "split": 1, "outer": 56, "tension": 100, "cut": 0, "downFit": "squeeze", "ceil": 16, "height": 304, "stem": 172, "slot": 28, "space": 40, "slope": 12, "rise": 16, "per": [{}, {}, {}, {}, {"both": 1}]}],
+  ['r3-carved-column', 'R3 Carved Column', {"lock": 1, "split": 1, "blade": "line", "tension": 100, "cut": 0, "downFit": "squeeze", "downJoin": "block", "ceil": 16, "corners": 1, "symbol": "cells", "per": [{}, {}, {"tilt": 1}, {}, {"both": 1, "tilt": 1}], "downKerf": 0, "stem": 152, "slot": 40, "space": 60, "innerRound": 8, "height": 576, "slope": 12, "rise": 16, "endRound": 128, "lower": [0, 40, 72, 0]}],
+  ['r3-carved-slab', 'R3 Carved Slab', {"lock": 1, "split": 1, "blade": "line", "tension": 100, "cut": 0, "downFit": "squeeze", "downJoin": "block", "ceil": 16, "corners": 1, "symbol": "cells", "per": [{}, {}, {"tilt": 1}, {}, {"both": 1, "tilt": 1}], "downKerf": 0, "innerRound": 8, "endRound": 128, "height": 544, "stem": 152, "slot": 40, "space": 60, "rise": 16, "slope": 12, "lower": [0, 40, 64, 0]}],
+  ['r3-calm-blade', 'R3 Calm Blade', {"lock": 1, "split": 1, "blade": "line", "tension": 100, "cut": 0, "downFit": "squeeze", "downJoin": "block", "ceil": 16, "corners": 1, "symbol": "cells", "per": [{}, {}, {"tilt": 1}, {}, {"both": 1, "tilt": 1}], "downKerf": 0, "stem": 152, "slot": 40, "space": 60, "innerRound": 8, "height": 576, "slope": 8, "rise": 16, "endRound": 128, "lower": [0, 40, 72, 0]}],
+  ['r4-apex', 'R3 + Apex', {"lock": 1, "split": 1, "blade": "line", "tension": 100, "cut": 0, "downFit": "squeeze", "downJoin": "block", "ceil": 16, "corners": 1, "symbol": "cells", "per": [{}, {}, {"tilt": 1, "apex": 1}, {}, {"both": 1, "tilt": 1, "barStep": 1}], "downKerf": 0, "stem": 152, "slot": 40, "space": 60, "innerRound": 8, "height": 576, "slope": 12, "rise": 16, "endRound": 128, "lower": [0, 40, 72, 0]}],
+];
+const byKey = Object.fromEntries(KNOBS.map((k) => [k.key, k]));
+/** Sets every control to a preset's settings, the sliders' and switches' shown values with them. */
+export function applyPreset(set) {
+  for (const [key, v] of Object.entries(set)) {
+    if (key === 'per') v.forEach((q, i) => Object.entries(q ?? {}).forEach(([row, on]) => { if (byKey.per.has(row, i)) byKey.per.set(row, i, on); }));
+    else if (key === 'lower') v.forEach((n, i) => { if (byKey.lower.has(i)) byKey.lower.set(i, n); });
+    else if (byKey[key]) { byKey[key].set(v); byKey[key].value = v; }
+  }
+}
+const chosen = PRESETS.find(([k]) => k === new URLSearchParams(globalThis.location?.search ?? '').get('preset'));
+if (chosen) applyPreset(chosen[2]);
+KNOBS.unshift({
+  key: 'preset', label: 'Preset', options: PRESETS.map(([k, label]) => [label, k]), value: chosen?.[0] ?? 'start',
+  set(v) { if (!globalThis.location?.href) return; const u = new URL(location.href); u.searchParams.set('preset', v); location.href = u.href; },
+});
+
 /** The marks' measures, as the sliders have them. */
 const now = () => ({ ...SLANT, ...at });
 const box = () => block(now());

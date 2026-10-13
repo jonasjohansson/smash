@@ -123,7 +123,7 @@ test('the chapter gives every still as plain vector', () => {
 
 test('the sliders draw every still at their measures, and back', () => {
   const { slope, stem, height } = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
-  assert.deepEqual(C.KNOBS.map((k) => k.key), ['slope', 'cut', 'stem', 'slot', 'space', 'ceil', 'height', 'rise', 'outer', 'tension', 'corners', 'endRound', 'innerRound', 'tilt', 'lock', 'dip', 'split', 'blade', 'a', 'tips', 'frame', 'frameGap', 'frameWidth', 'slash', 'slashWidth', 'shift', 'slashAt', 'downFit', 'downJoin', 'downKerf', 'symbol', 'per', 'lower']);
+  assert.deepEqual(C.KNOBS.map((k) => k.key), ['preset', 'slope', 'cut', 'stem', 'slot', 'space', 'ceil', 'height', 'rise', 'outer', 'tension', 'corners', 'endRound', 'innerRound', 'tilt', 'lock', 'dip', 'split', 'blade', 'a', 'tips', 'frame', 'frameGap', 'frameWidth', 'slash', 'slashWidth', 'shift', 'slashAt', 'downFit', 'downJoin', 'downKerf', 'symbol', 'per', 'lower']);
   const at8 = C.wordmark();
   slope.set(12);
   const S0 = C.START;
@@ -1665,5 +1665,22 @@ test("the A's apex and the H's bar step at every extreme: every letter draws, th
       for (const i of [2, 4]) assert.equal(crossingFlat(L[i], 2), null, `${at} ${a} ${i}`);
     }
     for (const downFit of G.DOWN_FITS) assert.doesNotThrow(() => G.down({ ...p, downFit, downJoin: corners ? 'block' : 'tiles' }), at);
+  }
+});
+
+test("the design loop's winners as presets: each sets the controls and draws every still, and back", () => {
+  const plain = C.wordmark();
+  const knob = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
+  const before = Object.fromEntries(C.KNOBS.map((k) => [k.key, k.value]));
+  const restore = () => C.KNOBS.forEach((k) => { k.value = before[k.key]; if (k.reset) k.reset(); else if (k.key !== 'preset') k.set(k.value); });
+  assert.equal(knob.preset.value, 'start');
+  assert.ok(C.PRESETS.length >= 9);
+  for (const [key, , set] of C.PRESETS) {
+    C.applyPreset(set);
+    for (const fn of ['wordmark', 'down', 'symbol', 's', 'lockup', 'lockupSM']) assert.match(C[fn](), /<path/, `${key} ${fn}`);
+    for (const [k, v] of Object.entries(set)) if (knob[k] && !knob[k].rows && !knob[k].each) assert.equal(knob[k].value, v, `${key} ${k}`);
+    if (set.height) assert.notEqual(C.wordmark(), plain, key);
+    restore();
+    assert.equal(C.wordmark(), plain, `${key}: back to the defaults`);
   }
 });
