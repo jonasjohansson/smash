@@ -123,7 +123,7 @@ test('the chapter gives every still as plain vector', () => {
 
 test('the sliders draw every still at their measures, and back', () => {
   const { slope, stem, height } = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
-  assert.deepEqual(C.KNOBS.map((k) => k.key), ['preset', 'slope', 'cut', 'stem', 'slot', 'space', 'ceil', 'height', 'rise', 'outer', 'tension', 'corners', 'endRound', 'innerRound', 'tilt', 'lock', 'dip', 'split', 'blade', 'a', 'tips', 'frame', 'frameGap', 'frameWidth', 'slash', 'slashWidth', 'shift', 'slashAt', 'downFit', 'downJoin', 'downKerf', 'symbol', 'per', 'lower']);
+  assert.deepEqual(C.KNOBS.map((k) => k.key), ['preset', 'slope', 'cut', 'stem', 'slot', 'space', 'ceil', 'height', 'rise', 'outer', 'tension', 'corners', 'endRound', 'innerRound', 'tilt', 'lock', 'dip', 'split', 'blade', 'a', 'tips', 'frame', 'frameGap', 'frameWidth', 'slash', 'slashWidth', 'shift', 'slashAt', 'downFit', 'downJoin', 'downKerf', 'symbol', 'per', 'downPer', 'lower']);
   const at8 = C.wordmark();
   slope.set(12);
   const S0 = C.START;
@@ -176,6 +176,33 @@ test('each corner of each letter rounded or square on its own; the old Round, Ba
   assert.ok(K.per.on('tl', 4) && K.per.on('bl', 4));
   for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value));
   assert.ok(!K.per.on('tl', 4));
+});
+
+test('bent in: a letter squares its corners that face a round one and reaches into it, the gap kept; Down its own', () => {
+  const P = { ...G.SLANT, ...C.START, drop: 0, per: Object.assign([], { 1: { bend: 1 } }) }; // the M bends into the S
+  // Its top left gives way to the S's top right, its top right to the A's top left; its feet are square already.
+  assert.deepEqual(G.cornersOf(P, 1), [false, false, false, false]);
+  assert.deepEqual(G.letterRadii(P, 1), [0, 0, 0, 0]);
+  const plain = G.letterPaths({ ...P, per: Object.assign([], { 1: { tl: 0, tr: 0 } }) }), bent = G.letterPaths(P);
+  assert.equal(bent[1].split('M').length, plain[1].split('M').length + 3); // into the S's top right and base right, the A's top left
+  assert.deepEqual([0, 2, 3, 4].map((i) => bent[i]), [0, 2, 3, 4].map((i) => plain[i]));
+  // Each piece by the S keeps the gap from its round: every point at least the gap from the round's centre, less its round.
+  const b = G.block(P), R = G.letterRadii(P, 0)[1];
+  const pts = bent[1].split('M').slice(-3).flatMap((d) => d.replace('Z', '').split('L').map((q) => q.split(' ').map(Number))).filter(([x]) => x < b.right(1) + 40);
+  const sx = b.left(1), gap = b.right(1) - sx; // the S's right edge, and the gap to the M
+  for (const [x, y] of pts.filter(([, y]) => y < R)) assert.ok(Math.hypot(Math.max(0, x - (sx - R)), R - y) >= gap - 1, `${x} ${y}`);
+  assert.ok(pts.some(([x]) => x < b.right(1) - 1)); // it reaches past its own side, over the S's corner
+  // Every letter bent, both cases and every Down, draws.
+  const all = [0, 1, 2, 3, 4].map(() => ({ bend: 1 }));
+  for (const a of ['A', 'a']) for (const downFit of G.DOWN_FITS) for (const downJoin of G.DOWN_JOINS) {
+    assert.doesNotThrow(() => G.letters({ ...P, a, per: all }), `${a}`);
+    assert.doesNotThrow(() => G.down({ ...P, a, downFit, downJoin, per: all }), `${a} ${downFit} ${downJoin}`);
+  }
+  // Down has its own switches: bent there, the wordmark as it was, and the other way about.
+  const D = (q) => G.down({ ...G.SLANT, ...C.START, drop: 0, downFit: 'fill', ...q }).d;
+  assert.notEqual(D({ downPer: Object.assign([], { 1: { bend: 1 } }) }), D({}));
+  assert.equal(D({ per: Object.assign([], { 1: { bend: 1 } }), downPer: [] }), D({}));
+  assert.equal(D({ downPer: Object.assign([], { 1: { bend: 1 } }), downFit: 'wider' }), D({ downFit: 'wider' })); // set in from each other, none bends
 });
 
 test('wider stems and another height: on the grid of 4, every cut at the slope, the S the same upside down', () => {
@@ -1391,6 +1418,8 @@ test("the chapter's Letters table: a Tilt for the A and the H, off; on, the word
   const fns = ['wordmark', 'down', 'lockup', 'symbol', 's', 'lockupSM'], before = fns.map((f) => C[f]());
   letters.set('tilt', 2, 1); letters.set('tilt', 4, 1);
   assert.ok(C.wordmark().includes(G.letters({ ...PAGE, drop: 0.4, lock: 1, per: TILTED })));
+  assert.deepEqual(fns.map((f, i) => C[f]() === before[i]), [false, true, false, true, true, true]); // Down has its own table
+  K2.downPer.set('tilt', 2, 1); K2.downPer.set('tilt', 4, 1);
   assert.deepEqual(fns.map((f, i) => C[f]() === before[i]), [false, false, false, true, true, true]);
   // Down's A and H tilt at their own stems (filled, wider than the wordmark's), at the same slope.
   const D = G.down({ ...SQUARE, drop: 0.4, lock: 1, per: TILTED, downFit: 'fill' });
@@ -1669,6 +1698,10 @@ test("the Letters table's Apex and Bar step: the A's and the H's, off at the sta
   const before = { word: C.wordmark(), down: C.down(), lockup: C.lockup(), others: others() };
   letters.set('apex', 2, 1);
   letters.set('barStep', 4, 1);
+  assert.equal(C.down(), before.down); // Down has its own table
+  const downs = C.KNOBS.find((k) => k.key === 'downPer');
+  downs.set('apex', 2, 1);
+  downs.set('barStep', 4, 1);
   const per = perWith({ apex: 1 }, { barStep: 1 }), p = { ...PAGE, per };
   assert.ok(C.wordmark().includes(G.letters(p)));
   assert.notEqual(G.letters(p), G.letters(PAGE));

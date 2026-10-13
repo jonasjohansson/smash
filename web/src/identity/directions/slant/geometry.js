@@ -135,11 +135,11 @@ export function block(p = SLANT) {
  * aside under a bar at least a slot thick (barOf).
  */
 export const PER = [
-  { cut: 1, tl: 1, tr: 1, br: 1, bl: 1, tilt: 1, split: 1, open: 0 },
-  { cut: 1, tl: 1, tr: 1, br: 0, bl: 0 },
-  { cut: 1, tl: 1, tr: 1, br: 0, bl: 0, dip: 1, tilt: 0, apex: 0 },
-  { cut: 1, tl: 1, tr: 1, br: 1, bl: 1, tilt: 1, split: 1, open: 0 },
-  { tl: 0, tr: 1, br: 1, bl: 0, tilt: 0, barStep: 0 },
+  { cut: 1, tl: 1, tr: 1, br: 1, bl: 1, bend: 0, tilt: 1, split: 1, open: 0 },
+  { cut: 1, tl: 1, tr: 1, br: 0, bl: 0, bend: 0 },
+  { cut: 1, tl: 1, tr: 1, br: 0, bl: 0, bend: 0, dip: 1, tilt: 0, apex: 0 },
+  { cut: 1, tl: 1, tr: 1, br: 1, bl: 1, bend: 0, tilt: 1, split: 1, open: 0 },
+  { tl: 0, tr: 1, br: 1, bl: 0, bend: 0, tilt: 0, barStep: 0 },
 ];
 /**
  * A letter's four outer corners, each rounded or square on its own (Jonas,
@@ -158,12 +158,87 @@ const per = (p, i) => {
   const was = i === 4 ? [both && round, round, base, both && base] : [round, round, base, base];
   return { ...q, ...Object.fromEntries(CORNERS.map((c, k) => [c, was[k] ? 1 : 0])) };
 };
-/** Letter i's four corners, clockwise from the top left: whether each is rounded (the a's stem square at its top). */
-export const cornersOf = (p, i) => {
-  const q = per(p, i), lower = i === 2 && p.a === 'a';
-  // (The a's bowl rounds its corner at the base with its top, and its stem stands square at its top.)
-  return lower ? [!!q.tl, false, !!q.br, !!(q.tl || q.bl)] : CORNERS.map((c) => !!q[c]);
+/**
+ * Which corner of which neighbour each of a letter's corners faces across
+ * the gap, clockwise from its top left: [the neighbour, ahead (1) or behind
+ * (-1); its corner]. In a row (the wordmark) its left corners face the
+ * letter before's right ones; in a column (Down, p.ends 'down') its top
+ * corners face the bottom ones of the letter above.
+ */
+const FACES = { row: [[-1, 1], [1, 0], [1, 3], [-1, 2]], down: [[-1, 3], [-1, 2], [1, 1], [1, 0]] };
+const facesOf = (p) => FACES[p.ends === 'down' ? 'down' : 'row'];
+/** Letter i's four corners as its switches have them (the a's stem square at its top, its bowl's corner with its top). */
+const switched = (p, i) => {
+  const q = per(p, i);
+  return i === 2 && p.a === 'a' ? [!!q.tl, false, !!q.br, !!(q.tl || q.bl)] : CORNERS.map((c) => !!q[c]);
 };
+/**
+ * Letter i's four corners, clockwise from the top left: whether each is
+ * rounded. Bent in (bend; Jonas, 2026-10-13: "make the letters bend into
+ * each other like the left top and bottom of m bends into the s bend"), a
+ * corner facing a neighbour's round one is square, and the letter reaches
+ * into that round (bends, below). Two bent letters facing, the first keeps
+ * its round.
+ */
+export const cornersOf = (p, i) => {
+  const on = switched(p, i);
+  if (!per(p, i).bend) return on;
+  return on.map((o, k) => {
+    const [dj, kk] = facesOf(p)[k], j = i + dj;
+    return o && !(j >= 0 && j < 5 && switched(p, j)[kk] && !(per(p, j).bend && j > i));
+  });
+};
+
+/**
+ * Where a letter bends into its neighbours' round corners (cornersOf): for
+ * each of its square corners facing a round one across the gap, the piece
+ * that fills the round's lee, its edge kept the gap from the round all along
+ * (the round grown by the gap, from the same centre, as a frame's: roundBox),
+ * running out to a point on the letter's top or base. boxes ({ box: [x0, y0,
+ * x1, y1], radii }) in reading order, a row or (down) a column; bent, which
+ * letters bend. Path data for each letter (its pieces, wound against its
+ * outline, so the two fill as one).
+ */
+export function bends(boxes, bent, tension = TENSION, down = false) {
+  const N = 48;
+  const swap = ([x, y]) => [y, x];
+  // As a row: a column's boxes turned onto their sides, its corners with them; a corner k becomes ROW[k].
+  const B = down ? boxes.map(({ box: [x0, y0, x1, y1], radii: [a, b, c, d] }) => ({ box: [y0, x0, y1, x1], radii: [a, d, c, b] })) : boxes;
+  const ROW = down ? [0, 3, 2, 1] : [0, 1, 2, 3];
+  const faces = FACES[down ? 'down' : 'row'];
+  return boxes.map((_, i) => {
+    if (!bent[i]) return '';
+    let d = '';
+    for (let k = 0; k < 4; k++) {
+      const [dj] = faces[k], j = i + dj, A = B[j], M = B[i], kr = ROW[k];
+      if (!A) continue;
+      const kk = FACES.row[kr][1], r = A.radii[kk];
+      if (!(r > 0) || M.radii[kr] > 0) continue;
+      const left = kr === 0 || kr === 3, top = kr < 2;
+      const [x0, y0, x1, y1] = M.box;
+      if (Math.abs(top ? A.box[1] - y0 : A.box[3] - y1) > 1e-6) continue; // their edges not in line: no lee to fill
+      const g = left ? x0 - A.box[2] : A.box[0] - x1;
+      if (!(g > 0)) continue;
+      // In the corner's own reckoning: u out from the letter's side across the gap, v in from its top (or base).
+      // The round grown by the gap runs from a, the gap above the edge, to b, on the letter's side r in.
+      const R = r + g, a = [R, -g], b = [0, r], c = [0, -g];
+      const toward = (q) => [q[0] + (c[0] - q[0]) * tension, q[1] + (c[1] - q[1]) * tension];
+      const Q = [a, toward(a), toward(b), b];
+      const pts = Array.from({ length: N + 1 }, (_, n) => bez(Q, n / N));
+      const m = pts.findIndex((q) => q[1] >= 0);
+      if (m < 1) continue;
+      const [pa, pb] = [pts[m - 1], pts[m]], tip = [pa[0] + ((pb[0] - pa[0]) * -pa[1]) / (pb[1] - pa[1]), 0];
+      const local = [tip, [0, 0], [0, r], ...pts.slice(m).reverse()];
+      let out = local.map(([u, v]) => [left ? x0 - u : x1 + u, top ? y0 + v : y1 - v]);
+      if (down) out = out.map(swap);
+      // Wound against the letters' outlines (clockwise on the page), so where they meet they fill as one.
+      const area = out.reduce((t, q, n) => { const q2 = out[(n + 1) % out.length]; return t + q[0] * q2[1] - q2[0] * q[1]; }, 0);
+      if (area > 0) out.reverse();
+      d += 'M' + out.map(([x, y]) => P(x, y)).join('L') + 'Z';
+    }
+    return d;
+  });
+}
 /** Whether an S (its switches q) is split along one line (p.blade; sLetter). */
 const lined = (p, q) => !!(q.split && p.split && p.blade === 'line');
 
@@ -852,13 +927,20 @@ export function letterPaths(p = SLANT, only = null) {
     A: (k) => up + s - k.grow - hi - (k.apex ? k.e : k.d) - k.r - slot - k.fall,
     a: (k) => H - swoop - bar - hi - (k.apex ? k.e + k.d : 2 * k.d) - 2 * k.r - slot,
   };
-  return [
+  const paths = [
     () => S(0, c(0), left(1), ends(own(0, c(0)), most.S)),
     () => M(right(1), left(4), ends(own(1, (c(2) + c(3)) / 2), most.M)),
     () => (p.a === 'a' ? a : A)(right(4), c(5), left(6), ends(own(2, c(5)), p.a === 'a' ? most.a : most.A)),
     () => S(right(6), c(7), left(8), ends(own(3, c(7)), most.S)),
     () => Hh(right(8), c(9), W, own(4, c(9))),
   ].map((draw, i) => (only == null || only === i ? draw() : ''));
+  // Bent in (cornersOf, bends): the wordmark's letters reach into their neighbours' rounds. (Down bends its own.)
+  const bent = [0, 1, 2, 3, 4].map((i) => !!per(p, i).bend);
+  if (only != null || !bent.some(Boolean)) return paths;
+  const x = [[0, left(1)], [right(1), left(4)], [right(4), left(6)], [right(6), left(8)], [right(8), W]];
+  const dips = depth(p) > 0; // the A's foot below the line: no edge in line at the base beside it
+  const boxes = x.map(([x0, x1], i) => ({ box: [x0, 0, x1, H + (dips && i === 2 ? 1 : 0)], radii: letterRadii(p, i) }));
+  return bends(boxes, bent, p.tension ?? TENSION).map((d, i) => paths[i] + d);
 }
 
 /** The letters as one path, filled evenodd. */
@@ -1107,7 +1189,11 @@ export function down(p = SLANT) {
   if (!DOWN_FITS.includes(fit)) throw new Error(`slant: no fit called ${fit}`);
   if (!DOWN_JOINS.includes(join)) throw new Error(`slant: no join called ${join}`);
   const carved = join === 'block';
-  const q = { ...p, dip: 0, height: 0, ends: 'down', kerf: carved && !!p.downKerf }; // the least height its slots allow; in two tiers, its top and its feet the ends (ENDS)
+  // Its own letters' switches (p.downPer; Jonas, 2026-10-13: "specific settings for the down version"), else the
+  // wordmark's. Its letters set in from each other's sides (wider), none bends in: their edges don't meet in line.
+  const own = p.downPer ?? p.per;
+  const perD = [0, 1, 2, 3, 4].map((i) => ({ ...(own?.[i] ?? {}), ...(fit === 'wider' ? { bend: 0 } : {}) }));
+  const q = { ...p, per: perD, dip: 0, height: 0, ends: 'down', kerf: carved && !!p.downKerf }; // the least height its slots allow; in two tiers, its top and its feet the ends (ENDS)
   const slot = p.stroke, stem = p.stem ?? BAR, gap = carved ? slot : p.space ?? slot;
   // Carved as one block, a letter's seams: its top under the letter above, its base over the one below.
   const seam = (i) => (carved ? { seam: [i > 0, i < STEMS.length - 1] } : {});
@@ -1132,6 +1218,9 @@ export function down(p = SLANT) {
     boxes.push({ box: [x, y, x + lw, y + b.H], radii: letterRadii(r, i) });
     y += b.H + gap;
   });
+  // Bent in (cornersOf, bends): a letter reaches up or down into the rounds of the letters above and below.
+  const bent = perD.map((_, i) => !!per(q, i).bend);
+  if (bent.some(Boolean)) d += bends(boxes, bent, p.tension ?? TENSION, true).join('');
   return { d, w, h: y - gap, boxes };
 }
 

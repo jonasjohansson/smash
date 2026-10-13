@@ -46,10 +46,33 @@ const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${ru
 // slot ends' corners rounded, the ceiling 44, the outer corners rounded 64
 // at 60%, no tilt and no dip, the A a capital, Down filled.
 export const START = { cut: 12, drop: 0, stem: 72, stroke: 20, space: 20, ceil: 44, height: H, rise: 0, outer: 64, tension: 0.6, corners: 0, endRound: 128, innerRound: 24, tilt: 0, lock: 0, split: 0, blade: 'step', a: 'A', dip: 0, downFit: 'fill', downJoin: 'tiles', downKerf: 0, tips: 0, frame: 0, frameGap: 20, frameWidth: 20, slash: 0, slashWidth: 20, shift: 0, slashAt: 0, symbol: 'extended' };
-const at = { ...START, per: PER.map((q) => ({ ...q })), lower: [0, 0, 0, 0, 0] };
+const at = { ...START, per: PER.map((q) => ({ ...q })), downPer: PER.map((q) => ({ ...q })), lower: [0, 0, 0, 0, 0] };
 const knob = (key, label, min, max, step, value, text, set) => ({ key, label, min, max, step, value, text, set: (v) => set(Number(v)) });
 /** A switch between a few options (the page draws a button for each): [label, value]. */
 const choice = (key, label, options, value) => ({ key, label, options, value, set: (v) => { at[key] = options.find(([, o]) => String(o) === String(v))?.[1] ?? value; } });
+// Each letter's own switches (geometry.js: PER): a button where the letter has the setting. Its four corners,
+// each rounded or square; Bend in (Jonas, 2026-10-13: "make the letters bend into each other like the left top
+// and bottom of m bends into the s bend"; off), its corners that face a neighbour's round square, and it
+// reaching into that round, the gap kept (geometry.js: cornersOf, bends). The A's and the H's Tilt (the design
+// panel, round 2, 2026-10-13; off) carry the S's blade's angle through their crossbars (geometry.js: barFall),
+// one angle through S, A, S, H without a slash. The A's Apex and the H's Bar step (the design panel, round 3,
+// 2026-10-13; off) tell the two apart: the A's counter head peaked at the governing slope over a crossbar grown
+// to a window, the H's lower slot stepped aside under a bar at least a slot thick (geometry.js: barOf). The a's
+// slot head peaks too.
+const ROWS = [['cut', 'Cut'], ['tl', 'Top left'], ['tr', 'Top right'], ['bl', 'Bottom left'], ['br', 'Bottom right'], ['bend', 'Bend in'], ['tilt', 'Tilt'], ['split', 'Split'], ['open', 'Open'], ['dip', 'Dip'], ['apex', 'Apex'], ['barStep', 'Bar step']];
+/** A table of the letters' switches, kept in at[key]. */
+const table = (key, label, rows) => ({
+  key, label, letters: ['S', 'M', 'A', 'S', 'H'], rows,
+  has: (row, i) => row in PER[i],
+  // Whether a switch does anything as the other controls stand (the page dims it where not): the A's Tilt
+  // waits for the capital, as the a's slot has no crossbar to fall (the design panel's review, round 2, 2026-10-13).
+  // The a's stem stands square at its top, so its Top right waits for the capital too.
+  live: (row, i) => !((row === 'tilt' || row === 'tr') && i === 2 && at.a === 'a'),
+  on: (row, i) => !!at[key][i][row],
+  set: (row, i, v) => { at[key][i][row] = v ? 1 : 0; },
+  reset() { at[key] = PER.map((q) => ({ ...q })); },
+});
+
 // More to get closer to CM.SUPPLY's latest (Jonas, 2026-10-12): the slots'
 // width, the S's crossbar tilted into their long diagonal and its slot run
 // through it, and the A or their a ("lets explore having both capital and
@@ -123,18 +146,10 @@ export const KNOBS = [
   // design panel, round 3, 2026-10-13; off) tell the two apart: the A's counter head peaked at the governing
   // slope over a crossbar grown to a window, the H's lower slot stepped aside under a bar at least a slot
   // thick (geometry.js: barOf). The a's slot head peaks too.
-  {
-    key: 'per', label: 'Letters', letters: ['S', 'M', 'A', 'S', 'H'],
-    rows: [['cut', 'Cut'], ['tl', 'Top left'], ['tr', 'Top right'], ['bl', 'Bottom left'], ['br', 'Bottom right'], ['tilt', 'Tilt'], ['split', 'Split'], ['open', 'Open'], ['dip', 'Dip'], ['apex', 'Apex'], ['barStep', 'Bar step']],
-    has: (row, i) => row in PER[i],
-    // Whether a switch does anything as the other controls stand (the page dims it where not): the A's Tilt
-    // waits for the capital, as the a's slot has no crossbar to fall (the design panel's review, round 2, 2026-10-13).
-    // The a's stem stands square at its top, so its Top right waits for the capital too.
-    live: (row, i) => !((row === 'tilt' || row === 'tr') && i === 2 && at.a === 'a'),
-    on: (row, i) => !!at.per[i][row],
-    set: (row, i, v) => { at.per[i][row] = v ? 1 : 0; },
-    reset() { at.per = PER.map((q) => ({ ...q })); },
-  },
+  table('per', 'Letters', ROWS),
+  // Down's own (Jonas, 2026-10-13: "specific settings for the down version"): the same switches, Down drawn
+  // from these and the wordmark from the Letters above; no Dip, as Down never dips.
+  table('downPer', 'Down letters', ROWS.filter(([row]) => row !== 'dip')),
   // Each letter's slot ends lowered past the ceiling (geometry.js: p.lower): a slider a letter, the H has none.
   {
     key: 'lower', label: 'Lower', each: ['S', 'M', 'A', 'S', 'H'], min: 0, max: 200, step: 4,
@@ -165,10 +180,11 @@ const byKey = Object.fromEntries(KNOBS.map((k) => [k.key, k]));
 /** Sets every control to a preset's settings, the sliders' and switches' shown values with them. */
 export function applyPreset(set) {
   for (const [key, v] of Object.entries(set)) {
-    // (A letter's Round, Base and Both, as the earlier presets have them, set its four corners: geometry.js, cornersOf.)
-    if (key === 'per') v.forEach((q, i) => {
-      if (q && ('round' in q || 'base' in q || 'both' in q)) cornersOf({ per: Object.assign([], { [i]: q }) }, i).forEach((on, k) => byKey.per.set(CORNERS[k], i, on));
-      Object.entries(q ?? {}).forEach(([row, on]) => { if (byKey.per.has(row, i)) byKey.per.set(row, i, on); });
+    // A letter's switches set the wordmark's and Down's alike. (A letter's Round, Base and Both, as the earlier
+    // presets have them, set its four corners: geometry.js, cornersOf.)
+    if (key === 'per') for (const t of [byKey.per, byKey.downPer]) v.forEach((q, i) => {
+      if (q && ('round' in q || 'base' in q || 'both' in q)) cornersOf({ per: Object.assign([], { [i]: q }) }, i).forEach((on, k) => t.set(CORNERS[k], i, on));
+      Object.entries(q ?? {}).forEach(([row, on]) => { if (t.has(row, i)) t.set(row, i, on); });
     });
     else if (key === 'lower') v.forEach((n, i) => { if (byKey.lower.has(i)) byKey.lower.set(i, n); });
     else if (byKey[key]) { byKey[key].set(v); byKey[key].value = v; }
