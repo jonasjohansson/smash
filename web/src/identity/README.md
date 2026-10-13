@@ -44,7 +44,7 @@ also draws the favicons, on whole pixels). The stills, the motion and its MP4, a
   motion and the stereogram stay fine, as they need to. One WebGL context draws every tile in turn (`gl.js`); the mark
   comes in as its signed distance (`field.js`); the shaders are `techniques.js`. The bar swaps in the modular mark
   and inverts; a click shows a tile wide; each has its MP4.
-- `type.js` (after the sequence): the site's own type. Druk for titles, always in capitals (Jonas, 2026-10-01: "i think
+- `type.js` (after the sequence, folded to a line since 2026-10-14, loaded when opened): the site's own type. Druk for titles, always in capitals (Jonas, 2026-10-01: "i think
   druk is great"; 2026-10-03: "go with druk"), its trial for now, Anton setting what the trial lacks; Anton beside it, its Google Fonts alternative; Neue Montreal for
   labels, captions and small text; Season Mix for what tells a project, its lead and its story (Jonas, 2026-10-01,
   after the site had tried Neue Montreal there: "i think we prefer the season mix"). Type
@@ -60,7 +60,7 @@ also draws the favicons, on whole pixels). The stills, the motion and its MP4, a
   `python3 web/scripts/identity-samples.py [treatment ...]` renders every piece as a JPEG and all of them as a PDF,
   black and white and yellow by default, in `samples/` (served at `/identity/samples/` and linked from the section;
   a direct link to a file skips the site's password).
-- `typeface.js` (after the type): SMASH's own typeface (`typeface/SMASH-VF.ttf`, the site's `/typeface/`), for very
+- `typeface.js` (after the type, folded too): SMASH's own typeface (`typeface/SMASH-VF.ttf`, the site's `/typeface/`), for very
   special occasions (Jonas, 2026-10-01), a section of its own: a line to set in it with its five axes (weight, width,
   crossbar, roundness, height; "The mark's" puts them back), its letters and its stylistic set; its specimen; its
   axes each at its least, the mark's and its most; and three occasions: the wordmark beside SMASH typed in the face

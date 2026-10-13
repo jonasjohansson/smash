@@ -314,9 +314,10 @@ const EXTRAS = [
   // At the end of the page, after every chapter (Jonas, 2026-09-29).
   { id: 'sequence', name: 'Sequence', last: true, load: async () => { const m = await import('./sequence/section.js'); return { html: m.HTML, mount: m.mount }; } },
   // The type chosen, Druk (Anton until 2026-10-03), Neue Montreal and Season Mix, at work with the marks (Jonas, 2026-09-30).
-  { id: 'type', name: 'Typography', last: true, load: async () => { const m = await import('./type.js'); return { html: m.HTML, mount: m.mount }; } },
+  // It and the typeface folded to a line each, loaded when opened (Jonas, 2026-10-14).
+  { id: 'type', name: 'Typography', last: true, folded: true, load: async () => { const m = await import('./type.js'); return { html: m.HTML, mount: m.mount }; } },
   // SMASH's own typeface, for very special occasions: a section of its own (Jonas, 2026-10-01).
-  { id: 'typeface', name: 'The SMASH typeface', last: true, load: async () => { const m = await import('./typeface.js'); return { html: m.HTML, mount: m.mount }; } },
+  { id: 'typeface', name: 'The SMASH typeface', last: true, folded: true, load: async () => { const m = await import('./typeface.js'); return { html: m.HTML, mount: m.mount }; } },
   // The palette at the very bottom, after the sequence (Jonas, 2026-09-30).
   { id: 'colour', name: 'Colour', last: true, load: async () => { const m = await import('./colour.js'); return { html: m.HTML, mount: m.mount }; } },
   // Folded, under the colour (Jonas, 2026-09-30: not so important any more): a line each, loaded when opened.
