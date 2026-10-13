@@ -38,6 +38,8 @@ export const info = {
 
 const path = (d, rule = 'evenodd') => `<path fill="currentColor" fill-rule="${rule}" d="${d}"/>`;
 const px = (d, pixel) => (pixel ? pixelate(d, pixel) : d);
+// The wordmark for p, round or in pixels (its round back counted from its corner, geometry.js: letterA).
+const drawn = (p, pixel) => px(letters(p, pixel), pixel);
 
 // The controls: the A's back and heel, square or round, and how far its foot
 // settles. Where they start, and what the files are made at: the original's A.
@@ -52,7 +54,7 @@ export const KNOBS = [
 ];
 
 // The wordmark, its artboard as deep as the foot settles.
-const wordmarkOf = (p, pixel) => svg(W, H + depth(p), path(px(letters(p), pixel)));
+const wordmarkOf = (p, pixel) => svg(W, H + depth(p), path(drawn(p, pixel)));
 export const wordmark = ({ pixel = 0 } = {}) => wordmarkOf(at, pixel);
 
 // The A three ways, side by side, whatever the controls say: the original's,
@@ -69,12 +71,12 @@ const CAP = 32;
 const FOOT = REST.crossbar + REST.gap / 2 - REST.stroke / 2; // the crossbar's foot
 const LOCK = lockPaths([['studio', CAP], ['middle', FOOT], ['stockholm', H]], CAP, W + PITCH);
 export function lockup({ pixel = 0 } = {}) {
-  return svg(LOCK.width, H + depth(at), path(px(letters(at), pixel)) + path(LOCK.d, 'nonzero'));
+  return svg(LOCK.width, H + depth(at), path(drawn(at, pixel)) + path(LOCK.d, 'nonzero'));
 }
 
 // SMASH written down: the letters in a column, a slot apart, a slot and the dip under the A.
 export function down({ pixel = 0 } = {}) {
-  const D = downPath(at);
+  const D = downPath(at, pixel);
   return svg(D.w, D.h, path(px(D.d, pixel)));
 }
 
@@ -88,7 +90,7 @@ function draw(ctx, w, h) {
   ctx.translate((w - W * k) / 2, (h - mh * k) / 2);
   ctx.scale(k, k);
   ctx.fillStyle = WHITE;
-  ctx.fill(new Path2D(px(letters(at), Number(document.body.dataset.pixel) || 0)), 'evenodd');
+  ctx.fill(new Path2D(drawn(at, Number(document.body.dataset.pixel) || 0)), 'evenodd');
   ctx.restore();
 }
 

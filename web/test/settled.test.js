@@ -191,3 +191,23 @@ test('the chapter: every still as plain vector, round or in pixels; the controls
   for (const q of C.KNOBS) q.set(q.value);
   assert.equal(C.wordmark(), at0);
 });
+
+test("in pixels of 4 every point is on the grid of 4, the round back's steps too (counted from its corner)", () => {
+  const points = (d) => [...d.matchAll(/[ML]([-\d.]+) ([-\d.]+)/g)].map((m) => [+m[1], +m[2]]);
+  for (const p of ALL) {
+    assert.deepEqual(points(O.pixelate(G.letters(p, 4), 4)).filter(([x, y]) => x % 4 || y % 4), [], JSON.stringify(p));
+    // Down: each letter on the grid in its own place, the narrow ones 26 in from the M's edges (2 off the column's grid).
+    assert.deepEqual(points(O.pixelate(G.down(p, 4).d, 4)).filter(([x, y]) => x % 2 || y % 4), [], JSON.stringify(p));
+    // In pixels of 10 too it draws.
+    assert.doesNotThrow(() => O.pixelate(G.letters(p, 10), 10));
+  }
+  // The back's steps: symmetric about its diagonal, inside its square, from the left edge at the cap's centre to the top.
+  const A = O.pixelate(G.letterA({ back: 'round' }, 4), 4);
+  assert.match(A, /L260 472L260 28L264 28L264 20L268 20L268 16L272 16L272 12L276 12L276 8L280 8L280 4L288 4L288 0Z/);
+  assert.equal(G.letterA({ back: 'round' }, 0), G.letterA({ back: 'round' }));
+  // The chapter draws its stills so: the A's back on the grid in the wordmark and in Down.
+  const back = C.KNOBS.find((k) => k.key === 'back');
+  back.set('round');
+  for (const fn of ['wordmark', 'wordmarkBack', 'wordmarkSettled', 'down']) assert.doesNotMatch(C[fn]({ pixel: 4 }), /\d\.\d/, fn);
+  back.set(back.value);
+});

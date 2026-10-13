@@ -47,11 +47,33 @@ function check(p) {
 }
 
 /**
+ * The round back in pixels of q: the points after (L, top), up to the top
+ * edge. Cells of q counted from the back's outer corner (L, 0), ink where the
+ * cell's centre is inside the circle (centre (x, top), radius r). Its square
+ * is 42 across, not a whole number of 4s, so pixelate() (original/geometry.js),
+ * which counts from the centre and stretches its cells to fit, would put the
+ * back's steps off the grid of 4; counted from the corner, which is on the
+ * grid, every step is.
+ */
+function backSteps(L, x, top, r, q) {
+  const pts = [];
+  for (let i = 0; L + i * q < x; i++) {
+    const cx = L + (i + 0.5) * q;
+    let j = 0; // empty cells at the top of this column
+    for (let cy = q / 2; cy < top && cx < x && Math.hypot(cx - x, cy - top) > r; cy += q) j++;
+    const y = Math.min(j * q, top);
+    pts.push([L + i * q, y], [Math.min(L + (i + 1) * q, x), y]);
+  }
+  return pts.map(([px, py]) => `L${P(px, py)}`).join('');
+}
+
+/**
  * The A as path data, in the wordmark's place: its outline clockwise, then its
  * counter, as the original's (filled evenodd). At SETTLED it is the original's
- * A to the character.
+ * A to the character. pixel (4 or 10) draws a round back in pixels counted
+ * from its corner (backSteps); pixelate() does the rest.
  */
-export function letterA(p = SETTLED) {
+export function letterA(p = SETTLED, pixel = 0) {
   const q = { ...SETTLED, ...p };
   check(q);
   const { s, top, lo, up } = measures(REST);
@@ -67,7 +89,8 @@ export function letterA(p = SETTLED) {
   // The heel: a quarter circle a stem round, across the whole foot, from the notch's wall to the back.
   if (q.heel === 'round') d += `A${f(stem)} ${f(stem)} 0 0 1 ${P(L, floor - stem)}`;
   else d += `L${P(L, floor)}`;
-  d += q.back === 'round' ? `L${P(L, top)}A${f(back)} ${f(back)} 0 0 1 ${P(x, 0)}Z` : 'Z';
+  if (q.back === 'round') d += `L${P(L, top)}` + (pixel ? backSteps(L, x, top, back, pixel) : `A${f(back)} ${f(back)} 0 0 1 ${P(x, 0)}`);
+  d += 'Z';
   // The counter, unchanged: from the crossbar up to its round top.
   return d + `M${P(x - s, up + s)}L${P(x - s, top)}A${f(s)} ${f(s)} 0 0 1 ${P(x + s, top)}L${P(x + s, up + s)}Z`;
 }
@@ -75,15 +98,15 @@ export function letterA(p = SETTLED) {
 /** How far the mark reaches under its baseline. */
 export const depth = (p = SETTLED) => ({ ...SETTLED, ...p }).dip;
 
-/** The five letters, one path each: S, M and the original's S and H, the A as set. */
-export function letterPathsOf(p = SETTLED) {
+/** The five letters, one path each: S, M and the original's S and H, the A as set (its back in pixels, at pixel). */
+export function letterPathsOf(p = SETTLED, pixel = 0) {
   const out = letterPaths(REST);
-  out[2] = letterA(p);
+  out[2] = letterA(p, pixel);
   return out;
 }
 
 /** The wordmark as one evenodd path. */
-export const letters = (p = SETTLED) => letterPathsOf(p).join('');
+export const letters = (p = SETTLED, pixel = 0) => letterPathsOf(p, pixel).join('');
 
 /** Each letter's left and right edges in the wordmark. */
 export function spans() {
@@ -97,13 +120,14 @@ export function spans() {
  * letter's slot runs under the M's middle stem; a slot between letters, and
  * under the A a slot and its dip, so its lowest point stays a slot from the S
  * below. The narrow letters sit half a pitch (26) in, so each is on the grid
- * of 4 in its own place. { d, w, h, lefts, tops }: where each letter starts.
+ * of 4 in its own place. pixel as letterA's. { d, w, h, lefts, tops }: where
+ * each letter starts.
  */
-export function down(p = SETTLED) {
+export function down(p = SETTLED, pixel = 0) {
   const q = { ...SETTLED, ...p };
   const { s } = measures(REST);
   const gap = 2 * s; // a slot
-  const paths = letterPathsOf(q), sp = spans();
+  const paths = letterPathsOf(q, pixel), sp = spans();
   const w = Math.max(...sp.map(([a, b]) => b - a));
   let y = 0, d = '';
   const lefts = [], tops = [];

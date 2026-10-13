@@ -79,7 +79,8 @@ also draws the favicons, on whole pixels). The stills, the motion and its MP4, a
   top-left corner square, or a quarter circle about its counter's top cap (r 42, half a slot and a stem), the one
   soft corner in the word. Heel: its left foot's outer corner square, or round by a stem (32). Dip: that foot
   settled 0 to 20 under the baseline, on the grid of 4, the right leg on the line, the notch square, a vertical step
-  where they meet. At its start it is the original; a row shows the A three ways. Down: the letters in a column at
+  where they meet. At its start it is the original; a row shows the A three ways. In pixels the round back steps
+  from its outer corner, so at 4 it stays on the grid (its square, 42, is not a whole number of 4s). Down: the letters in a column at
   their own widths, a slot apart, a slot and the dip under the A. The symbol and the favicons are the original's.
 - `directions/struck.js` (off the page since 2026-09-30, at Jonas's word; kept, with its export in `identity/01-struck/`): the mark with its slots leaning.
 - `sequence/`: a page of its own (`/identity/sequence/`), and a section on this page: the logo, square, taken down
