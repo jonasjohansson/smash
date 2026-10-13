@@ -85,7 +85,7 @@ also draws the favicons, on whole pixels). The stills, the motion and its MP4, a
 - `slant-best.js` (straight after the chapters; Jonas, 2026-10-14: "like a best-of"): Slant's best presets side by
   side, each its wordmark and Down, drawn by the chapter from its defaults (`drawWith`, so the chapter's own controls
   stay as they are), every one with its S level (`LEVEL`: whole, no blade; Jonas did not like the S split along a
-  diagonal), with a link to open each in the chapter so (`?s=level`). One colour switch for them all, from the palette: Ink,
+  diagonal), each card only its name (the chapter opens a preset level with `?s=level`). One colour switch for them all, from the palette: Ink,
   Paper, Earth (the type on the brown ground) or a hyper colour on the ground, and Flip; kept in this browser.
 - `directions/struck.js` (off the page since 2026-09-30, at Jonas's word; kept, with its export in `identity/01-struck/`): the mark with its slots leaning.
 - `sequence/`: a page of its own (`/identity/sequence/`), and a section on this page: the logo, square, taken down

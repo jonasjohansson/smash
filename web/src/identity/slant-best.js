@@ -5,7 +5,8 @@
 // on white, the type on the earth, or one of the hyper colours on the earth; Flip swaps the mark and the ground.
 // The choice is kept in this browser. Slant was explored and left (identity/brief.md); this is its record.
 // Every preset with its S level (LEVEL; Jonas, 2026-10-14: not "with the S that way", split along a diagonal
-// blade), and the link opens it so (?s=level); level, Calm Blade was all but Carved Column, so it went.
+// blade); level, Calm Blade was all but Carved Column, so it went. Each card only its name ("we don't need all
+// this explanation text", nor the link to the chapter).
 
 import { PRESETS, LEVEL, drawWith, wordmark, down } from './directions/slant.js';
 import { ACCENTS, EARTH } from './colour.js';
@@ -18,18 +19,18 @@ const COLOURS = [
   ['Earth', hex('Type'), hex('Ground')],
   ...ACCENTS.map((a) => [a.name, a.steps[0], hex('Ground')]),
 ];
-// [the preset, its name here, a line on it]
+// [the preset, its name here] (Jonas, 2026-10-14: "we don't need all this explanation text": a name, no line)
 const BEST = [
-  ['start', 'Start', 'Where the chapter starts: flat cuts, the ends round'],
-  ['r1-locked-blade', 'Round 1', 'The design panel’s first best: wide stems, a low block'],
-  ['r2-column-blade', 'Round 2', 'Its second: taller, the crossbars risen'],
-  ['r3-carved-column', 'Round 3', 'Its third and best: the ends round, the inside tight'],
-  ['r4-apex', 'Round 3 + Apex', 'The A peaked, the H’s bar stepped'],
-  ['wide', 'Wide', 'After Jonas’s reference, 14 October'],
+  ['start', 'Start'],
+  ['r1-locked-blade', 'Round 1'],
+  ['r2-column-blade', 'Round 2'],
+  ['r3-carved-column', 'Round 3'],
+  ['r4-apex', 'Round 3 + Apex'],
+  ['wide', 'Wide'],
 ];
 
 const esc = (s = '') => String(s).replace(/[<&"]/g, (c) => ({ '<': '&lt;', '&': '&amp;', '"': '&quot;' })[c]);
-const card = ([key, name, line]) => {
+const card = ([key, name]) => {
   const preset = PRESETS.find(([k]) => k === key)?.[2];
   if (!preset) return '';
   const set = { ...preset, ...LEVEL };
@@ -39,7 +40,7 @@ const card = ([key, name, line]) => {
         <div class="best-wm">${drawWith(set, wordmark)}</div>
         <div class="best-down">${drawWith(set, down)}</div>
       </div>
-      <figcaption><span class="best-name">${esc(name)}</span><span class="label">${esc(line)}</span><a class="label" href="?d=slant&amp;preset=${esc(key)}&amp;s=level#slant">Open in the chapter</a></figcaption>
+      <figcaption><span class="best-name">${esc(name)}</span></figcaption>
     </figure>`;
 };
 
@@ -57,8 +58,6 @@ const STYLE = `
 #slant-best .best-down svg { display: block; height: clamp(140px, 22vw, 260px); width: auto; }
 #slant-best figcaption { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
 #slant-best .best-name { color: var(--text); font-size: 13px; }
-#slant-best figcaption a { margin-left: auto; text-decoration: none; }
-#slant-best figcaption a:hover { color: var(--text); }
 `;
 
 export const HTML = `
