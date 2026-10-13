@@ -82,7 +82,7 @@ also draws the favicons, on whole pixels). The stills, the motion and its MP4, a
   where they meet. At its start it is the original; a row shows the A three ways. In pixels the round back steps
   from its outer corner, so at 4 it stays on the grid (its square, 42, is not a whole number of 4s). Down: the letters in a column at
   their own widths, a slot apart, a slot and the dip under the A. The symbol and the favicons are the original's.
-- `slant-best.js` (straight after the chapters; Jonas, 2026-10-14: "like a best-of"): Slant's best presets side by
+- `slant-best.js` (its own section at the bottom of the page; Jonas, 2026-10-14: "like a best-of"): Slant's best presets side by
   side, each its wordmark and Down, drawn by the chapter from its defaults (`drawWith`, so the chapter's own controls
   stay as they are), every one with its S level (`LEVEL`: whole, no blade; Jonas did not like the S split along a
   diagonal), each card only its name (the chapter opens a preset level with `?s=level`). One colour switch for them all, from the palette: Ink,

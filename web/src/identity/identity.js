@@ -311,8 +311,6 @@ function live(d, section) {
 const EXTRAS = [
   { id: 'modular', name: 'The modular mark', load: async () => { const m = await import('./modular.js'); return { html: m.HTML, mount: m.mount }; } },
   { id: 'lab', name: 'The live mark', load: async () => { const m = await import('./lab.js'); return { html: m.LAB_HTML, mount: m.mountLab }; } },
-  // Slant's best presets, in the palette's colours, straight after the chapters (Jonas, 2026-10-14).
-  { id: 'slant-best', name: 'Slant, best of', last: true, load: async () => { const m = await import('./slant-best.js'); return { html: m.HTML, mount: m.mount }; } },
   // At the end of the page, after every chapter (Jonas, 2026-09-29).
   { id: 'sequence', name: 'Sequence', last: true, load: async () => { const m = await import('./sequence/section.js'); return { html: m.HTML, mount: m.mount }; } },
   // The type chosen, Druk (Anton until 2026-10-03), Neue Montreal and Season Mix, at work with the marks (Jonas, 2026-09-30).
@@ -324,6 +322,8 @@ const EXTRAS = [
   // Folded, under the colour (Jonas, 2026-09-30: not so important any more): a line each, loaded when opened.
   { id: 'mapping', name: 'Mapping', last: true, folded: true, load: async () => { const m = await import('./mapping.js'); return { html: m.HTML, mount: m.mount }; } },
   { id: 'sculpture', name: 'Sculpture', last: true, folded: true, load: async () => { const m = await import('./sculpture.js'); return { html: m.HTML, mount: m.mount }; } },
+  // Slant's best presets, in the palette's colours: a section of its own at the bottom of the page (Jonas, 2026-10-14).
+  { id: 'slant-best', name: 'Slant, best of', last: true, load: async () => { const m = await import('./slant-best.js'); return { html: m.HTML, mount: m.mount }; } },
 ];
 const extras = {};
 async function addExtra(page, x) {
