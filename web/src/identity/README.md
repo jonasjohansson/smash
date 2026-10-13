@@ -86,6 +86,13 @@ also draws the favicons, on whole pixels). The stills, the motion and its MP4, a
   where they meet. At its start it is the original; a row shows the A three ways. In pixels the round back steps
   from its outer corner, so at 4 it stays on the grid (its square, 42, is not a whole number of 4s). Down: the letters in a column at
   their own widths, a slot apart, a slot and the dip under the A. The symbol and the favicons are the original's.
+- `kit.js` (after the colour; Jonas, 2026-10-14, after CM.SUPPLY's mockups: "a communication kit"): what the studio
+  hands out and sends, at its real size. Business cards, 85 × 55 mm, measured in their own millimetres: one front
+  (the wordmark, 31 mm high, in the middle) and a back for each of the team (the S M, the name and email, the site),
+  in black and white or an accent, as Typography's switch. Email signatures for each, a table with inline styles
+  that copies as HTML; its S M is `kit/smash-sm.png`, linked from the live site (mail drops SVG).
+  `python3 web/scripts/identity-kit.py [treatment ...]` prints the cards as vector PDFs, front and back, 91 × 61 mm
+  (3 mm of bleed), into `identity/kit/`.
 - `slant-best.js` (its own section at the bottom of the page; Jonas, 2026-10-14: "like a best-of"): Slant's best presets side by
   side, each its wordmark and Down, drawn by the chapter from its defaults (`drawWith`, so the chapter's own controls
   stay as they are), every one with its S level (`LEVEL`: whole, no blade; Jonas did not like the S split along a
