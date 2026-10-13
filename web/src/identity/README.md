@@ -2,6 +2,8 @@
 
 A page for the SMASH identity, in black and white: each section is its name and its marks, with
 no copy and no number (2026-10-01), in Neue Montreal (the site's own): a section's title small.
+Bottom right, a menu that follows along (2026-10-14): the section on screen, and opened, every section, a click
+taking the page there and opening it if it is folded (`sectionNav` in `identity.js`).
 
 The marks are drawn on a grid of 4 (2026-09-30, Jonas: every version of the mark on one grid, tightened): a bar 32
 and a slot 20 (8 : 5), a pitch 52, the block 552 × 472 (the trace measured 550 × 471, a 51.78 pitch and stems of

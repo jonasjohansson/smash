@@ -352,6 +352,59 @@ function addFolded(page, x) {
   fold.addEventListener('toggle', () => { if (fold.open && !loaded) loaded = addExtra(fold, x); });
 }
 
+/**
+ * The sections, bottom right (Jonas, 2026-10-14: "a small fixed menu that follows along"): a button with the section
+ * on screen; opened, every section's name, a click taking the page there (and opening it, if it is folded).
+ */
+function sectionNav(page) {
+  const items = [...page.children].filter((el) => el.matches('section[id], details.fold')).map((el) => ({
+    el, name: (el.querySelector(':scope > .ch-head .ch-name, :scope > .fold-head .fold-name')?.textContent ?? el.id).trim(),
+  }));
+  if (!items.length) return;
+  const nav = h(`<nav class="section-nav" aria-label="Sections">
+    <ul class="section-list" hidden>${items.map((x, i) => `<li><button type="button" data-i="${i}">${esc(x.name)}</button></li>`).join('')}</ul>
+    <button type="button" class="view-toggle section-now" aria-expanded="false"></button>
+  </nav>`);
+  document.body.appendChild(nav);
+  const list = nav.querySelector('.section-list'), now = nav.querySelector('.section-now'), links = [...list.querySelectorAll('button')];
+  const show = (on) => { list.hidden = !on; now.setAttribute('aria-expanded', String(on)); };
+  now.addEventListener('click', () => show(list.hidden));
+  list.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    const { el } = items[b.dataset.i];
+    if (el.tagName === 'DETAILS') el.open = true;
+    show(false);
+    // A jump, then again while the sections passed mount and change their height, until it holds (or a second).
+    let until = performance.now() + 1000;
+    const stop = () => { until = 0; };
+    addEventListener('wheel', stop, { once: true, passive: true });
+    addEventListener('touchstart', stop, { once: true, passive: true });
+    const land = () => {
+      if (performance.now() > until) return;
+      const off = el.getBoundingClientRect().top;
+      if (Math.abs(off) > 1) scrollBy(0, off);
+      requestAnimationFrame(land);
+    };
+    land();
+  });
+  document.addEventListener('click', (e) => { if (!nav.contains(e.target)) show(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') show(false); });
+  // The section on screen: the last one whose top is above the middle of the window.
+  let at = -1, queued = false;
+  const follow = () => {
+    queued = false;
+    let i = 0;
+    items.forEach((x, j) => { if (x.el.getBoundingClientRect().top < innerHeight / 2) i = j; });
+    if (i === at) return;
+    at = i;
+    now.textContent = items[i].name;
+    links.forEach((b, j) => b.toggleAttribute('data-now', j === i));
+  };
+  addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(follow); } }, { passive: true });
+  addEventListener('resize', follow);
+  follow();
+}
+
 async function main() {
   const directions = await loadDirections(ONLY);
   directions.forEach((d) => loadFonts(d.info));
@@ -368,6 +421,7 @@ async function main() {
   }
   if (!ONLY) for (const x of EXTRAS.filter((x) => x.last)) await (x.folded ? addFolded(page, x) : addExtra(page, x));
   for (const x of EXTRAS.filter((x) => x.id === ONLY)) await addExtra(page, x);
+  if (!ONLY) sectionNav(page);
   // The grid, previewed on the marks (grid.js): a button, and G; kept in this browser. Its lines one device pixel wide.
   document.documentElement.style.setProperty('--hair', `${1 / (window.devicePixelRatio || 1)}px`);
   const tools = h('<div class="view-tools"></div>');
