@@ -7,6 +7,8 @@ The marks from `/identity/` (`web/src/identity/`), exported for Illustrator, in 
   240 × 136, every coordinate a whole number. `modular/` holds the modular mark; `shapes/` the building blocks (`kit/`), the symbols
   built from them (`symbols/`, with all of them on one sheet) and the patterns' seamless tiles (`patterns/`).
 - `01-struck/`: Struck's lean (off /identity since 2026-09-30; kept).
+- `brief.md`: what the mark says, and how a version of it is judged (2026-10-13, after the Slant exploration; the
+  original stays as it is).
 
 In each folder:
 

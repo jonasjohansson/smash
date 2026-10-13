@@ -1,5 +1,10 @@
 # Slant: the mark with its curves cut straight
 
+**Outcome (2026-10-13): not taken.** Built and explored on the branch `slant` (not merged), then left: Jonas found it
+"not so timeless" and was "not sure what it communicates". A capital A settling under the line (the Settled chapter,
+the same branch) was tried after it; Jonas kept "just the normal a without the dip". The original mark stays as it is.
+Why, and what the mark says: `identity/brief.md`.
+
 2026-10-11. An alternative logo and wordmark for `/identity/`, beside the original, after CM.SUPPLY's round 4
 (2026-10-08, `identity/references/cm-supply-2026-10-08/`). Jonas: "i thought it was interesting with the slants
 instead of the uniform inner curves, i also thought the alternate a was interesting."
