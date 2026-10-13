@@ -74,6 +74,13 @@ also draws the favicons, on whole pixels). The stills, the motion and its MP4, a
   scale) in black and white; the
   dark steps as grounds under white; and each mark in every accent: on the ground (the original on its Dark 3 too),
   and in ground or type on the accent.
+- `directions/settled.js` and `settled/geometry.js` (2026-10-13; Jonas, of the slant: "not so timeless"; of the A
+  and the a: "capital A for sure"): the original mark exactly, its capital A the one letter that gives. Back: its
+  top-left corner square, or a quarter circle about its counter's top cap (r 42, half a slot and a stem), the one
+  soft corner in the word. Heel: its left foot's outer corner square, or round by a stem (32). Dip: that foot
+  settled 0 to 20 under the baseline, on the grid of 4, the right leg on the line, the notch square, a vertical step
+  where they meet. At its start it is the original; a row shows the A three ways. Down: the letters in a column at
+  their own widths, a slot apart, a slot and the dip under the A. The symbol and the favicons are the original's.
 - `directions/struck.js` (off the page since 2026-09-30, at Jonas's word; kept, with its export in `identity/01-struck/`): the mark with its slots leaning.
 - `sequence/`: a page of its own (`/identity/sequence/`), and a section on this page: the logo, square, taken down
   one move at a time to the modular mark, the S M, the S, the ! (the S's stem over its corner square) and that square

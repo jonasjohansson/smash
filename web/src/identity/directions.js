@@ -6,7 +6,9 @@
 // too on 2026-09-30 (Jonas). Reassembled, Impact, Cut,
 // Alignment and Crack Line were set aside; their modules stay in directions/ for the record.
 // Slant (2026-10-11): the original with its curves cut, after CM.SUPPLY's round 4.
-export const SLUGS = ['original', 'slant'];
+// Settled (2026-10-13): the original with its capital A the one letter that gives (Jonas: the
+// slant "not so timeless"; of the A and the a, "capital A for sure").
+export const SLUGS = ['original', 'slant', 'settled'];
 
 export async function loadDirections(only) {
   const slugs = only ? SLUGS.filter((s) => s === only) : SLUGS;
