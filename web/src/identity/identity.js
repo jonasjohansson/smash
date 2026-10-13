@@ -320,6 +320,8 @@ const EXTRAS = [
   { id: 'typeface', name: 'The SMASH typeface', last: true, folded: true, load: async () => { const m = await import('./typeface.js'); return { html: m.HTML, mount: m.mount }; } },
   // The palette at the very bottom, after the sequence (Jonas, 2026-09-30).
   { id: 'colour', name: 'Colour', last: true, load: async () => { const m = await import('./colour.js'); return { html: m.HTML, mount: m.mount }; } },
+  // The kit, after the colour (Jonas, 2026-10-14): business cards and email signatures, at their real size.
+  { id: 'kit', name: 'Kit', last: true, load: async () => { const m = await import('./kit.js'); return { html: m.HTML, mount: m.mount }; } },
   // Folded, under the colour (Jonas, 2026-09-30: not so important any more): a line, loaded when opened.
   { id: 'mapping', name: 'Mapping', last: true, folded: true, load: async () => { const m = await import('./mapping.js'); return { html: m.HTML, mount: m.mount }; } },
   // Hidden since 2026-10-14 (Jonas): off the page and its bar, still there alone at ?d=sculpture.
