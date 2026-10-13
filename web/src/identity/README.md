@@ -77,7 +77,8 @@ also draws the favicons, on whole pixels). The stills, the motion and its MP4, a
   scale) in black and white; the
   dark steps as grounds under white; and each mark in every accent: on the ground (the original on its Dark 3 too),
   and in ground or type on the accent.
-- `directions/settled.js` and `settled/geometry.js` (2026-10-13; Jonas, of the slant: "not so timeless"; of the A
+- `directions/settled.js` and `settled/geometry.js` (hidden since 2026-10-14, at Jonas's word: off the page, still at
+  `?d=settled`; 2026-10-13; Jonas, of the slant: "not so timeless"; of the A
   and the a: "capital A for sure"): the original mark exactly, its capital A the one letter that gives. Back: its
   top-left corner square, or a quarter circle about its counter's top cap (r 42, half a slot and a stem), the one
   soft corner in the word. Heel: its left foot's outer corner square, or round by a stem (32). Dip: that foot

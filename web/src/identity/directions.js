@@ -9,9 +9,11 @@
 // Settled (2026-10-13): the original with its capital A the one letter that gives (Jonas: the
 // slant "not so timeless"; of the A and the a, "capital A for sure").
 export const SLUGS = ['original', 'slant', 'settled'];
+// Hidden (Jonas, 2026-10-14): off the page and its bar, still there alone at ?d=<slug>.
+export const HIDDEN = ['settled'];
 
 export async function loadDirections(only) {
-  const slugs = only ? SLUGS.filter((s) => s === only) : SLUGS;
+  const slugs = only ? SLUGS.filter((s) => s === only) : SLUGS.filter((s) => !HIDDEN.includes(s));
   return Promise.all(slugs.map(async (slug, i) => {
     try {
       const mod = await import(`./directions/${slug}.js`);

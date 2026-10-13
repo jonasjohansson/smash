@@ -47,6 +47,6 @@ Every state returns to the still mark at rest. Nothing is randomised.
 On `/identity/` as the record (merged 2026-10-14, with a "Slant, best of" section of its presets in the palette's
 colours): the Slant chapter, a parametric mark with every curve cut at
 one slope and three rounds of a design panel pushing it toward CM.SUPPLY's edge (to "Carved Column"); and the
-Settled chapter, the original with its A's back rounded and its heel settling under the line, which the judges
-scored above the original. Jonas kept the plain A: "just the normal a without the dip". References from
+Settled chapter (hidden from the page since 2026-10-14, at `/identity/?d=settled`), the original with its A's back
+rounded and its heel settling under the line, which the judges scored above the original. Jonas kept the plain A: "just the normal a without the dip". References from
 CM.SUPPLY's round 4 are in `identity/references/cm-supply-2026-10-08/`.
