@@ -160,6 +160,36 @@ export const KNOBS = [
   },
 ];
 
+// The controls in folds (Jonas, 2026-10-14: "simplify the settings a bit, it's complicated knowing what to tweak"):
+// each in one group, the page drawing a group as a fold under its name (identity.js), open or shut at the start
+// (GROUPS); the Preset above them all. A control that does nothing as the others stand is hidden (when): the
+// two tiers' rounds without Two, the Tilt slider once the angle is locked, the Blade with the S whole, the
+// frame's and the slash's measures with them off, the kerf without the Block join.
+export const GROUPS = [['Size', true], ['Corners', true], ['Letters', true], ['Slant', false], ['A', false], ['Down', false], ['Frame and slash', false]];
+const GROUP = {
+  Size: ['stem', 'slot', 'space', 'height', 'ceil', 'rise'],
+  Corners: ['outer', 'tension', 'corners', 'endRound', 'innerRound'],
+  Letters: ['per', 'lower'],
+  Slant: ['slope', 'cut', 'tips', 'split', 'blade', 'lock', 'tilt'],
+  A: ['a', 'dip'],
+  Down: ['downFit', 'downJoin', 'downKerf', 'downPer', 'symbol'],
+  'Frame and slash': ['frame', 'frameGap', 'frameWidth', 'slash', 'slashWidth', 'shift', 'slashAt'],
+};
+const WHEN = {
+  endRound: () => !!Number(at.corners), innerRound: () => !!Number(at.corners),
+  tilt: () => !Number(at.lock), blade: () => !!Number(at.split),
+  frameGap: () => !!Number(at.frame), frameWidth: () => !!Number(at.frame),
+  slashWidth: () => !!Number(at.slash), shift: () => !!Number(at.slash), slashAt: () => !!Number(at.slash),
+  downKerf: () => at.downJoin === 'block',
+};
+// In the Down fold, Down's own switches without the word: Fit, Join, Kerf.
+const SHORT = { downFit: 'Fit', downJoin: 'Join', downKerf: 'Kerf', downPer: 'Down letters' };
+for (const k of KNOBS) {
+  k.group = Object.keys(GROUP).find((g) => GROUP[g].includes(k.key));
+  if (WHEN[k.key]) k.when = WHEN[k.key];
+  if (SHORT[k.key]) k.label = SHORT[k.key];
+}
+
 // The design loop's winners as presets (2026-10-13; Jonas: "do you have the winner settings as presets?"), each
 // in the controls' own units (Slope in 20, Tension in %), as the panel left them: rounds 1 to 3, and round 3 with
 // the A's apex and the H's bar step from the build that was stopped. ?preset=<key> starts the chapter there, every

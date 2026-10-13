@@ -96,6 +96,14 @@ h1, h2 { font-weight: 400; margin: 0; }
 .controls .knob.letters button[data-on] { background: var(--text); }
 .controls .knob.letters button:disabled { opacity: 0.3; cursor: default; }
 .controls .knob.switch span { margin-right: 6px; }
+.controls .knob[hidden] { display: none; }
+/* The controls in folds (slant.js: GROUPS): a name to open or shut, the controls under it. */
+.controls .knob-group { flex: 1 1 100%; border-top: 1px solid var(--line); padding-top: 8px; }
+.controls .knob-group > summary { cursor: pointer; list-style: none; color: var(--text); text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; }
+.controls .knob-group > summary::-webkit-details-marker { display: none; }
+.controls .knob-group > summary::before { content: '+'; display: inline-block; width: 1.5em; color: var(--dim); }
+.controls .knob-group[open] > summary::before { content: '\2212'; }
+.controls .knob-group > div { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 32px; padding: 10px 0 4px; }
 .controls :focus-visible { outline: 1px solid var(--text); outline-offset: 2px; }
 .controls .hint { flex: 0 1 40%; text-align: right; }
 @media (max-width: 760px) { .controls { flex-wrap: wrap; } .controls .hint { flex-basis: 100%; text-align: left; } .controls .scrub { flex-basis: 100%; order: -1; height: 32px; } }

@@ -90,6 +90,22 @@ const knobHTML = (k) => (k.each
   ? `<span class="knob switch" data-knob="${esc(k.key)}"><span>${esc(k.label)}</span>${k.options.map(([label, v]) => `<button type="button" data-v="${esc(String(v))}"${String(v) === String(k.value) ? ' data-on' : ''}>${esc(label)}</button>`).join('')}</span>`
   : `<label class="knob" data-knob="${esc(k.key)}"><span>${esc(k.label)}</span><input type="range" min="${k.min}" max="${k.max}" step="${k.step}" value="${k.value}"><output>${esc(k.text(k.value))}</output></label>`);
 
+/**
+ * A chapter's controls: in its groups where it has them (slant.js: GROUPS, [name, open at the start], and each
+ * control's group), each group a fold under its name, the controls with none above them all. A fold opened or
+ * shut is remembered in this browser (by chapter and name), so it stays as it was when a preset reloads the page.
+ */
+const foldKey = (slug, name) => `identity:fold:${slug}:${name}`;
+function knobsHTML(d) {
+  const K = d.mod.KNOBS ?? [];
+  if (!d.mod.GROUPS) return K.map(knobHTML).join('');
+  const isOpen = (name, open) => { try { const v = localStorage.getItem(foldKey(d.slug, name)); return v == null ? open : v === '1'; } catch { return open; } };
+  return K.filter((k) => !k.group).map(knobHTML).join('') + d.mod.GROUPS.map(([name, open]) => {
+    const inside = K.filter((k) => k.group === name);
+    return inside.length ? `<details class="knob-group" data-group="${esc(name)}"${isOpen(name, open) ? ' open' : ''}><summary>${esc(name)}</summary><div>${inside.map(knobHTML).join('')}</div></details>` : '';
+  }).join('');
+}
+
 /** Each control sets its measure, and the chapter's stills, favicons and stage are drawn again. */
 function knobs(d, section) {
   const redraw = () => {
@@ -98,8 +114,15 @@ function knobs(d, section) {
     if (fav) fav.outerHTML = favicons(d);
     // A table's switches that do nothing as the other controls now stand (k.live), dimmed.
     for (const k of d.mod.KNOBS ?? []) if (k.rows && k.live) for (const b of section.querySelectorAll(`.knob[data-knob="${k.key}"] button`)) b.disabled = !k.live(b.dataset.row, Number(b.dataset.i));
+    shown();
     d.live?.motion?.redraw?.();
   };
+  // A control that does nothing as the others stand (k.when), hidden.
+  const shown = () => { for (const k of d.mod.KNOBS ?? []) if (k.when) $(`.knob[data-knob="${k.key}"]`, section).hidden = !k.when(); };
+  shown();
+  for (const fold of section.querySelectorAll('.knob-group')) {
+    fold.addEventListener('toggle', () => { try { localStorage.setItem(foldKey(d.slug, fold.dataset.group), fold.open ? '1' : '0'); } catch { /* no storage: the fold as it starts */ } });
+  }
   for (const k of d.mod.KNOBS ?? []) {
     const el = $(`.knob[data-knob="${k.key}"]`, section);
     if (k.each) {
@@ -156,7 +179,7 @@ function chapter(d) {
           <button type="button" class="play" aria-label="Play or pause"${info.motion === false ? ' hidden' : ''}>Pause</button>
           <input type="range" class="scrub" min="0" max="1000" value="0" aria-label="Scrub the motion"${info.motion === false ? ' hidden' : ''}>
           ${typeof d.mod.frame === 'function' ? `<button type="button" class="download" title="${SIZES_HINT}">MP4</button>` : ''}
-          ${(d.mod.KNOBS ?? []).map(knobHTML).join('')}
+          ${knobsHTML(d)}
         </figcaption>
       </figure>
       <div class="row two">
