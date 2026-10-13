@@ -10,7 +10,7 @@
 // holds the wordmark. Geometry: ./slant/geometry.js.
 
 import { svg, timeline, canvasStage, withCleanup } from '../lib.js';
-import { letters, slash, letterS, down as downPath, symbol as symbolPath, symbolCells, symCols, symRows, block, depth, ring, wedges, move, wordRadii, letterRadii, symRadii, rounds, SLANT, DROP, DROPS, BAR, PER, H, PITCH } from './slant/geometry.js';
+import { letters, slash, letterS, down as downPath, symbol as symbolPath, symbolCells, symCols, symRows, block, depth, ring, wedges, move, wordRadii, letterRadii, symRadii, rounds, cornersOf, CORNERS, SLANT, DROP, DROPS, BAR, PER, H, PITCH } from './slant/geometry.js';
 import { lockPaths } from './original.js';
 import { extent } from './slant/clip.js';
 
@@ -125,11 +125,12 @@ export const KNOBS = [
   // thick (geometry.js: barOf). The a's slot head peaks too.
   {
     key: 'per', label: 'Letters', letters: ['S', 'M', 'A', 'S', 'H'],
-    rows: [['cut', 'Cut'], ['round', 'Round'], ['base', 'Base'], ['both', 'Both sides'], ['tilt', 'Tilt'], ['split', 'Split'], ['open', 'Open'], ['dip', 'Dip'], ['apex', 'Apex'], ['barStep', 'Bar step']],
+    rows: [['cut', 'Cut'], ['tl', 'Top left'], ['tr', 'Top right'], ['bl', 'Bottom left'], ['br', 'Bottom right'], ['tilt', 'Tilt'], ['split', 'Split'], ['open', 'Open'], ['dip', 'Dip'], ['apex', 'Apex'], ['barStep', 'Bar step']],
     has: (row, i) => row in PER[i],
     // Whether a switch does anything as the other controls stand (the page dims it where not): the A's Tilt
     // waits for the capital, as the a's slot has no crossbar to fall (the design panel's review, round 2, 2026-10-13).
-    live: (row, i) => !(row === 'tilt' && i === 2 && at.a === 'a'),
+    // The a's stem stands square at its top, so its Top right waits for the capital too.
+    live: (row, i) => !((row === 'tilt' || row === 'tr') && i === 2 && at.a === 'a'),
     on: (row, i) => !!at.per[i][row],
     set: (row, i, v) => { at.per[i][row] = v ? 1 : 0; },
     reset() { at.per = PER.map((q) => ({ ...q })); },
@@ -164,7 +165,11 @@ const byKey = Object.fromEntries(KNOBS.map((k) => [k.key, k]));
 /** Sets every control to a preset's settings, the sliders' and switches' shown values with them. */
 export function applyPreset(set) {
   for (const [key, v] of Object.entries(set)) {
-    if (key === 'per') v.forEach((q, i) => Object.entries(q ?? {}).forEach(([row, on]) => { if (byKey.per.has(row, i)) byKey.per.set(row, i, on); }));
+    // (A letter's Round, Base and Both, as the earlier presets have them, set its four corners: geometry.js, cornersOf.)
+    if (key === 'per') v.forEach((q, i) => {
+      if (q && ('round' in q || 'base' in q || 'both' in q)) cornersOf({ per: Object.assign([], { [i]: q }) }, i).forEach((on, k) => byKey.per.set(CORNERS[k], i, on));
+      Object.entries(q ?? {}).forEach(([row, on]) => { if (byKey.per.has(row, i)) byKey.per.set(row, i, on); });
+    });
     else if (key === 'lower') v.forEach((n, i) => { if (byKey.lower.has(i)) byKey.lower.set(i, n); });
     else if (byKey[key]) { byKey[key].set(v); byKey[key].value = v; }
   }

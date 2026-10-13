@@ -122,27 +122,48 @@ export function block(p = SLANT) {
 /**
  * Each letter's own switches, S M A S H (Jonas, 2026-10-12: "maybe i can turn
  * off or on some of the tilts and other settings per letter"): its slot ends
- * cut (off: square), its outer corners rounded at the top (round) and at the
- * base (base; Jonas: "so the top and bottom border radius match"), the S's
+ * cut (off: square), each of its four outer corners rounded or square (tl,
+ * tr, br, bl: cornersOf, below; they began as Round, Base and Both), the S's
  * tilt and split and its slot open at both ends (open; as the S M's: "the gaps
  * in the S goes all the way up"), the A's dip. A letter takes a setting only
- * where its switch is on. The H has no slot ends, and its round and base are
- * its right corners, the word's (Jonas: "can the right top and bottom of H
- * also be rounded"), and its left too with both ("setting also for both
- * corners of the H"). The A's and the H's tilt (off) carry the S's angle
+ * where its switch is on. The H has no slot ends, and its right corners, the
+ * word's, round at the start (Jonas: "can the right top and bottom of H also
+ * be rounded"), its left square. The A's and the H's tilt (off) carry the S's angle
  * through their crossbars (barFall). The A's apex and the H's bar step (off;
  * the design panel, round 3, 2026-10-13: the A and the H told apart) peak the
  * A's counter head and open a window under it, and step the H's lower slot
  * aside under a bar at least a slot thick (barOf).
  */
 export const PER = [
-  { cut: 1, round: 1, base: 1, tilt: 1, split: 1, open: 0 },
-  { cut: 1, round: 1, base: 0 },
-  { cut: 1, round: 1, base: 0, dip: 1, tilt: 0, apex: 0 },
-  { cut: 1, round: 1, base: 1, tilt: 1, split: 1, open: 0 },
-  { round: 1, base: 1, both: 0, tilt: 0, barStep: 0 },
+  { cut: 1, tl: 1, tr: 1, br: 1, bl: 1, tilt: 1, split: 1, open: 0 },
+  { cut: 1, tl: 1, tr: 1, br: 0, bl: 0 },
+  { cut: 1, tl: 1, tr: 1, br: 0, bl: 0, dip: 1, tilt: 0, apex: 0 },
+  { cut: 1, tl: 1, tr: 1, br: 1, bl: 1, tilt: 1, split: 1, open: 0 },
+  { tl: 0, tr: 1, br: 1, bl: 0, tilt: 0, barStep: 0 },
 ];
-const per = (p, i) => ({ ...PER[i], ...(p.per?.[i] ?? {}) });
+/**
+ * A letter's four outer corners, each rounded or square on its own (Jonas,
+ * 2026-10-13: "set the top and bottom left and right corner to either
+ * rounded or not for each letter"), clockwise from the top left: tl, tr, br,
+ * bl. They were Round (the top), Base (the base) and, for the H, Both (its
+ * left as its right); a letter's switches given those still draw as they
+ * did, its corners from them (the old defaults where one is missing).
+ */
+export const CORNERS = ['tl', 'tr', 'br', 'bl'];
+const WAS = [{ round: 1, base: 1 }, { round: 1, base: 0 }, { round: 1, base: 0 }, { round: 1, base: 1 }, { round: 1, base: 1, both: 0 }];
+const per = (p, i) => {
+  const o = p.per?.[i] ?? {}, q = { ...PER[i], ...o };
+  if (!('round' in o || 'base' in o || 'both' in o)) return q;
+  const { round, base, both } = { ...WAS[i], ...o };
+  const was = i === 4 ? [both && round, round, base, both && base] : [round, round, base, base];
+  return { ...q, ...Object.fromEntries(CORNERS.map((c, k) => [c, was[k] ? 1 : 0])) };
+};
+/** Letter i's four corners, clockwise from the top left: whether each is rounded (the a's stem square at its top). */
+export const cornersOf = (p, i) => {
+  const q = per(p, i), lower = i === 2 && p.a === 'a';
+  // (The a's bowl rounds its corner at the base with its top, and its stem stands square at its top.)
+  return lower ? [!!q.tl, false, !!q.br, !!(q.tl || q.bl)] : CORNERS.map((c) => !!q[c]);
+};
 /** Whether an S (its switches q) is split along one line (p.blade; sLetter). */
 const lined = (p, q) => !!(q.split && p.split && p.blade === 'line');
 
@@ -294,15 +315,17 @@ function innerOf(p, i, cap = Infinity) {
   // quarter of a bar under the crossbar's edge: endMost.)
   const t = i === 4 ? barOf(p, 4).step : 0;
   const foot = t ? Math.min(stem, endMost(p, 4, 2, [0, 0, 0, 0], [0, 0, 0, 0])) : stem;
-  const Rr = q.round ? (i === 4 || q.open ? Math.min(R0, stem) : Math.min(R0, Rm)) : 0, Rb = q.base ? (legs || q.open ? Math.min(R0, foot) : R0) : 0;
   const lower = i === 2 && p.a === 'a';
   // Down carved as one block (p.seam; down): a side that meets the next letter across a slot squares its corners,
-  // and the H's feet, the column's foot, round as a pair whatever its Both switch says, as the top S's top does.
-  const on = i === 4 ? [q.both && q.round, q.round, q.base, (q.both || p.seam) && q.base] : lower ? [q.round, 0, q.base, q.round] : [q.round, q.round, q.base, q.base];
+  // and the H's feet, the column's foot, round as a pair whichever of them is on, as the top S's top does.
+  // So in Down, its ends the H's feet, whichever is on rounds both.
+  const on = cornersOf(p, i);
+  if (i === 4 && (p.seam || (T && p.ends === 'down'))) on[2] = on[3] = on[2] || on[3];
+  const Rr = on[0] || on[1] || (lower && on[3]) ? (i === 4 || q.open ? Math.min(R0, stem) : Math.min(R0, Rm)) : 0, Rb = on[2] || on[3] ? (legs || q.open ? Math.min(R0, foot) : R0) : 0;
   const [top, base] = p.seam ?? [false, false];
   const radii = on.map((o, k) => (o && !(k < 2 ? top : base) ? (k < 2 || (lower && k === 3) ? Rr : Rb) : 0));
   const E = T && !lower && ENDS[p.ends ?? 'word']?.[i];
-  const drawn = (i === 4 ? [q.round, q.round, q.base, q.base] : on).map((o, k) => o && !(k < 2 ? top : base));
+  const drawn = on.map((o, k) => o && !(k < 2 ? top : base));
   return { Rr: top ? 0 : Rr, Rb: base ? 0 : Rb, radii, E, ends: E ? [0, 1, 2, 3].filter((k) => E[k] && drawn[k]) : [] };
 }
 
@@ -743,7 +766,6 @@ export function letterPaths(p = SLANT, only = null) {
       line: p.blade === 'line', // split, along one line (sLetter)
       kerf: !!p.kerf, // its crossbar slots run out parallel to its blade (Down's kerf: down, sLetter)
       open: !!q.open,
-      both: !!q.both,
       dip: q.dip === 0 ? 0 : p.dip ?? DIP,
       lower: Math.max(0, p.lower?.[i] ?? 0),
       fall: barFall(p, i), // the A's and the H's crossbar's fall across half its slot, tilted (0 unless)
@@ -801,7 +823,7 @@ export function letterPaths(p = SLANT, only = null) {
   // both capital and lowercase a"): the stem square on the right, the bowl
   // rounded on the left; its slot closed and cut at both ends, a bar above
   // where the bowl meets the stem, and the foot swooping from there.
-  const a = (L, x, R, k) => poly([k.o(L, 0), [R, 0], k.ob(R, H), [x + s, H], ...swoopTo(x + s, L, k, k.radii[3], k.o)]) // its bowl's corner rounds with its top
+  const a = (L, x, R, k) => poly([k.o(L, 0), [R, 0], k.ob(R, H), [x + s, H], ...swoopTo(x + s, L, k, k.radii[3], k.ob)]) // its bowl's corner rounds with its top
     + poly([...head(k, x), [x - s, H - swoop - bar - k.d, k.r], [x + s, H - swoop - bar, k.r2]]);
 
   // The H, as the original's; its right corners, the word's, rounded (its left square unless both: rounds).

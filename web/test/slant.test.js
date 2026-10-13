@@ -142,11 +142,40 @@ test('the sliders draw every still at their measures, and back', () => {
   for (const fn of ['wordmark', 'symbol', 'lockup', 'lockupSM', 's', 'sTurned', 'sSquare']) assert.match(C[fn](), /<path/, fn);
   assert.match(C.favicon({ size: 16 }), /<path/);
   const letters = byKey.per;
-  letters.set('cut', 2, 0); letters.set('round', 4, 1);
-  assert.ok(!letters.on('cut', 2) && letters.on('round', 4));
+  letters.set('cut', 2, 0); letters.set('tl', 4, 1);
+  assert.ok(!letters.on('cut', 2) && letters.on('tl', 4));
   assert.ok(!letters.has('tilt', 1) && letters.has('dip', 2));
   for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value));
   assert.equal(C.wordmark(), at8);
+});
+
+test('each corner of each letter rounded or square on its own; the old Round, Base and Both as they were', () => {
+  const P = { ...G.SLANT, outer: 16, a: 'A', dip: 0 };
+  const with1 = (i, q) => ({ ...P, per: Object.assign([], { [i]: q }) });
+  const none = { tl: 0, tr: 0, br: 0, bl: 0 };
+  // Every corner of every letter alone, at the start's measures and in two tiers: it draws, and it alone rounds.
+  for (const corners of [0, 1]) for (let i = 0; i < 5; i++) for (const [k, c] of G.CORNERS.entries()) {
+    const p = { ...with1(i, { ...none, [c]: 1 }), corners, outer: 40 };
+    assert.doesNotThrow(() => G.letters(p), `${i} ${c}`);
+    assert.deepEqual(G.letterRadii(p, i).map((r) => r > 0), G.CORNERS.map((_, j) => j === k), `${i} ${c}`);
+  }
+  // All square, the letters have no curve but their slot ends' rounds; all four, the H's four.
+  assert.doesNotMatch(G.letterPaths(with1(1, none))[1], /C/);
+  assert.deepEqual(G.letterRadii(with1(4, { tl: 1, tr: 1, br: 1, bl: 1 }), 4), [16, 16, 16, 16]);
+  // The old switches set the corners as they did: the H's Both its left as its right, the M's Base its feet.
+  assert.deepEqual(G.cornersOf(with1(4, { both: 1 }), 4), [true, true, true, true]);
+  assert.deepEqual(G.cornersOf(with1(1, { base: 1 }), 1), [true, true, true, true]);
+  assert.deepEqual(G.cornersOf(with1(0, { round: 0 }), 0), [false, false, true, true]);
+  // The a: its stem square at its top whatever its Top right says, its bowl's corner with its top.
+  assert.deepEqual(G.cornersOf({ a: 'a', per: Object.assign([], { 2: { tl: 1, tr: 1, br: 0, bl: 0 } }) }, 2), [true, false, false, true]);
+  // The page's Letters table: four corner rows, each letter's dots as its corners; a preset's Both sets the H's left.
+  const K = Object.fromEntries(C.KNOBS.map((k) => [k.key, k]));
+  assert.deepEqual(K.per.rows.slice(1, 5).map(([r]) => r), ['tl', 'tr', 'bl', 'br']);
+  assert.deepEqual([0, 1, 2, 3, 4].map((i) => G.CORNERS.map((c) => (K.per.on(c, i) ? 1 : 0)).join('')), ['1111', '1100', '1100', '1111', '0110']);
+  C.applyPreset({ per: [{}, {}, {}, {}, { both: 1 }] });
+  assert.ok(K.per.on('tl', 4) && K.per.on('bl', 4));
+  for (const k of C.KNOBS) (k.reset ? k.reset() : k.set(k.value));
+  assert.ok(!K.per.on('tl', 4));
 });
 
 test('wider stems and another height: on the grid of 4, every cut at the slope, the S the same upside down', () => {
@@ -1437,7 +1466,7 @@ test("the Letters table dims the A's Tilt while the a is chosen: it waits for th
   const live = () => letters.rows.flatMap(([row]) => [0, 1, 2, 3, 4].filter((i) => letters.has(row, i) && !letters.live(row, i)).map((i) => `${row} ${i}`));
   assert.deepEqual(live(), []);
   K2.a.set('a');
-  assert.deepEqual(live(), ['tilt 2']);
+  assert.deepEqual(live(), ['tr 2', 'tilt 2']); // the a's stem square at its top, too
   // And it does nothing there: the a's wordmark the same, its Tilt on or off.
   const before = C.wordmark();
   letters.set('tilt', 2, 1);
