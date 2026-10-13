@@ -4,8 +4,10 @@
 // controls are left as they are. One colour for them all, from the palette (colour.js): white on black, black
 // on white, the type on the earth, or one of the hyper colours on the earth; Flip swaps the mark and the ground.
 // The choice is kept in this browser. Slant was explored and left (identity/brief.md); this is its record.
+// Every preset with its S level (LEVEL; Jonas, 2026-10-14: not "with the S that way", split along a diagonal
+// blade), and the link opens it so (?s=level); level, Calm Blade was all but Carved Column, so it went.
 
-import { PRESETS, drawWith, wordmark, down } from './directions/slant.js';
+import { PRESETS, LEVEL, drawWith, wordmark, down } from './directions/slant.js';
 import { ACCENTS, EARTH } from './colour.js';
 
 const hex = (name) => EARTH.find((e) => e.name === name).hex;
@@ -19,25 +21,25 @@ const COLOURS = [
 // [the preset, its name here, a line on it]
 const BEST = [
   ['start', 'Start', 'Where the chapter starts: flat cuts, the ends round'],
-  ['r1-locked-blade', 'Locked Blade', 'Round 1 of the design panel, its best'],
-  ['r2-column-blade', 'Column Blade', 'Round 2, its best'],
-  ['r3-carved-column', 'Carved Column', 'Round 3, the panel’s best'],
-  ['r3-calm-blade', 'Calm Blade', 'Round 3, the gentler slope'],
-  ['r4-apex', 'Carved Column + Apex', 'The A’s apex and the H’s bar step'],
+  ['r1-locked-blade', 'Round 1', 'The design panel’s first best: wide stems, a low block'],
+  ['r2-column-blade', 'Round 2', 'Its second: taller, the crossbars risen'],
+  ['r3-carved-column', 'Round 3', 'Its third and best: the ends round, the inside tight'],
+  ['r4-apex', 'Round 3 + Apex', 'The A peaked, the H’s bar stepped'],
   ['wide', 'Wide', 'After Jonas’s reference, 14 October'],
 ];
 
 const esc = (s = '') => String(s).replace(/[<&"]/g, (c) => ({ '<': '&lt;', '&': '&amp;', '"': '&quot;' })[c]);
 const card = ([key, name, line]) => {
-  const set = PRESETS.find(([k]) => k === key)?.[2];
-  if (!set) return '';
+  const preset = PRESETS.find(([k]) => k === key)?.[2];
+  if (!preset) return '';
+  const set = { ...preset, ...LEVEL };
   return `
     <figure class="best-card">
       <div class="best-art">
         <div class="best-wm">${drawWith(set, wordmark)}</div>
         <div class="best-down">${drawWith(set, down)}</div>
       </div>
-      <figcaption><span class="best-name">${esc(name)}</span><span class="label">${esc(line)}</span><a class="label" href="?d=slant&amp;preset=${esc(key)}#slant">Open in the chapter</a></figcaption>
+      <figcaption><span class="best-name">${esc(name)}</span><span class="label">${esc(line)}</span><a class="label" href="?d=slant&amp;preset=${esc(key)}&amp;s=level#slant">Open in the chapter</a></figcaption>
     </figure>`;
 };
 

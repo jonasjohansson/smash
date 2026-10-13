@@ -240,11 +240,19 @@ export function drawWith(set, draw) {
     KNOBS.forEach((k, i) => { k.value = values[i]; });
   }
 }
-const chosen = PRESETS.find(([k]) => k === new URLSearchParams(globalThis.location?.search ?? '').get('preset'));
+/**
+ * The S level (Jonas, 2026-10-14, of the S split along its blade: "we didn't like this design ... with the S that
+ * way"): whole, its crossbar level and the angle free, whatever a preset says. ?s=level sets it after the
+ * preset; the best-of (../slant-best.js) draws every preset so.
+ */
+export const LEVEL = { split: 0, tilt: 0, lock: 0 };
+const address = new URLSearchParams(globalThis.location?.search ?? '');
+const chosen = PRESETS.find(([k]) => k === address.get('preset'));
 if (chosen) applyPreset(chosen[2]);
+if (address.get('s') === 'level') applyPreset(LEVEL);
 KNOBS.unshift({
   key: 'preset', label: 'Preset', options: PRESETS.map(([k, label]) => [label, k]), value: chosen?.[0] ?? 'start',
-  set(v) { if (!globalThis.location?.href) return; const u = new URL(location.href); u.searchParams.set('preset', v); location.href = u.href; },
+  set(v) { if (!globalThis.location?.href) return; const u = new URL(location.href); u.searchParams.set('preset', v); u.searchParams.delete('s'); location.href = u.href; },
 });
 
 /** The marks' measures, as the sliders have them. */
