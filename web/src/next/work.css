@@ -1,0 +1,237 @@
+/* ==========================================================================
+   SMASH, next: the work. The index (/next/work/: Schedule and Elevation)
+   and every project page (/next/work/<slug>/), told as a monograph.
+   Builds on next.css: its tokens, grid, bar rule, media and reveal.
+   ========================================================================== */
+
+/* ---------- Project: title zone ---------- */
+.pj-head { align-items: baseline; row-gap: 0; }
+.pj-offer a { text-decoration-color: transparent; }
+.pj-offer a:hover { text-decoration-color: currentColor; }
+.pj-title { grid-row: 2; margin-top: var(--s4); margin-left: -.04em; }
+.pj-facts { grid-row: 3; margin-top: var(--s7); row-gap: var(--s5); }
+.pj-facts .fact dt { margin-bottom: var(--s1); }
+
+/* The hero: the project's room, full bleed, never taller than the screen. */
+.pj-hero { margin-top: var(--s7); }
+.f-room .media, .pj-hero .media { width: 100%; aspect-ratio: auto; height: min(calc(100vw / var(--ar)), 100svh); }
+
+/* The lead, on the reading axis. */
+.pj-lead { margin-top: var(--s8); }
+.pj-lead em { font-style: normal; }
+
+/* ---------- Project: the body, in the order the story needs ---------- */
+.pj-flow { margin-top: var(--s8); }
+/* text -> media 84, media -> text 84, text -> text 52, media -> media 52. */
+.pj-flow > * + * { margin-top: var(--s7); }
+.pj-flow > .f-text + .f-text,
+.pj-flow > .f-media + .f-media { margin-top: var(--s6); }
+.pj-flow > .f-room + *, .pj-flow > * + .f-room { margin-top: var(--s8); }
+
+.f-text .label { padding-top: .2em; }
+.prose a { color: inherit; }
+.prose a:hover { color: var(--fg-2); }
+
+/* Figures: the picture, then its caption, "Fig. 3" and a sentence. */
+.fig { position: relative; }
+.fig .frame { position: relative; }
+.fig figcaption { padding-top: var(--s3); color: var(--fg-2); }
+.fig .cap { max-inline-size: 34em; text-wrap: pretty; }
+.fig-no { color: var(--fg); margin-right: .5em; }
+.f-room figcaption { padding-inline: var(--g); }
+.f-room figcaption.grid { padding-inline: var(--g); }
+
+/* A lone tall picture: columns 4-8, never taller than the screen. */
+.f-portrait .media { width: min(100%, calc((100svh - 104px) * var(--ar))); }
+
+/* ROW: one project's pictures a slot (gutter) apart, one height. */
+.f-row .row > .fig { flex: var(--ar) 1 0; min-width: 0; }
+.f-row .row .fig .cap { padding-right: var(--s3); }
+
+/* Video controls sit in the caption line, as words. */
+.vctl { display: flex; flex-wrap: wrap; gap: 0 var(--s4); margin-top: var(--s1); }
+.vctl button { min-height: 24px; }
+
+/* ---------- Project: credits, set as end credits on the centre axis ---------- */
+.pj-credits { margin-top: var(--s9); row-gap: var(--s5); }
+.pj-credits .label { grid-column: 1 / -1; text-align: center; color: var(--fg-2); }
+.credits { display: grid; grid-template-columns: subgrid; row-gap: var(--s2); }
+.credit { display: contents; }
+.credit dt { grid-column: 1 / 6; text-align: right; color: var(--fg-2); }
+.credit dd { grid-column: 7 / 12; margin: 0; color: var(--fg); }
+.credit dd a { color: inherit; }
+
+/* ---------- The door to the next project ---------- */
+.door { margin-top: var(--s9); position: relative; }
+.door-stage { position: relative; }
+.door-text { padding-top: var(--s5); padding-bottom: var(--s7); align-items: baseline; row-gap: 0; }
+.door-text .t-meta:first-child { grid-row: 1; }
+.door-text .door-no { grid-row: 1; }
+.door-title { grid-row: 2; margin-top: var(--s4); margin-left: -.04em; }
+.door-title a { text-decoration-thickness: .06em; text-underline-offset: .12em; text-decoration-color: transparent; transition: text-decoration-color var(--t-base) var(--ease); }
+.door-title a:hover, .door-title a:focus-visible { text-decoration-color: currentColor; }
+.door-meta { grid-row: 3; margin-top: var(--s4); }
+.door-room .media { width: 100%; aspect-ratio: auto; height: min(calc(100vw / var(--ar)), 100svh); background: color-mix(in oklab, var(--project) 22%, var(--ink)); }
+.door-room .media img { filter: brightness(var(--lit, 1)); }
+
+/* Walked up to (project.js): a 160svh hall, its stage pinned. One slot of
+   light at the centre column widens to the whole screen; the title fades. */
+.door.is-scrub { height: 160svh; }
+.door.is-scrub .door-stage { position: sticky; top: 0; height: 100svh; overflow: hidden; }
+.door.is-scrub .door-room { position: absolute; inset: 0; clip-path: inset(var(--dt, 50%) var(--dx, 50%) var(--db, 0px) var(--dx, 50%) round var(--dr, 0px)); }
+.door.is-scrub .door-room .media { height: 100%; }
+.door.is-scrub .door-text { position: absolute; z-index: 1; inset: 0 0 auto 0; padding-top: calc(var(--header) + var(--s7)); padding-bottom: 0; opacity: var(--dtext, 1); }
+.door.is-scrub .door-text a { pointer-events: auto; }
+
+/* The fed article: the door before it was its hero. */
+.project.is-fed > .pj-hero { display: none; }
+.project.is-fed > .pj-head { padding-top: var(--s8); }
+.project.is-fed > .pj-head + .pj-lead { margin-top: var(--s8); }
+
+/* ---------- Running foot and progress ---------- */
+.running-foot {
+  position: fixed; left: var(--g); bottom: var(--s3); z-index: 40;
+  margin: 0; padding: 2px var(--s2); margin-left: calc(var(--s2) * -1);
+  background: var(--ink); color: var(--fg);
+  transition: opacity var(--t-base) var(--ease);
+}
+.running-foot .rf-title { margin-left: 1.5em; }
+.running-foot.is-off { opacity: 0; }
+.progress { position: fixed; inset: 0 0 auto 0; height: 1px; z-index: 55; pointer-events: none; }
+.progress i { display: block; height: 100%; background: var(--project, var(--fg)); transform-origin: 0 50%; transform: scaleX(var(--p, 0)); }
+
+/* ---------- Phone ---------- */
+@media (max-width: 719px) {
+  .pj-head .pj-no { grid-column: 1 / 2; grid-row: 1; }
+  .pj-head .pj-offer { grid-column: 2 / 6; grid-row: 1; justify-self: end; }
+  .pj-facts { row-gap: var(--s5); }
+  .pj-flow > .f-room + *, .pj-flow > * + .f-room { margin-top: var(--s7); }
+  .f-text .label { margin-bottom: var(--s3); padding-top: 0; }
+  .f-plate .fig, .f-right .fig, .f-left .fig { margin-inline: calc(var(--g) * -1); }
+  .f-plate figcaption, .f-right figcaption, .f-left figcaption { padding-inline: var(--g); }
+  .f-portrait .media { width: 100%; }
+  .row.row-3 { flex-wrap: wrap; }
+  .f-row .row.row-3 > .fig:first-child { flex: 1 0 100%; }
+  .f-row .row { row-gap: var(--s5); }
+  .door-text .t-meta:first-child { grid-column: 1 / 3; }
+  .door-text .door-no { grid-column: 4 / 6; }
+  .f-row .row.row-wide { flex-direction: column; row-gap: var(--s5); }
+  .f-row .row.row-wide > .fig { flex: none; }
+  .credits { row-gap: var(--s3); }
+  .credit dt { grid-column: 1 / 3; }
+  .credit dd { grid-column: 3 / 6; }
+  .pj-credits .label { grid-column: 1 / 3; text-align: right; }
+  .running-foot .rf-title { display: none; }
+}
+
+/* ==========================================================================
+   The index: /next/work/
+   ========================================================================== */
+.work-top { align-items: end; row-gap: var(--s5); transition: opacity var(--t-base) var(--ease); }
+.work-top h1 { margin-left: -.04em; grid-column: 1 / 5; grid-row: 1; }
+.work-tools { grid-row: 1; }
+.work-tools { grid-column: 5 / 12; justify-self: end; text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: var(--s4); padding-bottom: .55em; }
+.filters { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--s2) var(--s5); }
+.filters a { text-decoration-color: transparent; }
+.filters a:hover { text-decoration-color: var(--fg-3); }
+.filters a[aria-current="true"] { text-decoration-color: currentColor; }
+.filters .n { color: var(--fg-2); margin-left: .3em; font-variant-numeric: tabular-nums; }
+.views { display: flex; gap: var(--s2); color: var(--fg-2); }
+.views button { color: var(--fg-2); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; text-decoration-color: transparent; min-height: 24px; }
+.views button:hover { color: var(--fg); }
+.views button[aria-pressed="true"] { color: var(--fg); text-decoration-color: currentColor; }
+html:not(.js) .views { display: none; }
+
+.work-body { margin-top: var(--s8); position: relative; }
+.work-body [hidden] { display: none !important; }
+
+/* Schedule: one ruled row per project. */
+.schedule { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; border-top: 1px solid var(--rule); position: relative; z-index: 2; }
+.schedule > li { display: contents; }
+.srow {
+  display: grid; grid-template-columns: subgrid; grid-column: 1 / -1;
+  align-items: baseline;
+  padding-block: var(--s4);
+  border-bottom: 1px solid var(--rule);
+  text-decoration: none; color: var(--fg);
+  position: relative;
+  transition: opacity var(--t-base) var(--ease);
+}
+.srow::before { content: ""; position: absolute; inset: -1px calc(var(--g) * -1); background: var(--ink); opacity: 0; z-index: -1; transition: opacity var(--t-fast) var(--ease); }
+.srow .no { grid-column: 1 / 2; color: var(--fg-2); }
+.srow .ttl { grid-column: 2 / 6; }
+.srow .plc { grid-column: 6 / 9; color: var(--fg-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.srow .off { grid-column: 9 / 11; color: var(--fg-2); }
+.srow .yr { grid-column: 11 / 12; justify-self: end; color: var(--fg-2); }
+.srow .thumb { display: none; }
+.srow:hover .ttl, .srow:focus-visible .ttl { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; }
+.srow:focus-visible { outline: none; }
+.srow:focus-visible::after { content: ""; position: absolute; inset: 2px calc(var(--g) * -.5); outline: 2px solid var(--light); outline-offset: 0; pointer-events: none; }
+
+/* Lit: the hovered project's room fills the screen behind the list; the
+   other rows go dark; the hovered row is a strip of black tape across it. */
+.lit { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0; transition: opacity var(--t-base) var(--ease); background: var(--ink); }
+.lit .media { position: absolute; inset: 0; aspect-ratio: auto; opacity: 0; background: transparent; }
+.lit .media.on { opacity: 1; }
+.lit-cap { position: fixed; left: 0; right: 0; bottom: var(--s4); z-index: 3; pointer-events: none; align-items: baseline; opacity: 0; transition: opacity var(--t-base) var(--ease); }
+/* Each line of the caption on its own strip of tape. */
+.lit-cap p { margin: 0; }
+.lit-cap.at-top { bottom: auto; top: calc(var(--header) + var(--s4)); }
+.lit-cap span { background: var(--ink); padding: 3px var(--s2); margin-inline: calc(var(--s2) * -1); -webkit-box-decoration-break: clone; box-decoration-break: clone; line-height: 1.75; }
+.lit-cap .place { text-align: right; }
+.lit-cap .place span { color: var(--fg-2); }
+.work-page.is-lit .lit, .work-page.is-lit .lit-cap { opacity: 1; }
+.work-page.is-lit .work-top { opacity: 0; }
+.work-page.is-lit .schedule { border-top-color: transparent; }
+.work-page.is-lit .srow { border-bottom-color: transparent; opacity: 0; }
+.work-page.is-lit .srow.on { opacity: 1; }
+.work-page.is-lit .srow.on::before { opacity: 1; }
+.work-page.is-lit .srow.on .ttl { text-decoration: none; }
+
+/* Elevation: the rooms, on the bar rule. One left over is a HALL. */
+.elevation { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; row-gap: var(--s8); }
+.elevation > li { grid-column: 1 / 6; min-width: 0; }
+.elevation > li.r { grid-column: 7 / 12; }
+.elevation > li.hall { grid-column: 1 / -1; }
+/* A pair shares one proportion, so the two rooms stand level. */
+.elevation > li:not(.hall) .media { aspect-ratio: 3 / 2; }
+.elevation > li.hall .media { aspect-ratio: auto; height: min(calc((100vw - 2 * var(--g)) / var(--ar)), calc(100svh - 104px)); }
+.ecard { display: block; text-decoration: none; color: var(--fg); }
+.ecard .frame { position: relative; }
+.ecard .media img { filter: brightness(.86); transition: filter var(--t-base) var(--ease); }
+.ecard:hover .media img, .ecard:focus-visible .media img { filter: brightness(1); }
+.ecard .ecap { display: grid; grid-template-columns: 1fr auto; gap: var(--s4); align-items: baseline; padding-top: var(--s3); }
+.ecard .ecap .ttl { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; text-decoration-color: transparent; transition: text-decoration-color var(--t-fast) var(--ease); }
+.ecard:hover .ttl, .ecard:focus-visible .ttl { text-decoration-color: currentColor; }
+.ecard .ecap .no { color: var(--fg-2); margin-right: .6em; }
+.ecard .ecap .meta { color: var(--fg-2); text-align: right; }
+.ecard:focus-visible { outline: none; }
+.ecard:focus-visible .frame { outline: 2px solid var(--light); outline-offset: 4px; }
+
+@media (max-width: 719px) {
+  .work-top h1 { grid-column: 1 / -1; }
+  .work-tools { grid-row: 2; grid-column: 1 / -1; justify-self: start; text-align: left; align-items: flex-start; padding-bottom: 0; }
+  .filters { justify-content: flex-start; gap: var(--s2) var(--s4); }
+  .filters a { min-height: 32px; display: inline-flex; align-items: center; }
+  .srow { grid-template-columns: 56px 1fr auto; column-gap: var(--s3); align-items: center; padding-block: var(--s3); min-height: 80px; }
+  .srow .thumb { display: block; grid-column: 1; grid-row: 1; width: 56px; height: 56px; overflow: hidden; background: color-mix(in oklab, var(--project) 10%, var(--ink)); }
+  .srow .thumb picture, .srow .thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .srow .no, .srow .plc, .srow .off { display: none; }
+  .srow .ttl { grid-column: 2; grid-row: 1; }
+  .srow .yr { grid-column: 3; grid-row: 1; }
+  .lit, .lit-cap { display: none; }
+  .elevation { row-gap: var(--s7); }
+  .elevation > li, .elevation > li.r, .elevation > li.hall { grid-column: 1 / -1; }
+/* A pair shares one proportion, so the two rooms stand level. */
+.elevation > li:not(.hall) .media { aspect-ratio: 3 / 2; }
+  .elevation > li .media { margin-inline: calc(var(--g) * -1); }
+  .elevation > li.hall .media { height: auto; aspect-ratio: var(--ar); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .door.is-scrub { height: auto; }
+}
+
+@media print {
+  .running-foot, .progress, .lit, .lit-cap, .door { display: none !important; }
+}

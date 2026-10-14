@@ -1,0 +1,25 @@
+{#- The contact room: the one lit room, at the foot of every page. It ends on
+    the mark at full grid width, cut by the page's edge below its lower
+    crossbar: the building standing on the ground, the negative of the opening. -#}
+<footer class="contact on-paper" id="contact" data-ground="paper" aria-labelledby="contact-title">
+  <div class="grid">
+    <h2 class="x-1 label t-meta" id="contact-title">Contact</h2>
+    <p class="x-all contact-mail t-display"><a href="mailto:hello@smash.studio">hello@smash.studio</a></p>
+  </div>
+  <div class="grid contact-facts">
+    <dl class="x-all bars bars-4 t-body">
+      <div class="fact"><dt class="t-meta">Studio</dt><dd><a href="https://maps.apple.com/?q=%C3%85s%C3%B6gatan%20122%2C%20116%2024%20Stockholm" target="_blank" rel="noopener">Åsögatan 122<br>116 24 Stockholm</a></dd></div>
+      <div class="fact"><dt class="t-meta">Follow</dt><dd><a href="https://www.instagram.com/studio.smash/" target="_blank" rel="noopener">Instagram</a><br><a href="https://www.linkedin.com/company/smashstudiosthlm/" target="_blank" rel="noopener">LinkedIn</a></dd></div>
+      <div class="fact"><dt class="t-meta">Work with us</dt><dd><a href="mailto:hello@smash.studio?subject=Internship">Internships</a><br><a href="/next/studio/">The studio</a></dd></div>
+      <div class="fact"><dt class="t-meta">Local time</dt><dd>Stockholm <span class="tnum" data-clock>--:--</span><br><span class="t-meta dim" data-clock-state>&nbsp;</span></dd></div>
+    </dl>
+  </div>
+  <div class="grid contact-line t-meta">
+    <p class="x-1-3">© 2026 SMASH</p>
+    <p class="x-4-8 dim">Experience design studio, Stockholm</p>
+    <p class="x-9-11 right">Motion <button class="motion-toggle" type="button" aria-pressed="true" data-motion-toggle>On</button></p>
+  </div>
+  <div class="ground" aria-hidden="true">
+    <div class="ground-crop">{% set markId = 'm-ground' %}{% set markLabel = '' %}{% include "next/mark.njk" %}</div>
+  </div>
+</footer>
