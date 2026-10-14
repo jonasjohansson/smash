@@ -29,7 +29,7 @@
 // the build's stamp (base.njk), and so do theirs.
 const build = new URL(import.meta.url).search;
 const [
-  { DEFAULTS, buildMark, markShape, paintMark, paintInfo, diveFocus, toDataUrl, useOutline },
+  { DEFAULTS, UNITS, buildMark, markShape, paintMark, paintInfo, diveFocus, toDataUrl, useOutline },
   { GLASS_DEFAULTS, createGlass },
   { createFeed, typeface, fitTitles },
 ] = await Promise.all([import(`./mark.js${build}`), import(`./glass.js${build}`), import(`./feed.js${build}`)]);
@@ -52,6 +52,7 @@ const HOLD = 3000; // ms per image just before the dive lands
 
 const DIVE_DEFAULTS = {
   videoFromStart: true, // play the reel behind the mark instead of the opening slideshow
+  aperture: true, // the opening of /next/ in the dive's place (below): the mark on the grid, opened, not flown into
   length: 2, // screens of scrolling from the mark to the pictures
   overlap: 0, // screens the page is already scrolling before the dive is through
   reel: 0.15, // how far into the dive (of its scroll) the reel takes over from the cut
@@ -256,6 +257,21 @@ const remember = (open) => { try { open ? sessionStorage.setItem('smash-pane', '
 const stage = document.querySelector('[data-stage]');
 const framesEl = document.getElementById('frames');
 const typing = (e) => e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement;
+const clamp01 = (v) => Math.min(1, Math.max(0, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const scrub = (t) => cubic(0.6, 0, 0.2, 1, t); // the aperture's ease, as /next/'s
+/** cubic-bezier(x1, y1, x2, y2) at t, solved for x by Newton's method. */
+function cubic(x1, y1, x2, y2, t) {
+  const bx = (u) => 3 * x1 * u * (1 - u) ** 2 + 3 * x2 * u * u * (1 - u) + u ** 3;
+  const by = (u) => 3 * y1 * u * (1 - u) ** 2 + 3 * y2 * u * u * (1 - u) + u ** 3;
+  let u = t;
+  for (let i = 0; i < 8; i++) {
+    const d = (bx(u + 1e-4) - bx(u - 1e-4)) / 2e-4;
+    if (!d) break;
+    u = clamp01(u - (bx(u) - t) / d);
+  }
+  return by(u);
+}
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 
 if (stage && framesEl) {
@@ -320,17 +336,101 @@ if (stage && framesEl) {
     shape = markShape(params, W, H);
     if (!params.info) mails.forEach((m) => { m.hidden = true; });
     focus = diveFocus(params, shape);
-    document.body.style.setProperty('--dive', params.length);
+    ap = aperture() ? placeAperture(W, H) : null;
+    document.body.classList.toggle('is-aperture', !!ap);
+    document.body.style.setProperty('--dive', ap ? APERTURE_LENGTH : params.length);
     track();
     frame();
     dirty = maskDirty = true;
-    // Until the canvas has a picture, the poster is masked with CSS.
+    // Until the canvas has a picture, the poster is masked with CSS (with the
+    // aperture, not shown: a moment of the ground).
     if (!current) {
-      const url = toDataUrl(buildMark(params, W, H));
+      const url = ap ? 'linear-gradient(transparent, transparent)' : toDataUrl(buildMark(params, W, H));
       slide.style.webkitMaskImage = url;
       slide.style.maskImage = url;
     }
     slide.classList.add('is-set'); // drawn with the viewer's settings
+  }
+
+  // ---- the aperture -----------------------------------------------------
+  // The opening of /next/ (Jonas, 2026-10-15: "the landing page treatment of
+  // the mask, how it changes when zooming in and what it looks like"), in the
+  // dive's place. The original mark (mark.js's own measures, not the site's
+  // thinner slots) stands on the page's ground, its slots on whole columns of
+  // the grid (3 to 10; 4 to 9 on a wide, short screen; all on a phone), between
+  // the rows of text, at most twice as tall as its own proportions; the film
+  // shows only in its slots, and only across their columns. Scrolling, a
+  // screen in all:
+  //   1. door (the first 30%): every closed slot end runs out through the
+  //      edge, and the rows of text go;
+  //   2. open: the block grows to the screen's edges as its slots widen until
+  //      they meet, and nothing of the ground is left.
+  // Not with a newer logo (?logo=) or the glass: those dive as before.
+  const MET = 54; // the slots' width when they meet: their pitch is 52 units
+  const EDGE = 32; // the block's plain edge, past its first and last slot, of its 552 units
+  const APERTURE_LENGTH = 1; // screens of scrolling
+  const aperture = () => dives && !glass && !logos && params.aperture;
+  let ap = null; // the mark's place at rest
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:absolute;visibility:hidden;height:0';
+  const px = (v) => { probe.style.width = v; document.body.append(probe); const w = probe.getBoundingClientRect().width; probe.remove(); return w; };
+  function placeAperture(W, H) {
+    const m = px('var(--margin)'), g = px('var(--gutter)'), cols = 12;
+    const [start, span] = W <= 720 ? [1, cols] : W / H > 2 ? [4, 6] : [3, 8];
+    const col = (W - 2 * m - (cols - 1) * g) / cols;
+    const field = span * col + (span - 1) * g;
+    const w = (field * UNITS.w) / (UNITS.w - 2 * EDGE);
+    const fx = m + (start - 1) * (col + g);
+    // Between the rows of text, with two gutters' air over and under it.
+    const air = 2 * g;
+    const [top, bottom] = params.info && shape.rows.length
+      ? [shape.rows[0].y + shape.rows[0].h + air, shape.rows[1].y - air]
+      : [air, H - air];
+    const h = Math.max(1, Math.min(bottom - top, (2 * w * UNITS.h) / UNITS.w));
+    return { W, H, w, h, x: fx - (EDGE * w) / UNITS.w, y: top + (bottom - top - h) / 2, fx, field };
+  }
+
+  // The mask at view.door and view.open: the film in the slots, across their
+  // columns, the block growing to the screen.
+  function paintAperture(c) {
+    const { W, H, w, h, x, y, fx, field } = ap;
+    const { door, open } = view;
+    c.fillStyle = c.strokeStyle = '#fff';
+    if (open >= 1) { c.fillRect(0, 0, W, H); return; } // the film alone
+    const x0 = lerp(x, -2, open), y0 = lerp(y, -2, open);
+    const bw = lerp(w, W + 4, open), bh = lerp(h, H + 4, open);
+    const stroke = 20 + (MET - 20) * open;
+    const p = { ...DEFAULTS, stroke, corner: (10 * stroke) / 20, inset: 42 * (1 - door), fit: 'stretch', padding: 0, info: false };
+    const s = markShape(p, bw, bh);
+    c.save();
+    c.beginPath();
+    c.rect(x0, y0, bw, bh);
+    c.clip();
+    // The film only across the slots' columns until they open, then out to the screen's edges.
+    const cl = lerp(fx, -2, open), cr = lerp(fx + field, W + 2, open);
+    c.beginPath();
+    c.rect(cl, 0, cr - cl, H);
+    c.clip();
+    c.translate(x0, y0);
+    c.lineCap = 'butt';
+    c.lineJoin = s.join;
+    c.lineWidth = s.stroke;
+    c.stroke(new Path2D(s.d));
+    // The same slots with square bends, at the strength of the opening: the
+    // ground outside each S's rounded turn thins away with the bars.
+    if (open > 0) {
+      c.globalAlpha = open;
+      c.lineJoin = 'miter';
+      c.stroke(new Path2D(markShape({ ...p, corner: 0 }, bw, bh).d));
+      c.globalAlpha = 1;
+    }
+    c.beginPath();
+    for (const [dx, dy, r = s.stroke / 2] of s.dots) { c.moveTo(dx + r, dy); c.arc(dx, dy, r, 0, Math.PI * 2); }
+    c.fill();
+    // The outer bars thin from outside too, until they are gone.
+    const edge = 17 * open * s.sx;
+    if (edge > 0) { c.fillRect(0, 0, edge, bh); c.fillRect(bw - edge, 0, edge, bh); }
+    c.restore();
   }
 
   // ---- the dive ---------------------------------------------------------
@@ -343,7 +443,7 @@ if (stage && framesEl) {
   const intro = document.querySelector('.about-intro-wrap'); // its headline shows the film
   const introHead = intro?.querySelector('h2');
   const landedLogo = document.querySelector('[data-landed-logo]');
-  const view = { t: 0, e: 0, s: 1, x: 0, y: 0, image: 1, fade: 0 };
+  const view = { t: 0, e: 0, s: 1, x: 0, y: 0, image: 1, fade: 0, door: 0, open: 0 };
   // Reveal the logo with the About headline: both start at the fold and
   // finish together. Keep a pinned interval before the page covers it.
   // How far the About scrolls up from the fold while the logo comes in:
@@ -407,6 +507,14 @@ if (stage && framesEl) {
   function frame() {
     const e = (view.e = 0.5 - Math.cos(Math.PI * view.t) / 2);
     document.body.classList.toggle('is-through', view.t >= 0.999);
+    if (ap) {
+      // Reduced motion: the mark at rest, dissolving.
+      const still = slow ? 0 : 1;
+      Object.assign(view, { s: 1, x: 0, y: 0, image: 1, fade: slow ? e : 0 });
+      view.door = still * scrub(clamp01(view.t / 0.3));
+      view.open = still * scrub(clamp01((view.t - 0.3) / 0.7));
+      return;
+    }
     if (slow) { Object.assign(view, { s: 1, x: 0, y: 0, image: 1, fade: e }); return; }
     const W = slide.clientWidth, H = slide.clientHeight;
     const s = Math.exp(e * Math.log(focus.depth));
@@ -520,7 +628,7 @@ if (stage && framesEl) {
     // A soft vignette on the pictures and the film once they fill the screen:
     // none in the mark at rest, coming in as the dive goes through it.
     cover(current, view.image);
-    const vignette = (params.vignette || 0) * view.e;
+    const vignette = ap ? 0 : (params.vignette || 0) * view.e;
     if (vignette > 0) {
       const v = ctx.createRadialGradient(cw / 2, ch / 2, Math.min(cw, ch) * 0.3, cw / 2, ch / 2, Math.hypot(cw, ch) / 2);
       v.addColorStop(0, 'rgba(0,0,0,0)');
@@ -534,9 +642,14 @@ if (stage && framesEl) {
       mctx.setTransform(1, 0, 0, 1, 0, 0);
       mctx.clearRect(0, 0, cw, ch);
       mctx.setTransform(dpr * view.s, 0, 0, dpr * view.s, dpr * view.x, dpr * view.y);
-      paintMark(mctx, shape, params.invert);
-      if (params.info && infoReady) {
-        const laid = paintInfo(mctx, shape, infoRows, params.invert, undefined, infoIcons);
+      if (ap) paintAperture(mctx);
+      else paintMark(mctx, shape, params.invert);
+      // With the aperture the rows stay where they are, and go as its ends open.
+      const rows = ap ? 1 - view.door : 1;
+      if (params.info && infoReady && rows > 0) {
+        mctx.globalAlpha = rows;
+        const laid = paintInfo(mctx, shape, infoRows, ap ? false : params.invert, undefined, infoIcons);
+        mctx.globalAlpha = 1;
         if (view.t === 0) placeMail(laid);
       }
       if (view.fade > 0) {
@@ -781,6 +894,7 @@ if (stage && framesEl) {
 
     if (dives) {
       const d = pane.addFolder({ title: 'Dive' });
+      if (!glass) d.addBinding(params, 'aperture', { label: 'aperture (/next/)' });
       d.addBinding(params, 'length', { label: 'scroll (screens)', min: 0.5, max: 6, step: 0.1 });
       d.addBinding(params, 'reel', { label: 'film starts at', min: 0, max: 0.95, step: 0.01 });
       if (!glass) d.addBinding(params, 'vignette', { min: 0, max: 1, step: 0.01 });

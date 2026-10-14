@@ -342,6 +342,8 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 .home.is-diving .info-mail { visibility: hidden; }
 /* S: black round the mark instead of yellow. (A, invert, is drawn into the mask.) */
 .home.light:not(.is-reading, .is-through) { background: var(--accent); } /* round the mark the landing is the accent (S: black); the page itself is gray */
+/* The aperture (main.js): the mark stands on the page's own ground. */
+.home.is-aperture:not(.is-reading, .is-through) { background: var(--ground); }
 /* H: the tweak panel, above the full-screen link. */
 /* The tweak panel (H) stays put while the page scrolls, and scrolls itself if taller than the screen. */
 .tweak { position: fixed !important; z-index: 100; top: 12px !important; right: 12px !important; width: 280px !important; max-height: calc(100svh - 24px); overflow-y: auto; }
