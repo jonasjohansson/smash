@@ -20,6 +20,8 @@ export const LOGOS = [
   ['r2-column-blade', 'Slant · Round 2'],
   ['r3-carved-column', 'Slant · Round 3'],
   ['r3-square', 'Round 3, square'],
+  ['r3-square-open', 'Round 3, square, open S'],
+  ['r3-open', 'Round 3, open S'],
   ['r4-apex', 'Slant · Round 3 + Apex'],
   ['wide', 'Slant · Wide'],
 ];
@@ -29,6 +31,10 @@ const VARIANTS = {
   // Round 3 without the slant (Jonas, 2026-10-14: "the r3 carved column but without the slant"): every cut
   // square (Slope 0), the A's and the H's crossbars level.
   'r3-square': ['r3-carved-column', { slope: 0, per: [{}, {}, {}, {}, { both: 1 }] }],
+  // And with the S open at the top and the bottom (Jonas, 2026-10-14: "the S opened in the top and bottom like
+  // the smaller wordmark"): each S's slots run out through its edges, thresholds, as the site's own mark's do.
+  'r3-square-open': ['r3-carved-column', { slope: 0, per: [{ open: 1 }, {}, {}, { open: 1 }, { both: 1 }] }],
+  'r3-open': ['r3-carved-column', { per: [{ open: 1 }, {}, { tilt: 1 }, { open: 1 }, { both: 1, tilt: 1 }] }],
 };
 const preset = (key) => {
   const [base, own] = VARIANTS[key] ?? [key, {}];
