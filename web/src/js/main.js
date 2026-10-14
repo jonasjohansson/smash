@@ -74,16 +74,22 @@ const DIVE_DEFAULTS = {
 // The gray trial (2026-10-14, after Jonas's reference of the S H blocks): a
 // cool neutral gray in the brown's place, lavender in the yellow's, with the
 // reference's coral and lime, its blue-gray, and its light concrete ground to
-// try; the brown and the yellow are kept as Brown.
-const SMASH_COLOURS = { ground: '#1e1f21', ink: '#e6e8ea', accent: '#a68bfa' };
+// try; the brown and the yellow are kept as Brown. The black is soft (Jonas:
+// "a not super black black"), a charcoal: the ground, and the type on the
+// accent and on concrete (SOFT_BLACK, main.css's --black).
+const SOFT_BLACK = '#26272a';
+const BLUE_GRAY = '#b5bec6';
+const SMASH_COLOURS = { ground: SOFT_BLACK, ink: '#e6e8ea', accent: '#a68bfa' };
 const PALETTES = {
   smash: { name: 'Gray · Lavender', ...SMASH_COLOURS },
-  'gray-coral': { name: 'Gray · Coral', ground: '#1e1f21', ink: '#e6e8ea', accent: '#ef5a43' },
-  'gray-lime': { name: 'Gray · Lime', ground: '#1e1f21', ink: '#e6e8ea', accent: '#a8f46a' },
-  'gray-steel': { name: 'Gray · Blue-gray type', ground: '#1e1f21', ink: '#b5bec6', accent: '#a68bfa' },
-  'concrete-lavender': { name: 'Concrete · Lavender', ground: '#d9d9d9', ink: '#1c1c1a', accent: '#a68bfa' },
-  'concrete-coral': { name: 'Concrete · Coral', ground: '#d9d9d9', ink: '#1c1c1a', accent: '#ef5a43' },
-  'concrete-lime': { name: 'Concrete · Lime', ground: '#d9d9d9', ink: '#1c1c1a', accent: '#a8f46a' },
+  'gray-gray': { name: 'Gray · Blue-gray', ground: SOFT_BLACK, ink: '#e6e8ea', accent: BLUE_GRAY },
+  'gray-coral': { name: 'Gray · Coral', ground: SOFT_BLACK, ink: '#e6e8ea', accent: '#ef5a43' },
+  'gray-lime': { name: 'Gray · Lime', ground: SOFT_BLACK, ink: '#e6e8ea', accent: '#a8f46a' },
+  'gray-steel': { name: 'Gray · Blue-gray type', ground: SOFT_BLACK, ink: BLUE_GRAY, accent: '#a68bfa' },
+  'concrete-gray': { name: 'Concrete · Blue-gray', ground: '#d9d9d9', ink: SOFT_BLACK, accent: BLUE_GRAY },
+  'concrete-lavender': { name: 'Concrete · Lavender', ground: '#d9d9d9', ink: SOFT_BLACK, accent: '#a68bfa' },
+  'concrete-coral': { name: 'Concrete · Coral', ground: '#d9d9d9', ink: SOFT_BLACK, accent: '#ef5a43' },
+  'concrete-lime': { name: 'Concrete · Lime', ground: '#d9d9d9', ink: SOFT_BLACK, accent: '#a8f46a' },
   brown: { name: 'Brown · Yellow (before)', ground: '#1f1915', ink: '#f3efe8', accent: '#f7be04' },
   night: { name: 'Night', ground: '#0e0e0e', ink: '#f3efe8', accent: '#f7be04' },
   signal: { name: 'Signal', ground: '#141211', ink: '#f3efe8', accent: '#ff4d2e' },
@@ -141,7 +147,7 @@ function paintGround(p) {
   root.setProperty('--line', `rgb(${rgb(ink)} / 0.14)`);
   root.setProperty('--tile', `color-mix(in oklab, ${ground}, ${ink} 8%)`);
   root.setProperty('--accent', shown);
-  root.setProperty('--on-accent', isLight(shown) ? '#111' : '#fff');
+  root.setProperty('--on-accent', isLight(shown) ? SOFT_BLACK : '#fff');
   meta.forEach((m) => { m.dataset.content ??= m.content; m.content = ground; });
 }
 

@@ -16,16 +16,19 @@
 :root {
   /* A dark, cool neutral gray with light text, in light and dark mode alike
      (the H panel can set another, ?palette= too); lavender round the mark on
-     the landing. The gray trial: before, a warm brown and SMASH yellow. */
+     the landing. The gray trial: before, a warm brown and SMASH yellow. Its
+     black is soft, a charcoal (--black): the ground, the type on the accent,
+     the landing behind its film. */
   color-scheme: dark;
-  --bg: #1e1f21;
+  --black: #26272a;
+  --bg: var(--black);
   --ink: #e6e8ea;
   --muted: rgb(230 232 234 / 0.55);
   --line: rgb(230 232 234 / 0.14);
-  --ground: #1e1f21; /* the projects' ground */
-  --tile: #2a2c2f; /* a picture's place while it loads */
+  --ground: var(--black); /* the projects' ground */
+  --tile: #313236; /* a picture's place while it loads */
   --accent: #a68bfa; /* lavender */
-  --on-accent: #111; /* type on the accent */
+  --on-accent: var(--black); /* type on the accent */
   --hero-pad: var(--margin); /* round a hero, as round the mark on the landing */
   --radius: 6px; /* a card's corners: the offerings, the projects' thumbnails */
 
@@ -140,7 +143,7 @@ body::after {
    The static mask below is the no-JS fallback; main.js replaces it with one
    drawn from parameters (mark.js), and scrolling flies through it. */
 
-.home { height: 100svh; overflow: hidden; background: #000; color: #fff; }
+.home { height: 100svh; overflow: hidden; background: var(--black); color: #fff; }
 .home .site-header { display: none; }
 /* A project page opens on its hero; no header. */
 :is(.project-page, .category-page, .typeface-page) .site-header { display: none; }
