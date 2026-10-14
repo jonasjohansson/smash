@@ -5,6 +5,10 @@
 // show their pictures through the letters, in place of the site's slotted
 // block, and the header carries the preset's S M. Loaded only when one is
 // picked (?logo=<key>, main.js).
+// It stretches as the block does (Jonas: "it should be a version of the logo
+// that can stretch"), but by being drawn again, not scaled: as tall as the box
+// asks, its width, stems, slots, slants and rounds as they are, so only the
+// letters grow taller or shorter.
 
 import { PRESETS, LEVEL, drawWith, wordmark, symbol } from '../identity/directions/slant.js';
 
@@ -58,14 +62,36 @@ function stems(w, h, d) {
 }
 
 /**
- * Preset `key`'s wordmark as { w, h, d, gaps, stems }: its path in its own
+ * Preset `key`'s wordmark drawn for a box `aspect` wide to 1 tall (its height
+ * on the grid of 4), or at the preset's own height without one; drawn once per
+ * height.
+ */
+const drawn = new Map();
+const widths = new Map(); // a preset's width, the same at any height
+export function outlineFor(key, aspect) {
+  const set = preset(key);
+  if (!set) return null;
+  if (!widths.has(key)) widths.set(key, outline(key).w);
+  const width = widths.get(key);
+  const height = aspect ? Math.max(64, Math.round(width / aspect / 4) * 4) : set.height;
+  const id = `${key}|${height}`;
+  if (!drawn.has(id)) {
+    if (drawn.size > 40) drawn.clear();
+    drawn.set(id, outline(key, height));
+  }
+  return drawn.get(id);
+}
+
+/**
+ * Preset `key`'s wordmark (at `height`, or its own) as { w, h, d, gaps, stems }: its path in its own
  * units (even-odd), the clear runs between its letters, left to right,
  * [x0, x1], and its full-height stems (above): the dive goes into the widest
  * stem nearest the gap between the M and the A, or, inverted, through that gap.
  */
-export function outline(key) {
+export function outline(key, height) {
   const set = preset(key);
   if (!set) return null;
+  if (height) set.height = height;
   const s = drawWith(set, wordmark);
   const [, , w, h] = s.match(/viewBox="([^"]+)"/)[1].split(/\s+/).map(Number);
   const d = [...s.matchAll(/ d="([^"]+)"/g)].map((m) => m[1]).join('');
@@ -77,7 +103,8 @@ export function outline(key) {
     else letters.push([a, b]);
   }
   const gaps = letters.slice(1).map(([a], i) => [letters[i][1], a]);
-  return { w, h, d, gaps, stems: stems(w, h, d) };
+  let found = null; // found once asked for
+  return { w, h, d, gaps, get stems() { return (found ??= stems(w, h, d)); } };
 }
 
 /** Preset `key`'s S M, black, sized by CSS, for the header. */

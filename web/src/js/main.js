@@ -186,7 +186,7 @@ const logoKey = (() => {
 })();
 const logos = logoKey === 'original' ? null : await import(`./logos.js${build}`).catch((e) => { console.error('[logo]', e); return null; });
 if (logos) {
-  useOutline(logos.outline(logoKey));
+  useOutline((aspect) => logos.outlineFor(logoKey, aspect));
   const sm = logos.symbolSVG(logoKey);
   if (sm) document.querySelectorAll('.logo, .landed-logo').forEach((a) => { a.querySelector('svg')?.remove(); a.insertAdjacentHTML('afterbegin', sm); a.classList.add('is-newer'); });
 }

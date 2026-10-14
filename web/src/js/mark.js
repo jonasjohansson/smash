@@ -25,9 +25,10 @@
 export const UNITS = { w: 552, h: 472 };
 
 // Another mark in this one's place (logos.js, ?logo=): letter outlines
-// { w, h, d, gaps } in their own units, filled where the block was, scaled
-// alike both ways (never stretched) and centred where the block would be.
-// The rows of text keep to its width. null: the slotted block.
+// { w, h, d, gaps, stems } in their own units, filled where the block was.
+// Given as a function of the block's aspect, it is drawn again to fill it, as
+// the slotted block stretches; as an outline, it is scaled alike both ways and
+// centred. null: the slotted block.
 let OUTLINE = null;
 export const useOutline = (o) => { OUTLINE = o; };
 
@@ -155,9 +156,9 @@ export function markShape(p, W, H) {
   const edge = p.info ? (p.stroke * inner) / UNITS.w / 2 : 0;
   let bw = Math.max(1, inner);
   let bh = Math.max(1, H - 2 * pad - 2 * (edge + row + gap));
-  const o = OUTLINE;
+  const o = typeof OUTLINE === 'function' ? OUTLINE(p.fit === 'contain' ? 0 : bw / bh) : OUTLINE;
   const units = o ? { w: o.w, h: o.h } : UNITS;
-  if (o || p.fit === 'contain') {
+  if (p.fit === 'contain' || (o && typeof OUTLINE !== 'function')) {
     const s = Math.min(bw / units.w, bh / units.h);
     bw = units.w * s;
     bh = units.h * s;
@@ -204,13 +205,13 @@ export function markShape(p, W, H) {
  * Inverted: only the slots (and anything outside the block) show it.
  */
 export function buildMark(p, W, H) {
-  const { bx, by, bw, bh, sx, stroke, dots, parts, outline } = markShape(p, W, H);
+  const { bx, by, bw, bh, sx, sy, stroke, dots, parts, outline } = markShape(p, W, H);
   if (outline) {
     const [ground, letters] = p.invert ? ['#fff', '#000'] : ['#000', '#fff'];
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`
       + `<defs><mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}">`
       + `<rect width="${W}" height="${H}" fill="${ground}"/>`
-      + `<path transform="translate(${bx} ${by}) scale(${sx})" fill="${letters}" fill-rule="evenodd" d="${outline.d}"/>`
+      + `<path transform="translate(${bx} ${by}) scale(${sx} ${sy})" fill="${letters}" fill-rule="evenodd" d="${outline.d}"/>`
       + `</mask></defs><rect width="${W}" height="${H}" mask="url(#m)"/></svg>`;
   }
   const caps = dots.map(([x, y, r = stroke / 2]) => `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${r.toFixed(2)}"/>`).join('');
