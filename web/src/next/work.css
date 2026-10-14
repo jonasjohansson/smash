@@ -4,41 +4,55 @@
    and its plate, row and pair.
    ========================================================================== */
 
-/* ---------- The index: two to a row, one alone across the page when odd ---------- */
+/* ---------- The index: two to a row, every picture at 3:2 ---------- */
 .index { row-gap: var(--s4); }
 .index > li { grid-column: span 6; min-width: 0; }
-.index > li.hall { grid-column: 1 / -1; }
-.index > li.half .media { aspect-ratio: 3 / 2; }
-.index > li.hall .media { aspect-ratio: auto; height: min(calc((100vw - 2 * var(--g)) / var(--ar)), calc(100svh - var(--header) - var(--s4))); }
+.index .media { aspect-ratio: 3 / 2; }
 .card { display: block; text-decoration: none; }
 @media (max-width: 719px) {
-  .index > li, .index > li.hall { grid-column: 1 / -1; }
-  .index > li.hall .media { height: auto; aspect-ratio: 3 / 2; }
+  .index > li { grid-column: 1 / -1; }
 }
 
 /* ---------- A project ---------- */
-/* The hero, a threshold: full bleed, down to the name, which stands whole
-   under it on the first screen (the name's line, the space over it, and one
-   step of air under it). */
-.pj-head { padding-top: var(--s3); row-gap: var(--s4); }
-.pj-hero .media { width: 100%; aspect-ratio: auto; height: max(var(--hero-min), calc(100svh - var(--header) - var(--s3) - var(--t-display) * var(--lh-display) - var(--s3))); }
-.pj-lead { text-wrap: balance; }
+/* Gaps are measured on the type itself, not its line box: from a picture's
+   edge to the top of the capitals, and from the baseline to the next edge.
+   The faces' measures (as in next.css): NHG Display at --lh-display has
+   .089em over its capitals and .116em under its baseline; at --lh-large,
+   --large-cap over and .231em under; NHG Text at --lh-body, --body-cap over
+   and .3835em under. */
+.project {
+  --display-cap: .089em;
+  --display-foot: .116;
+  --large-foot: .231;
+  --body-foot: .3835em;
+}
 
-/* Words and pictures: every block fills the row, and each is a full beat apart. */
-.pj-flow { padding-top: var(--s5); }
+/* The hero, a threshold: full bleed, down to the name, which stands whole
+   under it on the first screen, with one --s3 of air under its line. */
+.pj-hero .media { width: 100%; aspect-ratio: auto; height: max(var(--hero-min), calc(100svh - var(--header) - 2 * var(--s3) - var(--t-display) * (var(--lh-display) - .089))); }
+
+/* The head: hero to the name's capitals --s3, the name's baseline to the
+   lead's capitals --s4, the lead's baseline to the first plate --s5. */
+.pj-head { row-gap: 0; }
+.pj-head h1 { margin-top: calc(var(--s3) - var(--display-cap)); }
+.pj-lead { text-wrap: balance; margin-top: calc(var(--s4) - var(--t-display) * var(--display-foot) - var(--large-cap)); }
+.pj-flow { padding-top: calc(var(--s5) - var(--t-large) * var(--large-foot)); }
+
+/* The flow: plates, rows of two and words alone, each a full beat (--s5)
+   from the next. Words are measured from the picture's edge to their
+   capitals, and from their last baseline to the next picture. */
 .pj-flow > * + * { margin-top: var(--s5); }
-/* No picture inside the margins stands taller than the screen allows: a tall
-   row or a tall pair is cropped to it, as a plate is. The width is set, so
-   the cap takes from the height and never narrows the picture. */
-.pj-flow .row > .media.lead,
-.pj-flow .pair-media { width: 100%; max-height: var(--plate-max); }
+.pj-flow > .f-text { margin-top: calc(var(--s5) - var(--body-cap)); margin-bottom: calc(-1 * var(--body-foot)); }
+/* No picture inside the margins stands taller than the screen allows: the
+   row's lead is cropped to it, as a plate is. The width is set, so the cap
+   takes from the height and never narrows the picture. */
+.pj-flow .row > .media.lead { width: 100%; max-height: var(--plate-max); }
+/* A picture with a letterbox of its own is drawn past it (--zoom, story.js). */
+.pj-flow .media img, .pj-flow .media video { scale: var(--zoom, 1); }
 
 @media (max-width: 719px) {
   .pj-hero .media { height: var(--hero-phone); }
-  .pj-head { row-gap: var(--s3); }
-  .f-plate .media { aspect-ratio: var(--ar); height: auto; }
-  /* Two tall pictures in a row stay side by side, the lead's proportion
-     setting their height (next.css spans the lead across, which leaves the
-     other with no height). */
-  .pj-flow .row-tall.row-2 > .media.lead { grid-column: span 2; }
+  /* On a phone every picture in the flow stands across the content area
+     at one proportion, 4:5, its subject kept in frame by --focus. */
+  .pj-flow .media.media { grid-column: 1 / -1; aspect-ratio: 4 / 5; height: auto; max-height: none; }
 }

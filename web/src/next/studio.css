@@ -1,29 +1,52 @@
 /* ==========================================================================
    SMASH, next: the studio (/next/studio/). Builds on next.css.
-   The statement, the studio at work (a pair: next.css), then the people.
+   The statement, the studio at work (a plate: next.css), its words alone at
+   column 7, then the people. Each a full beat apart.
    ========================================================================== */
 
 :root {
   /* One treatment for every portrait: black and white, as on the studio's own site. */
   --portrait-tone: grayscale(1) contrast(1.05);
+  /* The set: one frame, and in it each face at one size and on one eye line.
+     A face is measured in its own picture (--face: the geometric mean of the
+     eyes' span and eyes-to-chin, in the picture's pixels); the frame is
+     --set-head faces wide, the point between the eyes at --set-x across and
+     --set-y down. */
+  --set-w: 3;
+  --set-h: 4;
+  --set-head: 2.63;
+  --set-x: .41;
+  --set-y: .44;
 }
 
-.st-pair { margin-top: var(--s5); }
+.st-plate { padding-top: var(--s5); }
+.st-text { padding-top: var(--s5); }
 
 /* The people: three portraits, four columns each; on a phone, the whole width. */
 .st-team { row-gap: var(--s4); }
 .st-member { grid-column: span 4; min-width: 0; }
-.st-member a { overflow-wrap: anywhere; }
+.st-member a { overflow-wrap: normal; }
 @media (max-width: 719px) {
   .st-member { grid-column: 1 / -1; }
 }
 
-/* The portraits as one set: the same 4:5 frame, the eyes on one line (38% of
-   the frame down), each head the same share of it (eyes to chin, a third of
-   the width). Each picture is fitted once, by its own --focus (where the
-   crop sits, and the centre of the scale) and --zoom; nothing changes after. */
-.st-member .media { aspect-ratio: 4 / 5; }
-.st-member img { object-position: var(--focus); transform: scale(var(--zoom, 1)); transform-origin: var(--focus); filter: var(--portrait-tone) var(--tone-adjust, ); }
-.st-member[data-person="ashley-reed"]   { --focus: 15% 55%; --zoom: 1.115; --tone-adjust: brightness(.9); }
-.st-member[data-person="veronica-reed"] { --focus: 36% 82%; --zoom: 1.105; }
-.st-member[data-person="emile-pascoe"]  { --focus: 100% 70%; --zoom: 1.075; }
+/* Each portrait is placed, not cropped from the middle: drawn at the width
+   that gives its face the set's size, and moved so the point between its eyes
+   lands on the set's mark. Per person, from their picture: --iw (its width),
+   --ex/--ey (the point between the eyes) and --face, all in its pixels. */
+.st-member .media { aspect-ratio: var(--set-w) / var(--set-h); }
+.st-member .media picture { overflow: hidden; }
+.st-member img {
+  --bw: calc(var(--set-head) * var(--face));
+  inset: auto;
+  left: calc(100% * (var(--set-x) - var(--ex) / var(--bw)));
+  top: calc(100% * (var(--set-y) - var(--ey) * var(--set-w) / (var(--bw) * var(--set-h))));
+  width: calc(100% * var(--iw) / var(--bw));
+  height: auto;
+  max-width: none;
+  object-fit: fill;
+  filter: var(--portrait-tone) var(--tone-adjust, );
+}
+.st-member[data-person="ashley-reed"]   { --iw: 1099; --ex: 510; --ey: 553; --face: 237.6; --tone-adjust: brightness(.9); }
+.st-member[data-person="veronica-reed"] { --iw: 1099; --ex: 540; --ey: 599; --face: 227.5; }
+.st-member[data-person="emile-pascoe"]  { --iw: 1000; --ex: 637; --ey: 606; --face: 232.5; }

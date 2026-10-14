@@ -13,8 +13,8 @@ eleventyComputed:
   description: "{{ stories[w.slug].lead | mdInline | striptags }}"
 ---
 {#- A project: a film or picture across the screen, its name, its one
-    sentence, then its words and pictures as plates, rows and pairs, each
-    filling the row (story.js). Only the hero bleeds.
+    sentence, then its pictures and words (story.js): plates across the 12
+    columns, rows of two, and words alone at column 7. Only the hero bleeds.
     Media markup is written inline: {% image %} renders nothing inside an
     include or a macro. -#}
 {%- set s = stories[w.slug] -%}
@@ -40,29 +40,16 @@ eleventyComputed:
 
   <div class="pj-flow">
   {%- for r in s.flow %}
-    {%- if r.kind == 'pair' %}{% set m = r.items[0] %}
-    {%- set sz = '(max-width: 719px) 100vw, ' + ('47vw' if not r.shape else ('39vw' if r.shape == 'pair-square' else '31vw')) %}
-    <div class="f-pair pair grid{% if r.shape %} {{ r.shape }}{% endif %}">
-      <div class="media pair-media" style="--ar: {{ m.ar }}">
-        {%- if m.type == 'video' %}
-        <video muted loop playsinline preload="none" poster="{% imageSrc m.poster, 2000, 'webp' %}" aria-label="{{ m.alt }}" data-auto><source src="{{ m.src }}" type="video/{{ 'webm' if m.src.endsWith('.webm') else 'mp4' }}"></video>
-        {%- else %}
-        {% image m.src, m.alt, sz, "lazy" %}
-        {%- endif %}
-      </div>
-      <div class="pair-text t-body prose measure">{{ r.body | md | safe }}</div>
-    </div>
-    {%- elif r.kind == 'text' %}
+    {%- if r.kind == 'text' %}
     <div class="f-text grid"><div class="c-7-12 t-body prose measure">{{ r.body | md | safe }}</div></div>
     {%- else %}
     {%- set kind = r.kind %}
-    {%- set n = r.items.length %}
     <div class="f-media f-{{ kind }} grid">
-      {%- if kind == 'row' %}<div class="c-all row{% if r.tall %} row-tall{% endif %} row-{{ n }}">{% endif %}
+      {%- if kind == 'row' %}<div class="c-all row">{% endif %}
       {%- for m in r.items %}
         {%- if kind == 'row' %}{% set sz = '(max-width: 719px) 100vw, ' + ((m.span * 94 / 12) | round) + 'vw' %}
         {%- else %}{% set sz = '(max-width: 719px) 100vw, 94vw' %}{% endif %}
-      <div class="media{% if kind == 'plate' %} c-all{% endif %}{% if m.lead %} lead{% endif %}" style="--ar: {{ m.ar }}{% if m.span %}; --span: {{ m.span }}{% endif %}">
+      <div class="media{% if kind == 'plate' %} c-all{% endif %}{% if m.lead %} lead{% endif %}" style="--ar: {{ m.ar }}{% if m.span %}; --span: {{ m.span }}{% endif %}{% if m.focus %}; --focus: {{ m.focus }}{% endif %}{% if m.zoom %}; --zoom: {{ m.zoom }}{% endif %}">
         {%- if m.type == 'video' %}
         <video muted loop playsinline preload="none" poster="{% imageSrc m.poster, 2000, 'webp' %}" aria-label="{{ m.alt }}" data-auto><source src="{{ m.src }}" type="video/{{ 'webm' if m.src.endsWith('.webm') else 'mp4' }}"></video>
         {%- else %}

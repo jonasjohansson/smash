@@ -32,8 +32,8 @@ scripts:
 </section>
 
 {#- The work, newest first: a room for each project, full bleed, people inside
-    the work, and its name under it at column 1. One picture each, and none of
-    them stands for the project anywhere else on the site (next.11tydata.js, HOME). -#}
+    the work, and its name under it at column 1, at the large size (the
+    names on /work/ stay at body size: there the work is an overview). -#}
 <section class="passes" aria-label="Work">
 {%- for w in work %}{% set m = w.home %}
   <a class="pass" href="{{ w.url }}" aria-labelledby="pt-{{ w.slug }}">
@@ -43,7 +43,7 @@ scripts:
       </div>
     </div>
     <div class="grid">
-      <h2 class="c-all caption t-body" id="pt-{{ w.slug }}">{{ w.title }}</h2>
+      <h2 class="c-all caption t-large" id="pt-{{ w.slug }}">{{ w.title }}</h2>
     </div>
   </a>
 {%- endfor %}

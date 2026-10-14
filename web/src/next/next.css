@@ -5,8 +5,9 @@
    Two axes: column 1 (titles, pictures) and column 7 (reading text).
    Three sizes of type, one weight, one style, one job each:
      display  a project's name, on its own page, and nothing else;
-     large    a page's one sentence (the statement, a project's lead, the address);
-     body     everything else, every name under a picture among it.
+     large    a page's one sentence (the statement, a project's lead, the address),
+              and the name under each home room;
+     body     everything else, the names on /work/ and under the portraits among it.
    Pictures: full bleed is a threshold (the opening, a home room, a project
    hero), and nothing else bleeds. Inside the margins a picture is a plate
    (12 columns), a row (filling 12 columns) or a pair (the picture from
@@ -31,7 +32,7 @@
   /* Grid */
   --cols: 12;
   --g: clamp(16px, 2.778vw, 56px);
-  --header: 64px;
+  --header: 80px;             /* the bar: the mark, with one --s2 over and under it */
 
   /* Space: one scale, on a grid of 8 */
   --s1: 8px;
@@ -46,10 +47,15 @@
   --display: "NHG Display", "NHG Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --t-body: clamp(17px, 15.9px + .29vw, 20px);
   --t-large: clamp(28px, 20.6px + 1.9vw, 48px);
-  --t-display: clamp(52px, 8.6vw, 168px);
+  --t-display: clamp(56px, 11vw, 176px);
   --lh-body: 1.5;
   --lh-large: 1.15;
   --lh-display: .92;
+  /* From the top of a line to the top of its capitals, from the faces' own
+     measures: NHG Text at --lh-body ((1.5 - (.978 + .245)) / 2 + .978 - .744),
+     NHG Display at --lh-large ((1.15 - (.916 + .228)) / 2 + .916 - .715). */
+  --body-cap: .3725em;
+  --large-cap: .204em;
   --track-large: -.012em;
   --track-display: -.035em;
   --word-large: .03em;        /* the large sizes' word space, opened against their tight tracking */
@@ -61,7 +67,7 @@
   --caption-gap: var(--s2);   /* between a picture and its name */
 
   /* Sizes */
-  --mark-w: 40px;             /* the mark in the header */
+  --mark-w: 56px;             /* the mark in the header */
   --mark-h: calc(var(--mark-w) * 472 / 552);  /* its height, in its own proportions */
   --tap: 44px;                /* the least height of a button */
   --plate-max: calc(100svh - var(--s5));  /* the tallest a picture inside the margins stands */
@@ -71,6 +77,8 @@
   /* The opening mark: its slots span whole columns, from --mark-start */
   --mark-start: 3;
   --mark-span: 8;
+  --mark-air: var(--s4);      /* the least space over the mark and under "Watch with sound" */
+  --mark-stretch: 2;          /* the most it is drawn taller than its own proportions */
 
   --nf-min: 50svh;            /* the not-found page, at least */
 
@@ -92,13 +100,16 @@
   :root {
     --cols: 4;
     --g: 16px;
-    --header: 56px;
-    --mark-w: 32px;
+    --header: 64px;
+    --mark-w: 40px;
+    --t-large: 26px;
+    --t-display: clamp(56px, 16vw, 112px);
     --s4: 48px;
     --s5: 80px;
     --s6: 112px;
     --mark-start: 1;
     --mark-span: 4;
+    --mark-air: var(--s2);
   }
 }
 
@@ -180,26 +191,28 @@ main { display: block; }
 .page-start { padding-top: var(--s4); }
 
 /* ---------- Header: the mark and three words, at the top of the page ---------- */
-/* The mark stands in the middle of the bar, and the words on its foot: the
-   mark has no baseline of its own, so its bottom edge is taken for one. */
+/* The mark stands in the middle of the bar, and the words hang from the same
+   line as it: their capitals' top on the mark's top edge. */
 .site-header {
   position: absolute; inset: 0 0 auto 0; z-index: 10;
   height: var(--header);
   padding-top: calc((var(--header) - var(--mark-h)) / 2);
-  align-items: baseline;
+  align-items: start;
   align-content: start;
 }
 .home-link { grid-column: 1 / 3; position: relative; display: block; width: max-content; }
 .home-link::before { content: ""; position: absolute; inset: calc(-1 * var(--s1)); } /* a tap target past the mark's edge */
 .home-link:focus-visible::after { top: calc(100% + var(--focus-rule)); }
 .home-link .mark { width: var(--mark-w); height: auto; }
-.nav { grid-column: 7 / 13; justify-self: end; display: flex; gap: var(--s3); }
+.nav { grid-column: 7 / 13; justify-self: end; display: flex; gap: var(--s3); margin-top: calc(-1 * var(--body-cap)); }
 .nav a { text-decoration-line: none; }
 .nav a[aria-current="page"] { text-decoration-line: underline; }
 .nav a:focus-visible { text-decoration-line: underline; }
 .mark-door { display: none; }
 main { padding-top: var(--header); }
 .home main { padding-top: 0; }
+/* On the home page the opening is the mark: the bar keeps only its words. */
+.home .home-link { visibility: hidden; }
 @media (max-width: 719px) {
   .home-link { grid-column: 1 / 2; }
   .nav { grid-column: 2 / 5; gap: var(--s2); }
@@ -213,22 +226,25 @@ main { padding-top: var(--header); }
 .ap-ink { position: absolute; inset: 0; width: 100%; height: 100%; }
 .ap-static { display: none; }
 .ap-row { position: absolute; z-index: 2; left: 0; right: 0; top: 0; pointer-events: none; }
-/* Under the mark, at its first slot's column. */
-.ap-row p { grid-column: var(--mark-start) / -1; }
+/* Under the mark, at column 1, where every word on the site starts. */
+.ap-row p { grid-column: 1 / -1; }
 .ap-row button { pointer-events: auto; text-decoration-line: underline; text-decoration-thickness: var(--rule); text-underline-offset: var(--u-offset); min-height: var(--tap); }
 .ap-row button:focus-visible { text-decoration-thickness: var(--focus-rule); }
 
-/* Without the script, or with reduced motion: the poster frame in the still mark. */
+/* With reduced motion or Save-Data: the same first screen, held still (the
+   poster in the mark, aperture.js), and the page scrolls on past it. */
+.js .no-scrub .ap-stage { position: relative; }
+/* Without the script: the poster frame in the still mark. */
 /* The still mark: its slots on the same columns as the moving one (--mark-start, --mark-span), the
    block's plain outer edge (32 of its 552 units each side) out past them, unseen on the ink.
-   "Watch with sound" under it, at its first slot's column. */
-:is(.no-scrub, html:not(.js) .aperture) .ap-stage { position: relative; height: auto; overflow: visible; overflow-x: clip; padding: var(--header) var(--g) 0; display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); column-gap: var(--g); }
-:is(.no-scrub, html:not(.js) .aperture) .ap-ink,
-:is(.no-scrub, html:not(.js) .aperture) .ap-film { display: none; }
-:is(.no-scrub, html:not(.js) .aperture) .ap-static { display: block; position: relative; aspect-ratio: 552 / 472; grid-column: var(--mark-start) / span var(--mark-span); margin-inline: calc(-100% * 32 / 488); }
-:is(.no-scrub, html:not(.js) .aperture) .ap-static .ap-poster { inset: var(--rule); width: calc(100% - 2 * var(--rule)); height: calc(100% - 2 * var(--rule)); clip-path: inset(0 calc(100% * 32 / 552)); } /* inside the mark's edge, and only across the slots' columns */
-:is(.no-scrub, html:not(.js) .aperture) .ap-static .mark { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--ink); }
-:is(.no-scrub, html:not(.js) .aperture) .ap-row { position: static; grid-column: 1 / -1; padding-inline: 0; margin-top: var(--s2); }
+   "Watch with sound" under it, at column 1. */
+html:not(.js) .aperture .ap-stage { position: relative; height: auto; overflow: visible; overflow-x: clip; padding: calc(var(--header) + var(--mark-air)) var(--g) 0; display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); column-gap: var(--g); }
+html:not(.js) .aperture .ap-ink,
+html:not(.js) .aperture .ap-film { display: none; }
+html:not(.js) .aperture .ap-static { display: block; position: relative; aspect-ratio: 552 / 472; grid-column: var(--mark-start) / span var(--mark-span); margin-inline: calc(-100% * 32 / 488); }
+html:not(.js) .aperture .ap-static .ap-poster { inset: var(--rule); width: calc(100% - 2 * var(--rule)); height: calc(100% - 2 * var(--rule)); clip-path: inset(0 calc(100% * 32 / 552)); } /* inside the mark's edge, and only across the slots' columns */
+html:not(.js) .aperture .ap-static .mark { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--ink); }
+html:not(.js) .aperture .ap-row { position: static; grid-column: 1 / -1; padding-inline: 0; margin-top: var(--s2); }
 
 /* ---------- Pictures ---------- */
 .media { position: relative; overflow: hidden; background: var(--tint); aspect-ratio: var(--ar, 1.5); }
@@ -242,8 +258,11 @@ main { padding-top: var(--header); }
 /* PLATE: one picture across the 12 columns, inside the margins, never
    taller than the screen allows. */
 .f-plate .media { aspect-ratio: auto; height: min(calc((100vw - 2 * var(--g)) / var(--ar)), var(--plate-max)); }
-/* A picture's name, under it at column 1. */
-.caption { padding-top: var(--caption-gap); }
+/* A picture's name, under it at column 1: --caption-gap from the picture to
+   the top of its capitals, at either size. */
+.caption { padding-top: calc(var(--caption-gap) - var(--cap, 0px)); }
+.caption.t-body { --cap: var(--body-cap); }
+.caption.t-large { --cap: var(--large-cap); }
 /* ROW: one project's pictures on whole columns (8+4, 6+6, 4+4+4), at one
    height: the lead's own proportion sets it, the others are cropped to it.
    On a phone they stack, each at its own proportion; tall ones go two to a
@@ -275,6 +294,7 @@ main { padding-top: var(--header); }
 }
 
 /* ---------- Home: the opening, the statement, then a room for each project ---------- */
+/* Each room's name at the large size, at column 1 under it (.caption). */
 /* The statement stands in equal space: the same beat above it and below. */
 .statement { padding-top: var(--s5); }
 .passes { padding-top: var(--s5); }

@@ -7,8 +7,8 @@ bodyClass: studio-page
 styles:
   - studio.css
 ---
-{#- The studio: its one sentence, the studio at work in a pair (the picture
-    from column 1, its words at column 7), then the people. Nothing here
+{#- The studio: its one sentence, the studio at work on a plate (the 12
+    columns), its words alone at column 7, then the people. Nothing here
     bleeds: full bleed is kept for thresholds. Media markup is written
     inline: {% image %} renders nothing inside an include or a macro. -#}
 
@@ -16,23 +16,26 @@ styles:
   <h1 class="c-1-9 t-large" id="studio-title">A studio of three, working with the makers each piece needs.</h1>
 </section>
 
-<div class="st-pair pair pair-tall grid">
-  <div class="media pair-media" style="--ar: 0.5625">{% image 'projects/heroes/01-poster.jpg', 'On site at Stockholm’s Great Synagogue, a drone scans the facade before the projection.', '(max-width: 719px) 100vw, 31vw', 'eager' %}</div>
-  <div class="pair-text t-body prose measure">
+<div class="st-plate f-plate grid">
+  <div class="media c-all" style="--ar: 1.5; --focus: 50% 40%">{% image 'projects/dome-conductor/development.jpg', 'A developer works at a laptop and a monitor showing the dome projection setup, with the orchestra projected in the background.', '(max-width: 719px) 100vw, 94vw', 'eager' %}</div>
+</div>
+
+<div class="st-text grid">
+  <div class="c-7-12 t-body prose measure">
     <p>We take each piece from the first idea to its last night: the story and the animation, the software, and the controllers and pads people touch. We test on scale models and drone scans, then fit the light to the building on site.</p>
   </div>
 </div>
 
-{#- The portraits are drawn at the size they now stand: four columns on a
-    desktop, the whole width on a phone (the shared data sizes them smaller). #}
+{#- The portraits are drawn larger than their frames (studio.css crops each to
+    the set), so their sizes ask for about 1.8 times the frame's width. #}
 <section class="section" aria-labelledby="people-title">
   <h2 class="visually-hidden" id="people-title">People</h2>
   <ul class="grid st-team" role="list">
     {%- for p in team %}
     <li class="st-member" data-person="{{ p.name | lower | replace(' ', '-') }}">
-      <div class="media">{{ p.picture | replace('(max-width: 720px) 33vw, 22vw', '(max-width: 719px) 100vw, 31vw') | safe }}</div>
+      <div class="media">{{ p.picture | replace('(max-width: 720px) 33vw, 22vw', '(max-width: 719px) 180vw, 57vw') | safe }}</div>
       <p class="st-name caption t-body">{{ p.name }}</p>
-      <p><a href="mailto:{{ p.email }}">{{ p.email }}</a></p>
+      <p><a href="mailto:{{ p.email }}">{{ p.email | replace('@', '<wbr>@') | safe }}</a></p>
     </li>
     {%- endfor %}
   </ul>

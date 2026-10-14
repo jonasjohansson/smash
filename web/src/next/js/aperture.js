@@ -3,13 +3,16 @@
 // The original mark (mark.js) is drawn in ink, whole, on the first screen,
 // with the showreel playing behind it: the film shows only through the
 // slots, light through slits in a dark room. "Watch with sound" sits under
-// it, at its first column. The mark's slots span whole columns, the ones
-// next.css declares once (--mark-start, --mark-span: 3-10, 4-9 on a very wide,
-// short screen, all 4 on a phone): the block's plain outer edge, 32 of its 552
-// units each side, lies out past them, unseen on the ink. On a desktop it stands
-// from the header to the bottom margin. On a phone it keeps its own proportions
-// (552 × 472) across the 4 columns, and stands centred, with "Watch with sound"
-// under it, between the header and the bottom margin. Until the slots open,
+// it, at column 1 like every other word. The mark's slots span whole columns,
+// the ones next.css declares once (--mark-start, --mark-span: 3-10, 4-9 on a
+// very wide, short screen, all 4 on a phone): the block's plain outer edge, 32
+// of its 552 units each side, lies out past them, unseen on the ink.
+// Its height is the screen's, less the header, "Watch with sound" and at least
+// --mark-air over the mark and under the words: the mark is redrawn to it, as
+// on the landing, but never more than --mark-stretch times taller than its own
+// proportions (552 × 472), so the letters still read. Mark and words stand
+// centred under the header: the space over the mark equals the space under
+// "Watch with sound". Until the slots open,
 // the film shows only inside the columns the slots span: the S's open stroke
 // ends at the column's edge, not out in the margin.
 // Scrolling, while the stage is held:
@@ -18,7 +21,9 @@
 //   2. open: the block grows to the screen's edges as its slots widen until
 //      they meet (stroke 20 -> 54), and nothing of the ink is left.
 // Then the film scrolls away as a picture.
-// Reduced motion or Save-Data: no hold, no scrub; the poster in the still mark.
+// Reduced motion or Save-Data: the same first screen with the poster in the
+// mark, held still: no film, no hold, no scrub. Without the script, next.css
+// sets the poster in the mark's SVG.
 
 import { markShape, DEFAULTS, UNITS } from '/js/mark.js';
 import { motion } from './motion.js';
@@ -30,6 +35,7 @@ if (root) {
   const stage = root.querySelector('[data-ap-stage]');
   const canvas = root.querySelector('[data-ap-ink]');
   const row = root.querySelector('[data-ap-row]');
+  const film = root.querySelector('[data-ap-film]');
   const ctx = canvas.getContext('2d');
   const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   const INK = token('--ink');
@@ -49,28 +55,25 @@ if (root) {
   function layout() {
     still = motion.reduced || motion.slow;
     root.classList.toggle('no-scrub', still);
-    if (still) {
-      root.style.height = '';
-      row.style.top = '';
-      return;
-    }
+    if (still) film.preload = 'none';
     const vw = stage.clientWidth;
     const vh = stage.clientHeight;
     const g = parseFloat(getComputedStyle(row).paddingLeft); // --g, the gutter and margin, resolved
     const cols = parseFloat(token('--cols'));
     const top = parseFloat(token('--header')); // under the header
     const gap = parseFloat(token('--s2'));
+    const air = parseFloat(token('--mark-air'));
+    const stretch = parseFloat(token('--mark-stretch'));
     const safe = parseFloat(getComputedStyle(stage).paddingBottom) || 0; // env(safe-area-inset-bottom)
-    const room = vh - top - gap - row.offsetHeight - g - safe; // what the mark may take, height
-    const phone = cols < 12;
+    const rest = vh - top - gap - row.offsetHeight - safe; // the mark and the air round it
     // The slot field on whole columns; the block reaches its plain edge past them.
     const col = (vw - 2 * g - (cols - 1) * g) / cols;
     const start = parseFloat(token('--mark-start'));
     const span = parseFloat(token('--mark-span'));
     const field = span * col + (span - 1) * g;
     const W = (field * UNITS.w) / FIELD;
-    const H = phone ? Math.min(room, (W * UNITS.h) / UNITS.w) : room;
-    const oy = top + Math.round((room - H) / 2); // centred with the row under it
+    const H = Math.min(rest - 2 * air, (stretch * W * UNITS.h) / UNITS.w);
+    const oy = top + Math.round((rest - H) / 2); // centred, with the row under it
     const fx = g + (start - 1) * (col + g); // the slots' columns, left edge
     const ox = fx - (EDGE * W) / UNITS.w;
     const dpr = Math.min(2, devicePixelRatio || 1);
@@ -78,7 +81,7 @@ if (root) {
     canvas.height = Math.round(vh * dpr);
     const phases = { door: 0.3 * vh, open: 0.7 * vh };
     const total = phases.door + phases.open;
-    root.style.height = `${vh + total}px`;
+    root.style.height = still ? '' : `${vh + total}px`;
     row.style.top = `${Math.round(oy + H + gap)}px`;
     L = { vw, vh, W, H, ox, oy, fx, field, dpr, phases, total };
     draw();
@@ -86,9 +89,9 @@ if (root) {
 
   function draw() {
     raf = 0;
-    if (!L || still) return;
+    if (!L) return;
     const { vw, vh, W, H, ox, oy, fx, field, dpr, phases: P } = L;
-    const y = Math.max(0, scrollY - root.offsetTop);
+    const y = still ? 0 : Math.max(0, scrollY - root.offsetTop);
     const door = scrub(clamp(y / P.door));
     const open = scrub(clamp((y - P.door) / P.open));
 
