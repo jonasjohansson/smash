@@ -29,7 +29,7 @@
 // the build's stamp (base.njk), and so do theirs.
 const build = new URL(import.meta.url).search;
 const [
-  { DEFAULTS, buildMark, markShape, paintMark, paintInfo, diveFocus, toDataUrl },
+  { DEFAULTS, buildMark, markShape, paintMark, paintInfo, diveFocus, toDataUrl, useOutline },
   { GLASS_DEFAULTS, createGlass },
   { createFeed, typeface, fitTitles },
 ] = await Promise.all([import(`./mark.js${build}`), import(`./glass.js${build}`), import(`./feed.js${build}`)]);
@@ -170,6 +170,33 @@ function stored(key) {
   }
 }
 paintGround(stored('smash-mark'));
+
+// The logo (logos.js): the site's own mark, or one of the newer ones from
+// /identity/, picked with ?logo=<key> and kept for the pages after, as the
+// palette is (?logo=original goes back); the H panel lists them too. A newer
+// one is drawn as letter outlines in the mark's place, and its S M goes in the
+// header.
+const logoKey = (() => {
+  const s = stored('smash-mark'), name = new URLSearchParams(location.search).get('logo');
+  if (name) {
+    if (name === 'original') delete s.logo; else s.logo = name;
+    try { localStorage.setItem('smash-mark', JSON.stringify(s)); } catch {}
+  }
+  return s.logo || 'original';
+})();
+const logos = logoKey === 'original' ? null : await import(`./logos.js${build}`).catch((e) => { console.error('[logo]', e); return null; });
+if (logos) {
+  useOutline(logos.outline(logoKey));
+  const sm = logos.symbolSVG(logoKey);
+  if (sm) document.querySelectorAll('.logo, .landed-logo').forEach((a) => { a.querySelector('svg')?.remove(); a.insertAdjacentHTML('afterbegin', sm); a.classList.add('is-newer'); });
+}
+// The Logo folder: picking one reloads the page with it.
+async function addLogo(pane) {
+  const { LOGOS } = logos ?? await import(`./logos.js${build}`);
+  const f = pane.addFolder({ title: 'Logo' });
+  f.addBinding({ logo: logoKey }, 'logo', { label: 'logo', options: Object.fromEntries(LOGOS.map(([k, name]) => [name, k])) })
+    .on('change', (e) => { const u = new URL(location.href); u.searchParams.set('logo', e.value); location.href = u.href; });
+}
 
 // The Palette folder, in both panels: a palette picked from the list sets the
 // three colours, and changing one of them makes them the viewer's own
@@ -761,6 +788,7 @@ if (stage && framesEl) {
     }
 
     relist = addPalette(pane, params, () => { paintGround(params); save(); });
+    addLogo(pane);
     const grain = pane.addFolder({ title: 'Grain' });
     grain.addBinding(params, 'grain', { label: 'grain (mark)', min: 0, max: 0.3, step: 0.005 }).on('change', () => paintGround(params));
     grain.addBinding(params, 'grainGround', { label: 'grain (ground)', min: 0, max: 0.3, step: 0.005 }).on('change', () => paintGround(params));
@@ -934,6 +962,7 @@ if (!stage) {
       tester?.then((t) => t?.reset());
     });
     relist = addPalette(pane, params, () => { paintGround(params); save(); });
+    addLogo(pane);
     const grain = pane.addFolder({ title: 'Grain' });
     grain.addBinding(params, 'grain', { label: 'grain (mark)', min: 0, max: 0.3, step: 0.005 });
     grain.addBinding(params, 'grainGround', { label: 'grain (ground)', min: 0, max: 0.3, step: 0.005 });

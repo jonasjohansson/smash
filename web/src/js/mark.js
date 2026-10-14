@@ -24,6 +24,13 @@
 
 export const UNITS = { w: 552, h: 472 };
 
+// Another mark in this one's place (logos.js, ?logo=): letter outlines
+// { w, h, d, gaps } in their own units, filled where the block was, scaled
+// alike both ways (never stretched) and centred where the block would be.
+// The rows of text keep to its width. null: the slotted block.
+let OUTLINE = null;
+export const useOutline = (o) => { OUTLINE = o; };
+
 export const DEFAULTS = {
   stroke: 20, // slot width
   corner: 10, // radius of the bends, on the slot's centre line
@@ -148,15 +155,17 @@ export function markShape(p, W, H) {
   const edge = p.info ? (p.stroke * inner) / UNITS.w / 2 : 0;
   let bw = Math.max(1, inner);
   let bh = Math.max(1, H - 2 * pad - 2 * (edge + row + gap));
-  if (p.fit === 'contain') {
-    const s = Math.min(bw / UNITS.w, bh / UNITS.h);
-    bw = UNITS.w * s;
-    bh = UNITS.h * s;
+  const o = OUTLINE;
+  const units = o ? { w: o.w, h: o.h } : UNITS;
+  if (o || p.fit === 'contain') {
+    const s = Math.min(bw / units.w, bh / units.h);
+    bw = units.w * s;
+    bh = units.h * s;
   }
   const bx = (W - bw) / 2;
   const by = (H - bh) / 2;
-  const sx = bw / UNITS.w;
-  const sy = bh / UNITS.h;
+  const sx = bw / units.w;
+  const sy = bh / units.h;
   // As wide as the block, just above and below it: one piece with the mark.
   const rows = p.info ? [
     { x: bx, y: by - gap - row, w: bw, h: row },
@@ -185,6 +194,7 @@ export function markShape(p, W, H) {
     return path;
   }).join('');
   const parts = [...groups.values()];
+  if (o) return { W, H, bx, by, bw, bh, sx, sy, stroke, d: '', dots: [], join, parts: [], rows, outline: o };
   return { W, H, bx, by, bw, bh, sx, sy, stroke, d, dots, join, parts, rows };
 }
 
@@ -194,7 +204,15 @@ export function markShape(p, W, H) {
  * Inverted: only the slots (and anything outside the block) show it.
  */
 export function buildMark(p, W, H) {
-  const { bx, by, bw, bh, stroke, dots, parts } = markShape(p, W, H);
+  const { bx, by, bw, bh, sx, stroke, dots, parts, outline } = markShape(p, W, H);
+  if (outline) {
+    const [ground, letters] = p.invert ? ['#fff', '#000'] : ['#000', '#fff'];
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`
+      + `<defs><mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}">`
+      + `<rect width="${W}" height="${H}" fill="${ground}"/>`
+      + `<path transform="translate(${bx} ${by}) scale(${sx})" fill="${letters}" fill-rule="evenodd" d="${outline.d}"/>`
+      + `</mask></defs><rect width="${W}" height="${H}" mask="url(#m)"/></svg>`;
+  }
   const caps = dots.map(([x, y, r = stroke / 2]) => `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${r.toFixed(2)}"/>`).join('');
 
   const ground = p.invert ? '#fff' : '#000';
@@ -214,6 +232,21 @@ export function buildMark(p, W, H) {
  */
 export function paintMark(ctx, shape, invert) {
   const { W, H, bx, by, bw, bh, stroke, dots, join } = shape;
+  if (shape.outline) {
+    shape.outline.path ??= new Path2D(shape.outline.d);
+    ctx.fillStyle = '#fff';
+    if (invert) {
+      ctx.fillRect(-W, -H, 3 * W, 3 * H);
+      ctx.globalCompositeOperation = 'destination-out';
+    }
+    ctx.save();
+    ctx.translate(bx, by);
+    ctx.scale(shape.sx, shape.sy);
+    ctx.fill(shape.outline.path, 'evenodd');
+    ctx.restore();
+    ctx.globalCompositeOperation = 'source-over';
+    return;
+  }
   shape.path ??= new Path2D(shape.d);
   // Slots of more than one width (letters with their own measures) are stroked group by group.
   const parts = shape.parts?.length > 1 ? shape.parts : null;
@@ -354,6 +387,17 @@ export function paintInfo(ctx, shape, texts, invert, least = 0.8, icons = []) {
  */
 export function diveFocus(p, shape) {
   const { W, H, bx, by, bh, sx, sy } = shape;
+  if (shape.outline) {
+    // Into the widest stem nearest the gap between the M and the A, where the
+    // picture shows all the way up; inverted, through that gap itself.
+    const { gaps, stems, h } = shape.outline, mid = gaps[1] ? (gaps[1][0] + gaps[1][1]) / 2 : shape.outline.w / 2;
+    const near = ([a, b]) => Math.abs((a + b) / 2 - mid);
+    const best = stems.reduce((q, r) => (!q || r[1] - r[0] > q[1] - q[0] + 1 || (r[1] - r[0] > q[1] - q[0] - 1 && near(r) < near(q)) ? r : q), null);
+    const [a, b] = p.invert || !best ? gaps[1] ?? [0, 0] : best;
+    const half = (b - a) / 2;
+    const depth = Math.max(W / 2 / (Math.max(0.5, half) * sx), H / bh) * 1.03;
+    return { x: bx + ((a + b) / 2) * sx, y: by + (h / 2) * sy, depth: Math.min(400, depth), open: half > 0 && depth <= 400 };
+  }
   const x = p.invert ? column(p, 4) : (column(p, 4) + column(p, 5)) / 2;
   const gap = p.invert ? p.stroke / 2 : (PITCH * p.columns - p.stroke) / 2;
   // The gap runs the block's full height; above and below it is ground.
