@@ -259,19 +259,7 @@ const framesEl = document.getElementById('frames');
 const typing = (e) => e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement;
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
 const lerp = (a, b, t) => a + (b - a) * t;
-const scrub = (t) => cubic(0.6, 0, 0.2, 1, t); // the aperture's ease, as /next/'s
-/** cubic-bezier(x1, y1, x2, y2) at t, solved for x by Newton's method. */
-function cubic(x1, y1, x2, y2, t) {
-  const bx = (u) => 3 * x1 * u * (1 - u) ** 2 + 3 * x2 * u * u * (1 - u) + u ** 3;
-  const by = (u) => 3 * y1 * u * (1 - u) ** 2 + 3 * y2 * u * u * (1 - u) + u ** 3;
-  let u = t;
-  for (let i = 0; i < 8; i++) {
-    const d = (bx(u + 1e-4) - bx(u - 1e-4)) / 2e-4;
-    if (!d) break;
-    u = clamp01(u - (bx(u) - t) / d);
-  }
-  return by(u);
-}
+const ease = (t) => 0.5 - Math.cos(Math.PI * t) / 2; // the aperture's: even, soft at both ends
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 
 if (stage && framesEl) {
@@ -361,17 +349,18 @@ if (stage && framesEl) {
   // the grid (3 to 10; 4 to 9 on a wide, short screen; all on a phone), between
   // the rows of text, at most twice as tall as its own proportions; the film
   // shows only in its slots, and only across their columns. Scrolling, a
-  // screen in all:
-  //   1. door (the first 30%): every closed slot end runs out through the
+  // screen and a half in all, two things at once:
+  //   1. door (the first quarter): every closed slot end runs out through the
   //      edge, and the rows of text go;
-  //   2. open: the block grows to the screen's edges as its slots widen until
-  //      they meet, and nothing of the ground is left.
+  //   2. open (all the way, from the first step: Jonas wants to see the
+  //      stems thin as it zooms): the block grows to the screen's edges as
+  //      its slots widen until they meet, and nothing of the ground is left.
   // Not with a newer logo (?logo=) or the glass: those dive as before.
   const PITCH = 52; // slot centre to slot centre, of the block's 552 units
   const REST = PITCH / 2; // the slots' width at rest: as wide as the stems
   const MET = PITCH + 2; // and when they meet
   const EDGE = 42 - REST / 2; // the block's plain edge, past its first and last slot
-  const APERTURE_LENGTH = 1; // screens of scrolling
+  const APERTURE_LENGTH = 1.5; // screens of scrolling
   const aperture = () => dives && !glass && !logos && params.aperture;
   let ap = null; // the mark's place at rest
   const probe = document.createElement('div');
@@ -514,8 +503,8 @@ if (stage && framesEl) {
       // Reduced motion: the mark at rest, dissolving.
       const still = slow ? 0 : 1;
       Object.assign(view, { s: 1, x: 0, y: 0, image: 1, fade: slow ? e : 0 });
-      view.door = still * scrub(clamp01(view.t / 0.3));
-      view.open = still * scrub(clamp01((view.t - 0.3) / 0.7));
+      view.door = still * ease(clamp01(view.t / 0.25));
+      view.open = still * ease(view.t);
       return;
     }
     if (slow) { Object.assign(view, { s: 1, x: 0, y: 0, image: 1, fade: e }); return; }
