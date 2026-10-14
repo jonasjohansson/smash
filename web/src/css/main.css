@@ -14,16 +14,17 @@
 @font-face { font-family: "Season Mix"; font-weight: 400; font-style: italic; font-display: swap; src: url(/fonts/SeasonMix-RegularItalic.woff) format("woff"); }
 
 :root {
-  /* A dark, warm brown with light text, in light and dark mode alike (the
-     H panel can set another); SMASH yellow round the mark on the landing. */
+  /* A dark, cool neutral gray with light text, in light and dark mode alike
+     (the H panel can set another, ?palette= too); lavender round the mark on
+     the landing. The gray trial: before, a warm brown and SMASH yellow. */
   color-scheme: dark;
-  --bg: #1f1915;
-  --ink: #f3efe8;
-  --muted: rgb(243 239 232 / 0.55);
-  --line: rgb(243 239 232 / 0.14);
-  --ground: #1f1915; /* the projects' ground */
-  --tile: #2c241e; /* a picture's place while it loads */
-  --accent: #f7be04; /* SMASH yellow */
+  --bg: #1e1f21;
+  --ink: #e6e8ea;
+  --muted: rgb(230 232 234 / 0.55);
+  --line: rgb(230 232 234 / 0.14);
+  --ground: #1e1f21; /* the projects' ground */
+  --tile: #2a2c2f; /* a picture's place while it loads */
+  --accent: #a68bfa; /* lavender */
   --on-accent: #111; /* type on the accent */
   --hero-pad: var(--margin); /* round a hero, as round the mark on the landing */
   --radius: 6px; /* a card's corners: the offerings, the projects' thumbnails */
@@ -271,7 +272,7 @@ body::after {
    on gentilhomme.com: SMASH yellow, an invitation, the address large. */
 /* The way in, on the page's own ground: the invitation, the address and the
    links in SMASH yellow, the first two in the chunky face. */
-.cta { position: relative; z-index: 1; background: var(--accent); color: var(--on-accent); padding-block: clamp(40px, 5vw, 80px); } /* SMASH yellow, black on it */
+.cta { position: relative; z-index: 1; background: var(--accent); color: var(--on-accent); padding-block: clamp(40px, 5vw, 80px); } /* the accent, black on it */
 .home:not(.can-dive) .cta { display: none; }
 /* The typeface (typeface.njk): its name set in itself, its files, and the
    font to try, its five axes on sliders. */
@@ -333,7 +334,7 @@ html:has(.home.can-dive)::-webkit-scrollbar { display: none; }
 .info-mail:focus-visible { outline: 1px solid #fff; outline-offset: 4px; }
 .home.is-diving .info-mail { visibility: hidden; }
 /* S: black round the mark instead of yellow. (A, invert, is drawn into the mask.) */
-.home.light:not(.is-reading, .is-through) { background: var(--accent); } /* round the mark the landing is SMASH yellow (S: black); the page itself is brown */
+.home.light:not(.is-reading, .is-through) { background: var(--accent); } /* round the mark the landing is the accent (S: black); the page itself is gray */
 /* H: the tweak panel, above the full-screen link. */
 /* The tweak panel (H) stays put while the page scrolls, and scrolls itself if taller than the screen. */
 .tweak { position: fixed !important; z-index: 100; top: 12px !important; right: 12px !important; width: 280px !important; max-height: calc(100svh - 24px); overflow-y: auto; }

@@ -67,11 +67,24 @@ const DIVE_DEFAULTS = {
 // The page's colours, from the tweak panel (H): a palette of a ground (the
 // page's background), the type on it and an accent, on every page. SMASH's
 // own is main.css's; the others are to try. D puts the type's colour in the
-// accent's place; C steps through the palettes, those kept in the panel too.
-// And the film grain over it all, stronger on the ground than over the mark.
-const SMASH_COLOURS = { ground: '#1f1915', ink: '#f3efe8', accent: '#f7be04' };
+// accent's place; C steps through the palettes, those kept in the panel too,
+// and ?palette=<name> in the address picks one and keeps it (?palette=smash
+// goes back). And the film grain over it all, stronger on the ground than over
+// the mark.
+// The gray trial (2026-10-14, after Jonas's reference of the S H blocks): a
+// cool neutral gray in the brown's place, lavender in the yellow's, with the
+// reference's coral and lime, its blue-gray, and its light concrete ground to
+// try; the brown and the yellow are kept as Brown.
+const SMASH_COLOURS = { ground: '#1e1f21', ink: '#e6e8ea', accent: '#a68bfa' };
 const PALETTES = {
-  smash: { name: 'SMASH', ...SMASH_COLOURS },
+  smash: { name: 'Gray · Lavender', ...SMASH_COLOURS },
+  'gray-coral': { name: 'Gray · Coral', ground: '#1e1f21', ink: '#e6e8ea', accent: '#ef5a43' },
+  'gray-lime': { name: 'Gray · Lime', ground: '#1e1f21', ink: '#e6e8ea', accent: '#a8f46a' },
+  'gray-steel': { name: 'Gray · Blue-gray type', ground: '#1e1f21', ink: '#b5bec6', accent: '#a68bfa' },
+  'concrete-lavender': { name: 'Concrete · Lavender', ground: '#d9d9d9', ink: '#1c1c1a', accent: '#a68bfa' },
+  'concrete-coral': { name: 'Concrete · Coral', ground: '#d9d9d9', ink: '#1c1c1a', accent: '#ef5a43' },
+  'concrete-lime': { name: 'Concrete · Lime', ground: '#d9d9d9', ink: '#1c1c1a', accent: '#a8f46a' },
+  brown: { name: 'Brown · Yellow (before)', ground: '#1f1915', ink: '#f3efe8', accent: '#f7be04' },
   night: { name: 'Night', ground: '#0e0e0e', ink: '#f3efe8', accent: '#f7be04' },
   signal: { name: 'Signal', ground: '#141211', ink: '#f3efe8', accent: '#ff4d2e' },
   acid: { name: 'Acid', ground: '#1b1f17', ink: '#ece9dc', accent: '#c8f000' },
@@ -85,10 +98,12 @@ const GROUND_DEFAULTS = { palette: 'smash', ...SMASH_COLOURS, kept: [], whiteAcc
 
 const isHex = (c) => /^#[0-9a-f]{6}$/i.test(c ?? '');
 const rgb = (c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16)).join(' ');
-const isLight = (c) => {
-  const [r, g, b] = rgb(c).split(' ').map((v) => v / 255);
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.5;
-};
+const lum = (c) => rgb(c).split(' ').map((v) => v / 255)
+  .map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
+  .reduce((sum, v, i) => sum + v * [0.2126, 0.7152, 0.0722][i], 0);
+// Light enough that black type reads better on it than white (WCAG contrast):
+// so black on the lavender and the coral, as in the reference.
+const isLight = (c) => (lum(c) + 0.05) / 0.05 >= 1.05 / (lum(c) + 0.05);
 
 // The palettes to pick from: the ones above, then those kept in the panel.
 const paletteList = (p) => [
@@ -143,6 +158,16 @@ function stored(key) {
     }
     return s;
   } catch { return {}; }
+}
+// ?palette=<name>: that palette, kept for the pages after (the landing's store).
+{
+  const name = new URLSearchParams(location.search).get('palette');
+  if (name && PALETTES[name]) {
+    const s = stored('smash-mark');
+    if (name === 'smash') for (const k of ['palette', 'ground', 'ink', 'accent']) delete s[k];
+    else Object.assign(s, { palette: name, ground: PALETTES[name].ground, ink: PALETTES[name].ink, accent: PALETTES[name].accent });
+    try { localStorage.setItem('smash-mark', JSON.stringify(s)); } catch {}
+  }
 }
 paintGround(stored('smash-mark'));
 
