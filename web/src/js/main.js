@@ -345,9 +345,9 @@ if (stage && framesEl) {
   // the mask, how it changes when zooming in and what it looks like"), in the
   // dive's place. The original mark (mark.js's own measures, not the site's
   // thinner slots), its slots as wide as the stems between them (Jonas: "lets
-  // have stems and gaps be same width"), stands on the page's ground, its slots on whole columns of
-  // the grid (3 to 10; 4 to 9 on a wide, short screen; all on a phone), between
-  // the rows of text, at most twice as tall as its own proportions; the film
+  // have stems and gaps be same width"), stands on the page's ground, its slots across the full width
+  // of the grid, margin to margin as the rows of text are (Jonas: "use the full
+  // width"), between the rows, at most twice as tall as its own proportions; the film
   // shows only in its slots, and only across their columns. Scrolling, a
   // screen and a half in all, two things at once:
   //   1. door (the first quarter): every closed slot end runs out through the
@@ -368,7 +368,7 @@ if (stage && framesEl) {
   const px = (v) => { probe.style.width = v; document.body.append(probe); const w = probe.getBoundingClientRect().width; probe.remove(); return w; };
   function placeAperture(W, H) {
     const m = px('var(--margin)'), g = px('var(--gutter)'), cols = 12;
-    const [start, span] = W <= 720 ? [1, cols] : W / H > 2 ? [4, 6] : [3, 8];
+    const [start, span] = [1, cols];
     const col = (W - 2 * m - (cols - 1) * g) / cols;
     const field = span * col + (span - 1) * g;
     const w = (field * UNITS.w) / (UNITS.w - 2 * EDGE);
