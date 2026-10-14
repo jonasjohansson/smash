@@ -5,14 +5,11 @@ preloadImage: /next/assets/img/reel-poster.webp
 scripts:
   - aperture.js
 ---
-{# NOTE for anyone extending this: async shortcodes ({% image %}, {% imageSrc %})
-   render nothing inside {% include %} or macros, so media markup is written
-   inline in loops, as below. #}
+{# Async shortcodes ({% image %}, {% imageSrc %}) render nothing inside
+   {% include %} or macros, so media markup is written inline in loops. #}
 
-{#- 1. Aperture. The original mark, whole, on the first screen; the showreel
-    plays only inside its slots, light through slits in a dark room. Scrolled,
-    the doors open through the edges, then the slots widen into the whole film
-    (aperture.js). -#}
+{#- The opening: the mark, whole, with the showreel playing through its
+    slots. Scrolled, the slots open into the film (aperture.js). -#}
 <section class="aperture" aria-label="Showreel" data-aperture>
   <div class="ap-stage" data-ap-stage>
     <video class="ap-film" muted loop playsinline preload="auto" poster="/next/assets/img/reel-poster.webp" aria-hidden="true" data-auto data-ap-film>
@@ -24,61 +21,27 @@ scripts:
       <img class="ap-poster" src="/next/assets/img/reel-poster.webp" alt="" fetchpriority="high">
       {% set markId = 'm-aperture' %}{% set markLabel = '' %}{% include "next/mark.njk" %}
     </div>
-    <div class="ap-row grid baseline t-meta" data-ap-row>
-      <p class="x-1-3 ap-name">Showreel 2026</p>
-      <p class="x-4-8 dim ap-what">Interactive installations, projection mapping, immersive environments</p>
-      <p class="x-9-11 right ap-watch"><button type="button" data-reel-open>Watch with sound</button><span class="dur tnum">0:48</span></p>
+    <div class="ap-row grid" data-ap-row>
+      <p class="c-all"><button type="button" data-reel-open>Watch with sound</button></p>
     </div>
   </div>
 </section>
 
-{#- 2. Statement: one line, on its own. -#}
-<section class="section statement grid baseline" id="statement" aria-labelledby="statement-title">
-  <p class="x-1 label t-meta">Studio</p>
-  <h1 class="x-2-11 t-h1" id="statement-title">We turn facades, domes and city squares into places people step into, play with and remember.</h1>
+<section class="statement grid" aria-labelledby="statement-title">
+  <h1 class="c-1-9 t-large" id="statement-title">We turn facades, domes and city squares into places people step into, play with and remember.</h1>
 </section>
 
-{#- 3. Selected work: one plate per project, newest first. Slots join (a
-    project's pictures a gutter apart); bars separate (projects far apart).
-    Every plate reads the same way: number, title, offering and year; the
-    picture; then its sentence and its place. -#}
-<section class="section work" id="work" aria-labelledby="work-title">
-  <div class="grid section-head t-meta">
-    <h2 class="x-1-5 label" id="work-title">Selected work</h2>
-    <p class="x-9-11 right"><a class="link" href="/next/work/">All work</a></p>
-  </div>
-
-  <div class="plates">
-  {%- for w in work %}
-    {%- set kind = w.plate.kind %}
-    {%- set n = w.plate.items.length %}
-    {%- set side = kind == 'right' or kind == 'left' %}
-    {%- set firstPlate = loop.first %}
-    <a class="plate plate-{{ kind }}" href="{{ w.url }}" style="--project: {{ w.color or '#5d6268' }}" aria-labelledby="pt-{{ w.slug }}">
-      {%- if not side %}
-      <div class="grid plate-index">
-        <span class="x-1 no t-meta tnum">{{ w.number }}</span>
-        <h3 class="x-2-9 t-h1 plate-title" id="pt-{{ w.slug }}">{{ w.title }}</h3>
-        <p class="x-10-11 right plate-facts t-meta">{{ w.offering }}, <span class="tnum">{{ w.year }}</span></p>
-      </div>
-      {%- endif %}
-
-      {%- if kind == 'room' %}<div class="room">
-      {%- elif kind == 'plate' %}<div class="grid"><div class="x-all">
-      {%- elif kind == 'row' %}<div class="grid"><div class="x-all row row-{{ n }}">
-      {%- else %}<div class="grid side side-{{ kind }}">
-        <div class="{{ 'x-1-4' if kind == 'right' else 'x-8-11' }} side-text" style="grid-row: 1">
-          <span class="no t-meta tnum">{{ w.number }}</span>
-          <h3 class="t-h1 plate-title" id="pt-{{ w.slug }}">{{ w.title }}</h3>
-          <p class="side-meta t-meta"><span class="dim">{{ w.offering }}, <span class="tnum">{{ w.year }}</span></span><br>{{ w.place }}</p>
-          <p class="side-lead t-body">{{ w.lead }}</p>
-        </div>
-        <div class="{{ 'x-5-11' if kind == 'right' else 'x-1-7' }}" style="grid-row: 1">
-      {%- endif %}
-
+{#- The work: each project its pictures, inside the margins, and its title
+    under them at column 1. Newest first. -#}
+<section class="plates" aria-label="Work">
+{%- for w in work %}
+  {%- set kind = w.plate.kind %}
+  <a class="plate" href="{{ w.url }}" aria-labelledby="pt-{{ w.slug }}">
+    <div class="grid">
+      <div class="c-all{% if kind == 'row' %} row{% if w.plate.tall %} row-tall{% endif %} row-{{ w.plate.items.length }}{% else %} plate-one{% endif %}">
       {%- for m in w.plate.items %}
-        {%- set sz = '100vw' if kind == 'room' else ('(max-width: 719px) 100vw, 62vw' if side else ('(max-width: 719px) 100vw, ' + ((m.share * 94) | round) + 'vw' if kind == 'row' else '(max-width: 719px) 100vw, 94vw')) %}
-        <div class="media{% if firstPlate and loop.first %} reveal{% endif %}{% if kind == 'plate' %} bleed-phone{% endif %}" style="--ar: {{ m.ar }}{% if w.plate.focus %}; --focus: {{ w.plate.focus }}{% endif %}{% if loop.first %}; view-transition-name: room-{{ w.slug }}{% endif %}">
+        {%- set sz = '(max-width: 719px) 100vw, ' + ((m.span * 94 / 12) | round) + 'vw' %}
+        <div class="media{% if m.lead %} lead{% endif %}" style="--ar: {{ m.ar }}; --span: {{ m.span }}{% if w.plate.focus %}; --focus: {{ w.plate.focus }}{% endif %}">
           {%- if m.type == 'video' %}
           <video muted loop playsinline preload="none" poster="{% imageSrc m.poster, 2000, 'webp' %}" aria-label="{{ m.alt }}" data-auto><source src="{{ m.src }}" type="video/{{ 'webm' if m.src.endsWith('.webm') else 'mp4' }}"></video>
           {%- else %}
@@ -86,28 +49,9 @@ scripts:
           {%- endif %}
         </div>
       {%- endfor %}
-
-      {%- if kind == 'room' %}</div>
-      {%- elif side %}</div></div>
-      {%- else %}</div></div>
-      {%- endif %}
-
-      {%- if not side %}
-      <div class="grid baseline plate-cap">
-        <p class="x-2-7 t-body lead">{{ w.lead }}</p>
-        <p class="x-9-11 right t-meta place">{{ w.place }}</p>
       </div>
-      {%- endif %}
-    </a>
-  {%- endfor %}
-  </div>
-</section>
-
-{#- 4. The studio, in a paragraph, and where to go next. -#}
-<section class="section closing grid baseline" aria-labelledby="closing-title">
-  <h2 class="x-1 label t-meta" id="closing-title">About</h2>
-  <div class="x-4-10">
-    <p class="t-lead">SMASH is an experience design studio in Stockholm. We make interactive installations, projection mapping and immersive environments, and we take each one from the first idea to the last night of the run.</p>
-    <p class="links t-body"><a href="/next/studio/">The studio</a><a href="/next/work/">All work</a></p>
-  </div>
+      <h2 class="c-all t-large caption" id="pt-{{ w.slug }}">{{ w.title }}</h2>
+    </div>
+  </a>
+{%- endfor %}
 </section>

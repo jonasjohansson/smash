@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark">
+  {#- The one copy of a colour outside next.css: a meta tag cannot read --ink. #}
   <meta name="theme-color" content="#0b0b0c">
   <title>{% if title %}{{ title }} · {% endif %}SMASH</title>
   {% set about = description or 'SMASH is an experience design studio in Stockholm. We make interactive installations, projection mapping and immersive environments, from the first idea to the last night of the run.' %}
@@ -21,52 +22,27 @@
   <link rel="preload" href="/next/assets/fonts/nhg-text/NHaasGroteskTXPro-55Rg.woff2" as="font" type="font/woff2" crossorigin>
   {% if preloadImage %}<link rel="preload" href="{{ preloadImage }}" as="image" fetchpriority="high">{% endif %}
   <link rel="stylesheet" href="/next/assets/next.css?v={{ build }}">
-  {#- work/project pages: extra stylesheets from front matter `styles: [file.css]` (in /next/assets/) -#}
   {% for c in styles %}<link rel="stylesheet" href="/next/assets/{{ c }}?v={{ build }}">{% endfor %}
   <script type="module" src="/next/assets/js/site.js?v={{ build }}"></script>
   {% for s in scripts %}<script type="module" src="/next/assets/js/{{ s }}?v={{ build }}"></script>{% endfor %}
 </head>
-<body class="{{ bodyClass }}{% if ground == 'paper' %} on-paper{% endif %}"{% if ground == 'paper' %} data-ground="paper"{% endif %}>
+<body{% if bodyClass %} class="{{ bodyClass }}"{% endif %}>
   <a class="skip" href="#content">Skip to content</a>
 
-  <header class="site-header grid t-meta" data-header>
+  <header class="site-header grid">
     {% set markId = 'm-head' %}{% set markLabel = 'SMASH, home' %}{% set markClass = '' %}
-    <a class="home-link" href="/next/" aria-label="SMASH, home">{% include "next/mark.njk" %}</a>
-    <p class="tagline" data-tagline><span data-tagline-text>Experience design studio, Stockholm</span><span class="running tnum" data-running></span></p>
+    <a class="home-link" href="/next/"{% if page.url == '/next/' %} aria-current="page"{% endif %}>{% include "next/mark.njk" %}</a>
     <nav class="nav" aria-label="Main">
       <a href="/next/work/"{% if section == 'work' %} aria-current="page"{% endif %}>Work</a>
       <a href="/next/studio/"{% if section == 'studio' %} aria-current="page"{% endif %}>Studio</a>
       <a href="#contact">Contact</a>
     </nav>
-    <button class="menu-button" type="button" aria-expanded="false" aria-controls="sheet" data-menu>Menu</button>
   </header>
-
-  <div class="sheet" id="sheet" hidden data-sheet>
-    <div class="sheet-top t-meta">
-      {% set markId = 'm-sheet' %}{% set markLabel = 'SMASH, home' %}
-      <a href="/next/" aria-label="SMASH, home">{% include "next/mark.njk" %}</a>
-      <button class="sheet-close" type="button" data-menu-close>Close</button>
-    </div>
-    <nav aria-label="Main, on a phone">
-      <a class="t-h1" href="/next/work/">Work</a>
-      <a class="t-h1" href="/next/studio/">Studio</a>
-      <a class="t-h1" href="#contact" data-menu-close>Contact</a>
-    </nav>
-    <div class="sheet-foot">
-      <a class="t-body" href="mailto:hello@smash.studio">hello@smash.studio</a>
-      <p class="t-meta dim">Stockholm <span class="tnum" data-clock>--:--</span></p>
-    </div>
-  </div>
 
   <main id="content" tabindex="-1">
 {{ content | safe }}
   </main>
 
-  {% if not noContact %}{% include "next/contact.njk" %}{% endif %}
-
-  <div class="grid-overlay grid" hidden aria-hidden="true" data-grid-overlay>
-    {% for i in range(0, 11) %}<span></span>{% endfor %}
-    <p class="measures t-meta">Bar 32 · slot 20 · pitch 52 · 11 columns, 10 gutters, 8 : 5</p>
-  </div>
+  {% include "next/contact.njk" %}
 </body>
 </html>

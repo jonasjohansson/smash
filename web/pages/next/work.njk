@@ -6,74 +6,23 @@ bodyClass: work-page
 description: "Facades, domes, stages and city squares: the work of SMASH, an experience design studio in Stockholm."
 styles:
   - work.css
-scripts:
-  - work.js
 ---
-{#- The work, two ways. Images (the default): the rooms themselves, two to a
-    row a gutter apart, one left over standing alone as a hall at the head.
-    List: a ruled list, one row a project; hover a row and its room lights
-    the whole screen behind the list. Filter by offering (?in=slug).
+{#- All the work: each project's picture and its title, two to a row; with an
+    odd number, the first stands alone across the page.
     Media markup is inline: {% image %} renders nothing in includes. -#}
-<section class="page-top grid work-top" aria-labelledby="work-title">
-  <h1 class="t-poster" id="work-title">Work</h1>
-  <div class="work-tools">
-    <nav class="filters t-body" aria-label="Filter by offering" data-filters>
-      <a href="/next/work/" data-in="" aria-current="true">All</a>
-      {%- for c in categories %}{% if counts[c.slug] %}
-      <a href="/next/work/?in={{ c.slug }}" data-in="{{ c.slug }}">{{ c.name }}</a>
-      {%- endif %}{% endfor %}
-    </nav>
-    <div class="views t-meta" role="group" aria-label="View">
-      <button type="button" aria-pressed="true" data-view="elevation">Images</button><span class="sep" aria-hidden="true">&thinsp;/&thinsp;</span><button type="button" aria-pressed="false" data-view="schedule">List</button>
-    </div>
-  </div>
-</section>
-
-<div class="work-body grid" data-work>
-  <p class="visually-hidden" aria-live="polite" data-work-status></p>
-
-  {#- Images -#}
-  <ol class="elevation" data-elevation>
-    {%- for w in work %}{% set s = stories[w.slug] %}{% set h = s.cover %}
-    {%- set hall = loop.first and (work.length % 2 == 1) %}{% set esz = '(max-width: 719px) 100vw, 94vw' if hall else '(max-width: 719px) 100vw, 47vw' %}
-    <li data-item data-in="{{ w.category }}"{% if hall %} class="hall"{% endif %}>
-      <a class="ecard" href="{{ w.url }}" style="--project: {{ s.color }}">
-        <div class="frame"><div class="media" style="--ar: {{ h.ar }}; view-transition-name: room-{{ w.slug }}">
-          {% image h.still, h.alt, esz, "eager" if loop.index <= 3 else "lazy" %}
-        </div></div>
-        <div class="ecap">
-          <p class="t-body"><span class="no t-meta tnum">{{ w.number }}</span><span class="ttl">{{ w.title }}</span></p>
-          <p class="meta t-meta">{{ s.place }}, <span class="tnum">{{ w.year }}</span></p>
-        </div>
-      </a>
-    </li>
-    {%- endfor %}
-  </ol>
-
-  {#- List -#}
-  <ol class="schedule" hidden data-schedule>
-    {%- for w in work %}{% set s = stories[w.slug] %}{% set h = s.cover %}
-    <li data-item data-in="{{ w.category }}">
-      <a class="srow" href="{{ w.url }}" style="--project: {{ s.color }}" data-slug="{{ w.slug }}" data-lead="{{ w.lead }}" data-client="{% for f in s.facts %}{% if f[0] == 'Client' %}For {{ f[1] }}{% endif %}{% endfor %}">
-        <span class="no t-meta tnum">{{ w.number }}</span>
-        <span class="thumb" aria-hidden="true">{% if h %}{% image h.still, "", "56px", "lazy" %}{% endif %}</span>
-        <span class="ttl t-lead">{{ w.title }}</span>
-        <span class="plc t-body">{{ s.place.split(',')[0] }}</span>
-        <span class="off t-body">{{ w.offering }}</span>
-        <span class="yr t-body tnum">{{ w.year }}</span>
-      </a>
-    </li>
-    {%- endfor %}
-  </ol>
-</div>
-
-{#- The lit room behind the list, and its caption: lead and client. -#}
-<div class="lit" aria-hidden="true" data-lit>
+<h1 class="visually-hidden">Work</h1>
+<ol class="index grid page-start">
   {%- for w in work %}{% set h = stories[w.slug].cover %}
-  <div class="media" data-room="{{ w.slug }}" style="--ar: {{ h.ar }}">{% image h.still, "", "100vw", "lazy" %}</div>
+  {%- set hall = loop.first and (work.length % 2 == 1) %}
+  {%- set sz = '(max-width: 719px) 100vw, 94vw' if hall else '(max-width: 719px) 100vw, 47vw' %}
+  {%- set ld = 'eager' if loop.index <= 3 else 'lazy' %}
+  <li class="{{ 'hall' if hall else 'pair' }}">
+    <a class="card" href="{{ w.url }}">
+      <div class="media" style="--ar: {{ h.ar }}">
+        {% image h.still, h.alt, sz, ld %}
+      </div>
+      <h2 class="caption t-large">{{ w.title }}</h2>
+    </a>
+  </li>
   {%- endfor %}
-</div>
-<div class="lit-cap grid" aria-hidden="true" data-lit-cap>
-  <p class="x-1-6 lead t-body" data-lit-lead></p>
-  <p class="x-8-11 place t-meta" data-lit-place></p>
-</div>
+</ol>

@@ -1,7 +1,7 @@
 // Video discipline: of the films marked data-auto (muted, looped), only the
 // most visible one plays, and only while it is at least half in view, the tab
 // is visible and motion allows it. Films one screen away load their metadata;
-// the rest load nothing. register(video) adds films made later.
+// the rest load nothing. A film the visitor paused (data-held) stays paused.
 
 import { motion } from './motion.js';
 
@@ -12,7 +12,7 @@ function pick() {
   let best = null;
   let ratio = 0.5;
   if (motion.auto && !document.hidden) {
-    for (const [v, r] of seen) if (r >= ratio && v.isConnected && !v.dataset.held) { best = v; ratio = r; } // held: paused by the visitor (project.js)
+    for (const [v, r] of seen) if (r >= ratio && v.isConnected && !v.dataset.held) { best = v; ratio = r; } // held: paused by the visitor (site.js)
   }
   if (best === current) { if (best && best.paused) best.play().catch(() => {}); return; }
   if (current && !current.paused) current.pause();
@@ -36,7 +36,7 @@ const near = new IntersectionObserver((entries) => {
   }
 }, { rootMargin: '100% 0px' });
 
-export function register(v) {
+function register(v) {
   v.muted = true;
   v.removeAttribute('autoplay');
   seen.set(v, 0);

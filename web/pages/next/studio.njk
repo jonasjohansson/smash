@@ -1,164 +1,36 @@
 ---
 permalink: /next/studio/
 title: Studio
-description: SMASH is an experience design studio in Stockholm. Who we are, what we make, how we work, and the people you will work with.
+description: The people of SMASH, an experience design studio in Stockholm.
 section: studio
-ground: paper
 bodyClass: studio-page
 styles:
   - studio.css
-scripts:
-  - studio.js
 ---
-{#- The studio: the day page. Everything else on the site is a dark room; here
-    the lights are on, on paper, where the people are. It ends at night, in an
-    ink contact room (studio.css, studio.js).
+{#- The studio: who SMASH is, the work being made, and the people.
     Media markup is written inline: {% image %} renders nothing inside an
     include or a macro. -#}
-{#- The work being made, found by project and file in the projects' data:
-    the project's own alt text, and a caption written for this page. -#}
-{%- set roomFig = ['dome-conductor', 'development.jpg', 'in development. The dome’s projection is set up on one screen, while the orchestra already plays on the dome behind.'] %}
-{%- set pairFigs = [
-  ['vi-kommer-i-fred', '09-wide.jpg', 'The invasion scene running live in Resolume, on the square by the water.'],
-  ['dome-conductor', 'fisheye-camera.jpg', 'The fisheye camera that filmed the orchestra for the dome’s 180° projection.']
-] %}
-{#- The offerings in this site's own words, by slug: the shared categories/*.md
-    stay as the live site has them. Any other slug falls back to its intro. -#}
-{%- set offerText = {
-  'experience-design': ['Experiences for museums and exhibitions that visitors take part in rather than look at. At Tekniska museet, visitors step into the Wisdome and conduct the Swedish Radio Symphony Orchestra with their hands: move faster and the orchestra speeds up, pause and it waits.'],
-  'digital-interactive': ['Installations that run live: cameras, sensors and real-time software that answer whoever steps up. In Kungsträdgården, a screen dropped passers-by into an alien invasion of Stockholm, day and night for two weeks.'],
-  'originals': ['We start from the building. A town hall, a synagogue, a five-storey facade, a stage: each piece is drawn to its surface’s own lines, so the architecture becomes the story rather than a screen for it.', 'Then we open it to the people in front of it. They paint a facade in colour, chase celebrities through its windows, or watch four hundred years of a town’s history pass over its walls.']
-} %}
-{%- set steps = [
-  ['Idea', 'We start from the building, and from the people who will stand in front of it.'],
-  ['Design', 'Each piece is drawn to its surface’s own lines, so the architecture becomes the story.'],
-  ['Build', 'Cameras, sensors, projectors and real-time software, tested on site, at full scale.'],
-  ['Run', 'We stay to the last night, and design for the crew who switches it on at seven in the morning.']
-] %}
+{%- set room = ['dome-conductor', 'development.jpg'] %}
 
-{#- 1. The page's name, then straight into a room where the work is being made. -#}
-<header class="page-top st-top" aria-labelledby="studio-title">
-  <div class="grid">
-    <h1 class="x-all t-poster" id="studio-title">Studio</h1>
-  </div>
-</header>
+<section class="grid page-start" aria-labelledby="studio-title">
+  <h1 class="c-1-9 t-large" id="studio-title">A studio of three, working with the makers each piece needs.</h1>
+</section>
 
-{#- 2. The work being made: a ROOM, as evidence of delivery. Eager: it is on
-    the first screen. -#}
-{%- for p in projects %}{% if p.slug == roomFig[0] %}{% for b in p.blocks %}{% if b.type == 'image' and b.src.endsWith('/' + roomFig[1]) %}
-<figure class="st-room" style="--project: {{ p.color or '#5d6268' }}">
-  <div class="room" data-ink>
-    <div class="media" style="--ar: {{ b.ar }}">{% image b.src, b.alt, '100vw', 'eager' %}</div>
-  </div>
-  <figcaption class="grid fig-cap t-meta">
-    <p class="x-1-5"><span class="fig-no tnum">Fig. 1</span> <a href="/next/work/{{ p.slug }}/">{{ p.title }}</a>, {{ roomFig[2] }}</p>
-  </figcaption>
-</figure>
+{%- for p in projects %}{% if p.slug == room[0] %}{% for b in p.blocks %}{% if b.type == 'image' and b.src.endsWith('/' + room[1]) %}
+<div class="st-room room">
+  <div class="media" style="--ar: {{ b.ar }}">{% image b.src, b.alt, '100vw', 'eager' %}</div>
+</div>
 {%- endif %}{% endfor %}{% endif %}{% endfor %}
 
-{#- 3. Who: the studio's own line, the studio in two paragraphs, the facts. -#}
-<section class="section st-who" aria-labelledby="who-title">
-  <div class="grid baseline st-line">
-    <h2 class="x-1 label t-meta" id="who-title">About</h2>
-    <p class="x-2-11 t-h1">A studio of three, with the makers each piece needs, from the first sketch to the last night of the run.</p>
-  </div>
-  <div class="grid st-intro">
-    <div class="x-4-9 t-body prose measure">
-      <p>SMASH is an experience design studio in Stockholm. We make interactive installations, projection mapping and immersive environments for museums, broadcasters, cities and the people who walk past them.</p>
-      <p class="dim">Each piece is ours from end to end: the idea, the design, the software, the hardware, and the hand-over to the crew who switches it on.</p>
-    </div>
-  </div>
-  <div class="grid st-facts">
-    <dl class="x-all bars bars-4 t-body">
-      <div class="fact"><dt class="t-meta">Studio</dt><dd>Södermalm, Stockholm</dd></div>
-      <div class="fact"><dt class="t-meta">People</dt><dd><a href="#people">Three</a>, with makers from our network</dd></div>
-      <div class="fact"><dt class="t-meta">What we do</dt><dd>{% for c in categories %}<a href="#{{ c.slug }}">{{ c.name }}</a>{% if not loop.last %}<br>{% endif %}{% endfor %}</dd></div>
-      <div class="fact"><dt class="t-meta">For</dt><dd>Museums, broadcasters and cities</dd></div>
-    </dl>
-  </div>
-</section>
-
-{#- 3. What we do: the three offerings, ruled like a schedule. Name on the
-    label axis, the words on the reading axis, the picture in the last three
-    columns. -#}
-<section class="section st-offers" aria-labelledby="offers-title">
-  <div class="grid section-head t-meta">
-    <h2 class="x-1-5 label" id="offers-title">What we do</h2>
-  </div>
-  <ol class="grid st-offer-list">
-    {%- for c in categories %}
-    <li class="x-all st-offer" id="{{ c.slug }}">
-      <div class="st-offer-name">
-        <span class="t-meta tnum dim">{{ loop.index | pad }}</span>
-        <h3 class="t-h2">{{ c.name }}</h3>
-      </div>
-      <div class="st-offer-text t-body measure">
-        <div class="prose">{% if offerText[c.slug] %}{% for para in offerText[c.slug] %}<p>{{ para }}</p>{% endfor %}{% else %}{{ c.intro | md | safe }}{% endif %}</div>
-        <p class="st-offer-link t-meta"><a href="/next/work/?in={{ c.slug }}">{{ c.name }} work</a></p>
-      </div>
-      <a class="st-offer-pic media" href="/next/work/?in={{ c.slug }}" tabindex="-1" aria-hidden="true">{% image c.hero.src, c.hero.alt, '(max-width: 719px) 100vw, (max-width: 1099px) 70vw, 24vw', 'lazy' %}</a>
-    </li>
-    {%- endfor %}
-  </ol>
-</section>
-
-{#- 4. How we work: four steps on the bar rule, then two projects being
-    built, one empty column apart (bars separate). -#}
-<section class="section st-how" aria-labelledby="how-title">
-  <div class="grid section-head t-meta">
-    <h2 class="x-1-5 label" id="how-title">How we work</h2>
-  </div>
-  <div class="grid">
-    <ol class="x-all bars bars-2 stack st-steps">
-      {%- for s in steps %}
-      <li class="st-step">
-        <span class="t-meta tnum dim">{{ loop.index | pad }}</span>
-        <h3 class="t-h2">{{ s[0] }}</h3>
-        <p class="t-body dim measure">{{ s[1] }}</p>
-      </li>
-      {%- endfor %}
-    </ol>
-  </div>
-  <div class="grid st-pair">
-    <div class="x-all bars bars-2 stack">
-      {%- for spec in pairFigs %}{% set k = loop.index + 1 %}
-      {%- for p in projects %}{% if p.slug == spec[0] %}{% for b in p.blocks %}{% if b.type == 'image' and b.src.endsWith('/' + spec[1]) %}
-      <figure style="--project: {{ p.color or '#5d6268' }}">
-        <div class="media" style="--ar: {{ b.ar }}">{% image b.src, b.alt, '(max-width: 719px) 100vw, 44vw', 'lazy' %}</div>
-        <figcaption class="fig-cap t-meta"><span class="fig-no tnum">Fig. {{ k }}</span> <a href="/next/work/{{ p.slug }}/">{{ p.title }}</a>, <span class="tnum">{{ p.year }}</span>. {{ spec[2] }}</figcaption>
-      </figure>
-      {%- endif %}{% endfor %}{% endif %}{% endfor %}
-      {%- endfor %}
-    </div>
-  </div>
-</section>
-
-{#- 5. People: set as type, a ruled list of names and addresses. -#}
-<section class="section st-people" id="people" aria-labelledby="people-title">
-  <div class="grid baseline people-intro">
-    <h2 class="x-1 label t-meta" id="people-title">People</h2>
-    <p class="x-4-10 t-lead">Every project has its own lead, with a senior creative and a senior technical lead beside them. We bring in makers from our network as the work needs.</p>
-  </div>
+<section class="section" aria-labelledby="people-title">
+  <h2 class="visually-hidden" id="people-title">People</h2>
   <ul class="grid st-team" role="list">
     {%- for p in team %}
     <li class="st-member">
-      <p class="st-name t-lead">{{ p.name }}{% if p.role %}<span class="dim">, {{ p.role }}</span>{% endif %}</p>
-      <p class="st-mail t-body"><a href="mailto:{{ p.email }}">{{ p.email }}</a></p>
+      <div class="media">{{ p.picture | safe }}</div>
+      <p class="st-name caption">{{ p.name }}</p>
+      <p><a href="mailto:{{ p.email }}">{{ p.email }}</a></p>
     </li>
     {%- endfor %}
   </ul>
-</section>
-
-{#- 6. Worked with: a sentence, not a logo wall. -#}
-<section class="section clients grid baseline" aria-labelledby="clients-title">
-  <h2 class="x-1 label t-meta" id="clients-title">Worked with</h2>
-  <p class="x-4-11 t-lead names">{% for c in clients %}<span>{{ c.name }}</span>{% if loop.revindex == 2 %}<span class="and"> and </span>{% elif not loop.last %}<span class="and">, </span>{% endif %}{% endfor %}<span class="and">.</span></p>
-</section>
-
-{#- 7. Internships -#}
-<section class="section st-interns grid baseline" aria-labelledby="interns-title">
-  <h2 class="x-1 label t-meta" id="interns-title">Internships</h2>
-  <div class="x-4-9 t-body measure">
-    <p>We take interns in production and design every year. Write to <a href="mailto:hello@smash.studio?subject=Internship">hello@smash.studio</a> with work you are proud of.</p>
-  </div>
 </section>

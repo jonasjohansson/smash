@@ -1,84 +1,93 @@
 /* ==========================================================================
-   SMASH, next: "Threshold". The logo is the grid.
+   SMASH, next.
 
-   The mark is 552 × 472 units: 11 bars of 32 and 10 slots of 20 on a pitch
-   of 52. The page has 11 columns and 10 gutters in that ratio (8 : 5), with a
-   margin of one gutter, so the mark drawn across the content width puts its
-   slots exactly on the gutters: gutter ÷ content = 20 ÷ 552 at any width.
-
-   Rules the whole site keeps:
-   - slots join: pictures of one project sit one gutter (--g) apart;
-   - bars separate: separate things sit one empty column apart (.bars-2/3/4);
-   - one family (Neue Haas Grotesk), Roman, never bold; sentence case;
-   - ink is the ground, paper is the one lit room; --light is the one accent.
+   One grid: 12 columns on a desktop, 4 on a phone, the margin one gutter.
+   Two axes: column 1 (titles, pictures) and column 7 (reading text).
+   Three sizes of type, one weight, one style. Charcoal ground. Nothing
+   moves on hover.
+   The one moving thing is the opening: the showreel through the mark.
    ========================================================================== */
 
 /* ---------- Faces ---------- */
 @font-face { font-family: "NHG Display"; src: url("/next/assets/fonts/nhg-display/NHaasGroteskDSPro-55Rg.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: "NHG Display"; src: url("/next/assets/fonts/nhg-display/NHaasGroteskDSPro-65Md.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
 @font-face { font-family: "NHG Text"; src: url("/next/assets/fonts/nhg-text/NHaasGroteskTXPro-55Rg.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: "NHG Text"; src: url("/next/assets/fonts/nhg-text/NHaasGroteskTXPro-56It.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
-@font-face { font-family: "NHG Text"; src: url("/next/assets/fonts/nhg-text/NHaasGroteskTXPro-65Md.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
 
 /* ---------- Tokens ---------- */
 :root {
   color-scheme: dark;
 
-  /* Colour: the black room, its text, and the studio's one light. */
+  /* Colour */
   --ink: #0b0b0c;
-  --ink-2: #141416;
-  --ink-3: #1d1e21;
-  --rule: #2b2c30;
   --fg: #e6e8ea;
-  --fg-2: #9aa1a8;
-  --fg-3: #5d6268;
-  --paper: #d9d9d9;
-  --paper-fg: #0b0b0c;
-  --paper-fg-2: #55585c;
-  --light: #a68bfa;
-  --project: var(--fg-3);
+  --tint: #16171a;            /* under a picture before it loads */
 
-  /* The ground a section sits on; .on-paper swaps these. */
-  --bg: var(--ink);
-  --tx: var(--fg);
-  --tx-2: var(--fg-2);
-  --hair: var(--rule);
+  /* Grid */
+  --cols: 12;
+  --g: clamp(16px, 2.778vw, 56px);
+  --header: 64px;
 
-  /* Grid: gutter = margin = 20/592 of the viewport (3.378vw). */
-  --g: clamp(16px, 3.378vw, 64px);
-  --cols: 11;
-  --c: calc((100vw - 12 * var(--g)) / 11);
+  /* Space: one scale, on a grid of 8 */
+  --s1: 8px;
+  --s2: 16px;
+  --s3: 32px;
+  --s4: 64px;
+  --s5: 128px;
+  --s6: 192px;
 
-  /* Spacing: the mark's measures (slot 20, bar 32, pitch 52), on as a Fibonacci series on a grid of 4. */
-  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 20px; --s5: 32px; --s6: 52px;
-  --s7: 84px; --s8: 136px; --s9: 220px; --s10: 356px;
-  --header: 52px;
-
-  /* Type */
+  /* Type: three sizes, one weight */
   --sans: "NHG Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --display: "NHG Display", "NHG Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --t-meta: clamp(13px, 12.63px + .095vw, 14px);
-  --t-body: clamp(17px, 15.886px + .286vw, 20px);
-  --t-lead: clamp(22px, 18.29px + .952vw, 32px);
-  --t-h2: clamp(32px, 24.57px + 1.905vw, 52px);
-  --t-h1: clamp(44px, 29.14px + 3.81vw, 84px);
-  --t-display: clamp(52px, 20.8px + 8vw, 136px);
-  --t-poster: clamp(56px, 11vw, 200px);
+  --t-body: clamp(17px, 15.9px + .29vw, 20px);
+  --t-large: clamp(28px, 20.6px + 1.9vw, 48px);
+  --t-display: clamp(52px, 8.6vw, 168px);
+  --lh-body: 1.5;
+  --lh-large: 1.15;
+  --lh-display: .92;
+  --track-large: -.012em;
+  --track-display: -.035em;
+  --indent-display: -.045em;  /* the display size's side bearing, taken back to the column */
+  --measure: 36em;            /* the longest line of reading text */
 
-  /* Motion: five kinds, all of them light opening. */
-  --ease: cubic-bezier(.2, 0, 0, 1);
-  --ease-scrub: cubic-bezier(.6, 0, .2, 1);
-  --t-fast: 160ms;
-  --t-base: 320ms;
-  --t-slow: 900ms;
+  --para: 1em;                /* between paragraphs, in a block or between blocks */
+  --caption-gap: var(--s2);   /* between a picture and its name */
+
+  /* Sizes */
+  --mark-w: 32px;             /* the mark in the header */
+  --tap: 44px;                /* the least height of a button */
+  --plate-max: calc(100svh - var(--s5));  /* the tallest a picture inside the margins stands */
+  --hero-min: 320px;          /* a project's first picture, on a short screen */
+  --hero-phone: 62svh;        /* a project's first picture, on a phone */
+
+  /* The opening mark: its slots span whole columns, from --mark-start */
+  --mark-start: 3;
+  --mark-span: 8;
+
+  --nf-min: 50svh;            /* the not-found page, at least */
+
+  /* Underlines: body text, and the large sizes (in em, so they scale with the type) */
+  --rule: 1px;
+  --focus-rule: 3px;
+  --u-offset: .2em;
+  --u-offset-large: .12em;
+  --u-rule-large: .03em;
+  --u-focus-large: .08em;
+}
+
+/* A very wide, short screen: the mark takes 6 columns, so it still stands. */
+@media (min-width: 720px) and (min-aspect-ratio: 2 / 1) {
+  :root { --mark-start: 4; --mark-span: 6; }
 }
 
 @media (max-width: 719px) {
   :root {
+    --cols: 4;
     --g: 16px;
-    --cols: 5;
-    --c: calc((100vw - 6 * var(--g)) / 5);
-    --s7: 52px; --s8: 84px; --s9: 136px;
+    --header: 56px;
+    --s4: 48px;
+    --s5: 80px;
+    --s6: 112px;
+    --mark-start: 1;
+    --mark-span: 4;
   }
 }
 
@@ -87,55 +96,51 @@
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; background: var(--ink); }
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--tx);
-  font: 400 var(--t-body) / 1.5 var(--sans);
+  background: var(--ink);
+  color: var(--fg);
+  font: 400 var(--t-body) / var(--lh-body) var(--sans);
   font-kerning: normal;
-  font-feature-settings: "kern";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: clip;
 }
 img, video, svg, picture { display: block; max-width: 100%; }
 picture img { width: 100%; height: 100%; }
-h1, h2, h3, h4, p, figure, blockquote, ul, ol, dl, dd { margin: 0; padding: 0; }
+h1, h2, h3, p, figure, ul, ol, dl, dd { margin: 0; padding: 0; }
 ul, ol { list-style: none; }
-h1, h2, h3, h4 { font-size: inherit; line-height: inherit; font-weight: 400; text-wrap: balance; hanging-punctuation: first; }
+h1, h2, h3 { font-size: inherit; line-height: inherit; font-weight: 400; text-wrap: balance; }
 p { text-wrap: pretty; }
-strong, b { font-weight: 500; }
-button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
-::selection { background: var(--light); color: var(--ink); }
-:focus-visible { outline: 2px solid var(--light); outline-offset: 4px; border-radius: 1px; }
+em, i { font-style: normal; }
+strong, b { font-weight: 400; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; border-radius: 0; }
+::selection { background: var(--fg); color: var(--ink); }
 
-a { color: inherit; text-decoration-line: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; transition: color var(--t-fast) var(--ease), text-decoration-color var(--t-fast) var(--ease); }
-a.quiet, .quiet a { text-decoration: none; }
-.link { color: var(--tx-2); }
-.link:hover { color: var(--tx); }
+/* Links: the same hovered or not. Keyboard focus is a heavy underline. */
+a { color: inherit; text-decoration-line: underline; text-decoration-thickness: var(--rule); text-underline-offset: var(--u-offset); }
+:focus { outline: none; }
+:focus-visible { outline: none; }
+a:focus-visible, button:focus-visible { text-decoration-line: underline; text-decoration-thickness: var(--focus-rule); text-decoration-color: currentColor; }
+/* A film that can be paused, and the mark: the same heavy rule, under them. */
+.media:has(> video:focus-visible)::after,
+.home-link:focus-visible::after { content: ""; position: absolute; left: 0; right: 0; height: var(--focus-rule); background: var(--fg); }
+.media:has(> video:focus-visible)::after { bottom: 0; }
 
-.skip {
-  position: fixed; left: var(--g); top: var(--s3); z-index: 100;
-  background: var(--light); color: var(--ink); padding: var(--s2) var(--s3);
-  transform: translateY(-200%);
-}
-.skip:focus { transform: none; }
+.skip { position: absolute; left: var(--g); top: var(--s1); z-index: 100; background: var(--ink); padding: var(--s1) 0; transform: translateY(-200%); }
+.skip:focus-visible { transform: none; }
 .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 
 /* ---------- Type ---------- */
-.t-meta { font: 400 var(--t-meta) / 1.43 var(--sans); letter-spacing: 0; font-variant-numeric: tabular-nums; }
-.t-body { font: 400 var(--t-body) / 1.5 var(--sans); }
-.t-lead { font: 400 var(--t-lead) / 1.25 var(--sans); letter-spacing: -.008em; }
-.t-h2 { font: 400 var(--t-h2) / 1.04 var(--display); letter-spacing: -.02em; word-spacing: .03em; }
-.t-h1 { font: 400 var(--t-h1) / 0.98 var(--display); letter-spacing: -.025em; word-spacing: .05em; }
-.t-display { font: 400 var(--t-display) / 0.92 var(--display); letter-spacing: -.03em; word-spacing: .06em; }
-/* Poster: the one size above display, for a page's own name (Work, Studio, a project). */
-.t-poster { font: 400 var(--t-poster) / .9 var(--display); letter-spacing: -.035em; word-spacing: .06em; margin-left: -.04em; }
-.t-display a, a.t-display, .t-h1 a, a.t-h1, .t-poster a, a.t-poster { text-decoration-thickness: .06em; text-underline-offset: .12em; }
-.tnum { font-variant-numeric: tabular-nums; }
-.nowrap { white-space: nowrap; }
-.dim { color: var(--tx-2); }
-.measure { max-inline-size: 34em; }
-.prose > * + * { margin-top: 1em; }
-.prose em, .prose i { font-style: italic; }
+.t-body { font: 400 var(--t-body) / var(--lh-body) var(--sans); }
+.t-large { font: 400 var(--t-large) / var(--lh-large) var(--display); letter-spacing: var(--track-large); }
+.t-display { font: 400 var(--t-display) / var(--lh-display) var(--display); letter-spacing: var(--track-display); margin-left: var(--indent-display); }
+/* Large type underlines with the large rules: links in it, and a caption whose
+   link (a card, a plate) has keyboard focus. */
+.t-large, .t-display { text-underline-offset: var(--u-offset-large); }
+.t-large a, .t-display a { text-decoration-thickness: var(--u-rule-large); text-underline-offset: var(--u-offset-large); }
+.t-large a:focus-visible, .t-display a:focus-visible,
+:focus-visible > * > .caption.t-large, :focus-visible > .caption.t-large { text-decoration-line: underline; text-decoration-thickness: var(--u-focus-large); text-underline-offset: var(--u-offset-large); }
+.prose > * + * { margin-top: var(--para); }
+.measure { max-inline-size: var(--measure); }
 
 /* ---------- Grid ---------- */
 .grid {
@@ -145,351 +150,126 @@ a.quiet, .quiet a { text-decoration: none; }
   padding-inline: var(--g);
 }
 .grid > * { min-width: 0; }
-.grid.baseline { align-items: baseline; }
 
-/* Spans, by desktop column (inclusive). On a phone they fall to the full row unless kept. */
-.x-all   { grid-column: 1 / -1; }
-.x-1     { grid-column: 1 / 2; }
-.x-1-3   { grid-column: 1 / 4; }
-.x-1-4   { grid-column: 1 / 5; }
-.x-1-5   { grid-column: 1 / 6; }
-.x-1-6   { grid-column: 1 / 7; }
-.x-1-7   { grid-column: 1 / 8; }
-.x-1-8   { grid-column: 1 / 9; }
-.x-2-5   { grid-column: 2 / 6; }
-.x-2-7   { grid-column: 2 / 8; }
-.x-2-9   { grid-column: 2 / 10; }
-.x-2-11  { grid-column: 2 / 12; }
-.x-4-8   { grid-column: 4 / 9; }
-.x-4-9   { grid-column: 4 / 10; }
-.x-4-10  { grid-column: 4 / 11; }
-.x-4-11  { grid-column: 4 / 12; }
-.x-5-11  { grid-column: 5 / 12; }
-.x-7-11  { grid-column: 7 / 12; }
-.x-8-11  { grid-column: 8 / 12; }
-.x-9-11  { grid-column: 9 / 12; }
-.x-10-11 { grid-column: 10 / 12; }
-.x-11    { grid-column: 11 / 12; }
-.right   { text-align: right; justify-self: end; }
-
+/* Spans by desktop column, inclusive. On a phone they take the full row. */
+.c-all   { grid-column: 1 / -1; }
+.c-1-4   { grid-column: 1 / 5; }
+.c-1-6   { grid-column: 1 / 7; }
+.c-1-9   { grid-column: 1 / 10; }
+.c-7-12  { grid-column: 7 / 13; }
 @media (max-width: 719px) {
-  [class*="x-"] { grid-column: 1 / -1; }
-  .p-left  { grid-column: 1 / 4 !important; }
-  .p-right { grid-column: 4 / 6 !important; }
-  .p-1     { grid-column: 1 / 2 !important; }
-  .p-2-5   { grid-column: 2 / 6 !important; }
+  [class*="c-"] { grid-column: 1 / -1; }
 }
 
-/* The bar rule: separate things one empty column apart. 2: 5+1+5, 3: 3+1+3+1+3, 4: 2+1+2+1+2+1+2. */
-.bars { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); column-gap: var(--g); row-gap: var(--s7); }
-.bars > * { min-width: 0; }
-.bars-2 > :nth-child(2n+1) { grid-column: 1 / 6; }
-.bars-2 > :nth-child(2n)   { grid-column: 7 / 12; }
-.bars-3 > :nth-child(3n+1) { grid-column: 1 / 4; }
-.bars-3 > :nth-child(3n+2) { grid-column: 5 / 8; }
-.bars-3 > :nth-child(3n)   { grid-column: 9 / 12; }
-.bars-4 > :nth-child(4n+1) { grid-column: 1 / 3; }
-.bars-4 > :nth-child(4n+2) { grid-column: 4 / 6; }
-.bars-4 > :nth-child(4n+3) { grid-column: 7 / 9; }
-.bars-4 > :nth-child(4n)   { grid-column: 10 / 12; }
-@media (max-width: 719px) {
-  .bars { row-gap: var(--s6); }
-  .bars > :nth-child(2n+1) { grid-column: 1 / 3; }
-  .bars > :nth-child(2n)   { grid-column: 4 / 6; }
-  .bars.stack > * { grid-column: 1 / -1; }
-}
-
-/* ---------- Sections and rhythm ---------- */
+/* ---------- Rhythm ---------- */
 main { display: block; }
-.section { padding-block-start: var(--s9); }
-.label { color: var(--tx-2); }
-.x-1.label, .x-1 .label { white-space: nowrap; }
-.page-top { padding-top: calc(var(--header) + var(--s8)); }
-.stack-5 > * + * { margin-top: var(--s5); }
-.on-paper {
-  --bg: var(--paper);
-  --tx: var(--paper-fg);
-  --tx-2: var(--paper-fg-2);
-  --hair: #b9babc;
-  background: var(--bg);
-  color: var(--tx);
-}
-.on-paper ::selection { background: var(--ink); color: var(--paper); }
+.section { padding-top: var(--s5); }
+.page-start { padding-top: var(--s4); }
 
-/* ---------- Header ---------- */
+/* ---------- Header: the mark and three words, at the top of the page ---------- */
 .site-header {
-  position: fixed; inset: 0 0 auto 0; z-index: 50;
+  position: absolute; inset: 0 0 auto 0; z-index: 10;
   height: var(--header);
   align-items: center;
-  color: var(--fg);
-  background: transparent;
-  transition: transform var(--t-base) var(--ease), background-color var(--t-base) var(--ease), color var(--t-base) var(--ease), opacity 600ms var(--ease);
 }
-.site-header::after { content: ""; position: absolute; inset: auto 0 0 0; height: 1px; background: var(--rule); opacity: 0; transition: opacity var(--t-base) var(--ease); }
-.site-header.is-solid { background: var(--ink); }
-.site-header.is-solid::after { opacity: 1; }
-.site-header.is-hidden { transform: translateY(-100%); }
-.site-header.is-paper { color: var(--paper-fg); }
-.site-header.is-paper.is-solid { background: var(--paper); }
-.site-header.is-paper::after { background: #b9babc; }
-/* Over the home film the header is still transparent: a short fall of ink
-   behind it keeps the nav legible where a lit slot runs under it. */
-.home .site-header:not(.is-solid):not(.is-paper)::before {
-  content: ""; position: absolute; inset: 0 0 -28px 0; z-index: -1; pointer-events: none;
-  background: linear-gradient(to bottom, rgb(11 11 12 / .78), rgb(11 11 12 / .5) 55%, rgb(11 11 12 / 0));
-}
-.site-header.is-dim { opacity: .18; }
-.site-header.is-dim:hover, .site-header.is-dim:focus-within { opacity: 1; }
-
-.home-link { grid-column: 1 / 2; display: flex; align-items: center; width: max-content; padding-block: 14px; }
-.home-link .mark { width: 28px; height: 24px; }
-.mark-door { transform: scaleY(0); transform-origin: 50% 100%; transform-box: fill-box; transition: transform var(--t-base) var(--ease); }
-.home-link:hover .mark-door, .home-link:focus-visible .mark-door { transform: scaleY(1); }
-.tagline { grid-column: 2 / 7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* The running head: on a project page, once its title has gone under the
-   header, the tagline gives way to the project's number and name (project.js). */
-.tagline .running { display: none; }
-.tagline .running .no, .tagline .running .dim { color: var(--fg-2); }
-.site-header.is-paper .tagline .running .no, .site-header.is-paper .tagline .running .dim { color: var(--paper-fg-2); }
-.site-header.has-running [data-tagline-text] { display: none; }
-.site-header.has-running [data-running] { display: inline; }
-.nav { grid-column: 8 / 12; justify-self: end; display: flex; gap: var(--s4); }
-.nav a { text-decoration-color: transparent; padding-block: 16px; }
-.nav a:hover { text-decoration-color: currentColor; }
-.nav a[aria-current="page"] { text-decoration-color: currentColor; }
-.menu-button { display: none; }
-
+.home-link { grid-column: 1 / 3; position: relative; display: flex; align-items: center; width: max-content; height: 100%; }
+.home-link:focus-visible::after { top: calc(50% + var(--mark-w) / 2); }
+.home-link .mark { width: var(--mark-w); height: auto; }
+.nav { grid-column: 7 / 13; justify-self: end; display: flex; gap: var(--s3); }
+.nav a { text-decoration-line: none; }
+.nav a[aria-current="page"] { text-decoration-line: underline; }
+.nav a:focus-visible { text-decoration-line: underline; }
+.mark-door { display: none; }
+main { padding-top: var(--header); }
+.home main { padding-top: 0; }
 @media (max-width: 719px) {
-  .tagline, .nav { display: none; }
-  .site-header.has-running .tagline { display: block; grid-column: 2 / 5; }
-  .menu-button { display: block; grid-column: 5 / 6; justify-self: end; padding-block: 16px; min-height: 44px; }
+  .home-link { grid-column: 1 / 2; }
+  .nav { grid-column: 2 / 5; gap: var(--s2); }
 }
 
-/* The phone menu: a full ink sheet. */
-.sheet {
-  position: fixed; inset: 0; z-index: 60;
-  background: var(--ink); color: var(--fg);
-  display: grid; grid-template-rows: var(--header) 1fr auto;
-  padding: 0 var(--g) var(--g);
-}
-.sheet[hidden] { display: none; }
-.sheet-top { display: flex; justify-content: space-between; align-items: center; }
-.sheet-top .mark { width: 28px; height: 24px; }
-.sheet-close { min-height: 44px; }
-.sheet nav { align-self: center; display: flex; flex-direction: column; gap: var(--s5); }
-.sheet nav a { text-decoration: none; }
-.sheet-foot { display: flex; flex-direction: column; gap: var(--s2); }
-
-/* ---------- Aperture (home opening) ---------- */
-/* The whole mark rests on the first screen with the reel playing through it
-   and its caption row under it; aperture.js sizes it, then opens it. */
+/* ---------- The opening: the showreel through the mark ---------- */
 .aperture { position: relative; background: var(--ink); }
-.ap-stage { position: relative; height: 100svh; overflow: hidden; background: var(--ink); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.ap-stage { position: relative; height: 100svh; overflow: hidden; background: var(--ink); }
 .js .ap-stage { position: sticky; top: 0; }
 .ap-film, .ap-poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .ap-ink { position: absolute; inset: 0; width: 100%; height: 100%; }
-/* The end of the opening: the film darkens into the ink below it, no edge. */
-.ap-stage::before, .ap-stage::after { content: ""; position: absolute; z-index: 1; pointer-events: none; opacity: var(--fade, 0); }
-.ap-stage::before { inset: 0; background: var(--ink); opacity: calc(var(--fade, 0) * .35); }
-.ap-stage::after { inset: auto 0 -1px 0; height: 35vh; background: linear-gradient(to bottom, rgb(11 11 12 / 0), rgb(11 11 12 / .55) 45%, var(--ink)); }
 .ap-static { display: none; }
-.ap-row { position: absolute; z-index: 2; left: 0; right: 0; top: 0; color: var(--fg); pointer-events: none; }
-.ap-row a, .ap-row button { pointer-events: auto; }
-.ap-row button { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; min-height: 32px; }
-.ap-row .dur { color: var(--fg-2); margin-left: .5em; }
-.ap-watch { white-space: nowrap; }
-@media (max-width: 719px) {
-  .ap-row .ap-what { display: none; }
-  .ap-row .ap-name { grid-column: 1 / 3; }
-  .ap-row .ap-watch { grid-column: 3 / 6; }
-}
+.ap-row { position: absolute; z-index: 2; left: 0; right: 0; top: 0; pointer-events: none; }
+/* Under the mark, at its first slot's column. */
+.ap-row p { grid-column: var(--mark-start) / -1; }
+.ap-row button { pointer-events: auto; text-decoration-line: underline; text-decoration-thickness: var(--rule); text-underline-offset: var(--u-offset); min-height: var(--tap); }
+.ap-row button:focus-visible { text-decoration-thickness: var(--focus-rule); }
 
-/* Without the script (or with reduced motion) the mark is a still picture: the poster frame in its slots. */
-:is(.no-scrub, html:not(.js) .aperture) .ap-stage { position: relative; height: auto; overflow: visible; padding: calc(var(--header) + var(--s4)) var(--g) var(--s6); }
-:is(.no-scrub, html:not(.js) .aperture) .ap-stage::before, :is(.no-scrub, html:not(.js) .aperture) .ap-stage::after { display: none; }
-:is(.no-scrub, html:not(.js) .aperture) .ap-ink, :is(.no-scrub, html:not(.js) .aperture) .ap-film { display: none; }
-:is(.no-scrub, html:not(.js) .aperture) .ap-static { display: block; position: relative; aspect-ratio: 552 / 472; width: min(100%, calc((100svh - var(--header) - var(--s4) - 96px) * 552 / 472)); margin-inline: auto; }
-:is(.no-scrub, html:not(.js) .aperture) .ap-static .ap-poster { position: absolute; inset: 0; }
+/* Without the script, or with reduced motion: the poster frame in the still mark. */
+/* The still mark: its slots on the same columns as the moving one (--mark-start, --mark-span), the
+   block's plain outer edge (32 of its 552 units each side) out past them, unseen on the ink.
+   "Watch with sound" under it, at its first slot's column. */
+:is(.no-scrub, html:not(.js) .aperture) .ap-stage { position: relative; height: auto; overflow: visible; overflow-x: clip; padding: var(--header) var(--g) 0; display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); column-gap: var(--g); }
+:is(.no-scrub, html:not(.js) .aperture) .ap-ink,
+:is(.no-scrub, html:not(.js) .aperture) .ap-film { display: none; }
+:is(.no-scrub, html:not(.js) .aperture) .ap-static { display: block; position: relative; aspect-ratio: 552 / 472; grid-column: var(--mark-start) / span var(--mark-span); margin-inline: calc(-100% * 32 / 488); }
+:is(.no-scrub, html:not(.js) .aperture) .ap-static .ap-poster { inset: var(--rule); width: calc(100% - 2 * var(--rule)); height: calc(100% - 2 * var(--rule)); } /* inside the mark's edge: no hairline round it */
 :is(.no-scrub, html:not(.js) .aperture) .ap-static .mark { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--ink); }
-:is(.no-scrub, html:not(.js) .aperture) .ap-row { position: static; margin-top: var(--s4); padding-inline: 0; }
+:is(.no-scrub, html:not(.js) .aperture) .ap-row { position: static; grid-column: 1 / -1; padding-inline: 0; margin-top: var(--s2); }
 
-/* ---------- Statement ---------- */
-
-.links { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s5); margin-top: var(--s5); }
-/* Home ends its work on a paragraph about the studio, and where to go next. */
-.closing .t-lead { text-wrap: pretty; }
-
-/* ---------- Section heads ---------- */
-.section-head { align-items: baseline; padding-bottom: var(--s5); }
-@media (max-width: 719px) {
-  .section-head .label { grid-column: 1 / 4; }
-  .section-head .right { grid-column: 4 / 6; }
-}
-
-/* ---------- Plates (home, offering pages) ---------- */
-.plates { counter-reset: plate; }
-.plate { display: block; text-decoration: none; color: inherit; }
-.plate + .plate { margin-top: var(--s9); }
-.plate-index { align-items: baseline; padding-bottom: var(--s5); }
-.plate .no { color: var(--fg-2); }
-.plate-title { text-decoration-line: underline; text-decoration-thickness: .06em; text-underline-offset: .12em; text-decoration-color: transparent; transition: text-decoration-color var(--t-base) var(--ease); }
-.plate:hover .plate-title, .plate:focus-visible .plate-title { text-decoration-color: currentColor; }
-.plate:focus-visible { outline: none; }
-.plate:focus-visible .plate-title { outline: 2px solid var(--light); outline-offset: 6px; }
-.plate-facts { color: var(--fg-2); white-space: nowrap; }
-.plate-cap { padding-top: var(--s4); }
-.plate-cap .lead { color: var(--fg); text-wrap: balance; max-inline-size: 30em; }
-.plate-cap .place { color: var(--fg-2); }
-
-/* Media: a picture at its own proportions on a placeholder of the project's colour. */
-.media {
-  position: relative; overflow: hidden;
-  background: color-mix(in oklab, var(--project) 10%, var(--ink));
-  aspect-ratio: var(--ar, 1.5);
-}
+/* ---------- Pictures ---------- */
+.media { position: relative; overflow: hidden; background: var(--tint); aspect-ratio: var(--ar, 1.5); }
 .media img, .media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: var(--focus, 50% 50%); }
 .media picture { position: absolute; inset: 0; }
-.plate .media img, .plate .media video { filter: brightness(.86); transition: filter var(--t-base) var(--ease); }
-.plate:hover .media img, .plate:hover .media video, .plate:focus-visible .media img { filter: brightness(1); }
-
 /* ROOM: full bleed, never taller than the screen. */
 .room .media { width: 100%; aspect-ratio: auto; height: min(calc(100vw / var(--ar)), 100svh); }
-/* PLATE: inside the margins, at its own proportions. */
-/* ROW: one project's pictures a slot (gutter) apart, one height. */
-.row { display: flex; gap: var(--g); }
-.row > .media { flex: var(--ar) 1 0; min-width: 0; }
-/* RIGHT and LEFT: picture in 8 columns, the words in 3. */
-.side { align-items: start; }
-.side .side-text { display: flex; flex-direction: column; }
-.side .side-text .plate-title { margin-top: var(--s5); }
-.side .side-meta { margin-top: var(--s4); }
-.side .side-lead { margin-top: var(--s5); text-wrap: balance; max-inline-size: 22em; }
-.side-left .side-text { align-self: end; }
-
+/* PLATE: one picture across the 12 columns, inside the margins, never
+   taller than the screen allows. */
+.plate-one .media, .f-plate .media { aspect-ratio: auto; height: min(calc((100vw - 2 * var(--g)) / var(--ar)), var(--plate-max)); }
+/* A picture's name, under it at column 1. */
+.caption { padding-top: var(--caption-gap); }
+/* ROW: one project's pictures on whole columns (8+4, 6+6, 4+4+4), at one
+   height: the lead's own proportion sets it, the others are cropped to it.
+   On a phone they stack, each at its own proportion; tall ones go two to a
+   row (three: the first alone, then two). */
+.row { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); column-gap: var(--g); row-gap: var(--g); }
+.row > .media { grid-column: span var(--span); aspect-ratio: auto; }
+.row > .media.lead { aspect-ratio: var(--ar); }
 @media (max-width: 719px) {
-  .plate-index .no { grid-column: 1 / 2; }
-  .plate-index .plate-title { grid-column: 1 / -1; order: 3; margin-top: var(--s3); }
-  .plate-index .plate-facts { grid-column: 2 / 6; text-align: right; }
-  .plate .media.bleed-phone { margin-inline: calc(var(--g) * -1); }
-  .row.row-3 { flex-wrap: wrap; }
-  .row.row-3 > .media:first-child { flex: 1 0 100%; }
-  .plate-cap .place { text-align: left; justify-self: start; margin-top: var(--s2); }
-  /* On a phone a side plate reads like the others: its index, the picture, then its sentence. */
-  .side > * { grid-row: auto !important; }
-  .side .side-text { display: contents; }
-  .side .side-text > * { grid-column: 1 / -1; }
-  .side .side-text .no { order: 1; }
-  .side .side-text .plate-title { order: 2; margin-top: var(--s3); }
-  .side .side-text .side-meta { order: 3; margin-top: var(--s3); margin-bottom: var(--s5); }
-  .side > :not(.side-text) { order: 4; }
-  .side .side-lead { order: 5; margin-top: var(--s4); }
+  .row > .media, .row > .media.lead { grid-column: 1 / -1; aspect-ratio: var(--ar); }
+  .row-tall > .media { grid-column: span 2; aspect-ratio: auto; }
+  .row-tall > .media:first-child, .row-tall.row-3 > .media:nth-child(2) { aspect-ratio: var(--ar); }
+  .row-tall.row-3 > .media:first-child { grid-column: 1 / -1; }
 }
 
-/* ---------- Slot reveal: used once a page. ----------
-   Closed, the frame is a dim room (the picture at a quarter of its light)
-   with one round-ended slit of full light down its middle, a gutter wide.
-   Open, the slit has widened to the frame's edges. The slit is a transparent
-   pill whose spread shadow is the dimming, so its ends stay round. */
-.js .reveal::after {
-  content: ""; position: absolute; z-index: 1; top: 0; bottom: 0; left: 50%;
-  width: var(--g); translate: -50% 0;
-  border-radius: calc(var(--g) / 2);
-  box-shadow: 0 0 0 200vmax rgb(11 11 12 / .75);
-  pointer-events: none;
-  transition: width 700ms var(--ease-scrub), border-radius 700ms var(--ease-scrub), box-shadow 700ms var(--ease-scrub);
-}
-.js .reveal.is-open::after { width: calc(100% + 2px); border-radius: 0; box-shadow: 0 0 0 200vmax rgb(11 11 12 / 0); }
-/* Every other picture comes in plainly, once, as it arrives (reveal.js). */
-.js .fade > :is(picture, img, video) { opacity: 0; transition: opacity 500ms var(--ease); }
-.js .fade.is-in > :is(picture, img, video) { opacity: 1; }
+/* ---------- Home: the statement, then the work ---------- */
+.statement { padding-top: var(--s5); }
+.plates { padding-top: var(--s6); }
+.plate { display: block; text-decoration: none; color: inherit; }
+.plate + .plate { margin-top: var(--s5); }
 
-/* ---------- People ---------- */
-.people-intro { margin-bottom: var(--s7); }
-.person { text-decoration: none; display: block; }
-.person .media { aspect-ratio: 4 / 5; }
-.person img { filter: grayscale(1) contrast(1.05); }
-.person .who { margin-top: var(--s3); }
-.person .mail { color: var(--tx-2); overflow-wrap: anywhere; }
-.person:hover .mail { color: var(--tx); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; }
-.after-people { margin-top: var(--s7); }
 
-/* ---------- Clients ---------- */
-.clients .names .and { color: var(--tx-2); }
-.clients .names > span:not(.and) { white-space: nowrap; }
+/* ---------- Contact: every page ends here ---------- */
+.contact { padding-top: var(--s6); padding-bottom: var(--s4); row-gap: var(--s3); }
+/* The address at display size; where the line is too short, it breaks before the @. */
+/* On the narrowest phones "@smash.studio" (6em wide) is longer than the column at the
+   display floor, so there the size follows the column instead. */
+.contact-mail { overflow-wrap: normal; font-size: min(var(--t-display), calc((100vw - 2 * var(--g)) / 6.2)); }
+.contact-more { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s3); }
 
-/* ---------- Contact room (every page ends here) ---------- */
-.contact { margin-top: var(--s9); padding-top: var(--s8); min-height: 84svh; overflow: hidden; }
-.contact .label { color: var(--paper-fg-2); }
-.contact-mail { margin-top: var(--s4); font-size: min(var(--t-display), calc((100vw - 2 * var(--g)) / 8.1)); }
-.contact-mail a { text-decoration-thickness: .035em; text-underline-offset: .14em; overflow-wrap: anywhere; }
-.contact-facts { margin-top: var(--s7); }
-.fact dt { color: var(--tx-2); }
-.fact dd { margin: 0; overflow-wrap: break-word; }
-.fact dd a { color: var(--tx); }
-.contact-line { margin-top: var(--s8); padding-bottom: var(--s4); align-items: baseline; }
-@media (max-width: 719px) {
-  /* One line on a phone too: the year at left, Motion at right. */
-  .contact-line > :first-child { grid-column: 1 / 3; }
-  .contact-line > .right { grid-column: 3 / -1; white-space: nowrap; }
-}
-.dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; border: 1px solid var(--light); vertical-align: .15em; margin-right: .5em; }
-.dot.on { background: var(--light); }
-.on-paper .dot { border-color: #6c4fd6; }
-.on-paper .dot.on { background: #6c4fd6; }
-.motion-toggle { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; color: var(--tx); }
-/* The building meets the ground: the mark at full width, cut by the page's foot below its lower crossbar. */
-.ground { padding-inline: var(--g); }
-.ground-crop { aspect-ratio: 552 / 284; overflow: hidden; }
-.ground .mark { width: 100%; height: auto; color: var(--paper-fg); }
-
-/* ---------- Video controls in a caption line ---------- */
-.vctl { display: inline-flex; gap: var(--s3); }
-.vctl button { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; color: var(--tx-2); }
-.vctl button:hover { color: var(--tx); }
-
-/* ---------- Reel player (full screen, with sound) ---------- */
+/* ---------- Reel player: full screen, with sound ---------- */
 .reel {
   position: fixed; inset: 0; width: 100vw; height: 100dvh; max-width: none; max-height: none;
   margin: 0; padding: 0; border: 0; background: var(--ink); color: var(--fg);
 }
 .reel::backdrop { background: var(--ink); }
 .reel video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
-.reel-bar { position: absolute; left: 0; right: 0; bottom: 0; padding: var(--s4) var(--g); display: flex; justify-content: space-between; align-items: baseline; gap: var(--s4); }
-.reel-bar button { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; min-height: 32px; }
-.reel-progress { position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--rule); }
-.reel-progress i { display: block; height: 100%; background: var(--fg); transform-origin: 0 50%; transform: scaleX(0); }
-.reel-close { position: absolute; top: 0; right: var(--g); height: var(--header); }
+.reel-bar { position: absolute; inset: 0 0 auto 0; height: var(--header); align-items: center; }
+.reel-bar [data-pp] { grid-column: 1 / 3; justify-self: start; min-height: var(--tap); }
+.reel-bar [data-close] { grid-column: 3 / -1; justify-self: end; min-height: var(--tap); }
+.reel-bar button { text-decoration-line: underline; text-decoration-thickness: var(--rule); text-underline-offset: var(--u-offset); }
+.reel-bar button:focus-visible { text-decoration-thickness: var(--focus-rule); }
 
-/* ---------- Stub pages ---------- */
-.stub-list { border-top: 1px solid var(--hair); }
-.stub-list a { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; padding-block: var(--s4); border-bottom: 1px solid var(--hair); text-decoration: none; align-items: baseline; }
-.stub-list a:hover .t-lead { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; }
-
-/* ---------- Grid overlay (?grid or G): the bars with their measures. ---------- */
-.grid-overlay { position: fixed; inset: 0; z-index: 90; pointer-events: none; }
-.grid-overlay[hidden] { display: none; }
-.grid-overlay span { background: color-mix(in srgb, var(--light) 9%, transparent); border-inline: 1px solid color-mix(in srgb, var(--light) 30%, transparent); height: 100vh; }
-.grid-overlay .measures { position: fixed; left: var(--g); bottom: var(--s3); color: var(--light); }
-@media (max-width: 719px) { .grid-overlay span:nth-child(n+6) { display: none; } }
-
-/* ---------- View transitions ---------- */
-@view-transition { navigation: auto; }
-::view-transition-old(root), ::view-transition-new(root) { animation-duration: 200ms; }
-::view-transition-group(*) { animation-duration: 600ms; animation-timing-function: cubic-bezier(.2, 0, 0, 1); }
-
-/* ---------- Reduced motion ---------- */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { transition-duration: 1ms !important; animation-duration: 1ms !important; }
-  .js .reveal::after { display: none; }
-  .js .fade > :is(picture, img, video) { opacity: 1; }
-  @view-transition { navigation: none; }
-}
-
-/* ---------- Print: the paper room ---------- */
+/* ---------- Print ---------- */
 @media print {
-  :root { --bg: #fff; --tx: #000; --tx-2: #444; --ink: #fff; --fg: #000; --fg-2: #444; }
-  .site-header, .aperture, .grid-overlay, .reel, .vctl, .ap-row { display: none !important; }
-  .js .reveal::after { display: none; }
-  .js .fade > :is(picture, img, video) { opacity: 1; }
-  .plate + .plate { break-before: page; }
+  :root { --ink: #fff; --fg: #000; }
+  .site-header, .aperture, .reel { display: none !important; }
 }
+
+/* ---------- Not found ---------- */
+.nf { row-gap: var(--s3); min-height: var(--nf-min); align-content: start; }

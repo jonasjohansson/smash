@@ -8,126 +8,60 @@ section: work
 bodyClass: project-page
 styles:
   - work.css
-scripts:
-  - project.js
 eleventyComputed:
   title: "{{ w.title }}"
   description: "{{ stories[w.slug].lead | mdInline | striptags }}"
 ---
-{#- A project, told as a monograph: the room first, its picture filling the
-    screen down to a title band (number, offering, name, and the picture's
-    caption on the band's first line); then the facts beside the lead; then
-    the words and pictures in the order the story needs them (story.js), every
-    picture captioned. It ends at a door to the next project, which opens as
-    you walk up to it (project.js); the feed follows one round of the work and
-    then lets the page end in the contact room. Once the title has gone under
-    the header, the header carries it as a running head.
-
+{#- A project: its picture across the screen, its name, then its words and
+    pictures in the order the story needs them (story.js).
     Media markup is written inline: {% image %} renders nothing inside an
     include or a macro. -#}
 {%- set s = stories[w.slug] -%}
-{%- set nx = stories[s.next] -%}
-<article class="project{% if s.hero %} has-hero{% endif %}" data-project="{{ s.slug }}" data-title="{{ s.title }}" data-number="{{ s.number }}" data-url="{{ s.url }}" style="--project: {{ s.color }}" aria-labelledby="t-{{ s.slug }}">
+<article class="project" aria-labelledby="t-{{ s.slug }}">
 
   {%- set h = s.hero %}
   {%- if h %}
-  <figure class="pj-hero">
-    <div class="media" style="--ar: {{ h.ar }};{% if h.focus %} --focus: {{ h.focus }};{% endif %} view-transition-name: room-{{ s.slug }}">
+  <div class="pj-hero">
+    <div class="media" style="--ar: {{ h.ar }};{% if h.focus %} --focus: {{ h.focus }};{% endif %}">
       {%- if h.type == 'video' %}
-      <video muted loop playsinline preload="metadata" poster="{% imageSrc h.poster, 2000, 'webp' %}" aria-label="{{ h.alt }}" data-auto data-vctl><source src="{{ h.src }}" type="video/{{ 'webm' if h.src.endsWith('.webm') else 'mp4' }}"></video>
+      <video muted loop playsinline preload="metadata" poster="{% imageSrc h.poster, 2000, 'webp' %}" aria-label="{{ h.alt }}" data-auto><source src="{{ h.src }}" type="video/{{ 'webm' if h.src.endsWith('.webm') else 'mp4' }}"></video>
       {%- else %}
       {% image h.src, h.alt, "100vw", "eager" %}
       {%- endif %}
     </div>
-    <figcaption class="grid t-meta"><p class="cap"><span class="fig-no tnum">Fig. 1</span> {{ h.cap }}{% if h.type == 'video' %} <span class="vctl" data-vctl-for><button type="button" data-v="play">Pause</button></span>{% endif %}</p></figcaption>
-  </figure>
+  </div>
   {%- endif %}
 
   <header class="pj-head grid">
-    <p class="x-1 t-meta tnum pj-no">{{ s.number }}</p>
-    {%- if s.offering %}
-    <p class="t-meta pj-offer"><a class="link" href="/next/work/?in={{ s.category }}">{{ s.offering }}</a></p>
-    {%- endif %}
-    <h1 class="x-all t-poster pj-title" id="t-{{ s.slug }}">{{ s.title }}</h1>
+    <h1 class="c-all t-display" id="t-{{ s.slug }}">{{ s.title }}</h1>
+    <p class="c-1-9 t-large pj-lead">{{ s.lead | mdInline | safe }}</p>
   </header>
-
-  <div class="pj-intro grid baseline">
-    <dl class="x-1-3 pj-facts">
-      {%- for f in s.facts %}
-      <div class="fact"><dt class="t-meta">{{ f[0] }}</dt><dd class="t-body{% if f[0] == 'Year' %} tnum{% endif %}">{{ f[1] }}</dd></div>
-      {%- endfor %}
-    </dl>
-    <p class="x-4-10 t-lead pj-lead">{{ s.lead | mdInline | safe }}</p>
-  </div>
 
   <div class="pj-flow">
   {%- for r in s.flow %}
     {%- if r.kind == 'text' %}
-    <section class="f-text grid baseline">
-      <h2 class="x-1-3 t-meta label">{{ r.label }}</h2>
-      <div class="x-4-9 t-body prose measure">{{ r.body | md | safe }}</div>
-    </section>
+    <div class="f-text grid"><div class="c-7-12 t-body prose measure">{{ r.body | md | safe }}</div></div>
     {%- else %}
     {%- set kind = r.kind %}
     {%- set n = r.items.length %}
-    <div class="f-media f-{{ kind }}{% if kind != 'room' %} grid{% endif %}{% if r.paper %} f-paper on-paper{% endif %}"{% if r.paper %} data-ground="paper"{% endif %}>
-      {%- if kind == 'row' %}<div class="x-all row row-{{ n }}{% if r.wide %} row-wide{% endif %}">{% endif %}
+    <div class="f-media f-{{ kind }}{% if kind == 'room' %} room{% else %} grid{% endif %}">
+      {%- if kind == 'row' %}<div class="c-all row{% if r.tall %} row-tall{% endif %} row-{{ n }}">{% endif %}
       {%- for m in r.items %}
         {%- if kind == 'room' %}{% set sz = '100vw' %}
-        {%- elif kind == 'row' %}{% set sz = '(max-width: 719px) 100vw, ' + ((m.share * 94) | round) + 'vw' %}
-        {%- elif kind == 'portrait' %}{% set sz = '(max-width: 719px) 100vw, 45vw' %}
+        {%- elif kind == 'row' %}{% set sz = '(max-width: 719px) 100vw, ' + ((m.span * 94 / 12) | round) + 'vw' %}
         {%- elif kind == 'plate' %}{% set sz = '(max-width: 719px) 100vw, 94vw' %}
-        {%- else %}{% set sz = '(max-width: 719px) 100vw, 72vw' %}{% endif %}
-      <figure class="fig{% if kind == 'right' %} x-4-11{% elif kind == 'left' %} x-1-8{% elif kind == 'portrait' %} x-4-8{% elif kind == 'plate' %} x-all{% endif %}" style="--ar: {{ m.ar }}">
-        <div class="frame"><div class="media{% if r.reveal and loop.first %} reveal{% endif %}{% if m.crop %} is-crop{% endif %}" style="--ar: {{ m.ar }}">
-          {%- if m.type == 'video' %}
-          <video muted loop playsinline preload="none" poster="{% imageSrc m.poster, 2000, 'webp' %}" aria-label="{{ m.alt }}" data-auto data-vctl><source src="{{ m.src }}" type="video/{{ 'webm' if m.src.endsWith('.webm') else 'mp4' }}"></video>
-          {%- else %}
-          {% image m.src, m.alt, sz, "lazy" %}
-          {%- endif %}
-        </div></div>
-        <figcaption class="t-meta{% if kind == 'room' %} grid{% endif %}"><p class="cap{% if kind == 'room' %} x-1-5{% endif %}"><span class="fig-no tnum">Fig. {{ m.fig }}</span> {{ m.cap }}{% if m.type == 'video' %} <span class="vctl" data-vctl-for><button type="button" data-v="play">Pause</button><button type="button" data-v="sound" aria-pressed="false">Sound on</button><span class="tnum dim" data-v="time"></span></span>{% endif %}</p></figcaption>
-      </figure>
+        {%- else %}{% set sz = '(max-width: 719px) 100vw, 47vw' %}{% endif %}
+      <div class="media{% if kind == 'right' %} c-7-12{% elif kind == 'left' %} c-1-6{% elif kind == 'portrait' %} c-1-{{ r.span }}{% elif kind == 'plate' %} c-all{% endif %}{% if m.lead %} lead{% endif %}" style="--ar: {{ m.ar }}{% if m.span %}; --span: {{ m.span }}{% endif %}">
+        {%- if m.type == 'video' %}
+        <video muted loop playsinline preload="none" poster="{% imageSrc m.poster, 2000, 'webp' %}" aria-label="{{ m.alt }}" data-auto><source src="{{ m.src }}" type="video/{{ 'webm' if m.src.endsWith('.webm') else 'mp4' }}"></video>
+        {%- else %}
+        {% image m.src, m.alt, sz, "lazy" %}
+        {%- endif %}
+      </div>
       {%- endfor %}
       {%- if kind == 'row' %}</div>{% endif %}
     </div>
     {%- endif %}
   {%- endfor %}
   </div>
-
-  {%- if s.credits.length %}
-  <section class="pj-credits grid baseline" aria-labelledby="c-{{ s.slug }}">
-    <h2 class="x-1-3 t-meta label" id="c-{{ s.slug }}">Credits</h2>
-    <dl class="credits t-meta">
-      {%- for c in s.credits %}
-      <div class="credit"><dt>{{ c[0] }}</dt><dd>{{ c[1] | mdInline | safe }}</dd></div>
-      {%- endfor %}
-    </dl>
-  </section>
-  {%- endif %}
-
-  {#- The door: the next project's title, and its room seen through one slot
-      at the centre of the page, which widens to the whole screen as you walk
-      up to it. Without the script it is a plain link with its picture. -#}
-  {%- set nh = nx.hero %}
-  <section class="door" data-door data-next="{{ nx.slug }}" style="--project: {{ nx.color }}" aria-labelledby="d-{{ s.slug }}">
-    <div class="door-stage" data-door-stage>
-      <div class="door-text grid" data-door-text>
-        <p class="x-1-3 t-meta">Next</p>
-        <p class="x-10-11 right t-meta tnum dim door-no">{{ nx.number }}</p>
-        <h2 class="x-all t-poster door-title" id="d-{{ s.slug }}"><a href="{{ nx.url }}" data-door-link>{{ nx.title }}</a></h2>
-        <p class="x-1-5 t-meta dim door-meta">{{ nx.place }}, <span class="tnum">{{ nx.year }}</span></p>
-      </div>
-      <div class="door-room" aria-hidden="true" data-door-room>
-        {%- if nh %}
-        <div class="media" style="--ar: {{ nh.ar }}">
-          {%- if nh.type == 'video' %}<img src="{% imageSrc nh.poster, 2000, 'webp' %}" alt="" loading="lazy" decoding="async">
-          {%- else %}{% image nh.src, "", "100vw", "lazy" %}{% endif %}
-        </div>
-        {%- endif %}
-      </div>
-    </div>
-  </section>
 </article>
-
-<div class="progress" aria-hidden="true" data-progress><i></i></div>
