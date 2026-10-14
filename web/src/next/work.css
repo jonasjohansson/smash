@@ -1,13 +1,14 @@
 /* ==========================================================================
    SMASH, next: the work. The index (/next/work/) and every project page
-   (/next/work/<slug>/). Builds on next.css: its tokens, grid and pictures.
+   (/next/work/<slug>/). Builds on next.css: its tokens, grid and pictures,
+   and its plate, row and pair.
    ========================================================================== */
 
 /* ---------- The index: two to a row, one alone across the page when odd ---------- */
 .index { row-gap: var(--s4); }
 .index > li { grid-column: span 6; min-width: 0; }
 .index > li.hall { grid-column: 1 / -1; }
-.index > li.pair .media { aspect-ratio: 3 / 2; }
+.index > li.half .media { aspect-ratio: 3 / 2; }
 .index > li.hall .media { aspect-ratio: auto; height: min(calc((100vw - 2 * var(--g)) / var(--ar)), calc(100svh - var(--header) - var(--s4))); }
 .card { display: block; text-decoration: none; }
 @media (max-width: 719px) {
@@ -16,18 +17,28 @@
 }
 
 /* ---------- A project ---------- */
-/* The picture fills the first screen down to the name, which stands under it. */
-.pj-hero .media { width: 100%; aspect-ratio: auto; height: max(var(--hero-min), calc(100svh - var(--header) - var(--t-display) * var(--lh-display) - var(--s3) - var(--s2))); }
-.pj-head { padding-top: var(--s2); row-gap: var(--s4); }
+/* The hero, a threshold: full bleed, down to the name, which stands whole
+   under it on the first screen (the name's line, the space over it, and one
+   step of air under it). */
+.pj-head { padding-top: var(--s3); row-gap: var(--s4); }
+.pj-hero .media { width: 100%; aspect-ratio: auto; height: max(var(--hero-min), calc(100svh - var(--header) - var(--s3) - var(--t-display) * var(--lh-display) - var(--s3))); }
+.pj-lead { text-wrap: balance; }
 
-/* Words and pictures, in the story's order. */
+/* Words and pictures: every block fills the row, and each is a full beat apart. */
 .pj-flow { padding-top: var(--s5); }
-.pj-flow > * + * { margin-top: var(--s4); }
-.pj-flow > .f-text + .f-text { margin-top: var(--para); }
-.pj-flow > .f-room + *, .pj-flow > * + .f-room { margin-top: var(--s5); }
+.pj-flow > * + * { margin-top: var(--s5); }
+/* No picture inside the margins stands taller than the screen allows: a tall
+   row or a tall pair is cropped to it, as a plate is. The width is set, so
+   the cap takes from the height and never narrows the picture. */
+.pj-flow .row > .media.lead,
+.pj-flow .pair-media { width: 100%; max-height: var(--plate-max); }
 
 @media (max-width: 719px) {
   .pj-hero .media { height: var(--hero-phone); }
   .pj-head { row-gap: var(--s3); }
   .f-plate .media { aspect-ratio: var(--ar); height: auto; }
+  /* Two tall pictures in a row stay side by side, the lead's proportion
+     setting their height (next.css spans the lead across, which leaves the
+     other with no height). */
+  .pj-flow .row-tall.row-2 > .media.lead { grid-column: span 2; }
 }

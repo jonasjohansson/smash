@@ -1,62 +1,43 @@
 // Data for every page of the next site (/next/): its layout, `work` (the
-// projects, newest first, each with how the home page shows it) and
+// projects, newest first, each with its room on the home page) and
 // `stories` (each project's page, from story.js). The existing site's data
 // stays untouched.
 
 import { readProjects } from '../../scripts/projects.js';
-import { stories, columns } from '../../_includes/next/story.js';
+import { stories } from '../../_includes/next/story.js';
 
-// Home plates, all inside the margins: `plate` is one picture across the 12
-// columns, `row` two or three on whole columns (story.js, columns()); `media`
-// names files of the project (images or videos) in the order shown; `focus`
-// is an object-position for them.
-const PLATES = {
-  jagad: { plate: 'plate', media: ['01-corrected.jpg'] },
-  'vi-kommer-i-fred': { plate: 'row', media: ['03.jpg', '07.webm'] },
-  'dome-conductor': { plate: 'plate', media: ['young-conductor.jpg'], focus: '50% 30%' },
-  'danny-saucedo': { plate: 'plate', media: ['03.jpg'] },
-  heroes: { plate: 'plate', media: ['01.jpg'] },
-  resonance: { plate: 'row', media: ['02.jpg', '04.jpg'] },
-  'sala-hjartslag': { plate: 'row', media: ['01-poster.jpg', '01.jpg'] },
+// Home: one room per project, full bleed, people inside the work. Each file
+// stands for its project here and nowhere else (the cover, the hero and the
+// flow use others: story.js). `focus` keeps the people and the light in frame
+// where the room is cropped: a phone shows the middle half of the width, a
+// 1440 × 900 screen a little less than the full height. `alt` where data.md
+// has none.
+const HOME = {
+  jagad: { file: '08.jpg', focus: '46% 50%', alt: 'A crowd on the pavement at night watches the game cover the building across the street.' },
+  'vi-kommer-i-fred': { file: '03.jpg', focus: '58% 50%', alt: 'A visitor crouches and points up beside the screen in Kungsträdgården, the Royal Castle behind.' },
+  'dome-conductor': { file: 'dome-experience.jpg', focus: '62% 50%' },
+  'danny-saucedo': { file: '03.jpg', focus: '44% 40%', alt: 'Danny Saucedo sings on the Melodifestivalen stage, the projected gate behind him.' },
+  heroes: { file: '01.jpg', focus: '48% 50%' },
+  resonance: { file: '02.jpg', focus: '54% 60%', alt: 'A visitor jumps between the lit pads in the square as colour runs across Uppsala Town Hall.' },
+  'sala-hjartslag': { file: '01.jpg', focus: '42% 50%' },
 };
-
-// Without an entry above, plates alternate.
-const CYCLE = ['plate', 'row'];
 
 const base = (src = '') => src.split('/').pop();
 
-function media(p, names) {
-  const pick = (name) => p.blocks.find((b) => (b.type === 'image' || b.type === 'video') && base(b.src) === name);
-  return names.map(pick).filter(Boolean).map((b) => ({
-    type: b.type,
-    src: b.src, // image: projects/slug/file (for the image shortcode); video: /projects/slug/file
-    poster: b.poster ?? null,
-    alt: b.alt ?? '',
-    ar: b.ar,
-  }));
-}
-
-function plateFor(p, i) {
-  const m = PLATES[p.slug] ?? {};
-  let kind = m.plate ?? CYCLE[i % CYCLE.length];
-  let names = m.media;
-  if (!names) {
-    const visual = p.blocks.filter((b) => b.type === 'image' || b.type === 'video');
-    const portraits = visual.filter((b) => b.ar < 1);
-    if (kind === 'row' && portraits.length < 2) kind = 'plate';
-    names = (kind === 'row' ? portraits.slice(0, 3) : [p.cover ?? visual[0]]).filter(Boolean).map((b) => base(b.src));
-  }
-  const items = media(p, names);
-  if (kind === 'row' && items.length < 2) kind = 'plate';
-  return { kind, focus: m.focus ?? null, ...columns(items) };
+function home(p) {
+  const h = HOME[p.slug];
+  const images = p.blocks.filter((b) => b.type === 'image');
+  const b = (h && images.find((x) => base(x.src) === h.file)) ?? images[0];
+  if (!b) return null;
+  return { src: b.src, ar: Number(b.ar) || 1.5, alt: b.alt || h?.alt || '', focus: h?.focus ?? null };
 }
 
 export default async function () {
   const list = await readProjects('projects');
-  const work = list.map((p, i) => ({
+  const work = list.map((p) => ({
     slug: p.slug,
     title: p.title,
-    plate: plateFor(p, i),
+    home: home(p),
     url: `/next/work/${p.slug}/`,
   }));
   return { layout: 'next/base.njk', work, stories: await stories() };

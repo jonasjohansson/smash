@@ -7,8 +7,9 @@ description: "Facades, domes, stages and city squares: the work of SMASH, an exp
 styles:
   - work.css
 ---
-{#- All the work: each project's picture and its title, two to a row; with an
-    odd number, the first stands alone across the page.
+{#- All the work: each project's cover, a still, and its name, two to a row;
+    with an odd number, the first stands alone across the page. The covers
+    stand for their projects here only (story.js).
     Media markup is inline: {% image %} renders nothing in includes. -#}
 <h1 class="visually-hidden">Work</h1>
 <ol class="index grid page-start">
@@ -16,12 +17,12 @@ styles:
   {%- set hall = loop.first and (work.length % 2 == 1) %}
   {%- set sz = '(max-width: 719px) 100vw, 94vw' if hall else '(max-width: 719px) 100vw, 47vw' %}
   {%- set ld = 'eager' if loop.index <= 3 else 'lazy' %}
-  <li class="{{ 'hall' if hall else 'pair' }}">
+  <li class="{{ 'hall' if hall else 'half' }}">
     <a class="card" href="{{ w.url }}">
       <div class="media" style="--ar: {{ h.ar }}">
         {% image h.still, h.alt, sz, ld %}
       </div>
-      <h2 class="caption t-large">{{ w.title }}</h2>
+      <h2 class="caption t-body">{{ w.title }}</h2>
     </a>
   </li>
   {%- endfor %}

@@ -7,28 +7,31 @@ bodyClass: studio-page
 styles:
   - studio.css
 ---
-{#- The studio: who SMASH is, the work being made, and the people.
-    Media markup is written inline: {% image %} renders nothing inside an
-    include or a macro. -#}
-{%- set room = ['dome-conductor', 'development.jpg'] %}
+{#- The studio: its one sentence, the studio at work in a pair (the picture
+    from column 1, its words at column 7), then the people. Nothing here
+    bleeds: full bleed is kept for thresholds. Media markup is written
+    inline: {% image %} renders nothing inside an include or a macro. -#}
 
 <section class="grid page-start" aria-labelledby="studio-title">
   <h1 class="c-1-9 t-large" id="studio-title">A studio of three, working with the makers each piece needs.</h1>
 </section>
 
-{%- for p in projects %}{% if p.slug == room[0] %}{% for b in p.blocks %}{% if b.type == 'image' and b.src.endsWith('/' + room[1]) %}
-<div class="st-room room">
-  <div class="media" style="--ar: {{ b.ar }}">{% image b.src, b.alt, '100vw', 'eager' %}</div>
+<div class="st-pair pair pair-tall grid">
+  <div class="media pair-media" style="--ar: 0.5625">{% image 'projects/heroes/01-poster.jpg', 'On site at Stockholm’s Great Synagogue, a drone scans the facade before the projection.', '(max-width: 719px) 100vw, 31vw', 'eager' %}</div>
+  <div class="pair-text t-body prose measure">
+    <p>We take each piece from the first idea to its last night: the story and the animation, the software, and the controllers and pads people touch. We test on scale models and drone scans, then fit the light to the building on site.</p>
+  </div>
 </div>
-{%- endif %}{% endfor %}{% endif %}{% endfor %}
 
+{#- The portraits are drawn at the size they now stand: four columns on a
+    desktop, the whole width on a phone (the shared data sizes them smaller). #}
 <section class="section" aria-labelledby="people-title">
   <h2 class="visually-hidden" id="people-title">People</h2>
   <ul class="grid st-team" role="list">
     {%- for p in team %}
-    <li class="st-member">
-      <div class="media">{{ p.picture | safe }}</div>
-      <p class="st-name caption">{{ p.name }}</p>
+    <li class="st-member" data-person="{{ p.name | lower | replace(' ', '-') }}">
+      <div class="media">{{ p.picture | replace('(max-width: 720px) 33vw, 22vw', '(max-width: 719px) 100vw, 31vw') | safe }}</div>
+      <p class="st-name caption t-body">{{ p.name }}</p>
       <p><a href="mailto:{{ p.email }}">{{ p.email }}</a></p>
     </li>
     {%- endfor %}

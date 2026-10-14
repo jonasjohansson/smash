@@ -31,26 +31,19 @@ scripts:
   <h1 class="c-1-9 t-large" id="statement-title">We turn facades, domes and city squares into places people step into, play with and remember.</h1>
 </section>
 
-{#- The work: each project its pictures, inside the margins, and its title
-    under them at column 1. Newest first. -#}
-<section class="plates" aria-label="Work">
-{%- for w in work %}
-  {%- set kind = w.plate.kind %}
-  <a class="plate" href="{{ w.url }}" aria-labelledby="pt-{{ w.slug }}">
-    <div class="grid">
-      <div class="c-all{% if kind == 'row' %} row{% if w.plate.tall %} row-tall{% endif %} row-{{ w.plate.items.length }}{% else %} plate-one{% endif %}">
-      {%- for m in w.plate.items %}
-        {%- set sz = '(max-width: 719px) 100vw, ' + ((m.span * 94 / 12) | round) + 'vw' %}
-        <div class="media{% if m.lead %} lead{% endif %}" style="--ar: {{ m.ar }}; --span: {{ m.span }}{% if w.plate.focus %}; --focus: {{ w.plate.focus }}{% endif %}">
-          {%- if m.type == 'video' %}
-          <video muted loop playsinline preload="none" poster="{% imageSrc m.poster, 2000, 'webp' %}" aria-label="{{ m.alt }}" data-auto><source src="{{ m.src }}" type="video/{{ 'webm' if m.src.endsWith('.webm') else 'mp4' }}"></video>
-          {%- else %}
-          {% image m.src, m.alt, sz, "lazy" %}
-          {%- endif %}
-        </div>
-      {%- endfor %}
+{#- The work, newest first: a room for each project, full bleed, people inside
+    the work, and its name under it at column 1. One picture each, and none of
+    them stands for the project anywhere else on the site (next.11tydata.js, HOME). -#}
+<section class="passes" aria-label="Work">
+{%- for w in work %}{% set m = w.home %}
+  <a class="pass" href="{{ w.url }}" aria-labelledby="pt-{{ w.slug }}">
+    <div class="room">
+      <div class="media" style="--ar: {{ m.ar }}{% if m.focus %}; --focus: {{ m.focus }}{% endif %}">
+        {% image m.src, m.alt, "100vw", "lazy" %}
       </div>
-      <h2 class="c-all t-large caption" id="pt-{{ w.slug }}">{{ w.title }}</h2>
+    </div>
+    <div class="grid">
+      <h2 class="c-all caption t-body" id="pt-{{ w.slug }}">{{ w.title }}</h2>
     </div>
   </a>
 {%- endfor %}

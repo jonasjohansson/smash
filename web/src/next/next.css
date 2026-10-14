@@ -3,8 +3,15 @@
 
    One grid: 12 columns on a desktop, 4 on a phone, the margin one gutter.
    Two axes: column 1 (titles, pictures) and column 7 (reading text).
-   Three sizes of type, one weight, one style. Charcoal ground. Nothing
-   moves on hover.
+   Three sizes of type, one weight, one style, one job each:
+     display  a project's name, on its own page, and nothing else;
+     large    a page's one sentence (the statement, a project's lead, the address);
+     body     everything else, every name under a picture among it.
+   Pictures: full bleed is a threshold (the opening, a home room, a project
+   hero), and nothing else bleeds. Inside the margins a picture is a plate
+   (12 columns), a row (filling 12 columns) or a pair (the picture from
+   column 1, its words at column 7, tops aligned).
+   Charcoal ground. Nothing changes on hover.
    The one moving thing is the opening: the showreel through the mark.
    ========================================================================== */
 
@@ -45,14 +52,17 @@
   --lh-display: .92;
   --track-large: -.012em;
   --track-display: -.035em;
+  --word-large: .03em;        /* the large sizes' word space, opened against their tight tracking */
+  --word-display: .05em;
   --indent-display: -.045em;  /* the display size's side bearing, taken back to the column */
-  --measure: 36em;            /* the longest line of reading text */
+  --measure: 30em;            /* the longest line of reading text */
 
-  --para: 1em;                /* between paragraphs, in a block or between blocks */
+  --para: calc(var(--lh-body) * 1em);  /* between paragraphs: exactly one line */
   --caption-gap: var(--s2);   /* between a picture and its name */
 
   /* Sizes */
-  --mark-w: 32px;             /* the mark in the header */
+  --mark-w: 40px;             /* the mark in the header */
+  --mark-h: calc(var(--mark-w) * 472 / 552);  /* its height, in its own proportions */
   --tap: 44px;                /* the least height of a button */
   --plate-max: calc(100svh - var(--s5));  /* the tallest a picture inside the margins stands */
   --hero-min: 320px;          /* a project's first picture, on a short screen */
@@ -83,6 +93,7 @@
     --cols: 4;
     --g: 16px;
     --header: 56px;
+    --mark-w: 32px;
     --s4: 48px;
     --s5: 80px;
     --s6: 112px;
@@ -131,14 +142,16 @@ a:focus-visible, button:focus-visible { text-decoration-line: underline; text-de
 
 /* ---------- Type ---------- */
 .t-body { font: 400 var(--t-body) / var(--lh-body) var(--sans); }
-.t-large { font: 400 var(--t-large) / var(--lh-large) var(--display); letter-spacing: var(--track-large); }
-.t-display { font: 400 var(--t-display) / var(--lh-display) var(--display); letter-spacing: var(--track-display); margin-left: var(--indent-display); }
-/* Large type underlines with the large rules: links in it, and a caption whose
-   link (a card, a plate) has keyboard focus. */
+.t-large { font: 400 var(--t-large) / var(--lh-large) var(--display); letter-spacing: var(--track-large); word-spacing: var(--word-large); }
+.t-display { font: 400 var(--t-display) / var(--lh-display) var(--display); letter-spacing: var(--track-display); word-spacing: var(--word-display); }
+/* The display size's side bearing, taken back to the column: only a project's name stands at it. */
+h1.t-display { margin-left: var(--indent-display); }
+/* Large type underlines with the large rules. */
 .t-large, .t-display { text-underline-offset: var(--u-offset-large); }
 .t-large a, .t-display a { text-decoration-thickness: var(--u-rule-large); text-underline-offset: var(--u-offset-large); }
-.t-large a:focus-visible, .t-display a:focus-visible,
-:focus-visible > * > .caption.t-large, :focus-visible > .caption.t-large { text-decoration-line: underline; text-decoration-thickness: var(--u-focus-large); text-underline-offset: var(--u-offset-large); }
+.t-large a:focus-visible, .t-display a:focus-visible { text-decoration-line: underline; text-decoration-thickness: var(--u-focus-large); text-underline-offset: var(--u-offset-large); }
+/* A picture's name, when its link (a room, a card) has keyboard focus: the heavy rule. */
+a:focus-visible > * > .caption, a:focus-visible > .caption { text-decoration-line: underline; text-decoration-thickness: var(--focus-rule); text-underline-offset: var(--u-offset); }
 .prose > * + * { margin-top: var(--para); }
 .measure { max-inline-size: var(--measure); }
 
@@ -167,13 +180,18 @@ main { display: block; }
 .page-start { padding-top: var(--s4); }
 
 /* ---------- Header: the mark and three words, at the top of the page ---------- */
+/* The mark stands in the middle of the bar, and the words on its foot: the
+   mark has no baseline of its own, so its bottom edge is taken for one. */
 .site-header {
   position: absolute; inset: 0 0 auto 0; z-index: 10;
   height: var(--header);
-  align-items: center;
+  padding-top: calc((var(--header) - var(--mark-h)) / 2);
+  align-items: baseline;
+  align-content: start;
 }
-.home-link { grid-column: 1 / 3; position: relative; display: flex; align-items: center; width: max-content; height: 100%; }
-.home-link:focus-visible::after { top: calc(50% + var(--mark-w) / 2); }
+.home-link { grid-column: 1 / 3; position: relative; display: block; width: max-content; }
+.home-link::before { content: ""; position: absolute; inset: calc(-1 * var(--s1)); } /* a tap target past the mark's edge */
+.home-link:focus-visible::after { top: calc(100% + var(--focus-rule)); }
 .home-link .mark { width: var(--mark-w); height: auto; }
 .nav { grid-column: 7 / 13; justify-self: end; display: flex; gap: var(--s3); }
 .nav a { text-decoration-line: none; }
@@ -208,7 +226,7 @@ main { padding-top: var(--header); }
 :is(.no-scrub, html:not(.js) .aperture) .ap-ink,
 :is(.no-scrub, html:not(.js) .aperture) .ap-film { display: none; }
 :is(.no-scrub, html:not(.js) .aperture) .ap-static { display: block; position: relative; aspect-ratio: 552 / 472; grid-column: var(--mark-start) / span var(--mark-span); margin-inline: calc(-100% * 32 / 488); }
-:is(.no-scrub, html:not(.js) .aperture) .ap-static .ap-poster { inset: var(--rule); width: calc(100% - 2 * var(--rule)); height: calc(100% - 2 * var(--rule)); } /* inside the mark's edge: no hairline round it */
+:is(.no-scrub, html:not(.js) .aperture) .ap-static .ap-poster { inset: var(--rule); width: calc(100% - 2 * var(--rule)); height: calc(100% - 2 * var(--rule)); clip-path: inset(0 calc(100% * 32 / 552)); } /* inside the mark's edge, and only across the slots' columns */
 :is(.no-scrub, html:not(.js) .aperture) .ap-static .mark { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--ink); }
 :is(.no-scrub, html:not(.js) .aperture) .ap-row { position: static; grid-column: 1 / -1; padding-inline: 0; margin-top: var(--s2); }
 
@@ -216,11 +234,14 @@ main { padding-top: var(--header); }
 .media { position: relative; overflow: hidden; background: var(--tint); aspect-ratio: var(--ar, 1.5); }
 .media img, .media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: var(--focus, 50% 50%); }
 .media picture { position: absolute; inset: 0; }
-/* ROOM: full bleed, never taller than the screen. */
+/* ROOM: full bleed, never taller than the screen; on a phone, the height of a project's hero. */
 .room .media { width: 100%; aspect-ratio: auto; height: min(calc(100vw / var(--ar)), 100svh); }
+@media (max-width: 719px) {
+  .room .media { height: var(--hero-phone); }
+}
 /* PLATE: one picture across the 12 columns, inside the margins, never
    taller than the screen allows. */
-.plate-one .media, .f-plate .media { aspect-ratio: auto; height: min(calc((100vw - 2 * var(--g)) / var(--ar)), var(--plate-max)); }
+.f-plate .media { aspect-ratio: auto; height: min(calc((100vw - 2 * var(--g)) / var(--ar)), var(--plate-max)); }
 /* A picture's name, under it at column 1. */
 .caption { padding-top: var(--caption-gap); }
 /* ROW: one project's pictures on whole columns (8+4, 6+6, 4+4+4), at one
@@ -237,19 +258,34 @@ main { padding-top: var(--header); }
   .row-tall.row-3 > .media:first-child { grid-column: 1 / -1; }
 }
 
-/* ---------- Home: the statement, then the work ---------- */
+/* PAIR: a picture from column 1 and its words at column 7, their tops on one
+   line. The picture takes 6 columns when wide, 5 when near square, 4 when tall.
+   On a phone the words follow the picture. Markup:
+   <div class="pair grid [pair-square|pair-tall]"><div class="media pair-media" style="--ar: …">…</div>
+   <div class="pair-text t-body prose measure">…</div></div> */
+.pair { align-items: start; }
+.pair > .pair-media { grid-column: 1 / 7; }
+.pair-square > .pair-media { grid-column: 1 / 6; }
+.pair-tall > .pair-media { grid-column: 1 / 5; }
+.pair > .pair-text { grid-column: 7 / 13; }
+@media (max-width: 719px) {
+  .pair > .pair-media, .pair > .pair-text { grid-column: 1 / -1; }
+  .pair > .pair-media { aspect-ratio: auto; height: min(calc((100vw - 2 * var(--g)) / var(--ar)), var(--plate-max)); }
+  .pair > .pair-text { margin-top: var(--s3); }
+}
+
+/* ---------- Home: the opening, the statement, then a room for each project ---------- */
+/* The statement stands in equal space: the same beat above it and below. */
 .statement { padding-top: var(--s5); }
-.plates { padding-top: var(--s6); }
-.plate { display: block; text-decoration: none; color: inherit; }
-.plate + .plate { margin-top: var(--s5); }
+.passes { padding-top: var(--s5); }
+.pass { display: block; text-decoration: none; color: inherit; }
+.pass + .pass { margin-top: var(--s5); }
 
 
 /* ---------- Contact: every page ends here ---------- */
 .contact { padding-top: var(--s6); padding-bottom: var(--s4); row-gap: var(--s3); }
-/* The address at display size; where the line is too short, it breaks before the @. */
-/* On the narrowest phones "@smash.studio" (6em wide) is longer than the column at the
-   display floor, so there the size follows the column instead. */
-.contact-mail { overflow-wrap: normal; font-size: min(var(--t-display), calc((100vw - 2 * var(--g)) / 6.2)); }
+/* The address, at the large size: one line, on every screen. */
+.contact-mail { white-space: nowrap; }
 .contact-more { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s3); }
 
 /* ---------- Reel player: full screen, with sound ---------- */

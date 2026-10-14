@@ -6,9 +6,12 @@
 // it, at its first column. The mark's slots span whole columns, the ones
 // next.css declares once (--mark-start, --mark-span: 3-10, 4-9 on a very wide,
 // short screen, all 4 on a phone): the block's plain outer edge, 32 of its 552
-// units each side, lies out past them, unseen on the ink. It stands from the
-// header to the bottom margin; on a phone its slots become full-height columns
-// of light (mark.js keeps the round ends round however far it stretches).
+// units each side, lies out past them, unseen on the ink. On a desktop it stands
+// from the header to the bottom margin. On a phone it keeps its own proportions
+// (552 × 472) across the 4 columns, and stands centred, with "Watch with sound"
+// under it, between the header and the bottom margin. Until the slots open,
+// the film shows only inside the columns the slots span: the S's open stroke
+// ends at the column's edge, not out in the margin.
 // Scrolling, while the stage is held:
 //   1. door: every closed slot end runs out through the edge (inset 42 -> 0);
 //      "Watch with sound" is gone from the first step;
@@ -59,36 +62,39 @@ if (root) {
     const gap = parseFloat(token('--s2'));
     const safe = parseFloat(getComputedStyle(stage).paddingBottom) || 0; // env(safe-area-inset-bottom)
     const room = vh - top - gap - row.offsetHeight - g - safe; // what the mark may take, height
+    const phone = cols < 12;
     // The slot field on whole columns; the block reaches its plain edge past them.
     const col = (vw - 2 * g - (cols - 1) * g) / cols;
     const start = parseFloat(token('--mark-start'));
     const span = parseFloat(token('--mark-span'));
     const field = span * col + (span - 1) * g;
     const W = (field * UNITS.w) / FIELD;
-    const H = room;
-    const ox = g + (start - 1) * (col + g) - (EDGE * W) / UNITS.w;
+    const H = phone ? Math.min(room, (W * UNITS.h) / UNITS.w) : room;
+    const oy = top + Math.round((room - H) / 2); // centred with the row under it
+    const fx = g + (start - 1) * (col + g); // the slots' columns, left edge
+    const ox = fx - (EDGE * W) / UNITS.w;
     const dpr = Math.min(2, devicePixelRatio || 1);
     canvas.width = Math.round(vw * dpr);
     canvas.height = Math.round(vh * dpr);
     const phases = { door: 0.3 * vh, open: 0.7 * vh };
     const total = phases.door + phases.open;
     root.style.height = `${vh + total}px`;
-    row.style.top = `${Math.round(top + H + gap)}px`;
-    L = { vw, vh, W, H, ox, top, dpr, phases, total };
+    row.style.top = `${Math.round(oy + H + gap)}px`;
+    L = { vw, vh, W, H, ox, oy, fx, field, dpr, phases, total };
     draw();
   }
 
   function draw() {
     raf = 0;
     if (!L || still) return;
-    const { vw, vh, W, H, ox, top, dpr, phases: P } = L;
+    const { vw, vh, W, H, ox, oy, fx, field, dpr, phases: P } = L;
     const y = Math.max(0, scrollY - root.offsetTop);
     const door = scrub(clamp(y / P.door));
     const open = scrub(clamp((y - P.door) / P.open));
 
     // The block's rectangle: the mark's own, growing to the screen (2px over, no seams).
     const x0 = lerp(ox, -2, open);
-    const y0 = lerp(top, -2, open);
+    const y0 = lerp(oy, -2, open);
     const bw = lerp(W, vw + 4, open);
     const bh = lerp(H, vh + 4, open);
 
@@ -140,6 +146,13 @@ if (root) {
     const edge = 17 * open * s.sx;
     if (edge > 0) { ctx.fillRect(0, 0, edge, bh); ctx.fillRect(bw - edge, 0, edge, bh); }
     ctx.restore();
+
+    // The film inside the slots' columns until they open, then out to the screen's edges.
+    ctx.fillStyle = INK;
+    const cl = lerp(fx, -2, open);
+    const cr = lerp(fx + field, vw + 2, open);
+    if (cl > 0) ctx.fillRect(0, 0, cl, vh);
+    if (cr < vw) ctx.fillRect(cr, 0, vw - cr, vh);
 
   }
 
