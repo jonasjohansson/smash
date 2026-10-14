@@ -19,13 +19,21 @@ export const LOGOS = [
   ['r1-locked-blade', 'Slant · Round 1'],
   ['r2-column-blade', 'Slant · Round 2'],
   ['r3-carved-column', 'Slant · Round 3'],
+  ['r3-square', 'Round 3, square'],
   ['r4-apex', 'Slant · Round 3 + Apex'],
   ['wide', 'Slant · Wide'],
 ];
 
+// Presets of our own, from Slant's: [the preset, what changes].
+const VARIANTS = {
+  // Round 3 without the slant (Jonas, 2026-10-14: "the r3 carved column but without the slant"): every cut
+  // square (Slope 0), the A's and the H's crossbars level.
+  'r3-square': ['r3-carved-column', { slope: 0, per: [{}, {}, {}, {}, { both: 1 }] }],
+};
 const preset = (key) => {
-  const set = PRESETS.find(([k]) => k === key)?.[2];
-  return set ? { ...set, ...LEVEL } : null;
+  const [base, own] = VARIANTS[key] ?? [key, {}];
+  const set = PRESETS.find(([k]) => k === base)?.[2];
+  return set ? { ...set, ...LEVEL, ...own } : null;
 };
 
 /** The x extents an absolute path's points reach, subpath by subpath (M L C A Z only, as Slant writes). */
