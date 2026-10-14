@@ -63,6 +63,7 @@
   --t-h2: clamp(32px, 24.57px + 1.905vw, 52px);
   --t-h1: clamp(44px, 29.14px + 3.81vw, 84px);
   --t-display: clamp(52px, 20.8px + 8vw, 136px);
+  --t-poster: clamp(56px, 11vw, 200px);
 
   /* Motion: five kinds, all of them light opening. */
   --ease: cubic-bezier(.2, 0, 0, 1);
@@ -122,12 +123,15 @@ a.quiet, .quiet a { text-decoration: none; }
 /* ---------- Type ---------- */
 .t-meta { font: 400 var(--t-meta) / 1.43 var(--sans); letter-spacing: 0; font-variant-numeric: tabular-nums; }
 .t-body { font: 400 var(--t-body) / 1.5 var(--sans); }
-.t-lead { font: 400 var(--t-lead) / 1.1875 var(--display); letter-spacing: -.01em; }
-.t-h2 { font: 400 var(--t-h2) / 1.04 var(--display); letter-spacing: -.02em; }
-.t-h1 { font: 400 var(--t-h1) / 0.98 var(--display); letter-spacing: -.025em; }
-.t-display { font: 400 var(--t-display) / 0.92 var(--display); letter-spacing: -.035em; }
-.t-display a, a.t-display, .t-h1 a, a.t-h1 { text-decoration-thickness: .06em; text-underline-offset: .12em; }
+.t-lead { font: 400 var(--t-lead) / 1.25 var(--sans); letter-spacing: -.008em; }
+.t-h2 { font: 400 var(--t-h2) / 1.04 var(--display); letter-spacing: -.02em; word-spacing: .03em; }
+.t-h1 { font: 400 var(--t-h1) / 0.98 var(--display); letter-spacing: -.025em; word-spacing: .05em; }
+.t-display { font: 400 var(--t-display) / 0.92 var(--display); letter-spacing: -.03em; word-spacing: .06em; }
+/* Poster: the one size above display, for a page's own name (Work, Studio, a project). */
+.t-poster { font: 400 var(--t-poster) / .9 var(--display); letter-spacing: -.035em; word-spacing: .06em; margin-left: -.04em; }
+.t-display a, a.t-display, .t-h1 a, a.t-h1, .t-poster a, a.t-poster { text-decoration-thickness: .06em; text-underline-offset: .12em; }
 .tnum { font-variant-numeric: tabular-nums; }
+.nowrap { white-space: nowrap; }
 .dim { color: var(--tx-2); }
 .measure { max-inline-size: 34em; }
 .prose > * + * { margin-top: 1em; }
@@ -147,6 +151,7 @@ a.quiet, .quiet a { text-decoration: none; }
 .x-all   { grid-column: 1 / -1; }
 .x-1     { grid-column: 1 / 2; }
 .x-1-3   { grid-column: 1 / 4; }
+.x-1-4   { grid-column: 1 / 5; }
 .x-1-5   { grid-column: 1 / 6; }
 .x-1-6   { grid-column: 1 / 7; }
 .x-1-7   { grid-column: 1 / 8; }
@@ -159,6 +164,7 @@ a.quiet, .quiet a { text-decoration: none; }
 .x-4-9   { grid-column: 4 / 10; }
 .x-4-10  { grid-column: 4 / 11; }
 .x-4-11  { grid-column: 4 / 12; }
+.x-5-11  { grid-column: 5 / 12; }
 .x-7-11  { grid-column: 7 / 12; }
 .x-8-11  { grid-column: 8 / 12; }
 .x-9-11  { grid-column: 9 / 12; }
@@ -239,18 +245,24 @@ main { display: block; }
 .home-link .mark { width: 28px; height: 24px; }
 .mark-door { transform: scaleY(0); transform-origin: 50% 100%; transform-box: fill-box; transition: transform var(--t-base) var(--ease); }
 .home-link:hover .mark-door, .home-link:focus-visible .mark-door { transform: scaleY(1); }
-.tagline { grid-column: 2 / 6; }
+.tagline { grid-column: 2 / 7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* The running head: on a project page, once its title has gone under the
+   header, the tagline gives way to the project's number and name (project.js). */
+.tagline .running { display: none; }
+.tagline .running .no, .tagline .running .dim { color: var(--fg-2); }
+.site-header.is-paper .tagline .running .no, .site-header.is-paper .tagline .running .dim { color: var(--paper-fg-2); }
+.site-header.has-running [data-tagline-text] { display: none; }
+.site-header.has-running [data-running] { display: inline; }
 .nav { grid-column: 8 / 12; justify-self: end; display: flex; gap: var(--s4); }
 .nav a { text-decoration-color: transparent; padding-block: 16px; }
 .nav a:hover { text-decoration-color: currentColor; }
 .nav a[aria-current="page"] { text-decoration-color: currentColor; }
-.nav .count { color: var(--fg-2); margin-left: .35em; }
-.site-header.is-paper .nav .count { color: var(--paper-fg-2); }
 .menu-button { display: none; }
 
 @media (max-width: 719px) {
   .tagline, .nav { display: none; }
-  .menu-button { display: block; grid-column: 4 / 6; justify-self: end; padding-block: 16px; min-height: 44px; }
+  .site-header.has-running .tagline { display: block; grid-column: 2 / 5; }
+  .menu-button { display: block; grid-column: 5 / 6; justify-self: end; padding-block: 16px; min-height: 44px; }
 }
 
 /* The phone menu: a full ink sheet. */
@@ -269,64 +281,65 @@ main { display: block; }
 .sheet-foot { display: flex; flex-direction: column; gap: var(--s2); }
 
 /* ---------- Aperture (home opening) ---------- */
+/* The whole mark rests on the first screen with the reel playing through it
+   and its caption row under it; aperture.js sizes it, then opens it. */
 .aperture { position: relative; background: var(--ink); }
-.ap-stage { position: relative; height: 100svh; overflow: hidden; background: var(--ink); }
+.ap-stage { position: relative; height: 100svh; overflow: hidden; background: var(--ink); padding-bottom: env(safe-area-inset-bottom, 0px); }
 .js .ap-stage { position: sticky; top: 0; }
 .ap-film, .ap-poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .ap-ink { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* The end of the opening: the film darkens into the ink below it, no edge. */
+.ap-stage::before, .ap-stage::after { content: ""; position: absolute; z-index: 1; pointer-events: none; opacity: var(--fade, 0); }
+.ap-stage::before { inset: 0; background: var(--ink); opacity: calc(var(--fade, 0) * .35); }
+.ap-stage::after { inset: auto 0 -1px 0; height: 35vh; background: linear-gradient(to bottom, rgb(11 11 12 / 0), rgb(11 11 12 / .55) 45%, var(--ink)); }
 .ap-static { display: none; }
-.ap-row {
-  position: absolute; left: 0; right: 0;
-  color: var(--fg);
-  pointer-events: none;
-}
+.ap-row { position: absolute; z-index: 2; left: 0; right: 0; top: 0; color: var(--fg); pointer-events: none; }
 .ap-row a, .ap-row button { pointer-events: auto; }
 .ap-row button { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; min-height: 32px; }
 .ap-row .dur { color: var(--fg-2); margin-left: .5em; }
-.ap-row { top: 0; }
 .ap-watch { white-space: nowrap; }
-.ap-intro { display: none; }
-@media (max-width: 719px) {
-  .ap-intro { display: block; position: absolute; left: var(--g); right: var(--g); top: calc(var(--header) + var(--s5)); color: var(--fg); pointer-events: none; }
-  :is(.no-scrub, html:not(.js) .aperture) .ap-intro { position: static; margin-bottom: var(--s6); }
-}
 @media (max-width: 719px) {
   .ap-row .ap-what { display: none; }
   .ap-row .ap-name { grid-column: 1 / 3; }
   .ap-row .ap-watch { grid-column: 3 / 6; }
 }
-.ap-skip { position: absolute; left: var(--g); bottom: var(--g); }
 
 /* Without the script (or with reduced motion) the mark is a still picture: the poster frame in its slots. */
 :is(.no-scrub, html:not(.js) .aperture) .ap-stage { position: relative; height: auto; overflow: visible; padding: calc(var(--header) + var(--s4)) var(--g) var(--s6); }
+:is(.no-scrub, html:not(.js) .aperture) .ap-stage::before, :is(.no-scrub, html:not(.js) .aperture) .ap-stage::after { display: none; }
 :is(.no-scrub, html:not(.js) .aperture) .ap-ink, :is(.no-scrub, html:not(.js) .aperture) .ap-film { display: none; }
-:is(.no-scrub, html:not(.js) .aperture) .ap-static { display: block; position: relative; aspect-ratio: 552 / 472; }
+:is(.no-scrub, html:not(.js) .aperture) .ap-static { display: block; position: relative; aspect-ratio: 552 / 472; width: min(100%, calc((100svh - var(--header) - var(--s4) - 96px) * 552 / 472)); margin-inline: auto; }
 :is(.no-scrub, html:not(.js) .aperture) .ap-static .ap-poster { position: absolute; inset: 0; }
 :is(.no-scrub, html:not(.js) .aperture) .ap-static .mark { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--ink); }
-:is(.no-scrub, html:not(.js) .aperture) .ap-row { position: static; margin-top: var(--s3); padding-inline: 0; }
+:is(.no-scrub, html:not(.js) .aperture) .ap-row { position: static; margin-top: var(--s4); padding-inline: 0; }
 
 /* ---------- Statement ---------- */
-.statement .t-h1 { padding-top: .06em; }
-.statement .label { padding-top: .5em; }
-.statement-body { margin-top: var(--s7); }
+
 .links { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s5); margin-top: var(--s5); }
+/* Home ends its work on a paragraph about the studio, and where to go next. */
+.closing .t-lead { text-wrap: pretty; }
 
 /* ---------- Section heads ---------- */
 .section-head { align-items: baseline; padding-bottom: var(--s5); }
+@media (max-width: 719px) {
+  .section-head .label { grid-column: 1 / 4; }
+  .section-head .right { grid-column: 4 / 6; }
+}
 
 /* ---------- Plates (home, offering pages) ---------- */
 .plates { counter-reset: plate; }
 .plate { display: block; text-decoration: none; color: inherit; }
 .plate + .plate { margin-top: var(--s9); }
 .plate-index { align-items: baseline; padding-bottom: var(--s5); }
-.plate-index .no { color: var(--fg-2); }
+.plate .no { color: var(--fg-2); }
 .plate-title { text-decoration-line: underline; text-decoration-thickness: .06em; text-underline-offset: .12em; text-decoration-color: transparent; transition: text-decoration-color var(--t-base) var(--ease); }
 .plate:hover .plate-title, .plate:focus-visible .plate-title { text-decoration-color: currentColor; }
 .plate:focus-visible { outline: none; }
 .plate:focus-visible .plate-title { outline: 2px solid var(--light); outline-offset: 6px; }
-.plate-facts { color: var(--fg-2); }
-.plate-cap { align-items: baseline; padding-top: var(--s3); }
-.plate-cap .lead { color: var(--fg-2); }
+.plate-facts { color: var(--fg-2); white-space: nowrap; }
+.plate-cap { padding-top: var(--s4); }
+.plate-cap .lead { color: var(--fg); text-wrap: balance; max-inline-size: 30em; }
+.plate-cap .place { color: var(--fg-2); }
 
 /* Media: a picture at its own proportions on a placeholder of the project's colour. */
 .media {
@@ -347,67 +360,48 @@ main { display: block; }
 .row > .media { flex: var(--ar) 1 0; min-width: 0; }
 /* RIGHT and LEFT: picture in 8 columns, the words in 3. */
 .side { align-items: start; }
-.side .side-text { display: flex; flex-direction: column; gap: var(--s3); }
-.side .side-text .t-h2 { margin-bottom: var(--s3); }
-.side .side-foot { margin-top: var(--s5); display: flex; flex-direction: column; gap: var(--s3); }
+.side .side-text { display: flex; flex-direction: column; }
+.side .side-text .plate-title { margin-top: var(--s5); }
+.side .side-meta { margin-top: var(--s4); }
+.side .side-lead { margin-top: var(--s5); text-wrap: balance; max-inline-size: 22em; }
+.side-left .side-text { align-self: end; }
 
 @media (max-width: 719px) {
   .plate-index .no { grid-column: 1 / 2; }
   .plate-index .plate-title { grid-column: 1 / -1; order: 3; margin-top: var(--s3); }
   .plate-index .plate-facts { grid-column: 2 / 6; text-align: right; }
   .plate .media.bleed-phone { margin-inline: calc(var(--g) * -1); }
-  .side .side-text .t-h2 { font-size: var(--t-h1); line-height: .98; letter-spacing: -.025em; }
   .row.row-3 { flex-wrap: wrap; }
   .row.row-3 > .media:first-child { flex: 1 0 100%; }
-  .plate-cap .place { text-align: left; justify-self: start; }
+  .plate-cap .place { text-align: left; justify-self: start; margin-top: var(--s2); }
+  /* On a phone a side plate reads like the others: its index, the picture, then its sentence. */
   .side > * { grid-row: auto !important; }
-  .side .side-text { margin-bottom: var(--s5); }
+  .side .side-text { display: contents; }
+  .side .side-text > * { grid-column: 1 / -1; }
+  .side .side-text .no { order: 1; }
+  .side .side-text .plate-title { order: 2; margin-top: var(--s3); }
+  .side .side-text .side-meta { order: 3; margin-top: var(--s3); margin-bottom: var(--s5); }
+  .side > :not(.side-text) { order: 4; }
+  .side .side-lead { order: 5; margin-top: var(--s4); }
 }
 
-/* ---------- Slot reveal: a round-ended slit of light opens to the frame. ---------- */
-.js .reveal {
-  clip-path: inset(0 calc(50% - var(--g) / 2) round calc(var(--g) / 2));
-  background: color-mix(in oklab, var(--project) 55%, var(--ink));
-  transition: clip-path var(--t-slow) var(--ease), background-color var(--t-slow) var(--ease);
+/* ---------- Slot reveal: used once a page. ----------
+   Closed, the frame is a dim room (the picture at a quarter of its light)
+   with one round-ended slit of full light down its middle, a gutter wide.
+   Open, the slit has widened to the frame's edges. The slit is a transparent
+   pill whose spread shadow is the dimming, so its ends stay round. */
+.js .reveal::after {
+  content: ""; position: absolute; z-index: 1; top: 0; bottom: 0; left: 50%;
+  width: var(--g); translate: -50% 0;
+  border-radius: calc(var(--g) / 2);
+  box-shadow: 0 0 0 200vmax rgb(11 11 12 / .75);
+  pointer-events: none;
+  transition: width 700ms var(--ease-scrub), border-radius 700ms var(--ease-scrub), box-shadow 700ms var(--ease-scrub);
 }
-.js .reveal::after { content: ""; position: absolute; inset: 0; background: var(--ink); opacity: .6; transition: opacity var(--t-slow) var(--ease); pointer-events: none; }
-.js .reveal.is-open { clip-path: inset(0 0 round 0); background-color: color-mix(in oklab, var(--project) 10%, var(--ink)); }
-.js .reveal.is-open::after { opacity: 0; }
-
-/* ---------- Offerings ---------- */
-.offer-wrap { position: relative; }
-.offer-list { display: grid; grid-template-columns: subgrid; border-top: 1px solid var(--hair); }
-.offer-list > li { display: contents; }
-.offer {
-  display: grid; grid-template-columns: subgrid; grid-column: 1 / -1;
-  align-items: baseline;
-  padding-block: var(--s5);
-  border-bottom: 1px solid var(--hair);
-  text-decoration: none;
-  transition: color var(--t-base) var(--ease);
-}
-.offer .name { grid-column: 1 / 8; }
-.offer .desc { grid-column: 8 / 12; color: var(--tx-2); transition: opacity var(--t-base) var(--ease); }
-.offer .count { color: var(--tx-2); font-variant-numeric: tabular-nums; margin-left: .3em; font-size: .4em; vertical-align: super; letter-spacing: 0; font-family: var(--sans); }
-.offer-panel {
-  position: absolute; z-index: 2; pointer-events: none;
-  right: var(--g); width: calc(3 * var(--c) + 2 * var(--g));
-  aspect-ratio: 3 / 4; top: 50%; translate: 0 -50%;
-  opacity: 0; transition: opacity var(--t-base) var(--ease);
-}
-.offer-panel .media { position: absolute; inset: 0; aspect-ratio: auto; opacity: 0; transition: opacity var(--t-base) var(--ease); }
-.offer-panel .media.on { opacity: 1; }
-@media (hover: hover) and (pointer: fine) and (min-width: 720px) {
-  .offer-list.is-hover .offer { color: var(--fg-3); }
-  .offer-list.is-hover .offer.on { color: var(--fg); }
-  .offer-list.is-hover .desc { opacity: 0; }
-  .offerings.is-hover .offer-panel { opacity: 1; }
-}
-@media (max-width: 719px) {
-  .offer { display: block; padding-block: var(--s4); }
-  .offer .desc { display: block; margin-top: var(--s2); }
-  .offer-panel { display: none; }
-}
+.js .reveal.is-open::after { width: calc(100% + 2px); border-radius: 0; box-shadow: 0 0 0 200vmax rgb(11 11 12 / 0); }
+/* Every other picture comes in plainly, once, as it arrives (reveal.js). */
+.js .fade > :is(picture, img, video) { opacity: 0; transition: opacity 500ms var(--ease); }
+.js .fade.is-in > :is(picture, img, video) { opacity: 1; }
 
 /* ---------- People ---------- */
 .people-intro { margin-bottom: var(--s7); }
@@ -427,12 +421,17 @@ main { display: block; }
 .contact { margin-top: var(--s9); padding-top: var(--s8); min-height: 84svh; overflow: hidden; }
 .contact .label { color: var(--paper-fg-2); }
 .contact-mail { margin-top: var(--s4); font-size: min(var(--t-display), calc((100vw - 2 * var(--g)) / 8.1)); }
-.contact-mail a { text-decoration-thickness: .06em; text-underline-offset: .1em; overflow-wrap: anywhere; }
+.contact-mail a { text-decoration-thickness: .035em; text-underline-offset: .14em; overflow-wrap: anywhere; }
 .contact-facts { margin-top: var(--s7); }
 .fact dt { color: var(--tx-2); }
 .fact dd { margin: 0; overflow-wrap: break-word; }
 .fact dd a { color: var(--tx); }
 .contact-line { margin-top: var(--s8); padding-bottom: var(--s4); align-items: baseline; }
+@media (max-width: 719px) {
+  /* One line on a phone too: the year at left, Motion at right. */
+  .contact-line > :first-child { grid-column: 1 / 3; }
+  .contact-line > .right { grid-column: 3 / -1; white-space: nowrap; }
+}
 .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; border: 1px solid var(--light); vertical-align: .15em; margin-right: .5em; }
 .dot.on { background: var(--light); }
 .on-paper .dot { border-color: #6c4fd6; }
@@ -481,8 +480,8 @@ main { display: block; }
 /* ---------- Reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 1ms !important; animation-duration: 1ms !important; }
-  .js .reveal { clip-path: none; }
   .js .reveal::after { display: none; }
+  .js .fade > :is(picture, img, video) { opacity: 1; }
   @view-transition { navigation: none; }
 }
 
@@ -490,7 +489,7 @@ main { display: block; }
 @media print {
   :root { --bg: #fff; --tx: #000; --tx-2: #444; --ink: #fff; --fg: #000; --fg-2: #444; }
   .site-header, .aperture, .grid-overlay, .reel, .vctl, .ap-row { display: none !important; }
-  .js .reveal { clip-path: none; }
   .js .reveal::after { display: none; }
+  .js .fade > :is(picture, img, video) { opacity: 1; }
   .plate + .plate { break-before: page; }
 }

@@ -1,25 +1,28 @@
-// A project's page: the door to the next project, the feed that follows it
-// one round through the work, the running foot ("03 / 07  Dome Conductor"),
-// the progress hairline, and the words that control each film.
+// A project's page: the title band measured under the hero, the running head
+// in the header ("03  Dome Conductor"), the door to the next project, the
+// feed that follows it one round through the work, the progress hairline,
+// and the words that control each film.
 //
-// The door: a 160svh hall whose stage is pinned. The next project's room is
-// seen through one slot of light a gutter wide at the centre column; walking
-// up to it, the slot widens to the whole screen (window to threshold) and the
-// title fades. Then the next project simply continues: its page is fetched,
-// its article goes in after the door without its hero (the door was its
-// hero), and the address, the running foot and the hairline follow whichever
-// project is being read. After one round the last door is left out, and the
-// page ends in the contact room. Reduced motion: no pin and no scrub, the door
-// is its title and its picture, a plain link.
+// The door: a hall one screen tall plus a short run-in, its stage pinned. The
+// next project's room is seen through one slot of light a gutter wide at the
+// centre column; as the door comes up the screen (from 60% of the viewport)
+// the slot widens to the whole screen (window to threshold) and the title
+// fades. Then the next project simply continues: its page is fetched, its
+// article goes in after the door without its hero (the door was its hero),
+// and the address, the running head and the hairline follow whichever project
+// is being read. After one round the last door is left out, and the page ends
+// in the contact room. Reduced motion: no pin and no scrub, the door is its
+// title and its picture, a plain link.
 
 import { motion } from './motion.js';
-import { observe } from './reveal.js';
+import { scan } from './reveal.js';
 import { register } from './video.js';
 
 const clamp = (v) => Math.min(1, Math.max(0, v));
 const ease = (t) => bezier(0.6, 0, 0.2, 1, t); // --ease-scrub
 const origin = document.querySelector('article.project');
-const foot = document.querySelector('[data-foot]');
+const header = document.querySelector('[data-header]');
+const running = header?.querySelector('[data-running]');
 const progress = document.querySelector('[data-progress]');
 const contact = document.getElementById('contact');
 const feedOn = Boolean(origin) && 'fetch' in window && 'DOMParser' in window;
@@ -38,15 +41,17 @@ function controls(root) {
     const clock = box.querySelector('[data-v="time"]');
     const show = () => {
       play.textContent = v.paused ? 'Play' : 'Pause';
-      sound.textContent = v.muted ? 'Sound on' : 'Sound off';
-      sound.setAttribute('aria-pressed', String(!v.muted));
-      clock.textContent = time(v.duration);
+      if (sound) {
+        sound.textContent = v.muted ? 'Sound on' : 'Sound off';
+        sound.setAttribute('aria-pressed', String(!v.muted));
+      }
+      if (clock) clock.textContent = time(v.duration);
     };
     play.addEventListener('click', () => {
       if (v.paused) { delete v.dataset.held; if (v.preload === 'none') v.preload = 'auto'; v.play().catch(() => {}); }
       else { v.dataset.held = '1'; v.pause(); }
     });
-    sound.addEventListener('click', () => {
+    sound?.addEventListener('click', () => {
       v.muted = !v.muted;
       if (!v.muted && v.paused) { delete v.dataset.held; v.play().catch(() => {}); }
       show();
@@ -78,8 +83,9 @@ function paintDoor(el) {
   const r = el.getBoundingClientRect();
   const H = innerHeight;
   if (r.bottom < -H || r.top > 2 * H) return;
-  const span = Math.max(1, r.height - H);
-  const p = clamp(-r.top / span);
+  // From the door's top at 60% of the screen to the end of its pin.
+  const start = H * 0.6;
+  const p = clamp((start - r.top) / Math.max(1, start + r.height - H));
   const e = ease(p);
   const text = el.querySelector('[data-door-text]');
   const g = parseFloat(getComputedStyle(el).getPropertyValue('--g')) || 16;
@@ -88,11 +94,17 @@ function paintDoor(el) {
   const meta = text?.querySelector('.door-meta');
   const top0 = meta ? Math.min(H * 0.62, meta.offsetTop + meta.offsetHeight + 52) : H * 0.5;
   const x = ((W - g) / 2) * (1 - e);
+  // The slot widens first; its top rises only once the title has begun to go,
+  // so the room never runs over type that can still be read.
+  const dt = top0 * (1 - clamp((e - 0.3) / 0.7));
   el.style.setProperty('--dx', `${x}px`);
-  el.style.setProperty('--dt', `${top0 * (1 - e)}px`);
+  el.style.setProperty('--dt', `${dt}px`);
   el.style.setProperty('--db', `${g * (1 - e)}px`);
   el.style.setProperty('--dr', `${(g / 2) * (1 - e)}px`);
-  el.style.setProperty('--dtext', String(clamp(1 - p / 0.4)));
+  // The title gives way as the room rises to it, and is gone before they meet.
+  const last = meta || text?.querySelector('.door-title');
+  const tb = last ? last.offsetTop + last.offsetHeight : 0;
+  el.style.setProperty('--dtext', String(Math.min(clamp(1 - (e - 0.2) / 0.2), clamp((dt - tb) / 40))));
   if (feedOn && r.top < H * 1.5 && !el.dataset.fed) feed(el);
 }
 
@@ -111,6 +123,7 @@ async function feed(el) {
     seen.add(slug);
     article.classList.add('is-fed');
     article.querySelector('.pj-hero')?.remove();
+    article.classList.remove('has-hero');
     // Its title is the page's title only once: the fed ones are h2 in effect.
     const h1 = article.querySelector('h1');
     if (h1) { const h2 = document.createElement('h2'); h2.className = h1.className; h2.id = h1.id; h2.innerHTML = h1.innerHTML; h1.replaceWith(h2); }
@@ -119,7 +132,7 @@ async function feed(el) {
     // Images it carried as relative or lazy stay as they are; it goes in after this article.
     const host = el.closest('article.project');
     host.after(document.adoptNode(article));
-    article.querySelectorAll('.reveal').forEach(observe);
+    scan(article);
     article.querySelectorAll('video[data-auto]').forEach(register);
     controls(article);
     door(article.querySelector('[data-door]'));
@@ -130,29 +143,51 @@ async function feed(el) {
   }
 }
 
-/* ---------- Running foot, address, progress ---------- */
+/* ---------- The title band: the hero fills the screen down to it ---------- */
+function band() {
+  if (!origin?.classList.contains('has-hero')) return;
+  const head = origin.querySelector('.pj-head');
+  if (head) origin.style.setProperty('--pj-band', `${Math.ceil(head.getBoundingClientRect().height)}px`);
+}
+
+/* ---------- Running head, address, progress ---------- */
 let articles = [...document.querySelectorAll('article.project')];
 let current = origin;
+let shown = '';
+function head(a) {
+  if (!running) return;
+  const key = a ? a.dataset.project : '';
+  header.classList.toggle('has-running', Boolean(a));
+  if (key === shown) return;
+  shown = key;
+  running.textContent = '';
+  if (!a) return;
+  const no = document.createElement('span');
+  no.className = 'no';
+  no.textContent = a.dataset.number;
+  running.append(no, a.dataset.title);
+}
 function follow() {
   const H = innerHeight;
+  // The project being read: the last one whose title band is past the middle of the screen.
   let now = articles[0];
-  for (const a of articles) if (a.getBoundingClientRect().top <= H * 0.45) now = a;
+  for (const a of articles) if ((a.querySelector('.pj-head') ?? a).getBoundingClientRect().top <= H * 0.5) now = a;
   if (now && now !== current) {
     current = now;
     const url = now.dataset.url;
     if (url && location.pathname !== url) history.replaceState(history.state, '', url);
     document.title = `${now.dataset.title} · SMASH`;
-    if (foot) {
-      foot.querySelector('[data-foot-no]').textContent = now.dataset.number;
-      foot.querySelector('[data-foot-title]').textContent = now.dataset.title;
-    }
     if (progress) progress.style.setProperty('--project', now.style.getPropertyValue('--project'));
   }
   if (now && progress) {
     const r = now.getBoundingClientRect();
     progress.style.setProperty('--p', String(clamp(-r.top / Math.max(1, r.height - H))));
   }
-  if (foot && contact) foot.classList.toggle('is-off', contact.getBoundingClientRect().top < H - 40 || scrollY < 40);
+  // The running head: once the title has gone under the header, until the contact room.
+  const title = now?.querySelector('.pj-title');
+  const under = title && title.getBoundingClientRect().bottom < (header?.offsetHeight || 52);
+  const end = contact && contact.getBoundingClientRect().top < H;
+  head(under && !end ? now : null);
 }
 
 let ticking = false;
@@ -169,6 +204,9 @@ if (origin) {
   addEventListener('scroll', tick, { passive: true });
   addEventListener('resize', tick);
   addEventListener('motionchange', tick);
+  band();
+  document.fonts?.ready.then(() => { band(); tick(); });
+  addEventListener('resize', band);
   frame();
 }
 

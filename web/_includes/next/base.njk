@@ -32,9 +32,9 @@
   <header class="site-header grid t-meta" data-header>
     {% set markId = 'm-head' %}{% set markLabel = 'SMASH, home' %}{% set markClass = '' %}
     <a class="home-link" href="/next/" aria-label="SMASH, home">{% include "next/mark.njk" %}</a>
-    <p class="tagline">Experience design studio, Stockholm</p>
+    <p class="tagline" data-tagline><span data-tagline-text>Experience design studio, Stockholm</span><span class="running tnum" data-running></span></p>
     <nav class="nav" aria-label="Main">
-      <a href="/next/work/"{% if section == 'work' %} aria-current="page"{% endif %}>Work<span class="count tnum">{{ work.length | pad }}</span></a>
+      <a href="/next/work/"{% if section == 'work' %} aria-current="page"{% endif %}>Work</a>
       <a href="/next/studio/"{% if section == 'studio' %} aria-current="page"{% endif %}>Studio</a>
       <a href="#contact">Contact</a>
     </nav>

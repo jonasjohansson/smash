@@ -78,10 +78,11 @@ if (overlay) {
 
 /* Motion: On / Off, for every autoplaying film on the site (WCAG 2.2.2). */
 document.querySelectorAll('[data-motion-toggle]').forEach((b) => {
+  const state = b.parentElement.querySelector('[data-motion-state]');
   const show = () => {
-    b.textContent = motion.on ? 'On' : 'Off';
-    b.setAttribute('aria-pressed', String(motion.on));
-    b.setAttribute('aria-label', `Motion ${motion.on ? 'on' : 'off'}: autoplaying films ${motion.on ? 'play' : 'are paused'}`);
+    if (state) state.textContent = `Motion: ${motion.on ? 'on' : 'off'}`;
+    b.textContent = motion.on ? 'Turn off' : 'Turn on';
+    b.setAttribute('aria-label', motion.on ? 'Turn motion off: pause the films that play by themselves' : 'Turn motion on: let films play by themselves');
   };
   b.addEventListener('click', () => { motion.set(!motion.on); });
   addEventListener('motionchange', show);

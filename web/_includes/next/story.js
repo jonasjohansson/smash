@@ -13,6 +13,11 @@
 //   'right a.jpg'            columns 4-11 / 'left a.jpg' columns 1-8
 //   'portrait a.jpg'         a lone tall picture, columns 4-8
 //   'row a.jpg b.jpg ...'    one project's pictures a gutter apart, one height
+//   'row:paper a.jpg ...'    any of these on a lit paper band, full bleed (a white render)
+// `hero` opens the page and is its Fig. 1; `cover`, if given, stands for the
+// project on the index instead. `crop` sets a file's proportion where its own
+// frame carries a letterbox. `focus` keeps the hero's subject in view where
+// a narrow screen crops it. `run` is how long it ran, only where the text says so.
 // Without a flow, one is made by the rules in `compose` (spec 9.5).
 // Nothing here is random.
 
@@ -21,11 +26,13 @@ import { readCategories } from '../../scripts/categories.js';
 
 const STORY = {
   jagad: {
-    hero: '01-corrected.jpg',
+    hero: '09.webm',
+    cover: '01-corrected.jpg',
     lead: 'For three nights, a building in central Stockholm became a five-storey arcade game, played from joysticks on the pavement across the street.',
     place: 'Central Stockholm',
     client: 'Kanal 5',
     medium: 'Projection mapping, interactive game',
+    run: 'Three nights',
     texts: {
       'The game': 'To launch Kanal 5’s show *Jagad*, we rebuilt a classic top-down chase game onto the building itself. The windows became the blocks, and the gaps between them became the streets. Players worked arcade controllers we designed and built for the pavement, hunting celebrity avatars as they roamed the facade. Catch one, and the whole road network flooded with your colour. High scores and player names went straight back up onto the wall.',
       'The nights': 'Hundreds queued over the three nights, some of them to chase down their own avatar. For everyone who could not be there, a [web version](https://jagad.jonasjohansson.se/) put the same game on any phone.',
@@ -33,7 +40,7 @@ const STORY = {
     flow: [
       'room joystick-hero.jpg',
       'text: The game',
-      'plate 09.webm',
+      'plate 01-corrected.jpg',
       'row 04.jpg controller-facade-first-frame.jpg',
       'right 02.jpg',
       'text: The nights',
@@ -66,6 +73,7 @@ const STORY = {
     place: 'Kungsträdgården, Stockholm',
     client: 'TV4',
     medium: 'Mixed reality, live camera',
+    run: 'Two weeks, day and night',
     texts: {
       'The launch': 'For the launch of TV4’s science fiction drama *Vi kommer i fred*, we stood a single-camera totem in Kungsträdgården, facing the Royal Castle across the water. Whoever walked by was dropped straight into the show’s opening scene: a huge alien craft breaking through the clouds over the city they were standing in.',
       'How it works': 'Behind the screen, the whole invasion ran live in Resolume, mapped onto the camera feed so that anyone who stepped up landed inside the shot. Two versions of the scene, one for day and one for night, swapped on a timer to match the light. It ran around the clock for two weeks.',
@@ -98,12 +106,13 @@ const STORY = {
 
   'dome-conductor': {
     hero: 'young-conductor.jpg',
+    focus: '14% 40%',
     lead: 'An orchestra follows your hands. Raise them, find a rhythm and conduct the music around you.',
     place: 'Wisdome Stockholm, Tekniska museet',
     client: 'KTH Royal Institute of Technology',
     medium: 'Interactive installation, dome film',
     texts: {
-      'The commission': 'We made Dome Conductor with [IVAR Studios](https://ivar.studio/sv/projects/dome-conductor/) for KTH Royal Institute of Technology, and worked on its development and parts of its design. It premiered at [Tekniska museet during the 2025 Baltic Sea Festival](https://www.tekniskamuseet.se/pa-gang/tekniska-pa-ostersjofestivalen/), and brought the Swedish Radio Symphony Orchestra into Wisdome Stockholm.',
+      'The commission': 'We made Dome Conductor with [IVAR Studios](https://ivar.studio/sv/projects/dome-conductor/) for KTH Royal Institute of Technology, and worked on its development and parts of its design. It premiered at [Tekniska museet](https://www.tekniskamuseet.se/pa-gang/tekniska-pa-ostersjofestivalen/) during the 2025 Baltic Sea Festival, and brought the Swedish Radio Symphony Orchestra into Wisdome Stockholm.',
       'How it works': 'A camera follows the visitor’s movements. KTH’s machine learning model, trained on recordings of conductors, turns those gestures into tempo: move faster and the orchestra speeds up; pause and it waits. There is no suit to wear and nothing to calibrate. KTH researchers Hedvig Kjellström and Mert Mermerci worked on the project, supported by WASP and SeRC.',
       'The experience': 'It plays the opening ninety seconds of Beethoven’s Fifth Symphony, recorded with conductor Daniel Harding. A wide-angle camera filmed the orchestra for the dome’s 180° projection, and playback lets the visitor set the pace. The musicians also recorded their reactions: conduct them well, and they applaud.',
     },
@@ -137,7 +146,8 @@ const STORY = {
   },
 
   'danny-saucedo': {
-    hero: '01.jpg',
+    hero: '03.jpg',
+    crop: { '01.jpg': 2.4, '01-poster.jpg': 1 },
     lead: 'Stage design and projection mapping for Danny Saucedo’s *Happy That You Found Me* at Melodifestivalen 2024.',
     place: 'Melodifestivalen, SVT',
     client: 'Danny Saucedo',
@@ -148,7 +158,7 @@ const STORY = {
       'The making': 'We tested the visuals on a physical maquette, and wrote a custom camera tool in [Unity](https://unity.com/) to hold one precise direction of photography across every scene.',
     },
     flow: [
-      'room 03.jpg',
+      'plate 01.jpg',
       'text: The stage',
       'right 02.jpg',
       'text: The visuals',
@@ -183,7 +193,7 @@ const STORY = {
       'room 02.jpg',
       'text: The tribute',
       'text: The making',
-      'row 03.jpg 01.mp4',
+      'row:paper 03.jpg 01.mp4',
     ],
     credits: [
       ['Commissioned by', '[World Jewish Congress](https://www.worldjewishcongress.org/), [Raoul Wallenberg Academy](https://rwacademy.se/) and [Nobel Week Lights](https://nobelweeklights.se/)'],
@@ -260,7 +270,7 @@ const MEDIUM = {
 
 const base = (src = '') => src.split('/').pop();
 
-function figure(b, caps) {
+function figure(b, caps, crop = {}) {
   const file = base(b.src);
   return {
     type: b.type,
@@ -269,7 +279,8 @@ function figure(b, caps) {
     poster: b.poster ?? null,
     alt: b.alt ?? '',
     cap: caps[file] ?? b.alt ?? '',
-    ar: Number(b.ar) || 1.5,
+    ar: Number(crop[file]) || Number(b.ar) || 1.5,
+    crop: Boolean(crop[file]),
     full: Boolean(b.full),
   };
 }
@@ -315,12 +326,13 @@ export async function stories() {
   list.forEach((p, i) => {
     const s = STORY[p.slug] ?? {};
     const caps = s.caps ?? {};
-    const media = p.blocks.filter((b) => b.type === 'image' || b.type === 'video').map((b) => figure(b, caps));
+    const media = p.blocks.filter((b) => b.type === 'image' || b.type === 'video').map((b) => figure(b, caps, s.crop));
     const byFile = Object.fromEntries(media.map((m) => [m.file, m]));
     const texts = p.blocks.filter((b) => b.type === 'text');
     const leadBlock = texts.find((b) => !b.label);
     const creditBlock = texts.find((b) => b.label === 'Credits');
     const hero = byFile[s.hero] ?? media.find((m) => m.ar >= 1.2) ?? media[0] ?? null;
+    const cover = byFile[s.cover] ?? hero;
 
     let flow;
     if (s.flow) {
@@ -330,12 +342,13 @@ export async function stories() {
           const label = t[1];
           return { kind: 'text', label, body: s.texts?.[label] ?? texts.find((b) => b.label === label)?.content ?? '' };
         }
-        const [kind, ...files] = line.trim().split(/\s+/);
-        return { kind, items: files.map((f) => byFile[f]).filter(Boolean) };
+        const [head, ...files] = line.trim().split(/\s+/);
+        const [kind, mod] = head.split(':');
+        return { kind, paper: mod === 'paper', items: files.map((f) => byFile[f]).filter(Boolean) };
       }).filter((r) => r.kind === 'text' ? r.body : r.items.length);
     } else {
       const rest = p.blocks.filter((b) => b !== leadBlock && b !== creditBlock && !(hero && b.src && base(b.src) === hero.file));
-      flow = compose(rest.map((b) => (b.type === 'text' ? b : figure(b, caps))));
+      flow = compose(rest.map((b) => (b.type === 'text' ? b : figure(b, caps, s.crop))));
     }
 
     // Figures are numbered through the page: the hero is Fig. 1.
@@ -343,8 +356,8 @@ export async function stories() {
     let firstMedia = true;
     for (const r of flow) {
       if (r.items) {
-        // The slot reveal opens ROOMs and the first pictures after the lead only.
-        r.reveal = r.kind === 'room' || firstMedia;
+        // The slot reveal is used once a page: the first pictures after the lead.
+        r.reveal = firstMedia;
         firstMedia = false;
         const sum = r.items.reduce((a, m) => a + m.ar, 0);
         r.items = r.items.map((m) => ({ ...m, fig: ++n, share: m.ar / sum }));
@@ -363,13 +376,16 @@ export async function stories() {
       url: `/next/work/${p.slug}/`,
       number: String(i + 1).padStart(2, '0'),
       lead: s.lead ?? leadBlock?.content ?? '',
-      hero: hero ? { ...hero, fig: 1 } : null,
+      hero: hero ? { ...hero, fig: 1, focus: s.focus ?? null } : null,
+      // The picture that stands for the project on the index: a still.
+      cover: cover ? { ...cover, still: cover.type === 'video' ? cover.poster : cover.src } : null,
       flow,
       facts: [
         ['Client', s.client],
         ['Place', s.place ?? p.caption],
         ['Medium', s.medium ?? (p.tags ?? []).map((t) => MEDIUM[t]).filter(Boolean).join(', ')],
         ['Year', String(p.year)],
+        ['Run', s.run],
       ].filter(([, v]) => v),
       credits: s.credits ?? (creditBlock ? [['', creditBlock.content]] : []),
       offering: cats[p.category] ?? null,

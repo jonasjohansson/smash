@@ -1,7 +1,7 @@
 // The work index: the filter by offering (?in=slug, kept in the address),
-// the two views (Schedule / Elevation, remembered per visitor), and the lit
-// room: on a fine pointer, hovering a row lights its project's room behind
-// the whole list, after an 80ms intent delay.
+// the two views (Images, the default, and List; the choice is remembered per
+// visitor), and the lit room: on a fine pointer, hovering a row of the list
+// lights its project's room behind the whole list, after an 80ms intent delay.
 
 const root = document.querySelector('[data-work]');
 if (root) {
@@ -26,7 +26,7 @@ if (root) {
   /* ---------- Views ---------- */
   const stored = () => { try { return localStorage.getItem(KEY); } catch { return null; } };
   function view(name, remember) {
-    const v = name === 'elevation' ? 'elevation' : 'schedule';
+    const v = name === 'schedule' ? 'schedule' : 'elevation';
     schedule.hidden = v !== 'schedule';
     elevation.hidden = v !== 'elevation';
     viewButtons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === v)));
@@ -34,7 +34,7 @@ if (root) {
     unlight();
   }
   viewButtons.forEach((b) => b.addEventListener('click', () => view(b.dataset.view, true)));
-  view(stored() || (phone.matches ? 'elevation' : 'schedule'));
+  view(stored() || 'elevation');
 
   /* ---------- Filter ---------- */
   const names = Object.fromEntries(filters.map((a) => [a.dataset.in, a.firstChild.textContent.trim()]));
@@ -44,19 +44,12 @@ if (root) {
     filters.forEach((a) => a.setAttribute('aria-current', String(a.dataset.in === on)));
     let n = 0;
     for (const list of [schedule, elevation]) {
-      let k = 0;
       const items = [...list.querySelectorAll('[data-item]')];
       const shown = items.filter((li) => !on || li.dataset.in === on);
       const odd = shown.length % 2 === 1;
       items.forEach((li) => { li.hidden = !shown.includes(li); });
-      // Elevation: pairs on the bar rule; one left over is a hall, and it leads.
-      if (list === elevation) {
-        shown.forEach((li, i) => {
-          li.classList.remove('hall', 'l', 'r');
-          if (odd && i === 0) li.classList.add('hall');
-          else li.classList.add((k++ % 2) ? 'r' : 'l');
-        });
-      }
+      // Images: two to a row; one left over is a hall, and it leads.
+      if (list === elevation) shown.forEach((li, i) => li.classList.toggle('hall', odd && i === 0));
       n = shown.length;
     }
     if (status) status.textContent = `${n} ${n === 1 ? 'project' : 'projects'}${on ? `, ${names[on]}` : ''}`;
@@ -98,6 +91,7 @@ if (root) {
     if (litCap) {
       const low = row.getBoundingClientRect().bottom > innerHeight - litCap.offsetHeight - 40;
       litCap.classList.toggle('at-top', low);
+      lit.classList.toggle('at-top', low);
     }
   }
   function unlight() {

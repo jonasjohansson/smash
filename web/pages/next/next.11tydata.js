@@ -23,38 +23,39 @@ const MEDIUM = {
 };
 
 // Home plates: `plate` is room | plate | right | left | row; `media` names
-// files of the project (images or videos) in the order shown. `lead` is the
-// plate's sentence in the studio's voice.
+// files of the project (images or videos) in the order shown; `focus` is an
+// object-position for them. `lead` is the plate's sentence in the studio's voice.
 const META = {
   jagad: {
     client: 'Kanal 5',
     plate: 'room',
-    media: ['01-corrected.jpg'],
+    media: ['09.webm'],
     lead: 'For three nights, a five-storey building in central Stockholm became an arcade game, played from joysticks on the pavement.',
   },
   'vi-kommer-i-fred': {
     client: 'TV4',
     plate: 'row',
-    media: ['03.jpg', '06.jpg', '07.webm'],
+    media: ['03.jpg', '07.webm'],
     lead: 'Facing the Royal Castle, a screen pulled everyone who walked past into an alien invasion of Stockholm, day and night for two weeks.',
   },
   'dome-conductor': {
     client: 'KTH Royal Institute of Technology',
     plate: 'right',
     media: ['young-conductor.jpg'],
+    focus: '50% 30%',
     lead: 'Visitors step into the Wisdome and conduct the Swedish Radio Symphony Orchestra with their hands. Move faster and it speeds up; pause and it waits.',
   },
   'danny-saucedo': {
     client: 'Melodifestivalen',
     plate: 'room',
-    media: ['01.jpg'],
+    media: ['03.jpg'],
     lead: 'A stage for Melodifestivalen 2024: three LED walls, an LED floor, and a Romanesque gate built to be mapped.',
   },
   heroes: {
     client: 'World Jewish Congress, Raoul Wallenberg Academy',
     plate: 'left',
     media: ['01.jpg'],
-    lead: 'Statues of Raoul Wallenberg and Dag Hammarskjöld, scanned in 3D and set into the drone-scanned facade of Stockholm’s Great Synagogue.',
+    lead: 'Wallenberg and Hammarskjöld, scanned in 3D and set into the Great Synagogue’s own facade.',
   },
   resonance: {
     client: 'Allt ljus på Uppsala',
@@ -64,8 +65,8 @@ const META = {
   },
   'sala-hjartslag': {
     client: 'City of Sala',
-    plate: 'plate',
-    media: ['01.jpg'],
+    plate: 'row',
+    media: ['01-poster.jpg', '01.jpg'],
     lead: 'Four hundred years of a town’s history, drawn onto the curve of one facade for Sala’s anniversary.',
   },
 };
@@ -100,7 +101,7 @@ function plateFor(p, i) {
   const items = media(p, names);
   // A row's pictures share one height: each takes width in proportion to its aspect.
   const sum = items.reduce((s, b) => s + b.ar, 0);
-  return { kind, items: items.map((b) => ({ ...b, share: b.ar / sum })) };
+  return { kind, focus: m.focus ?? null, items: items.map((b) => ({ ...b, share: b.ar / sum })) };
 }
 
 export default async function () {

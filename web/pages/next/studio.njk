@@ -15,8 +15,6 @@ scripts:
     ink contact room (studio.css, studio.js).
     Media markup is written inline: {% image %} renders nothing inside an
     include or a macro. -#}
-{%- set first = (work | sort(false, false, 'year') | first).year %}
-{%- set last = (work | sort(true, false, 'year') | first).year %}
 {#- The work being made, found by project and file in the projects' data:
     the project's own alt text, and a caption written for this page. -#}
 {%- set roomFig = ['dome-conductor', 'development.jpg', 'in development. The dome’s projection is set up on one screen, while the orchestra already plays on the dome behind.'] %}
@@ -24,6 +22,13 @@ scripts:
   ['vi-kommer-i-fred', '09-wide.jpg', 'The invasion scene running live in Resolume, on the square by the water.'],
   ['dome-conductor', 'fisheye-camera.jpg', 'The fisheye camera that filmed the orchestra for the dome’s 180° projection.']
 ] %}
+{#- The offerings in this site's own words, by slug: the shared categories/*.md
+    stay as the live site has them. Any other slug falls back to its intro. -#}
+{%- set offerText = {
+  'experience-design': ['Experiences for museums and exhibitions that visitors take part in rather than look at. At Tekniska museet, visitors step into the Wisdome and conduct the Swedish Radio Symphony Orchestra with their hands: move faster and the orchestra speeds up, pause and it waits.'],
+  'digital-interactive': ['Installations that run live: cameras, sensors and real-time software that answer whoever steps up. In Kungsträdgården, a screen dropped passers-by into an alien invasion of Stockholm, day and night for two weeks.'],
+  'originals': ['We start from the building. A town hall, a synagogue, a five-storey facade, a stage: each piece is drawn to its surface’s own lines, so the architecture becomes the story rather than a screen for it.', 'Then we open it to the people in front of it. They paint a facade in colour, chase celebrities through its windows, or watch four hundred years of a town’s history pass over its walls.']
+} %}
 {%- set steps = [
   ['Idea', 'We start from the building, and from the people who will stand in front of it.'],
   ['Design', 'Each piece is drawn to its surface’s own lines, so the architecture becomes the story.'],
@@ -31,41 +36,47 @@ scripts:
   ['Run', 'We stay to the last night, and design for the crew who switches it on at seven in the morning.']
 ] %}
 
-{#- 1. Who: the name of the page, the statement, and the studio in a paragraph. -#}
+{#- 1. The page's name, then straight into a room where the work is being made. -#}
 <header class="page-top st-top" aria-labelledby="studio-title">
   <div class="grid">
-    <h1 class="x-all t-display" id="studio-title">Studio</h1>
-  </div>
-  <div class="grid st-statement">
-    <p class="x-2-11 t-h1">We turn facades, domes and city squares into places people step into, play with and remember.</p>
-  </div>
-  <div class="grid st-intro">
-    <div class="x-4-9 t-body prose measure">
-      <p>SMASH is an experience design studio in Stockholm. We make interactive installations, projection mapping and immersive environments for museums, broadcasters, cities and the people who walk past them.</p>
-      <p class="dim">We take each piece from the first sketch to the last night of the run: the idea, the design, the software, the hardware, and the hand-over to the crew who switches it on.</p>
-    </div>
-  </div>
-  <div class="grid st-facts">
-    <dl class="x-all bars bars-4 t-body">
-      <div class="fact"><dt class="t-meta">Studio</dt><dd>Södermalm, Stockholm</dd></div>
-      <div class="fact"><dt class="t-meta">People</dt><dd>Three, with makers from our network as the work needs</dd></div>
-      <div class="fact"><dt class="t-meta">What we do</dt><dd>{% for c in categories %}<a href="#{{ c.slug }}">{{ c.name }}</a>{% if not loop.last %}<br>{% endif %}{% endfor %}</dd></div>
-      <div class="fact"><dt class="t-meta">Work</dt><dd><a href="/next/work/"><span class="tnum">{{ work.length | pad }}</span> projects</a><br><span class="tnum dim">{{ first }}–{{ last }}</span></dd></div>
-    </dl>
+    <h1 class="x-all t-poster" id="studio-title">Studio</h1>
   </div>
 </header>
 
-{#- 2. The work being made: a ROOM, as evidence of delivery. -#}
+{#- 2. The work being made: a ROOM, as evidence of delivery. Eager: it is on
+    the first screen. -#}
 {%- for p in projects %}{% if p.slug == roomFig[0] %}{% for b in p.blocks %}{% if b.type == 'image' and b.src.endsWith('/' + roomFig[1]) %}
 <figure class="st-room" style="--project: {{ p.color or '#5d6268' }}">
-  <div class="room">
-    <div class="media reveal" style="--ar: {{ b.ar }}">{% image b.src, b.alt, '100vw', 'lazy' %}</div>
+  <div class="room" data-ink>
+    <div class="media" style="--ar: {{ b.ar }}">{% image b.src, b.alt, '100vw', 'eager' %}</div>
   </div>
   <figcaption class="grid fig-cap t-meta">
     <p class="x-1-5"><span class="fig-no tnum">Fig. 1</span> <a href="/next/work/{{ p.slug }}/">{{ p.title }}</a>, {{ roomFig[2] }}</p>
   </figcaption>
 </figure>
 {%- endif %}{% endfor %}{% endif %}{% endfor %}
+
+{#- 3. Who: the studio's own line, the studio in two paragraphs, the facts. -#}
+<section class="section st-who" aria-labelledby="who-title">
+  <div class="grid baseline st-line">
+    <h2 class="x-1 label t-meta" id="who-title">About</h2>
+    <p class="x-2-11 t-h1">A studio of three, with the makers each piece needs, from the first sketch to the last night of the run.</p>
+  </div>
+  <div class="grid st-intro">
+    <div class="x-4-9 t-body prose measure">
+      <p>SMASH is an experience design studio in Stockholm. We make interactive installations, projection mapping and immersive environments for museums, broadcasters, cities and the people who walk past them.</p>
+      <p class="dim">Each piece is ours from end to end: the idea, the design, the software, the hardware, and the hand-over to the crew who switches it on.</p>
+    </div>
+  </div>
+  <div class="grid st-facts">
+    <dl class="x-all bars bars-4 t-body">
+      <div class="fact"><dt class="t-meta">Studio</dt><dd>Södermalm, Stockholm</dd></div>
+      <div class="fact"><dt class="t-meta">People</dt><dd><a href="#people">Three</a>, with makers from our network</dd></div>
+      <div class="fact"><dt class="t-meta">What we do</dt><dd>{% for c in categories %}<a href="#{{ c.slug }}">{{ c.name }}</a>{% if not loop.last %}<br>{% endif %}{% endfor %}</dd></div>
+      <div class="fact"><dt class="t-meta">For</dt><dd>Museums, broadcasters and cities</dd></div>
+    </dl>
+  </div>
+</section>
 
 {#- 3. What we do: the three offerings, ruled like a schedule. Name on the
     label axis, the words on the reading axis, the picture in the last three
@@ -76,15 +87,14 @@ scripts:
   </div>
   <ol class="grid st-offer-list">
     {%- for c in categories %}
-    {%- set n = counts[c.slug] or 0 %}
     <li class="x-all st-offer" id="{{ c.slug }}">
       <div class="st-offer-name">
         <span class="t-meta tnum dim">{{ loop.index | pad }}</span>
         <h3 class="t-h2">{{ c.name }}</h3>
       </div>
       <div class="st-offer-text t-body measure">
-        <div class="prose">{{ c.intro | md | safe }}</div>
-        <p class="st-offer-link t-meta"><a href="/next/work/?in={{ c.slug }}">{{ c.name }} work</a> <span class="tnum dim">({{ n }})</span></p>
+        <div class="prose">{% if offerText[c.slug] %}{% for para in offerText[c.slug] %}<p>{{ para }}</p>{% endfor %}{% else %}{{ c.intro | md | safe }}{% endif %}</div>
+        <p class="st-offer-link t-meta"><a href="/next/work/?in={{ c.slug }}">{{ c.name }} work</a></p>
       </div>
       <a class="st-offer-pic media" href="/next/work/?in={{ c.slug }}" tabindex="-1" aria-hidden="true">{% image c.hero.src, c.hero.alt, '(max-width: 719px) 100vw, (max-width: 1099px) 70vw, 24vw', 'lazy' %}</a>
     </li>
@@ -99,12 +109,12 @@ scripts:
     <h2 class="x-1-5 label" id="how-title">How we work</h2>
   </div>
   <div class="grid">
-    <ol class="x-all bars bars-4 stack st-steps">
+    <ol class="x-all bars bars-2 stack st-steps">
       {%- for s in steps %}
       <li class="st-step">
         <span class="t-meta tnum dim">{{ loop.index | pad }}</span>
         <h3 class="t-h2">{{ s[0] }}</h3>
-        <p class="t-body dim">{{ s[1] }}</p>
+        <p class="t-body dim measure">{{ s[1] }}</p>
       </li>
       {%- endfor %}
     </ol>
@@ -123,23 +133,20 @@ scripts:
   </div>
 </section>
 
-{#- 5. People -#}
-<section class="section people st-people" aria-labelledby="people-title">
+{#- 5. People: set as type, a ruled list of names and addresses. -#}
+<section class="section st-people" id="people" aria-labelledby="people-title">
   <div class="grid baseline people-intro">
     <h2 class="x-1 label t-meta" id="people-title">People</h2>
     <p class="x-4-10 t-lead">Every project has its own lead, with a senior creative and a senior technical lead beside them. We bring in makers from our network as the work needs.</p>
   </div>
-  <div class="grid">
-    <ul class="x-all bars bars-3">
-      {%- for p in team %}
-      <li><a class="person" href="mailto:{{ p.email }}">
-        <div class="media">{{ p.picture | safe }}</div>
-        <p class="who t-body">{{ p.name }}{% if p.role %}<span class="dim">, {{ p.role }}</span>{% endif %}</p>
-        <p class="mail t-meta">{{ p.email }}</p>
-      </a></li>
-      {%- endfor %}
-    </ul>
-  </div>
+  <ul class="grid st-team" role="list">
+    {%- for p in team %}
+    <li class="st-member">
+      <p class="st-name t-lead">{{ p.name }}{% if p.role %}<span class="dim">, {{ p.role }}</span>{% endif %}</p>
+      <p class="st-mail t-body"><a href="mailto:{{ p.email }}">{{ p.email }}</a></p>
+    </li>
+    {%- endfor %}
+  </ul>
 </section>
 
 {#- 6. Worked with: a sentence, not a logo wall. -#}

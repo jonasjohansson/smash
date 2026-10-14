@@ -9,22 +9,22 @@ styles:
 scripts:
   - work.js
 ---
-{#- The work, two ways. Schedule: a ruled list, one row a project; hover a
-    row and its room lights the whole screen behind the list, the row a strip
-    of black tape across it. Elevation: the rooms themselves, on the bar rule,
-    one left over standing alone as a hall. Filter by offering (?in=slug).
+{#- The work, two ways. Images (the default): the rooms themselves, two to a
+    row a gutter apart, one left over standing alone as a hall at the head.
+    List: a ruled list, one row a project; hover a row and its room lights
+    the whole screen behind the list. Filter by offering (?in=slug).
     Media markup is inline: {% image %} renders nothing in includes. -#}
 <section class="page-top grid work-top" aria-labelledby="work-title">
-  <h1 class="x-1-6 t-display" id="work-title">Work</h1>
+  <h1 class="t-poster" id="work-title">Work</h1>
   <div class="work-tools">
     <nav class="filters t-body" aria-label="Filter by offering" data-filters>
-      <a href="/next/work/" data-in="" aria-current="true">All<span class="n">{{ work.length | pad }}</span></a>
+      <a href="/next/work/" data-in="" aria-current="true">All</a>
       {%- for c in categories %}{% if counts[c.slug] %}
-      <a href="/next/work/?in={{ c.slug }}" data-in="{{ c.slug }}">{{ c.name }}<span class="n">{{ counts[c.slug] | pad }}</span></a>
+      <a href="/next/work/?in={{ c.slug }}" data-in="{{ c.slug }}">{{ c.name }}</a>
       {%- endif %}{% endfor %}
     </nav>
     <div class="views t-meta" role="group" aria-label="View">
-      <button type="button" aria-pressed="true" data-view="schedule">Schedule</button><span aria-hidden="true">/</span><button type="button" aria-pressed="false" data-view="elevation">Elevation</button>
+      <button type="button" aria-pressed="true" data-view="elevation">Images</button><span class="sep" aria-hidden="true">&thinsp;/&thinsp;</span><button type="button" aria-pressed="false" data-view="schedule">List</button>
     </div>
   </div>
 </section>
@@ -32,30 +32,14 @@ scripts:
 <div class="work-body grid" data-work>
   <p class="visually-hidden" aria-live="polite" data-work-status></p>
 
-  {#- Schedule -#}
-  <ol class="schedule" data-schedule>
-    {%- for w in work %}{% set s = stories[w.slug] %}{% set h = s.hero %}{% set isrc = h.poster if h.type == 'video' else h.src %}
-    <li data-item data-in="{{ w.category }}">
-      <a class="srow" href="{{ w.url }}" style="--project: {{ s.color }}" data-slug="{{ w.slug }}" data-lead="{{ w.lead }}" data-client="{% for f in s.facts %}{% if f[0] == 'Client' %}For {{ f[1] }}{% endif %}{% endfor %}">
-        <span class="no t-meta tnum">{{ w.number }}</span>
-        <span class="thumb" aria-hidden="true">{% if h %}{% image isrc, "", "56px", "lazy" %}{% endif %}</span>
-        <span class="ttl t-lead">{{ w.title }}</span>
-        <span class="plc t-body">{{ s.place.split(',')[0] }}</span>
-        <span class="off t-body">{{ w.offering }}</span>
-        <span class="yr t-body tnum">{{ w.year }}</span>
-      </a>
-    </li>
-    {%- endfor %}
-  </ol>
-
-  {#- Elevation -#}
-  <ol class="elevation" hidden data-elevation>
-    {%- for w in work %}{% set s = stories[w.slug] %}{% set h = s.hero %}{% set isrc = h.poster if h.type == 'video' else h.src %}
-    {%- set hall = loop.first and (work.length % 2 == 1) %}{% set esz = '(max-width: 719px) 100vw, 94vw' if hall else '(max-width: 719px) 100vw, 41vw' %}
-    <li data-item data-in="{{ w.category }}" class="{{ 'hall' if hall else ('r' if (loop.index0 - (1 if work.length % 2 == 1 else 0)) % 2 == 1 else 'l') }}">
+  {#- Images -#}
+  <ol class="elevation" data-elevation>
+    {%- for w in work %}{% set s = stories[w.slug] %}{% set h = s.cover %}
+    {%- set hall = loop.first and (work.length % 2 == 1) %}{% set esz = '(max-width: 719px) 100vw, 94vw' if hall else '(max-width: 719px) 100vw, 47vw' %}
+    <li data-item data-in="{{ w.category }}"{% if hall %} class="hall"{% endif %}>
       <a class="ecard" href="{{ w.url }}" style="--project: {{ s.color }}">
-        <div class="frame"><div class="media reveal" style="--ar: {{ h.ar }}; view-transition-name: room-{{ w.slug }}">
-          {% image isrc, h.alt, esz, "lazy" %}
+        <div class="frame"><div class="media" style="--ar: {{ h.ar }}; view-transition-name: room-{{ w.slug }}">
+          {% image h.still, h.alt, esz, "eager" if loop.index <= 3 else "lazy" %}
         </div></div>
         <div class="ecap">
           <p class="t-body"><span class="no t-meta tnum">{{ w.number }}</span><span class="ttl">{{ w.title }}</span></p>
@@ -65,15 +49,31 @@ scripts:
     </li>
     {%- endfor %}
   </ol>
+
+  {#- List -#}
+  <ol class="schedule" hidden data-schedule>
+    {%- for w in work %}{% set s = stories[w.slug] %}{% set h = s.cover %}
+    <li data-item data-in="{{ w.category }}">
+      <a class="srow" href="{{ w.url }}" style="--project: {{ s.color }}" data-slug="{{ w.slug }}" data-lead="{{ w.lead }}" data-client="{% for f in s.facts %}{% if f[0] == 'Client' %}For {{ f[1] }}{% endif %}{% endfor %}">
+        <span class="no t-meta tnum">{{ w.number }}</span>
+        <span class="thumb" aria-hidden="true">{% if h %}{% image h.still, "", "56px", "lazy" %}{% endif %}</span>
+        <span class="ttl t-lead">{{ w.title }}</span>
+        <span class="plc t-body">{{ s.place.split(',')[0] }}</span>
+        <span class="off t-body">{{ w.offering }}</span>
+        <span class="yr t-body tnum">{{ w.year }}</span>
+      </a>
+    </li>
+    {%- endfor %}
+  </ol>
 </div>
 
-{#- The lit room behind the schedule, and its caption: lead and place. -#}
+{#- The lit room behind the list, and its caption: lead and client. -#}
 <div class="lit" aria-hidden="true" data-lit>
-  {%- for w in work %}{% set h = stories[w.slug].hero %}{% set isrc = h.poster if h.type == 'video' else h.src %}
-  <div class="media" data-room="{{ w.slug }}" style="--ar: {{ h.ar }}">{% image isrc, "", "100vw", "lazy" %}</div>
+  {%- for w in work %}{% set h = stories[w.slug].cover %}
+  <div class="media" data-room="{{ w.slug }}" style="--ar: {{ h.ar }}">{% image h.still, "", "100vw", "lazy" %}</div>
   {%- endfor %}
 </div>
-<div class="lit-cap grid t-meta" aria-hidden="true" data-lit-cap>
-  <p class="x-1-6 lead"><span data-lit-lead></span></p>
-  <p class="x-8-11 place"><span data-lit-place></span></p>
+<div class="lit-cap grid" aria-hidden="true" data-lit-cap>
+  <p class="x-1-6 lead t-body" data-lit-lead></p>
+  <p class="x-8-11 place t-meta" data-lit-place></p>
 </div>
