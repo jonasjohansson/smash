@@ -356,7 +356,8 @@ if (stage && framesEl) {
   // The opening of /next/ (Jonas, 2026-10-15: "the landing page treatment of
   // the mask, how it changes when zooming in and what it looks like"), in the
   // dive's place. The original mark (mark.js's own measures, not the site's
-  // thinner slots) stands on the page's ground, its slots on whole columns of
+  // thinner slots), its slots as wide as the stems between them (Jonas: "lets
+  // have stems and gaps be same width"), stands on the page's ground, its slots on whole columns of
   // the grid (3 to 10; 4 to 9 on a wide, short screen; all on a phone), between
   // the rows of text, at most twice as tall as its own proportions; the film
   // shows only in its slots, and only across their columns. Scrolling, a
@@ -366,8 +367,10 @@ if (stage && framesEl) {
   //   2. open: the block grows to the screen's edges as its slots widen until
   //      they meet, and nothing of the ground is left.
   // Not with a newer logo (?logo=) or the glass: those dive as before.
-  const MET = 54; // the slots' width when they meet: their pitch is 52 units
-  const EDGE = 32; // the block's plain edge, past its first and last slot, of its 552 units
+  const PITCH = 52; // slot centre to slot centre, of the block's 552 units
+  const REST = PITCH / 2; // the slots' width at rest: as wide as the stems
+  const MET = PITCH + 2; // and when they meet
+  const EDGE = 42 - REST / 2; // the block's plain edge, past its first and last slot
   const APERTURE_LENGTH = 1; // screens of scrolling
   const aperture = () => dives && !glass && !logos && params.aperture;
   let ap = null; // the mark's place at rest
@@ -399,7 +402,7 @@ if (stage && framesEl) {
     if (open >= 1) { c.fillRect(0, 0, W, H); return; } // the film alone
     const x0 = lerp(x, -2, open), y0 = lerp(y, -2, open);
     const bw = lerp(w, W + 4, open), bh = lerp(h, H + 4, open);
-    const stroke = 20 + (MET - 20) * open;
+    const stroke = REST + (MET - REST) * open;
     const p = { ...DEFAULTS, stroke, corner: (10 * stroke) / 20, inset: 42 * (1 - door), fit: 'stretch', padding: 0, info: false };
     const s = markShape(p, bw, bh);
     c.save();
