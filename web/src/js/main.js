@@ -180,8 +180,8 @@ paintGround(stored('smash-mark'));
 // The logo (logos.js): the site's own mark, or one of the newer ones from
 // /identity/, picked with ?logo=<key> and kept for the pages after, as the
 // palette is (?logo=original goes back); the H panel lists them too. A newer
-// one is drawn as letter outlines in the mark's place, and its S M goes in the
-// header.
+// one is drawn as letter outlines in the mark's place, and its wordmark goes
+// in the header and the landed logo.
 const logoKey = (() => {
   const s = stored('smash-mark'), name = new URLSearchParams(location.search).get('logo');
   if (name) {
@@ -193,8 +193,8 @@ const logoKey = (() => {
 const logos = logoKey === 'original' ? null : await import(`./logos.js${build}`).catch((e) => { console.error('[logo]', e); return null; });
 if (logos) {
   useOutline((aspect) => logos.outlineFor(logoKey, aspect));
-  const sm = logos.symbolSVG(logoKey);
-  if (sm) document.querySelectorAll('.logo, .landed-logo').forEach((a) => { a.querySelector('svg')?.remove(); a.insertAdjacentHTML('afterbegin', sm); a.classList.add('is-newer'); });
+  const word = logos.wordmarkSVG(logoKey);
+  if (word) document.querySelectorAll('.logo, .landed-logo').forEach((a) => { a.querySelector('svg')?.remove(); a.insertAdjacentHTML('afterbegin', word); a.classList.add('is-newer'); });
 }
 // The Logo folder: picking one reloads the page with it.
 async function addLogo(pane) {

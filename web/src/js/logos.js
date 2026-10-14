@@ -3,14 +3,16 @@
 // presets (../identity/slant-best.js), each drawn by the identity page's own
 // code with its S level, as letter outlines. The landing and the heroes then
 // show their pictures through the letters, in place of the site's slotted
-// block, and the header carries the preset's S M. Loaded only when one is
+// block, and the header and the landed logo carry its wordmark, at its own
+// proportions (Jonas: "the normal smash logo in the top left, ie same version
+// that is on the landing page"). Loaded only when one is
 // picked (?logo=<key>, main.js).
 // It stretches as the block does (Jonas: "it should be a version of the logo
 // that can stretch"), but by being drawn again, not scaled: as tall as the box
 // asks, its width, stems, slots, slants and rounds as they are, so only the
 // letters grow taller or shorter.
 
-import { PRESETS, LEVEL, drawWith, wordmark, symbol } from '../identity/directions/slant.js';
+import { PRESETS, LEVEL, drawWith, wordmark } from '../identity/directions/slant.js';
 
 // [key, name]: the site's own mark first, then the best-of's, in its order.
 export const LOGOS = [
@@ -121,5 +123,5 @@ export function outline(key, height) {
   return { w, h, d, gaps, get stems() { return (found ??= stems(w, h, d)); } };
 }
 
-/** Preset `key`'s S M, black, sized by CSS, for the header. */
-export const symbolSVG = (key) => (preset(key) ? drawWith(preset(key), symbol) : null);
+/** Preset `key`'s wordmark at its own height, in currentColor, sized by CSS: the header's and the landed logo. */
+export const wordmarkSVG = (key) => (preset(key) ? drawWith(preset(key), wordmark) : null);
