@@ -657,17 +657,12 @@ if (stage && framesEl) {
       if (ap) paintAperture(mctx);
       else paintMark(mctx, shape, params.invert);
       // With the aperture the rows stay where they are, and go as its ends
-      // open; inverted, as the mark is (Jonas: "invert should also impact the
-      // typography"): the film in the row, the letters cut out of it.
+      // open; upright or inverted, the film is in their letters, on the
+      // ground (Jonas, 2026-10-15: not cut out of a band of film).
       const rows = ap ? 1 - view.door : 1;
       if (params.info && infoReady && rows > 0) {
         mctx.globalAlpha = rows;
-        if (ap && params.invert) {
-          mctx.fillStyle = '#fff';
-          for (const r of shape.rows) mctx.fillRect(r.x, r.y, r.w, r.h);
-          mctx.globalAlpha = 1;
-        }
-        const laid = paintInfo(mctx, shape, infoRows, params.invert, undefined, infoIcons);
+        const laid = paintInfo(mctx, shape, infoRows, ap ? false : params.invert, undefined, infoIcons);
         mctx.globalAlpha = 1;
         if (view.t === 0) placeMail(laid);
       }
