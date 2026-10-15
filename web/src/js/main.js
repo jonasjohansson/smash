@@ -378,16 +378,19 @@ if (stage && framesEl) {
     const k = W / (UNITS.w - 2 * edge + 2 * REST); // px to the block's unit, across the screen
     const fx = REST * k, field = W - 2 * fx;
     const w = UNITS.w * k;
-    // Top to bottom: a stem, a row, a stem, the mark, a stem, a row, a stem;
+    // Top to bottom: a stem, a row, half a stem (Jonas: "the margin between
+    // the sentences and the word sign can be reduced to half"), the mark,
+    // half a stem, a row, a stem;
     // the mark at most twice as tall as its own proportions, and the whole
     // centred if that leaves room over.
     const rows = params.info ? shape.rows : [];
-    const rh = rows.reduce((sum, r) => sum + r.h + fx, 0);
+    const gap = fx / 2;
+    const rh = rows.reduce((sum, r) => sum + r.h + gap, 0);
     const h = Math.max(1, Math.min(H - 2 * fx - rh, (2 * w * UNITS.h) / UNITS.w));
     let at = (H - h - rh) / 2;
-    if (rows[0]) { rows[0].y = at; at += rows[0].h + fx; }
+    if (rows[0]) { rows[0].y = at; at += rows[0].h + gap; }
     const y = at;
-    if (rows[1]) rows[1].y = y + h + fx;
+    if (rows[1]) rows[1].y = y + h + gap;
     for (const r of rows) { r.x = fx; r.w = field; }
     return { W, H, w, h, x: fx - (edge * w) / UNITS.w, y, fx, field };
   }
