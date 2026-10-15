@@ -383,15 +383,18 @@ if (stage && framesEl) {
   }
 
   // The mask at view.door and view.open: the film in the slots, across their
-  // columns, the block growing to the screen.
+  // columns, the block growing to the screen. Inverted (A, Jonas: "can i
+  // invert the landing page image mask too?"), the film is in the stems and
+  // the slots are the ground: they thin away instead, as the stems do upright.
   function paintAperture(c) {
     const { W, H, w, h, x, y, fx, field } = ap;
     const { door, open } = view;
+    const inverted = params.invert;
     c.fillStyle = c.strokeStyle = '#fff';
     if (open >= 1) { c.fillRect(0, 0, W, H); return; } // the film alone
     const x0 = lerp(x, -2, open), y0 = lerp(y, -2, open);
     const bw = lerp(w, W + 4, open), bh = lerp(h, H + 4, open);
-    const stroke = REST + (MET - REST) * open;
+    const stroke = inverted ? REST * (1 - open) : REST + (MET - REST) * open;
     const p = { ...DEFAULTS, stroke, corner: (10 * stroke) / 20, inset: 42 * (1 - door), fit: 'stretch', padding: 0, info: false };
     const s = markShape(p, bw, bh);
     c.save();
@@ -404,13 +407,17 @@ if (stage && framesEl) {
     c.rect(cl, 0, cr - cl, H);
     c.clip();
     c.translate(x0, y0);
+    if (inverted) {
+      c.fillRect(0, 0, bw, bh);
+      c.globalCompositeOperation = 'destination-out';
+    }
     c.lineCap = 'butt';
     c.lineJoin = s.join;
     c.lineWidth = s.stroke;
     c.stroke(new Path2D(s.d));
     // The same slots with square bends, at the strength of the opening: the
     // ground outside each S's rounded turn thins away with the bars.
-    if (open > 0) {
+    if (open > 0 && !inverted) {
       c.globalAlpha = open;
       c.lineJoin = 'miter';
       c.stroke(new Path2D(markShape({ ...p, corner: 0 }, bw, bh).d));
@@ -420,7 +427,7 @@ if (stage && framesEl) {
     for (const [dx, dy, r = s.stroke / 2] of s.dots) { c.moveTo(dx + r, dy); c.arc(dx, dy, r, 0, Math.PI * 2); }
     c.fill();
     // The outer bars thin from outside too, until they are gone.
-    const edge = 17 * open * s.sx;
+    const edge = inverted ? 0 : 17 * open * s.sx;
     if (edge > 0) { c.fillRect(0, 0, edge, bh); c.fillRect(bw - edge, 0, edge, bh); }
     c.restore();
   }
