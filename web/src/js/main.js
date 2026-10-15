@@ -378,13 +378,15 @@ if (stage && framesEl) {
     const k = W / (UNITS.w - 2 * edge + 2 * REST); // px to the block's unit, across the screen
     const fx = REST * k, field = W - 2 * fx;
     const w = UNITS.w * k;
-    // Top to bottom: a stem, a row, half a stem (Jonas: "the margin between
-    // the sentences and the word sign can be reduced to half"), the mark,
-    // half a stem, a row, a stem;
+    // Top to bottom: a stem, a row, a quarter of a stem (Jonas: "the margin
+    // between the sentences and the word sign can be reduced to half", then
+    // "a bit less still, and the letters can just extend": the rows taller by
+    // what the gap gives up), the mark, a quarter of a stem, a row, a stem;
     // the mark at most twice as tall as its own proportions, and the whole
     // centred if that leaves room over.
     const rows = params.info ? shape.rows : [];
-    const gap = fx / 2;
+    const gap = fx / 4;
+    for (const r of rows) r.h += fx / 4;
     const rh = rows.reduce((sum, r) => sum + r.h + gap, 0);
     const h = Math.max(1, Math.min(H - 2 * fx - rh, (2 * w * UNITS.h) / UNITS.w));
     let at = (H - h - rh) / 2;
@@ -662,7 +664,8 @@ if (stage && framesEl) {
       const rows = ap ? 1 - view.door : 1;
       if (params.info && infoReady && rows > 0) {
         mctx.globalAlpha = rows;
-        const laid = paintInfo(mctx, shape, infoRows, ap ? false : params.invert, undefined, infoIcons);
+        // Taller with the aperture, its letters narrow as far as they need to fill the row.
+        const laid = paintInfo(mctx, shape, infoRows, ap ? false : params.invert, ap ? 0.3 : undefined, infoIcons);
         mctx.globalAlpha = 1;
         if (view.t === 0) placeMail(laid);
       }
