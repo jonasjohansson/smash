@@ -345,10 +345,10 @@ if (stage && framesEl) {
   // the mask, how it changes when zooming in and what it looks like"), in the
   // dive's place. The original mark (mark.js's own measures, not the site's
   // thinner slots), its slots as wide as the stems between them (Jonas: "lets
-  // have stems and gaps be same width"), stands on the page's ground, its slots across the full width
-  // of the grid, margin to margin as the rows of text are (Jonas: "use the full
-  // width"), between the rows, at most twice as tall as its own proportions; the film
-  // shows only in its slots, and only across their columns. Scrolling, a
+  // have stems and gaps be same width"), stands on the page's ground, the
+  // whole block across the full width, margin to margin as the rows of text
+  // are (Jonas: "use the full width"), between the rows, at most twice as
+  // tall as its own proportions; the film shows only in its slots. Scrolling, a
   // screen and a half in all, two things at once:
   //   1. door (the first quarter): every closed slot end runs out through the
   //      edge, and the rows of text go;
@@ -359,7 +359,6 @@ if (stage && framesEl) {
   const PITCH = 52; // slot centre to slot centre, of the block's 552 units
   const REST = PITCH / 2; // the slots' width at rest: as wide as the stems
   const MET = PITCH + 2; // and when they meet
-  const EDGE = 42 - REST / 2; // the block's plain edge, past its first and last slot
   const APERTURE_LENGTH = 1.5; // screens of scrolling
   const aperture = () => dives && !glass && !logos && params.aperture;
   let ap = null; // the mark's place at rest
@@ -367,19 +366,20 @@ if (stage && framesEl) {
   probe.style.cssText = 'position:absolute;visibility:hidden;height:0';
   const px = (v) => { probe.style.width = v; document.body.append(probe); const w = probe.getBoundingClientRect().width; probe.remove(); return w; };
   function placeAperture(W, H) {
-    const m = px('var(--margin)'), g = px('var(--gutter)'), cols = 12;
-    const [start, span] = [1, cols];
-    const col = (W - 2 * m - (cols - 1) * g) / cols;
-    const field = span * col + (span - 1) * g;
-    const w = (field * UNITS.w) / (UNITS.w - 2 * EDGE);
-    const fx = m + (start - 1) * (col + g);
+    // What shows, margin to margin: upright, the slots (the block's plain
+    // edge past them is the ground); inverted, the whole block, its plain
+    // edges too (Jonas: with the slots alone there, the edges "seem cropped").
+    const m = px('var(--margin)'), g = px('var(--gutter)');
+    const edge = params.invert ? 0 : 42 - REST / 2; // past the outer slots, of the block's 552 units
+    const fx = m, field = W - 2 * m;
+    const w = (field * UNITS.w) / (UNITS.w - 2 * edge);
     // Between the rows of text, with two gutters' air over and under it.
     const air = 2 * g;
     const [top, bottom] = params.info && shape.rows.length
       ? [shape.rows[0].y + shape.rows[0].h + air, shape.rows[1].y - air]
       : [air, H - air];
     const h = Math.max(1, Math.min(bottom - top, (2 * w * UNITS.h) / UNITS.w));
-    return { W, H, w, h, x: fx - (EDGE * w) / UNITS.w, y: top + (bottom - top - h) / 2, fx, field };
+    return { W, H, w, h, x: fx - (edge * w) / UNITS.w, y: top + (bottom - top - h) / 2, fx, field };
   }
 
   // The mask at view.door and view.open: the film in the slots, across their
