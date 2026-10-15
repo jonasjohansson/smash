@@ -324,7 +324,7 @@ if (stage && framesEl) {
     shape = markShape(params, W, H);
     if (!params.info) mails.forEach((m) => { m.hidden = true; });
     focus = diveFocus(params, shape);
-    ap = aperture() ? placeAperture(W, H) : null;
+    ap = aperture() ? placeAperture(W, H) : null; // and the rows of text round it
     document.body.classList.toggle('is-aperture', !!ap);
     document.body.style.setProperty('--dive', ap ? APERTURE_LENGTH : params.length);
     track();
@@ -366,20 +366,30 @@ if (stage && framesEl) {
   probe.style.cssText = 'position:absolute;visibility:hidden;height:0';
   const px = (v) => { probe.style.width = v; document.body.append(probe); const w = probe.getBoundingClientRect().width; probe.remove(); return w; };
   function placeAperture(W, H) {
-    // What shows, margin to margin: upright, the slots (the block's plain
-    // edge past them is the ground); inverted, the whole block, its plain
-    // edges too (Jonas: with the slots alone there, the edges "seem cropped").
-    const m = px('var(--margin)'), g = px('var(--gutter)');
-    const edge = params.invert ? 0 : 42 - REST / 2; // past the outer slots, of the block's 552 units
-    const fx = m, field = W - 2 * m;
-    const w = (field * UNITS.w) / (UNITS.w - 2 * edge);
-    // Between the rows of text, with two gutters' air over and under it.
-    const air = 2 * g;
-    const [top, bottom] = params.info && shape.rows.length
-      ? [shape.rows[0].y + shape.rows[0].h + air, shape.rows[1].y - air]
-      : [air, H - air];
-    const h = Math.max(1, Math.min(bottom - top, (2 * w * UNITS.h) / UNITS.w));
-    return { W, H, w, h, x: fx - (edge * w) / UNITS.w, y: top + (bottom - top - h) / 2, fx, field };
+    // What shows, across the screen with a stem's width of ground at each
+    // side, and over, under and between the rows of text and the mark
+    // (Jonas: "the side margins should be same as the stem width", "the
+    // sides and top and bottom"):
+    // upright, the slots (the block's plain edge past them is the ground);
+    // inverted, the whole block (with the slots alone, the edges "seem
+    // cropped"), its plain edges trimmed to a stem's width too.
+    const plain = 42 - REST / 2; // the block's plain edge, past the outer slots, of its 552 units
+    const edge = params.invert ? plain - REST : plain; // of it, unseen at each side
+    const k = W / (UNITS.w - 2 * edge + 2 * REST); // px to the block's unit, across the screen
+    const fx = REST * k, field = W - 2 * fx;
+    const w = UNITS.w * k;
+    // Top to bottom: a stem, a row, a stem, the mark, a stem, a row, a stem;
+    // the mark at most twice as tall as its own proportions, and the whole
+    // centred if that leaves room over.
+    const rows = params.info ? shape.rows : [];
+    const rh = rows.reduce((sum, r) => sum + r.h + fx, 0);
+    const h = Math.max(1, Math.min(H - 2 * fx - rh, (2 * w * UNITS.h) / UNITS.w));
+    let at = (H - h - rh) / 2;
+    if (rows[0]) { rows[0].y = at; at += rows[0].h + fx; }
+    const y = at;
+    if (rows[1]) rows[1].y = y + h + fx;
+    for (const r of rows) { r.x = fx; r.w = field; }
+    return { W, H, w, h, x: fx - (edge * w) / UNITS.w, y, fx, field };
   }
 
   // The mask at view.door and view.open: the film in the slots, across their
@@ -643,11 +653,18 @@ if (stage && framesEl) {
       mctx.setTransform(dpr * view.s, 0, 0, dpr * view.s, dpr * view.x, dpr * view.y);
       if (ap) paintAperture(mctx);
       else paintMark(mctx, shape, params.invert);
-      // With the aperture the rows stay where they are, and go as its ends open.
+      // With the aperture the rows stay where they are, and go as its ends
+      // open; inverted, as the mark is (Jonas: "invert should also impact the
+      // typography"): the film in the row, the letters cut out of it.
       const rows = ap ? 1 - view.door : 1;
       if (params.info && infoReady && rows > 0) {
         mctx.globalAlpha = rows;
-        const laid = paintInfo(mctx, shape, infoRows, ap ? false : params.invert, undefined, infoIcons);
+        if (ap && params.invert) {
+          mctx.fillStyle = '#fff';
+          for (const r of shape.rows) mctx.fillRect(r.x, r.y, r.w, r.h);
+          mctx.globalAlpha = 1;
+        }
+        const laid = paintInfo(mctx, shape, infoRows, params.invert, undefined, infoIcons);
         mctx.globalAlpha = 1;
         if (view.t === 0) placeMail(laid);
       }
