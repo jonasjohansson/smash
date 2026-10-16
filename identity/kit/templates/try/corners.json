@@ -1,0 +1,918 @@
+{
+ "artd-c05-print-037-business-card": {
+  "cards": [
+   {
+    "tl": [
+     0.231,
+     0.486
+    ],
+    "tr": [
+     0.634,
+     0.359
+    ],
+    "br": [
+     0.77,
+     0.508
+    ],
+    "bl": [
+     0.352,
+     0.647
+    ],
+    "occluded": false,
+    "tone": "light"
+   }
+  ]
+ },
+ "business-card-mockup-pc014": {
+  "cards": [
+   {
+    "tl": [
+     0.349,
+     0.441
+    ],
+    "tr": [
+     0.72,
+     0.525
+    ],
+    "br": [
+     0.631,
+     0.673
+    ],
+    "bl": [
+     0.241,
+     0.581
+    ],
+    "occluded": false,
+    "tone": "dark"
+   }
+  ]
+ },
+ "business-card-bc-hof-01": {
+  "cards": [
+   {
+    "tl": [
+     0.3194,
+     0.5778
+    ],
+    "tr": [
+     0.4783,
+     0.4514
+    ],
+    "br": [
+     0.6194,
+     0.5164
+    ],
+    "bl": [
+     0.4687,
+     0.6499
+    ],
+    "occluded": true,
+    "tone": "light",
+    "layer": 0
+   },
+   {
+    "tl": [
+     0.548,
+     0.579
+    ],
+    "tr": [
+     0.636,
+     0.427
+    ],
+    "br": [
+     0.781,
+     0.455
+    ],
+    "bl": [
+     0.6995,
+     0.61
+    ],
+    "occluded": true,
+    "tone": "light",
+    "layer": 1
+   }
+  ]
+ },
+ "j3k7nneehpb8c3l-2blxb-p79e5-mtkkm-jkcha-fasls-be2es-98n2n-b9": {
+  "cards": [
+   {
+    "tl": [
+     0.3967,
+     0.2673
+    ],
+    "tr": [
+     0.6601,
+     0.3993
+    ],
+    "br": [
+     0.6,
+     0.6529
+    ],
+    "bl": [
+     0.3325,
+     0.5164
+    ],
+    "portrait": false,
+    "occluded": false,
+    "tone": "light"
+   }
+  ]
+ },
+ "artd-c05-print-040-business-card": {
+  "cards": [
+   {
+    "tl": [
+     0.4254,
+     0.2271
+    ],
+    "tr": [
+     0.6037,
+     0.4546
+    ],
+    "br": [
+     0.506,
+     0.6238
+    ],
+    "bl": [
+     0.3245,
+     0.3915
+    ],
+    "occluded": false,
+    "tone": "light"
+   },
+   {
+    "tl": [
+     0.308,
+     0.4294
+    ],
+    "tr": [
+     0.4913,
+     0.6548
+    ],
+    "br": [
+     0.3939,
+     0.8286
+    ],
+    "bl": [
+     0.2107,
+     0.5977
+    ],
+    "occluded": false,
+    "tone": "light"
+   }
+  ]
+ },
+ "business-card-bc-bui-01": {
+  "cards": [
+   {
+    "tl": [
+     0.4347,
+     0.5186
+    ],
+    "tr": [
+     0.8015,
+     0.4357
+    ],
+    "br": [
+     0.8912,
+     0.589
+    ],
+    "bl": [
+     0.514,
+     0.6751
+    ],
+    "occluded": false,
+    "tone": "dark",
+    "layer": 0
+   },
+   {
+    "tl": [
+     0.1964,
+     0.584
+    ],
+    "tr": [
+     0.3977,
+     0.3734
+    ],
+    "br": [
+     0.609,
+     0.4495
+    ],
+    "bl": [
+     0.4148,
+     0.668
+    ],
+    "occluded": true,
+    "tone": "light",
+    "layer": 1
+   }
+  ]
+ },
+ "business-card-on-paper-cutter": {
+  "cards": [
+   {
+    "tl": [
+     0.4085,
+     0.3003
+    ],
+    "tr": [
+     0.7517,
+     0.4025
+    ],
+    "br": [
+     0.708,
+     0.6768
+    ],
+    "bl": [
+     0.3468,
+     0.5657
+    ],
+    "occluded": false,
+    "tone": "light"
+   }
+  ]
+ },
+ "business-card-bc-bui-02": {
+  "cards": [
+   {
+    "tl": [
+     0.3255,
+     0.8322
+    ],
+    "tr": [
+     0.3245,
+     0.3811
+    ],
+    "br": [
+     0.5162,
+     0.3739
+    ],
+    "bl": [
+     0.5256,
+     0.8222
+    ],
+    "occluded": false,
+    "tone": "light",
+    "layer": 0
+   },
+   {
+    "tl": [
+     0.3884,
+     0.4721
+    ],
+    "tr": [
+     0.57,
+     0.1339
+    ],
+    "br": [
+     0.7247,
+     0.2938
+    ],
+    "bl": [
+     0.5423,
+     0.6456
+    ],
+    "occluded": true,
+    "tone": "dark",
+    "layer": 1
+   }
+  ]
+ },
+ "the-business-card-mockup-bundle": {
+  "cards": [
+   {
+    "tl": [
+     0.153,
+     0.632
+    ],
+    "tr": [
+     0.234,
+     0.225
+    ],
+    "br": [
+     0.4208,
+     0.3099
+    ],
+    "bl": [
+     0.3497,
+     0.7168
+    ],
+    "occluded": false,
+    "tone": "light"
+   },
+   {
+    "tl": [
+     0.6321,
+     0.317
+    ],
+    "tr": [
+     0.8756,
+     0.5304
+    ],
+    "br": [
+     0.7687,
+     0.7241
+    ],
+    "bl": [
+     0.5201,
+     0.4907
+    ],
+    "occluded": false,
+    "tone": "light"
+   }
+  ]
+ },
+ "business-card-bc-bui-03": {
+  "cards": [
+   {
+    "tl": [
+     0.3235,
+     0.4045
+    ],
+    "tr": [
+     0.6796,
+     0.4989
+    ],
+    "br": [
+     0.5434,
+     0.6267
+    ],
+    "bl": [
+     0.178,
+     0.5225
+    ],
+    "portrait": false,
+    "occluded": false,
+    "tone": "dark"
+   }
+  ]
+ },
+ "business-card-bc-h-05": {
+  "cards": [
+   {
+    "tl": [
+     0.3285,
+     0.381
+    ],
+    "tr": [
+     0.568,
+     0.386
+    ],
+    "br": [
+     0.5627,
+     0.603
+    ],
+    "bl": [
+     0.3232,
+     0.598
+    ],
+    "portrait": false,
+    "occluded": true,
+    "tone": "dark"
+   },
+   {
+    "tl": [
+     0.47,
+     0.3221
+    ],
+    "tr": [
+     0.6816,
+     0.4859
+    ],
+    "br": [
+     0.6105,
+     0.6803
+    ],
+    "bl": [
+     0.392,
+     0.5037
+    ],
+    "portrait": false,
+    "occluded": false,
+    "tone": "light"
+   }
+  ]
+ },
+ "business-card-bc-ygap-04": {
+  "cards": [
+   {
+    "tl": [
+     0.1908,
+     0.4397
+    ],
+    "tr": [
+     0.4382,
+     0.3973
+    ],
+    "br": [
+     0.4597,
+     0.6082
+    ],
+    "bl": [
+     0.2016,
+     0.6594
+    ],
+    "portrait": false,
+    "occluded": false,
+    "tone": "light"
+   },
+   {
+    "tl": [
+     0.3434,
+     0.755
+    ],
+    "tr": [
+     0.5012,
+     0.474
+    ],
+    "br": [
+     0.6406,
+     0.6034
+    ],
+    "bl": [
+     0.4864,
+     0.9008
+    ],
+    "portrait": false,
+    "occluded": false,
+    "tone": "dark"
+   }
+  ]
+ },
+ "business-card-mockup-s003-003": {
+  "cards": [
+   {
+    "tl": [
+     0.5435,
+     0.3773
+    ],
+    "tr": [
+     0.7369,
+     0.4413
+    ],
+    "br": [
+     0.6838,
+     0.604
+    ],
+    "bl": [
+     0.4929,
+     0.5308
+    ],
+    "portrait": false,
+    "occluded": true,
+    "tone": "light"
+   },
+   {
+    "tl": [
+     0.3357,
+     0.3534
+    ],
+    "tr": [
+     0.5366,
+     0.457
+    ],
+    "br": [
+     0.4878,
+     0.658
+    ],
+    "bl": [
+     0.2857,
+     0.5621
+    ],
+    "portrait": false,
+    "occluded": false,
+    "tone": "light"
+   }
+  ]
+ },
+ "business-card-mockup-s008-009": {
+  "cards": [
+   {
+    "tl": [
+     0.6,
+     0.465
+    ],
+    "tr": [
+     0.775,
+     0.54
+    ],
+    "br": [
+     0.7227,
+     0.71
+    ],
+    "bl": [
+     0.5467,
+     0.6225
+    ],
+    "portrait": false,
+    "occluded": true,
+    "tone": "light"
+   }
+  ]
+ },
+ "eom-business-card-03": {
+  "cards": [
+   {
+    "tl": [
+     0.4044,
+     0.5013
+    ],
+    "tr": [
+     0.5955,
+     0.4119
+    ],
+    "br": [
+     0.726,
+     0.448
+    ],
+    "bl": [
+     0.5391,
+     0.5455
+    ],
+    "portrait": false,
+    "occluded": false,
+    "tone": "light"
+   },
+   {
+    "tl": [
+     0.1848,
+     0.603
+    ],
+    "tr": [
+     0.4002,
+     0.5039
+    ],
+    "br": [
+     0.5327,
+     0.5472
+    ],
+    "bl": [
+     0.323,
+     0.6516
+    ],
+    "portrait": false,
+    "occluded": false,
+    "tone": "light"
+   },
+   {
+    "tl": [
+     0.344,
+     0.6606
+    ],
+    "tr": [
+     0.5537,
+     0.5561
+    ],
+    "br": [
+     0.7007,
+     0.6018
+    ],
+    "bl": [
+     0.489,
+     0.709
+    ],
+    "portrait": false,
+    "occluded": false,
+    "tone": "light"
+   },
+   {
+    "tl": [
+     0.5557,
+     0.5571
+    ],
+    "tr": [
+     0.7501,
+     0.4611
+    ],
+    "br": [
+     0.9008,
+     0.4962
+    ],
+    "bl": [
+     0.7054,
+     0.5991
+    ],
+    "portrait": false,
+    "occluded": false,
+    "tone": "light"
+   }
+  ]
+ },
+ "eden-book-01-gzndf-33rxn-4rp9k-tedc6-49h5l-rllld-jm747-k653z": {
+  "cards": [
+   {
+    "tl": [
+     0.3888,
+     0.3266
+    ],
+    "tr": [
+     0.6588,
+     0.4275
+    ],
+    "br": [
+     0.6064,
+     0.6944
+    ],
+    "bl": [
+     0.3404,
+     0.5864
+    ],
+    "portrait": false,
+    "occluded": true,
+    "tone": "light"
+   }
+  ]
+ },
+ "artd-c05-print-038-business-card": {
+  "cards": [
+   {
+    "tl": [
+     0.4928,
+     0.2636
+    ],
+    "tr": [
+     0.6328,
+     0.5789
+    ],
+    "br": [
+     0.4986,
+     0.7271
+    ],
+    "bl": [
+     0.3491,
+     0.4005
+    ],
+    "portrait": false,
+    "occluded": false,
+    "tone": "dark"
+   }
+  ]
+ },
+ "business-card-bl06-mockup": {
+  "cards": [
+   {
+    "tl": [
+     0.271,
+     0.464
+    ],
+    "tr": [
+     0.714,
+     0.538
+    ],
+    "br": [
+     0.699,
+     0.951
+    ],
+    "bl": [
+     0.225,
+     0.897
+    ],
+    "portrait": false,
+    "occluded": false,
+    "tone": "light"
+   },
+   {
+    "tl": [
+     0.459,
+     0.07
+    ],
+    "tr": [
+     0.82,
+     0.295
+    ],
+    "br": [
+     0.741,
+     0.622
+    ],
+    "bl": [
+     0.362,
+     0.395
+    ],
+    "portrait": false,
+    "occluded": true,
+    "tone": "light"
+   }
+  ]
+ },
+ "business-card-bi-a-07": {
+  "cards": [
+   {
+    "tl": [
+     0.332,
+     0.568
+    ],
+    "tr": [
+     0.533,
+     0.401
+    ],
+    "br": [
+     0.719,
+     0.444
+    ],
+    "bl": [
+     0.518,
+     0.637
+    ],
+    "portrait": false,
+    "occluded": false,
+    "tone": "light"
+   }
+  ]
+ },
+ "business-card-mockup-pc004": {
+  "cards": [
+   {
+    "tl": [
+     0.35,
+     0.425
+    ],
+    "tr": [
+     0.738,
+     0.46
+    ],
+    "br": [
+     0.709,
+     0.609
+    ],
+    "bl": [
+     0.304,
+     0.572
+    ],
+    "portrait": false,
+    "occluded": false,
+    "tone": "light"
+   }
+  ]
+ },
+ "artd-c01-print-002-business-card": {
+  "cards": [
+   {
+    "tl": [
+     0.386,
+     0.306
+    ],
+    "tr": [
+     0.687,
+     0.458
+    ],
+    "br": [
+     0.583,
+     0.637
+    ],
+    "bl": [
+     0.281,
+     0.488
+    ],
+    "portrait": false,
+    "occluded": false,
+    "tone": "light"
+   }
+  ]
+ },
+ "business-card-bi-a-49": {
+  "cards": [
+   {
+    "tl": [
+     0.49,
+     0.387
+    ],
+    "tr": [
+     0.746,
+     0.545
+    ],
+    "br": [
+     0.544,
+     0.611
+    ],
+    "bl": [
+     0.288,
+     0.446
+    ],
+    "portrait": false,
+    "occluded": false,
+    "tone": "light"
+   }
+  ]
+ },
+ "business-card-mockup-pc011": {
+  "cards": [
+   {
+    "tl": [
+     0.21,
+     0.42
+    ],
+    "tr": [
+     0.64,
+     0.341
+    ],
+    "br": [
+     0.74,
+     0.508
+    ],
+    "bl": [
+     0.307,
+     0.592
+    ],
+    "portrait": false,
+    "occluded": false,
+    "tone": "light"
+   }
+  ]
+ },
+ "raw-free-business-cards-mockup": {
+  "cards": [
+   {
+    "tl": [
+     0.357,
+     0.237
+    ],
+    "tr": [
+     0.548,
+     0.103
+    ],
+    "br": [
+     0.616,
+     0.265
+    ],
+    "bl": [
+     0.425,
+     0.407
+    ],
+    "portrait": false,
+    "occluded": false,
+    "tone": "light"
+   },
+   {
+    "tl": [
+     0.372,
+     0.642
+    ],
+    "tr": [
+     0.57,
+     0.503
+    ],
+    "br": [
+     0.638,
+     0.682
+    ],
+    "bl": [
+     0.437,
+     0.827
+    ],
+    "portrait": false,
+    "occluded": false,
+    "tone": "dark"
+   }
+  ]
+ },
+ "business-card-k01-mockup": {
+  "cards": [
+   {
+    "tl": [
+     0.36,
+     0.363
+    ],
+    "tr": [
+     0.579,
+     0.539
+    ],
+    "br": [
+     0.514,
+     0.751
+    ],
+    "bl": [
+     0.29,
+     0.583
+    ],
+    "portrait": false,
+    "occluded": true,
+    "tone": "light"
+   }
+  ]
+ },
+ "business-card-of-a-19": {
+  "cards": [
+   {
+    "tl": [
+     0.277,
+     0.52
+    ],
+    "tr": [
+     0.627,
+     0.352
+    ],
+    "br": [
+     0.802,
+     0.455
+    ],
+    "bl": [
+     0.452,
+     0.637
+    ],
+    "portrait": false,
+    "occluded": false,
+    "tone": "light"
+   }
+  ]
+ }
+}

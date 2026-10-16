@@ -1,0 +1,121 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Card try-on</title><style>
+:root { color-scheme: dark; }
+body { margin: 0; background: #000; color: #fff; font: 13px/1.4 "Neue Montreal", "Helvetica Neue", Arial, sans-serif; }
+nav { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 6px 20px; padding: 12px 16px; background: #000; border-bottom: 1px solid #333; }
+nav div { display: flex; flex-wrap: wrap; gap: 4px; }
+button { padding: 6px 10px; background: none; color: #888; border: 1px solid #333; font: inherit; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+button[aria-pressed="true"], button:hover { color: #fff; border-color: #fff; }
+main { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--col, 440px)), 1fr)); gap: 28px 16px; padding: 16px; }
+figure { margin: 0; min-width: 0; }
+.scene { position: relative; overflow: hidden; line-height: 0; }
+.scene > img { display: block; width: 100%; height: auto; }
+.face { position: absolute; left: 0; top: 0; width: 510px; height: 330px; transform-origin: 0 0; isolation: isolate; cursor: pointer; }
+.face img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.face .light { mix-blend-mode: multiply; }
+.original .face { display: none; }
+.h { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border: 1px solid #0ff; border-radius: 50%; background: rgba(0,255,255,.25); cursor: grab; z-index: 2; display: none; }
+.editing .h { display: block; }
+.editing .face { outline: 1px solid rgba(0,255,255,.6); }
+figcaption { margin-top: 8px; }
+figcaption a { color: inherit; text-decoration: none; } figcaption a:hover { text-decoration: underline; }
+</style></head><body>
+<nav>
+  <div id="treat"></div>
+  <div id="who"></div>
+  <div><button id="orig">Original</button><button id="edit">Corners</button><button id="copy" hidden>Copy corners</button></div>
+  <div><button data-col="320px">S</button><button data-col="440px" aria-pressed="true">M</button><button data-col="100%">L</button></div>
+</nav>
+<main></main>
+<script>
+const SCENES = /*SCENES*/[];
+const TREATS = [['black-and-white', 'Black and white'], ['acid', 'Acid'], ['yellow', 'Yellow'], ['red', 'Red'], ['sky', 'Sky']];
+const PEOPLE = [['veronica-reed', 'Veronica'], ['ashley-reed', 'Ashley'], ['emile-pascoe', 'Emile']];
+const W = 510, H = 330;
+const state = { treat: 'black-and-white', who: 'veronica-reed' };
+try { Object.assign(state, JSON.parse(localStorage.getItem('smash-tryon') || '{}')); } catch {}
+const save = () => { try { localStorage.setItem('smash-tryon', JSON.stringify(state)); } catch {} };
+
+// The plane taking the card's W x H rectangle to four points, as a CSS matrix3d.
+function matrix(q) {
+  const src = [[0, 0], [W, 0], [W, H], [0, H]], A = [], b = [];
+  q.forEach(([u, v], i) => { const [x, y] = src[i];
+    A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); b.push(u);
+    A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); b.push(v); });
+  for (let c = 0; c < 8; c++) {
+    let p = c; for (let r = c + 1; r < 8; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
+    [A[c], A[p]] = [A[p], A[c]]; [b[c], b[p]] = [b[p], b[c]];
+    for (let r = 0; r < 8; r++) if (r !== c) { const f = A[r][c] / A[c][c]; for (let k = c; k < 8; k++) A[r][k] -= f * A[c][k]; b[r] -= f * b[c]; }
+  }
+  const [a, bb, c, d, e, f, g, h] = b.map((v, i) => v / A[i][i]);
+  return `matrix3d(${a},${d},0,${g},${bb},${e},0,${h},0,0,1,0,${c},${f},0,1)`;
+}
+
+const art = (side) => side === 'front' ? `cards/front-${state.treat}.jpg` : `cards/back-${state.who}-${state.treat}.jpg`;
+const main = document.querySelector('main');
+const views = SCENES.map((s) => {
+  const fig = document.createElement('figure');
+  fig.innerHTML = `<div class="scene"><img src="${s.pic}" alt=""></div><figcaption><a href="${s.url}" target="_blank" rel="noopener">${s.name}</a></figcaption>`;
+  const scene = fig.querySelector('.scene');
+  const faces = s.faces.map((f, i) => {
+    const el = document.createElement('div');
+    el.className = 'face';
+    el.innerHTML = `<img class="art" alt=""><img class="light" src="${f.light}" alt="">`;
+    const face = { el, f, side: f.side || (i % 2 ? 'back' : 'front'), hs: [] };
+    el.onclick = () => { if (!document.body.classList.contains('editing')) { face.side = face.side === 'front' ? 'back' : 'front'; paint(face); } };
+    scene.append(el);
+    f.q.forEach((_, k) => {
+      const h = document.createElement('div');
+      h.className = 'h';
+      h.onpointerdown = (e) => {
+        h.setPointerCapture(e.pointerId);
+        h.onpointermove = (m) => { const r = scene.getBoundingClientRect();
+          f.q[k] = [Math.min(1, Math.max(0, (m.clientX - r.left) / r.width)), Math.min(1, Math.max(0, (m.clientY - r.top) / r.height))];
+          s.edited = true; place(view); };
+        h.onpointerup = () => { h.onpointermove = null; };
+      };
+      scene.append(h); face.hs.push(h);
+    });
+    return face;
+  });
+  const view = { s, scene, faces };
+  main.append(fig);
+  return view;
+});
+
+function paint(face) { face.el.querySelector('.art').src = art(face.side); }
+function place(v) {
+  const w = v.scene.clientWidth, h = v.scene.clientHeight;
+  for (const face of v.faces) {
+    const q = face.f.q.map(([x, y]) => [x * w, y * h]);
+    face.el.style.transform = matrix(q);
+    face.hs.forEach((hd, k) => { hd.style.left = q[k][0] + 'px'; hd.style.top = q[k][1] + 'px'; });
+  }
+}
+const all = () => views.forEach((v) => { v.faces.forEach(paint); place(v); });
+new ResizeObserver(() => views.forEach(place)).observe(main);
+views.forEach((v) => v.scene.querySelector('img').addEventListener('load', () => place(v)));
+
+function seg(id, items, key) {
+  const box = document.getElementById(id);
+  box.innerHTML = items.map(([k, n]) => `<button data-k="${k}" aria-pressed="${state[key] === k}">${n}</button>`).join('');
+  box.onclick = (e) => { const b = e.target.closest('button'); if (!b) return;
+    state[key] = b.dataset.k; save(); for (const x of box.children) x.setAttribute('aria-pressed', String(x === b)); all(); };
+}
+seg('treat', TREATS, 'treat');
+seg('who', PEOPLE, 'who');
+const toggle = (btn, cls, after) => btn.onclick = () => { const on = document.body.classList.toggle(cls); btn.setAttribute('aria-pressed', String(on)); after?.(on); };
+toggle(document.getElementById('orig'), 'original');
+toggle(document.getElementById('edit'), 'editing', (on) => { document.getElementById('copy').hidden = !on; });
+document.getElementById('copy').onclick = async (e) => {
+  const out = {};
+  for (const s of SCENES.filter((x) => x.edited)) out[s.id] = s.faces.map((f) => f.q.map((p) => p.map((n) => +n.toFixed(4))));
+  await navigator.clipboard.writeText(JSON.stringify(out));
+  e.target.textContent = 'Copied'; setTimeout(() => { e.target.textContent = 'Copy corners'; }, 1500);
+};
+for (const b of document.querySelectorAll('[data-col]')) b.onclick = () => {
+  main.style.setProperty('--col', b.dataset.col);
+  for (const x of document.querySelectorAll('[data-col]')) x.setAttribute('aria-pressed', String(x === b));
+};
+all();
+</script></body></html>

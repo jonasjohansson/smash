@@ -1,0 +1,121 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Card try-on</title><style>
+:root { color-scheme: dark; }
+body { margin: 0; background: #000; color: #fff; font: 13px/1.4 "Neue Montreal", "Helvetica Neue", Arial, sans-serif; }
+nav { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 6px 20px; padding: 12px 16px; background: #000; border-bottom: 1px solid #333; }
+nav div { display: flex; flex-wrap: wrap; gap: 4px; }
+button { padding: 6px 10px; background: none; color: #888; border: 1px solid #333; font: inherit; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+button[aria-pressed="true"], button:hover { color: #fff; border-color: #fff; }
+main { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--col, 440px)), 1fr)); gap: 28px 16px; padding: 16px; }
+figure { margin: 0; min-width: 0; }
+.scene { position: relative; overflow: hidden; line-height: 0; }
+.scene > img { display: block; width: 100%; height: auto; }
+.face { position: absolute; left: 0; top: 0; width: 510px; height: 330px; transform-origin: 0 0; isolation: isolate; cursor: pointer; }
+.face img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.face .light { mix-blend-mode: multiply; }
+.original .face { display: none; }
+.h { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border: 1px solid #0ff; border-radius: 50%; background: rgba(0,255,255,.25); cursor: grab; z-index: 2; display: none; }
+.editing .h { display: block; }
+.editing .face { outline: 1px solid rgba(0,255,255,.6); }
+figcaption { margin-top: 8px; }
+figcaption a { color: inherit; text-decoration: none; } figcaption a:hover { text-decoration: underline; }
+</style></head><body>
+<nav>
+  <div id="treat"></div>
+  <div id="who"></div>
+  <div><button id="orig">Original</button><button id="edit">Corners</button><button id="copy" hidden>Copy corners</button></div>
+  <div><button data-col="320px">S</button><button data-col="440px" aria-pressed="true">M</button><button data-col="100%">L</button></div>
+</nav>
+<main></main>
+<script>
+const SCENES = [{"id": "artd-c05-print-037-business-card", "name": "ARTD-C05-Print-037 (thick card stack on concrete block)", "url": "https://artdirected.design/products/artd-c05-print-037-business-card", "pic": "previews/artd-c05-print-037-business-card.jpg", "w": 1600, "h": 2400, "avg": 8.3, "faces": [{"q": [[0.231, 0.486], [0.634, 0.359], [0.77, 0.508], [0.352, 0.647]], "light": "light/artd-c05-print-037-business-card-0.png", "side": "back"}]}, {"id": "business-card-mockup-pc014", "name": "Business Card Mockup PC014", "url": "https://shop.6tm-magazine.com/products/business-card-mockup-pc014", "pic": "previews/business-card-mockup-pc014.jpg", "w": 1000, "h": 1500, "avg": 8.2, "faces": [{"q": [[0.349, 0.441], [0.72, 0.525], [0.631, 0.673], [0.241, 0.581]], "light": "light/business-card-mockup-pc014-0.png", "side": "front"}]}, {"id": "business-card-bc-hof-01", "name": "Business Card BC-HOF-01 (Indoor Setting, hands)", "url": "https://mockup.maison/products/business-card-bc-hof-01", "pic": "previews/business-card-bc-hof-01.jpg", "w": 1068, "h": 1600, "avg": 8, "faces": [{"q": [[0.548, 0.579], [0.636, 0.427], [0.781, 0.455], [0.6995, 0.61]], "light": "light/business-card-bc-hof-01-0.png", "side": "back"}, {"q": [[0.3194, 0.5778], [0.4783, 0.4514], [0.6194, 0.5164], [0.4687, 0.6499]], "light": "light/business-card-bc-hof-01-1.png", "side": "back"}]}, {"id": "j3k7nneehpb8c3l-2blxb-p79e5-mtkkm-jkcha-fasls-be2es-98n2n-b9", "name": "B1 BUSINESS CARDS X3", "url": "https://www.formatmockups.com/mockups/p/j3k7nneehpb8c3l-2blxb-p79e5-mtkkm-jkcha-fasls-be2es-98n2n-b9ykp-f3jwc-dxwh2-tgch3-jyg8p-wckms-5cdaw-2s8wc-sbhmg", "pic": "previews/j3k7nneehpb8c3l-2blxb-p79e5-mtkkm-jkcha-fasls-be2es-98n2n-b9.jpg", "w": 2500, "h": 1667, "avg": 8, "faces": [{"q": [[0.3967, 0.2673], [0.6601, 0.3993], [0.6, 0.6529], [0.3325, 0.5164]], "light": "light/j3k7nneehpb8c3l-2blxb-p79e5-mtkkm-jkcha-fasls-be2es-98n2n-b9-0.png", "side": "back"}]}, {"id": "artd-c05-print-040-business-card", "name": "ARTD-C05-Print-040 (Business Card)", "url": "https://artdirected.design/products/artd-c05-print-040-business-card", "pic": "previews/artd-c05-print-040-business-card.jpg", "w": 3108, "h": 2070, "avg": 8, "faces": [{"q": [[0.4254, 0.2271], [0.6037, 0.4546], [0.506, 0.6238], [0.3245, 0.3915]], "light": "light/artd-c05-print-040-business-card-0.png", "side": "back"}, {"q": [[0.308, 0.4294], [0.4913, 0.6548], [0.3939, 0.8286], [0.2107, 0.5977]], "light": "light/artd-c05-print-040-business-card-1.png", "side": "back"}]}, {"id": "business-card-bc-bui-01", "name": "Business Card BC-BUI-01 (Studio Desk)", "url": "https://mockup.maison/products/business-card-bc-bui-01", "pic": "previews/business-card-bc-bui-01.jpg", "w": 1067, "h": 1600, "avg": 7.8, "faces": [{"q": [[0.1964, 0.584], [0.3977, 0.3734], [0.609, 0.4495], [0.4148, 0.668]], "light": "light/business-card-bc-bui-01-0.png", "side": "back"}, {"q": [[0.4347, 0.5186], [0.8015, 0.4357], [0.8912, 0.589], [0.514, 0.6751]], "light": "light/business-card-bc-bui-01-1.png", "side": "front"}]}, {"id": "business-card-on-paper-cutter", "name": "Business Card on Paper Cutter PSD Mockup", "url": "https://unmark.gumroad.com/l/business-card-on-paper-cutter", "pic": "previews/business-card-on-paper-cutter.jpg", "w": 1920, "h": 1280, "avg": 7.7, "faces": [{"q": [[0.4085, 0.3003], [0.7517, 0.4025], [0.708, 0.6768], [0.3468, 0.5657]], "light": "light/business-card-on-paper-cutter-0.png", "side": "back"}]}, {"id": "business-card-bc-bui-02", "name": "Business Card BC-BUI-02 (cards on perforated steel strip)", "url": "https://mockup.maison/products/business-card-bc-bui-02", "pic": "previews/business-card-bc-bui-02.jpg", "w": 1600, "h": 1067, "avg": 7.7, "faces": [{"q": [[0.3884, 0.4721], [0.57, 0.1339], [0.7247, 0.2938], [0.5423, 0.6456]], "light": "light/business-card-bc-bui-02-0.png", "side": "front"}, {"q": [[0.3255, 0.8322], [0.3245, 0.3811], [0.5162, 0.3739], [0.5256, 0.8222]], "light": "light/business-card-bc-bui-02-1.png", "side": "back"}]}, {"id": "the-business-card-mockup-bundle", "name": "The Business Card Bundle (30 PSD mockups)", "url": "https://the-brandidentity.com/store/product/the-business-card-mockup-bundle", "pic": "previews/the-business-card-mockup-bundle.jpg", "w": 1500, "h": 1000, "avg": 7.7, "faces": [{"q": [[0.153, 0.632], [0.234, 0.225], [0.4208, 0.3099], [0.3497, 0.7168]], "light": "light/the-business-card-mockup-bundle-0.png", "side": "back"}, {"q": [[0.6321, 0.317], [0.8756, 0.5304], [0.7687, 0.7241], [0.5201, 0.4907]], "light": "light/the-business-card-mockup-bundle-1.png", "side": "back"}]}, {"id": "business-card-bc-bui-03", "name": "Business Card BC-BUI-03", "url": "https://mockup.maison/products/business-card-bc-bui-03", "pic": "previews/business-card-bc-bui-03.jpg", "w": 1067, "h": 1600, "avg": 7.7, "faces": [{"q": [[0.3235, 0.4045], [0.6796, 0.4989], [0.5434, 0.6267], [0.178, 0.5225]], "light": "light/business-card-bc-bui-03-0.png", "side": "front"}]}, {"id": "business-card-bc-h-05", "name": "Business Card BC-H-05 (Geometric Tile Surface)", "url": "https://mockup.maison/products/business-card-bc-h-05", "pic": "previews/business-card-bc-h-05.jpg", "w": 1600, "h": 1067, "avg": 7.5, "faces": [{"q": [[0.3285, 0.381], [0.568, 0.386], [0.5627, 0.603], [0.3232, 0.598]], "light": "light/business-card-bc-h-05-0.png", "side": "front"}, {"q": [[0.47, 0.3221], [0.6816, 0.4859], [0.6105, 0.6803], [0.392, 0.5037]], "light": "light/business-card-bc-h-05-1.png", "side": "back"}]}, {"id": "business-card-bc-ygap-04", "name": "Business Card BC-YGAP-04 (Wooden Tabletop)", "url": "https://mockup.maison/products/business-card-bc-ygap-04", "pic": "previews/business-card-bc-ygap-04.jpg", "w": 1600, "h": 1067, "avg": 7.5, "faces": [{"q": [[0.1908, 0.4397], [0.4382, 0.3973], [0.4597, 0.6082], [0.2016, 0.6594]], "light": "light/business-card-bc-ygap-04-0.png", "side": "back"}, {"q": [[0.3434, 0.755], [0.5012, 0.474], [0.6406, 0.6034], [0.4864, 0.9008]], "light": "light/business-card-bc-ygap-04-1.png", "side": "front"}]}, {"id": "business-card-mockup-s003-003", "name": "Business Card Mockup S003-003", "url": "https://sedshop.co/mockups/business-card-mockup-s003-003", "pic": "previews/business-card-mockup-s003-003.jpg", "w": 1920, "h": 1280, "avg": 7.5, "faces": [{"q": [[0.5435, 0.3773], [0.7369, 0.4413], [0.6838, 0.604], [0.4929, 0.5308]], "light": "light/business-card-mockup-s003-003-0.png", "side": "back"}, {"q": [[0.3357, 0.3534], [0.5366, 0.457], [0.4878, 0.658], [0.2857, 0.5621]], "light": "light/business-card-mockup-s003-003-1.png", "side": "back"}]}, {"id": "business-card-mockup-s008-009", "name": "Business Card Mockup S008-009", "url": "https://sedshop.co/mockups/business-card-mockup-s008-009", "pic": "previews/business-card-mockup-s008-009.jpg", "w": 1920, "h": 1280, "avg": 7.5, "faces": [{"q": [[0.6, 0.465], [0.775, 0.54], [0.7227, 0.71], [0.5467, 0.6225]], "light": "light/business-card-mockup-s008-009-0.png", "side": "back"}]}, {"id": "eom-business-card-03", "name": "EoM Business Card 02 (Essential on Monday)", "url": "https://shop.6tm-magazine.com/products/eom-business-card-03", "pic": "previews/eom-business-card-03.jpg", "w": 1365, "h": 2048, "avg": 7.5, "faces": [{"q": [[0.4044, 0.5013], [0.5955, 0.4119], [0.726, 0.448], [0.5391, 0.5455]], "light": "light/eom-business-card-03-0.png", "side": "back"}, {"q": [[0.1848, 0.603], [0.4002, 0.5039], [0.5327, 0.5472], [0.323, 0.6516]], "light": "light/eom-business-card-03-1.png", "side": "back"}, {"q": [[0.344, 0.6606], [0.5537, 0.5561], [0.7007, 0.6018], [0.489, 0.709]], "light": "light/eom-business-card-03-2.png", "side": "back"}, {"q": [[0.5557, 0.5571], [0.7501, 0.4611], [0.9008, 0.4962], [0.7054, 0.5991]], "light": "light/eom-business-card-03-3.png", "side": "back"}]}, {"id": "eden-book-01-gzndf-33rxn-4rp9k-tedc6-49h5l-rllld-jm747-k653z", "name": "DIY Business Card 05 (cards on tangled cables)", "url": "https://www.formatmockups.com/mockups/p/eden-book-01-gzndf-33rxn-4rp9k-tedc6-49h5l-rllld-jm747-k653z-ldgly-nn6k5-t7jtn-mxwec-2gtt6-aczzc-29fbb-spdxz", "pic": "previews/eden-book-01-gzndf-33rxn-4rp9k-tedc6-49h5l-rllld-jm747-k653z.jpg", "w": 2500, "h": 1667, "avg": 7.5, "faces": [{"q": [[0.3888, 0.3266], [0.6588, 0.4275], [0.6064, 0.6944], [0.3404, 0.5864]], "light": "light/eden-book-01-gzndf-33rxn-4rp9k-tedc6-49h5l-rllld-jm747-k653z-0.png", "side": "back"}]}, {"id": "artd-c05-print-038-business-card", "name": "ARTD-C05-Print-038 (black business card on rough stone)", "url": "https://artdirected.design/products/artd-c05-print-038-business-card", "pic": "previews/artd-c05-print-038-business-card.jpg", "w": 2600, "h": 1733, "avg": 7.5, "faces": [{"q": [[0.4928, 0.2636], [0.6328, 0.5789], [0.4986, 0.7271], [0.3491, 0.4005]], "light": "light/artd-c05-print-038-business-card-0.png", "side": "front"}]}, {"id": "business-card-bl06-mockup", "name": "Business Card BL06 Mockup", "url": "https://supply.family/shop/business-card-bl06-mockup/", "pic": "previews/business-card-bl06-mockup.jpg", "w": 1600, "h": 1070, "avg": 7.5, "faces": [{"q": [[0.459, 0.07], [0.82, 0.295], [0.741, 0.622], [0.362, 0.395]], "light": "light/business-card-bl06-mockup-0.png", "side": "back"}, {"q": [[0.271, 0.464], [0.714, 0.538], [0.699, 0.951], [0.225, 0.897]], "light": "light/business-card-bl06-mockup-1.png", "side": "back"}]}, {"id": "business-card-bi-a-07", "name": "Business Card BI-A-07 (Bistro Collection)", "url": "https://parallelmockup.com/products/business-card-bi-a-07", "pic": "previews/business-card-bi-a-07.jpg", "w": 2000, "h": 3000, "avg": 7.5, "faces": [{"q": [[0.332, 0.568], [0.533, 0.401], [0.719, 0.444], [0.518, 0.637]], "light": "light/business-card-bi-a-07-0.png", "side": "back"}]}, {"id": "business-card-mockup-pc004", "name": "Business Card Mockup PC004", "url": "https://shop.6tm-magazine.com/products/business-card-mockup-pc004", "pic": "previews/business-card-mockup-pc004.jpg", "w": 1000, "h": 1500, "avg": 7.3, "faces": [{"q": [[0.35, 0.425], [0.738, 0.46], [0.709, 0.609], [0.304, 0.572]], "light": "light/business-card-mockup-pc004-0.png", "side": "back"}]}, {"id": "artd-c01-print-002-business-card", "name": "ARTD-C01-Print-002 (Business Card)", "url": "https://artdirected.design/products/artd-c01-print-002-business-card", "pic": "previews/artd-c01-print-002-business-card.jpg", "w": 1500, "h": 995, "avg": 7.2, "faces": [{"q": [[0.386, 0.306], [0.687, 0.458], [0.583, 0.637], [0.281, 0.488]], "light": "light/artd-c01-print-002-business-card-0.png", "side": "back"}]}, {"id": "business-card-bi-a-49", "name": "Business Card BI-A-49", "url": "https://parallelmockup.com/products/business-card-bi-a-49", "pic": "previews/business-card-bi-a-49.jpg", "w": 2000, "h": 3000, "avg": 7.2, "faces": [{"q": [[0.49, 0.387], [0.746, 0.545], [0.544, 0.611], [0.288, 0.446]], "light": "light/business-card-bi-a-49-0.png", "side": "back"}]}, {"id": "business-card-mockup-pc011", "name": "Business Card Mockup PC011 (Just Form Mockups)", "url": "https://shop.6tm-magazine.com/products/business-card-mockup-pc011", "pic": "previews/business-card-mockup-pc011.jpg", "w": 1000, "h": 1500, "avg": 7, "faces": [{"q": [[0.21, 0.42], [0.64, 0.341], [0.74, 0.508], [0.307, 0.592]], "light": "light/business-card-mockup-pc011-0.png", "side": "back"}]}, {"id": "raw-free-business-cards-mockup", "name": "Raw Free Business Cards Mockup (Batch 00001)", "url": "https://www.mockupcloud.com/free/raw-free-business-cards-mockup", "pic": "previews/raw-free-business-cards-mockup.jpg", "w": 1170, "h": 780, "avg": 7, "faces": [{"q": [[0.357, 0.237], [0.548, 0.103], [0.616, 0.265], [0.425, 0.407]], "light": "light/raw-free-business-cards-mockup-0.png", "side": "back"}, {"q": [[0.372, 0.642], [0.57, 0.503], [0.638, 0.682], [0.437, 0.827]], "light": "light/raw-free-business-cards-mockup-1.png", "side": "front"}]}, {"id": "business-card-k01-mockup", "name": "Business Card K01 Mockup", "url": "https://supply.family/shop/business-card-k01-mockup/", "pic": "previews/business-card-k01-mockup.jpg", "w": 1600, "h": 1070, "avg": 7, "faces": [{"q": [[0.36, 0.363], [0.579, 0.539], [0.514, 0.751], [0.29, 0.583]], "light": "light/business-card-k01-mockup-0.png", "side": "back"}]}, {"id": "business-card-of-a-19", "name": "Business Card Mockup OF-A-19", "url": "https://parallelmockup.com/products/business-card-of-a-19", "pic": "previews/business-card-of-a-19.jpg", "w": 2000, "h": 3000, "avg": 7, "faces": [{"q": [[0.277, 0.52], [0.627, 0.352], [0.802, 0.455], [0.452, 0.637]], "light": "light/business-card-of-a-19-0.png", "side": "back"}]}];
+const TREATS = [['black-and-white', 'Black and white'], ['acid', 'Acid'], ['yellow', 'Yellow'], ['red', 'Red'], ['sky', 'Sky']];
+const PEOPLE = [['veronica-reed', 'Veronica'], ['ashley-reed', 'Ashley'], ['emile-pascoe', 'Emile']];
+const W = 510, H = 330;
+const state = { treat: 'black-and-white', who: 'veronica-reed' };
+try { Object.assign(state, JSON.parse(localStorage.getItem('smash-tryon') || '{}')); } catch {}
+const save = () => { try { localStorage.setItem('smash-tryon', JSON.stringify(state)); } catch {} };
+
+// The plane taking the card's W x H rectangle to four points, as a CSS matrix3d.
+function matrix(q) {
+  const src = [[0, 0], [W, 0], [W, H], [0, H]], A = [], b = [];
+  q.forEach(([u, v], i) => { const [x, y] = src[i];
+    A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); b.push(u);
+    A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); b.push(v); });
+  for (let c = 0; c < 8; c++) {
+    let p = c; for (let r = c + 1; r < 8; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
+    [A[c], A[p]] = [A[p], A[c]]; [b[c], b[p]] = [b[p], b[c]];
+    for (let r = 0; r < 8; r++) if (r !== c) { const f = A[r][c] / A[c][c]; for (let k = c; k < 8; k++) A[r][k] -= f * A[c][k]; b[r] -= f * b[c]; }
+  }
+  const [a, bb, c, d, e, f, g, h] = b.map((v, i) => v / A[i][i]);
+  return `matrix3d(${a},${d},0,${g},${bb},${e},0,${h},0,0,1,0,${c},${f},0,1)`;
+}
+
+const art = (side) => side === 'front' ? `cards/front-${state.treat}.jpg` : `cards/back-${state.who}-${state.treat}.jpg`;
+const main = document.querySelector('main');
+const views = SCENES.map((s) => {
+  const fig = document.createElement('figure');
+  fig.innerHTML = `<div class="scene"><img src="${s.pic}" alt=""></div><figcaption><a href="${s.url}" target="_blank" rel="noopener">${s.name}</a></figcaption>`;
+  const scene = fig.querySelector('.scene');
+  const faces = s.faces.map((f, i) => {
+    const el = document.createElement('div');
+    el.className = 'face';
+    el.innerHTML = `<img class="art" alt=""><img class="light" src="${f.light}" alt="">`;
+    const face = { el, f, side: f.side || (i % 2 ? 'back' : 'front'), hs: [] };
+    el.onclick = () => { if (!document.body.classList.contains('editing')) { face.side = face.side === 'front' ? 'back' : 'front'; paint(face); } };
+    scene.append(el);
+    f.q.forEach((_, k) => {
+      const h = document.createElement('div');
+      h.className = 'h';
+      h.onpointerdown = (e) => {
+        h.setPointerCapture(e.pointerId);
+        h.onpointermove = (m) => { const r = scene.getBoundingClientRect();
+          f.q[k] = [Math.min(1, Math.max(0, (m.clientX - r.left) / r.width)), Math.min(1, Math.max(0, (m.clientY - r.top) / r.height))];
+          s.edited = true; place(view); };
+        h.onpointerup = () => { h.onpointermove = null; };
+      };
+      scene.append(h); face.hs.push(h);
+    });
+    return face;
+  });
+  const view = { s, scene, faces };
+  main.append(fig);
+  return view;
+});
+
+function paint(face) { face.el.querySelector('.art').src = art(face.side); }
+function place(v) {
+  const w = v.scene.clientWidth, h = v.scene.clientHeight;
+  for (const face of v.faces) {
+    const q = face.f.q.map(([x, y]) => [x * w, y * h]);
+    face.el.style.transform = matrix(q);
+    face.hs.forEach((hd, k) => { hd.style.left = q[k][0] + 'px'; hd.style.top = q[k][1] + 'px'; });
+  }
+}
+const all = () => views.forEach((v) => { v.faces.forEach(paint); place(v); });
+new ResizeObserver(() => views.forEach(place)).observe(main);
+views.forEach((v) => v.scene.querySelector('img').addEventListener('load', () => place(v)));
+
+function seg(id, items, key) {
+  const box = document.getElementById(id);
+  box.innerHTML = items.map(([k, n]) => `<button data-k="${k}" aria-pressed="${state[key] === k}">${n}</button>`).join('');
+  box.onclick = (e) => { const b = e.target.closest('button'); if (!b) return;
+    state[key] = b.dataset.k; save(); for (const x of box.children) x.setAttribute('aria-pressed', String(x === b)); all(); };
+}
+seg('treat', TREATS, 'treat');
+seg('who', PEOPLE, 'who');
+const toggle = (btn, cls, after) => btn.onclick = () => { const on = document.body.classList.toggle(cls); btn.setAttribute('aria-pressed', String(on)); after?.(on); };
+toggle(document.getElementById('orig'), 'original');
+toggle(document.getElementById('edit'), 'editing', (on) => { document.getElementById('copy').hidden = !on; });
+document.getElementById('copy').onclick = async (e) => {
+  const out = {};
+  for (const s of SCENES.filter((x) => x.edited)) out[s.id] = s.faces.map((f) => f.q.map((p) => p.map((n) => +n.toFixed(4))));
+  await navigator.clipboard.writeText(JSON.stringify(out));
+  e.target.textContent = 'Copied'; setTimeout(() => { e.target.textContent = 'Copy corners'; }, 1500);
+};
+for (const b of document.querySelectorAll('[data-col]')) b.onclick = () => {
+  main.style.setProperty('--col', b.dataset.col);
+  for (const x of document.querySelectorAll('[data-col]')) x.setAttribute('aria-pressed', String(x === b));
+};
+all();
+</script></body></html>
