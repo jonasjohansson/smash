@@ -28,12 +28,13 @@ export const CM = {
   keepUpper: 15, keepLower: 19, // chopped, how much of each opening stays at the slot (their short one's)
   chop: 217, // the page's live chopped wordmark: how tall (their short one's)
   sBridge: 1, hBridge: 1, level: 0, // the S bridged, the H bridged, the A's and the H's band crossbars level (not slanted)
-  hStyle: 'band', hDrop: 8.7, // the H's crossbar: the S's band, or 'cut' as their short one's (level on top at the middle
-  // and hDrop, a slot under it cut as the M's)
+  hStyle: 'cut', hBase: 113, hGrow: 0.13, // the H's crossbar: theirs ('cut': level on top, a slot under it cut as the
+  // M's), its top hBase above the base at 217 and hGrow more for each unit taller (their 217 and their 346, both
+  // to the pixel); or 'band', the S's
   a: 'A', // the capital A, or 'a', theirs
   aTop: 'round', aRound: 7, // the A's counter's top: as their a's (flat, rounded aRound), or 'cut' as the S's
   aNotch: 19, aSwoop: 94, aCounter: 44, // their a: its bowl meeting the stem this far up, its swoop's pull down, its counter's low corner
-  corners: [[1, 1, 1, 1], [0, 1, 0, 0], [1, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 1]], // each letter's tl tr br bl
+  corners: [[1, 1, 1, 1], [0, 1, 0, 0], [1, 1, 0, 0], [1, 1, 1, 1], [0, 0, 0, 1]], // each letter's tl tr br bl (the A both top ones, Jonas)
   symbol: 217, // the S M and the S alone: how tall, chopped (their slide 03; their short wordmark's block)
 };
 
@@ -220,7 +221,7 @@ function Hh(p, x0, g, c4) {
   const [tl, tr, br, bl] = box(p, c4, x0, x1, g);
   if (!p.hBridge) return outline([tl, [a, 0], [a, h], bl]) + outline([[b, 0], tr, br, [b, h]]);
   if (p.hStyle === 'cut') { // level on top, the slot under it cut as the M's: its high corner a bar down
-    const y = g.mid + p.hDrop, top = g.Ym(y), cut = (x) => g.Ym(y + p.bar + g.k * (x - a));
+    const top = h - p.hBase - p.hGrow * (h - 217), cut = (x) => top + p.bar + g.k * (x - a);
     return outline([tl, [a, 0], [a, top], [b, top], [b, 0], tr, br, [b, h], [b, cut(b), r], [a, cut(a)], [a, h], bl]);
   }
   const [top, bot] = bars(p, g, a), [obtuse, acute] = g.kb ? [r, 0] : [p.aRound, p.aRound];

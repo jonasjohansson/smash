@@ -31,7 +31,8 @@ const SLIDERS = [
   ['rise', 'Rise', -60, 80, 1, 'Middle'],
   ['upper', 'Upper opening', 0, 140, 1, 'Middle'],
   ['lower', 'Lower opening', 0, 140, 1, 'Middle'],
-  ['hDrop', 'H bar, their cut', -60, 80, 0.5, 'Middle'],
+  ['hBase', 'H bar from base', 20, 300, 0.5, 'Middle'],
+  ['hGrow', 'H bar, with height', 0, 1, 0.01, 'Middle'],
   ['chop', 'Chop to', 150, 541, 1, 'Chop'],
   ['keepUpper', 'Opening kept, upper', 0, 60, 1, 'Chop'],
   ['keepLower', 'Opening kept, lower', 0, 60, 1, 'Chop'],
@@ -46,7 +47,7 @@ const SLIDERS = [
 const SWITCHES = [
   ['sBridge', 'S bridge', [['On', 1], ['Off', 0]], 'Middle'],
   ['hBridge', 'H bridge', [['On', 1], ['Off', 0]], 'Middle'],
-  ['hStyle', 'H bar', [['The S\'s band', 'band'], ['Theirs, cut', 'cut']], 'Middle'],
+  ['hStyle', 'H bar', [['Theirs, cut', 'cut'], ['The S\'s band', 'band']], 'Middle'],
   ['sLevel', 'S middle', [['Diagonal', 0], ['Level', 1]], 'Middle'],
   ['level', 'Crossbars', [['Slanted', 0], ['Level', 1]], 'Middle'],
   ['a', 'The A', [['Capital A', 'A'], ['Their a', 'a']], 'Block'],
@@ -59,8 +60,8 @@ const CORNERS = [['tl', 'Top left'], ['tr', 'Top right'], ['br', 'Bottom right']
 // bar theirs); Chopped's lowest, 217, is the short one's block.
 const PRESETS = [
   ['SMASH, bridged', {}],
-  ["CM.SUPPLY's tall", { a: 'a', sBridge: 0, hBridge: 0 }],
-  ["CM.SUPPLY's short", { a: 'a', sBridge: 1, hBridge: 1, hStyle: 'cut' }],
+  ["CM.SUPPLY's tall", { a: 'a', sBridge: 0, hBridge: 0, corners: [[1, 1, 1, 1], [0, 1, 0, 0], [1, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 1]] }],
+  ["CM.SUPPLY's short", { a: 'a', sBridge: 1, hBridge: 1, corners: [[1, 1, 1, 1], [0, 1, 0, 0], [1, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 1]] }],
 ];
 
 const esc = (s = '') => String(s).replace(/[<&"]/g, (c) => ({ '<': '&lt;', '&': '&amp;', '"': '&quot;' })[c]);
