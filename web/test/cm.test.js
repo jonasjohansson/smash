@@ -55,9 +55,9 @@ test('the S is the same turned upside down when its openings match and its middl
 
 test('a block lower than the S allows is raised to it', () => {
   const low = G.least(G.CM);
-  assert.ok(low > 100 && low < 220, `least ${low}`); // their S M is about 220
+  assert.ok(low > 100 && low < 217, `least ${low}`); // their short wordmark is 217
   assert.equal(G.row(G.CM, 50).h, low);
-  assert.equal(G.symbol(G.CM).h, 220);
+  assert.equal(G.symbol(G.CM).h, 217);
 });
 
 test('every outer and cut round draws without breaking the outline', () => {
@@ -65,4 +65,42 @@ test('every outer and cut round draws without breaking the outline', () => {
   assert.match(d, /C/);
   assert.match(d, /A/);
   assert.doesNotMatch(d, /NaN|Infinity/);
+});
+
+/** The corners of a mark's path, as numbers [x, y], round or not (every pair after a command). */
+const points = (d) => [...d.matchAll(/[MLC]([^MLCAZ]+)/g)].flatMap(([, n]) => {
+  const v = n.trim().split(/\s+/).map(Number), out = [];
+  for (let i = 0; i < v.length; i += 2) out.push([v[i], v[i + 1]]);
+  return out;
+});
+
+test('chopped, nothing is scaled: the S\'s middle and its ends come through, only shifted', () => {
+  const p = { ...SQUARE, sBridge: 1 };
+  const tall = new Set(points(one(p, 'S')).map(([x, y]) => `${x}`));
+  const short = G.row(p, 217, 'S', [[0, 0, 0, 0]]);
+  assert.equal(short.h, 217);
+  // the same columns of corners, and the diagonals at the same slope
+  assert.deepEqual(new Set(points(short.d).map(([x]) => `${x}`)), tall);
+  for (const s of slopes(short.d)) assert.ok(Math.abs(s - G.CM.slope) < 2e-3, `slope ${s}`);
+  // the top end and the bottom end as tall, the bottom one moved up by the chop
+  const ys = (d) => points(d).map(([, y]) => y);
+  assert.ok(ys(short.d).includes(25));
+  assert.ok(ys(short.d).includes(217 - 25));
+});
+
+test('their short one: 217, chopped 162 above the middle and 162 below', () => {
+  const p = { ...SQUARE, sBridge: 1 };
+  const band = (d) => points(d).filter(([x]) => x === 139).map(([, y]) => y).sort((a, b) => a - b);
+  const tall = band(one(p, 'S')), short = band(G.row(p, 217, 'S', [[0, 0, 0, 0]]).d);
+  // at the slot's left side: the top end as tall, the band's top 162 up, the lower opening's flat bottom closed up
+  // to the strip's edge (theirs 126.9), the bottom end 324 up
+  assert.deepEqual(short.map((y) => +y.toFixed(2)), [tall[0], +(tall[1] - 162).toFixed(2), 127.35, +(tall[3] - 324).toFixed(2)]);
+});
+
+test('their a dips under the block, and taller blocks draw the strips back in', () => {
+  const w = G.wordmark({ ...G.CM, a: 'a' });
+  assert.ok(w.below > 6 && w.below < 10, `dip ${w.below}`); // theirs dips 8
+  assert.match(G.svgOf(w), new RegExp(`viewBox="0 0 1880 ${+(541 + w.below).toFixed(2)}"`));
+  assert.equal(G.wordmark(G.CM, 800).h, 800);
+  assert.doesNotMatch(G.wordmark({ ...G.CM, a: 'a', hStyle: 'cut' }, 217).d, /NaN/);
 });

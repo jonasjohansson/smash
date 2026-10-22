@@ -3,13 +3,15 @@
 // and to see it "tall like the original and then chopped a bit so we get the word mark with S and M etc": the
 // wordmark tall, then chopped to three lower blocks (their slide 07), then the S M and the S alone, chopped,
 // with their lockups (slides 03 and 04), and the bridges each way. The settings live in the address (#…), so a
-// link shows what was set; Theirs over lays their tall PNG on the tall wordmark, to check it against.
+// link shows what was set; Theirs over lays their tall PNG on the tall wordmark and their short one on the 217, to
+// check them against. A lower block is the tall one chopped (geometry.js), as theirs.
 
 import { CM, LETTERS, wordmark, symbol, sAlone, svgOf, least } from './geometry.js';
 
-const CHOPPED = [420, 320, 220]; // the chopped wordmarks' blocks, under the tall one
+const CHOPPED = [420, 320, 217]; // the chopped wordmarks' blocks, under the tall one (217 their short one's)
 const EXAGGERATED = [1.25, 1.5]; // the tall block drawn out (Jonas, 2026-10-22: "exaggerate the height a bit"), above it
 const REF = new URL('./cm-supply-tall.png', import.meta.url).href; // their tall wordmark, 1880 × 550 (the a dips 9)
+const REF_SHORT = new URL('./cm-supply-short.png', import.meta.url).href; // their short one, bridged (a screenshot of their Figma), 217 tall
 const REF_W = 1880;
 
 // [key, label, min, max, step, group, as words]
@@ -29,6 +31,12 @@ const SLIDERS = [
   ['rise', 'Rise', -60, 80, 1, 'Middle'],
   ['upper', 'Upper opening', 0, 140, 1, 'Middle'],
   ['lower', 'Lower opening', 0, 140, 1, 'Middle'],
+  ['hDrop', 'H bar, their cut', -60, 80, 0.5, 'Middle'],
+  ['keepUpper', 'Chop keeps, upper', 0, 60, 1, 'Chop'],
+  ['keepLower', 'Chop keeps, lower', 0, 60, 1, 'Chop'],
+  ['aNotch', 'a notch', 0, 60, 1, 'Cuts'],
+  ['aSwoop', 'a swoop', 0, 200, 1, 'Cuts'],
+  ['aCounter', 'a counter base', 20, 90, 1, 'Cuts'],
   ['outerX', 'Corner across', 0, 90, 1, 'Corners'],
   ['outerY', 'Corner down', 0, 140, 1, 'Corners'],
   ['tension', 'Corner tension', 0.1, 1, 0.01, 'Corners'],
@@ -37,14 +45,22 @@ const SLIDERS = [
 const SWITCHES = [
   ['sBridge', 'S bridge', [['On', 1], ['Off', 0]], 'Middle'],
   ['hBridge', 'H bridge', [['On', 1], ['Off', 0]], 'Middle'],
+  ['hStyle', 'H bar', [['The S\'s band', 'band'], ['Theirs, cut', 'cut']], 'Middle'],
   ['sLevel', 'S middle', [['Diagonal', 0], ['Level', 1]], 'Middle'],
   ['level', 'Crossbars', [['Slanted', 0], ['Level', 1]], 'Middle'],
+  ['a', 'The A', [['Capital A', 'A'], ['Their a', 'a']], 'Block'],
   ['aTop', 'A counter top', [['As their a', 'round'], ['Cut', 'cut']], 'Cuts'],
   ['even', 'Spacing', [['Theirs', 0], ['Even', 1]], 'Block'],
 ];
-const GROUPS = [['Block', true], ['Middle', true], ['Cuts', false], ['Corners', false]];
+const GROUPS = [['Block', true], ['Middle', true], ['Cuts', false], ['Chop', false], ['Corners', false]];
 const CORNERS = [['tl', 'Top left'], ['tr', 'Top right'], ['br', 'Bottom right'], ['bl', 'Bottom left']];
-const PRESETS = [['SMASH, bridged', {}], ["CM.SUPPLY's, open", { sBridge: 0, hBridge: 0 }]];
+// Theirs: the tall one (their PNG, the S open, the H two bars) and the short one (their Figma, both bridged, the H's
+// bar theirs); Chopped's lowest, 217, is the short one's block.
+const PRESETS = [
+  ['SMASH, bridged', {}],
+  ["CM.SUPPLY's tall", { a: 'a', sBridge: 0, hBridge: 0 }],
+  ["CM.SUPPLY's short", { a: 'a', sBridge: 1, hBridge: 1, hStyle: 'cut' }],
+];
 
 const esc = (s = '') => String(s).replace(/[<&"]/g, (c) => ({ '<': '&lt;', '&': '&amp;', '"': '&quot;' })[c]);
 const fresh = () => structuredClone(CM);
@@ -74,13 +90,14 @@ function marks() {
   const tall = wordmark(p);
   const ref = view.ref ? `<img class="ref" src="${REF}" alt="" style="left:0;top:0;width:${(REF_W / tall.w) * 100}%">` : '';
   const chopped = CHOPPED.map((h) => wordmark(p, h));
+  const refShort = (m) => (view.ref && m.h === 217 ? `<img class="ref" src="${REF_SHORT}" alt="" style="left:0;top:0;width:${(REF_W / m.w) * 100}%">` : '');
   const drawn = EXAGGERATED.map((k) => wordmark(p, Math.round(p.height * k)));
   const sm = symbol(p), s = sAlone(p);
   const ways = [['Bridged', 1, 1], ['S bridged', 1, 0], ['H bridged', 0, 1], ["Open, as CM.SUPPLY's", 0, 0]];
   return `
     <section class="sec"><h2>Exaggerated</h2><div class="chopped">${drawn.map((m, i) => fig(m, `Exaggerated, ${EXAGGERATED[i]}×`, `smash-cm-${m.h}`)).join('')}</div></section>
     <section class="sec"><h2>Tall</h2>${fig(tall, 'Tall', 'smash-cm-tall', ref)}</section>
-    <section class="sec"><h2>Chopped</h2><div class="chopped">${chopped.map((m) => fig(m, m.h > CHOPPED.at(-1) ? 'Chopped' : 'Chopped, its lowest here', `smash-cm-${m.h}`)).join('')}</div></section>
+    <section class="sec"><h2>Chopped</h2><div class="chopped">${chopped.map((m) => fig(m, m.h === 217 ? "Chopped to their short one's" : 'Chopped', `smash-cm-${m.h}`, refShort(m))).join('')}</div></section>
     <section class="sec"><h2>S M and S</h2>
       <div class="pair">${fig(sm, 'S M', 'smash-cm-sm')}${fig(s, 'S', 'smash-cm-s')}</div>
       <div class="pair"><div class="art lockup-art">${lockup(sm)}</div><div class="art lockup-art">${lockup(s, 's')}</div></div>
@@ -101,7 +118,7 @@ function controls() {
   return `<div class="controls">
     <div class="actions">${PRESETS.map(([label], i) => `<button type="button" data-preset="${i}">${esc(label)}</button>`).join('')}
       <button type="button" data-view="paper"${view.paper ? ' data-on' : ''}>Paper</button>
-      <button type="button" data-view="ref"${view.ref ? ' data-on' : ''} title="Their tall wordmark over the tall one, to check it against">Theirs over</button>
+      <button type="button" data-view="ref"${view.ref ? ' data-on' : ''} title="Their tall wordmark over the tall one, and their short one over the 217, to check them against">Theirs over</button>
       <span class="note">Lowest block now ${least(p)}</span></div>
     ${GROUPS.map(([name, start]) => `<details data-group="${name}"${(open[name] ?? start) ? ' open' : ''}><summary>${name}</summary><div>
       ${SLIDERS.filter((s) => s[5] === name).map(slider).join('')}${SWITCHES.filter((s) => s[3] === name).map(toggle).join('')}${name === 'Corners' ? letters() : ''}

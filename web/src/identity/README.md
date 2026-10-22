@@ -136,7 +136,12 @@ A page of its own (`web/src/identity-cm/`, 2026-10-22): CM.SUPPLY's round 4 word
 their tall PNG (it lays over it to within a pixel, Theirs over), with a capital A in their a's place and a bridge
 for the S and the H (Jonas: "we want the bridge for the s and the H"; their S's slot runs through and their H is
 two bars, both a switch away). `geometry.js` draws it from its measures (`CM`: the block 541, stems 139, slots 36,
-every cut at one slope, the outer corners long); `cm.js` is the page: its controls, then the wordmark tall, chopped
-to 420, 320 and 220 (the S's openings shrinking with the block, as their S M's), the S M and the S alone chopped
-with their lockups, and the bridges each way. Each mark downloads as an SVG; the settings live in the address.
-Tests: `test/cm.test.js`.
+every cut at one slope, the outer corners long; their a too, as a switch). A lower block is the tall one chopped
+(Jonas: "the part of the S is removed top and bottom", "that chop goes across the S and M"): two strips out across
+every letter, just above and below the S's middle, nothing scaled; their short wordmark (a screenshot of their
+Figma, `identity/references/cm-supply-2026-10-08/logo-short-bridged-screenshot.png`) is the tall one chopped to
+217 so, its S and H bridged, the H's bar theirs (level on top, a slot cut under it). `cm.js` is the page: its
+controls and three presets (SMASH bridged, CM.SUPPLY's tall, CM.SUPPLY's short), then the wordmark drawn out,
+tall, chopped to 420, 320 and 217, the S M and the S alone chopped with their lockups, and the bridges each way.
+Theirs over lays their tall PNG on the tall one and their short one on the 217. Each mark downloads as an SVG;
+the settings live in the address. Tests: `test/cm.test.js`.
