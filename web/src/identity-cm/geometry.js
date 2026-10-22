@@ -26,6 +26,7 @@ export const CM = {
   bridge: 36, rise: 13, sLevel: 0, // the S's diagonal band and the crossbars: how thick, how far above the middle; the S's level
   upper: 31, lower: 36, // the S's openings at the slot, tall: the upper (right) and the lower (left)
   keepUpper: 15, keepLower: 19, // chopped, how much of each opening stays at the slot (their short one's)
+  chop: 217, // the page's live chopped wordmark: how tall (their short one's)
   sBridge: 1, hBridge: 1, level: 0, // the S bridged, the H bridged, the A's and the H's band crossbars level (not slanted)
   hStyle: 'band', hDrop: 8.7, // the H's crossbar: the S's band, or 'cut' as their short one's (level on top at the middle
   // and hDrop, a slot under it cut as the M's)
@@ -118,15 +119,29 @@ function mapOf(p, m, h) {
     const e1 = -d / 2, e2 = -d - e1, i1 = m.yT - 1, i2 = m.yB + 1;
     return { Y: (y) => (y <= i1 ? y : y <= i2 ? y + e1 : y + e1 + e2), Ym: (y) => y + e1, h };
   }
-  const [r1, r2] = room(p, m);
-  let d1 = Math.min(d / 2, r1), d2 = Math.min(d - d1, r2);
-  d1 = Math.min(d - d2, r1);
-  const s1 = m.zTop - d1;
+  const { d1, d2 } = cutOf(p, m, d), s1 = m.zTop - d1;
   return {
     Y: (y) => (y <= s1 ? y : y <= m.zTop ? s1 : y <= m.zBot ? y - d1 : y <= m.zBot + d2 ? m.zBot - d1 : y - d1 - d2),
     Ym: (y) => y - d1,
     h: +(m.H - d1 - d2).toFixed(6),
   };
+}
+
+/** How much each strip takes for a chop of d in all: half each, the rest to the other where one runs out of room. */
+function cutOf(p, m, d) {
+  const [r1, r2] = room(p, m);
+  let d1 = Math.min(d / 2, r1);
+  const d2 = Math.min(d - d1, r2);
+  d1 = Math.min(d - d2, r1);
+  return { d1, d2 };
+}
+
+/** The two strips a chop to h takes out of the tall block, [y0, y1] each, top then bottom; none when h is the tall one's or more. */
+export function strips(p, h) {
+  const m = middle(p), d = m.H - Math.max(h, least(p));
+  if (d <= 0) return [];
+  const { d1, d2 } = cutOf(p, m, d);
+  return [[m.zTop - d1, m.zTop], [m.zBot, m.zBot + d2]].filter(([a, b]) => b - a > 0.01);
 }
 
 /** The least block height: the tall one chopped as far as it goes. */
