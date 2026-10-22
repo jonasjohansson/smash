@@ -8,13 +8,14 @@
 import { CM, LETTERS, wordmark, symbol, sAlone, svgOf, least } from './geometry.js';
 
 const CHOPPED = [420, 320, 220]; // the chopped wordmarks' blocks, under the tall one
+const EXAGGERATED = [1.25, 1.5]; // the tall block drawn out (Jonas, 2026-10-22: "exaggerate the height a bit"), above it
 const REF = new URL('./cm-supply-tall.png', import.meta.url).href; // their tall wordmark, 1880 × 550 (the a dips 9)
 const REF_W = 1880;
 
 // [key, label, min, max, step, group, as words]
 const deg = (k) => `${(Math.atan(k) * 180 / Math.PI).toFixed(1)}°`;
 const SLIDERS = [
-  ['height', 'Height', 160, 900, 1, 'Block'],
+  ['height', 'Height', 160, 1400, 1, 'Block'],
   ['symbol', 'S M height', 140, 600, 1, 'Block'],
   ['stem', 'Stem', 40, 260, 1, 'Block'],
   ['mid', 'M middle stem', 40, 280, 1, 'Block'],
@@ -73,9 +74,11 @@ function marks() {
   const tall = wordmark(p);
   const ref = view.ref ? `<img class="ref" src="${REF}" alt="" style="left:0;top:0;width:${(REF_W / tall.w) * 100}%">` : '';
   const chopped = CHOPPED.map((h) => wordmark(p, h));
+  const drawn = EXAGGERATED.map((k) => wordmark(p, Math.round(p.height * k)));
   const sm = symbol(p), s = sAlone(p);
   const ways = [['Bridged', 1, 1], ['S bridged', 1, 0], ['H bridged', 0, 1], ["Open, as CM.SUPPLY's", 0, 0]];
   return `
+    <section class="sec"><h2>Exaggerated</h2><div class="chopped">${drawn.map((m, i) => fig(m, `Exaggerated, ${EXAGGERATED[i]}×`, `smash-cm-${m.h}`)).join('')}</div></section>
     <section class="sec"><h2>Tall</h2>${fig(tall, 'Tall', 'smash-cm-tall', ref)}</section>
     <section class="sec"><h2>Chopped</h2><div class="chopped">${chopped.map((m) => fig(m, m.h > CHOPPED.at(-1) ? 'Chopped' : 'Chopped, its lowest here', `smash-cm-${m.h}`)).join('')}</div></section>
     <section class="sec"><h2>S M and S</h2>
