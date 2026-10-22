@@ -1,0 +1,81 @@
+/* /identity-cm/: the page's chrome as /identity/'s (Neue Montreal, black and white), quiet, so the mark carries it. */
+
+@font-face { font-family: "Neue Montreal"; font-weight: 400; font-display: swap; src: url(/fonts/NeueMontreal-Regular.woff) format("woff"); }
+
+:root {
+  --page: #000;
+  --text: #fff;
+  --dim: #8c8c8c;
+  --line: #262626;
+  --mark: #fff;
+  --ground: #000;
+  --margin: clamp(16px, 4vw, 64px);
+  --gap: clamp(8px, 1.2vw, 16px);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { overflow-x: clip; background: var(--page); color: var(--text); -webkit-font-smoothing: antialiased; }
+body { margin: 0; font: 400 16px/1.45 "Neue Montreal", "Helvetica Neue", Arial, sans-serif; }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+h1, h2 { font-weight: 400; margin: 0; }
+
+#page { padding: 24px var(--margin) 120px; display: grid; gap: clamp(48px, 8vw, 120px); }
+#page > * { min-width: 0; }
+
+.top { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
+.top a { text-decoration: none; }
+.top a:hover { color: var(--text); }
+
+/* A section: its name small, over a rule */
+.sec { display: grid; gap: var(--gap); }
+.sec > h2 { font-size: 13px; border-top: 1px solid var(--line); padding-top: 16px; margin-bottom: clamp(8px, 2vw, 24px); }
+
+/* The marks, each on its ground with its name and a download under it */
+.art { background: var(--ground); color: var(--mark); box-shadow: inset 0 0 0 1px var(--line); position: relative; padding: clamp(24px, 6vw, 96px) clamp(16px, 5vw, 80px); display: grid; place-items: center; }
+.art svg { display: block; width: 100%; height: auto; }
+.art .ref { position: absolute; pointer-events: none; opacity: 0.5; mix-blend-mode: difference; filter: invert(1); }
+figure { margin: 0; display: grid; gap: 8px; }
+figcaption { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--dim); }
+figcaption a { text-decoration: none; }
+figcaption a:hover { color: var(--text); }
+
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); }
+@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+.chopped { display: grid; gap: var(--gap); }
+.pair { display: grid; grid-template-columns: 1.6fr 1fr; gap: var(--gap); }
+.pair .art svg { max-height: 220px; width: auto; max-width: 100%; }
+@media (max-width: 760px) { .pair { grid-template-columns: 1fr; } }
+
+/* The lockup: the S M or the S, and three lines in Neue Montreal, a third of the mark each (their slide 03) */
+.lockup-art { container-type: inline-size; }
+.lockup { display: flex; align-items: stretch; gap: 0.32em; white-space: nowrap; font-size: min(34px, 3.3cqi); }
+.lockup.s { font-size: min(34px, 4.8cqi); }
+.lockup .m { height: 3.15em; display: flex; }
+.lockup .m svg { height: 100%; width: auto; }
+.lockup .t { line-height: 1.05; display: flex; flex-direction: column; justify-content: space-between; letter-spacing: -0.01em; }
+.lockup .t span:last-child { opacity: 0.55; }
+
+/* The controls: folds of sliders and switches, as /identity/'s */
+.controls { display: grid; gap: 4px 24px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); align-items: start; font-size: 12px; }
+.controls details { border-top: 1px solid var(--line); padding: 10px 0; }
+.controls summary { cursor: pointer; color: var(--dim); letter-spacing: 0.06em; text-transform: uppercase; list-style: none; }
+.controls summary::before { content: "+ "; }
+.controls details[open] summary::before { content: "– "; }
+.controls details > div { display: grid; gap: 8px; padding-top: 10px; }
+.knob { display: grid; grid-template-columns: 9.5em 1fr 4.5em; gap: 10px; align-items: center; }
+.knob > span:first-child { color: var(--dim); }
+.knob input[type=range] { width: 100%; accent-color: #fff; }
+.knob output { text-align: right; font-variant-numeric: tabular-nums; }
+.switch { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.switch > span:first-child { color: var(--dim); width: 9.5em; }
+.switch button, .actions button { background: none; border: 1px solid var(--line); padding: 3px 9px; cursor: pointer; }
+.switch button[data-on], .actions button[data-on] { border-color: var(--text); }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); grid-column: 1 / -1; }
+.actions .note { color: var(--dim); margin-left: auto; }
+.letters { display: grid; grid-template-columns: 9.5em repeat(5, 1fr); gap: 6px; align-items: center; }
+.letters > span { color: var(--dim); }
+.letters .col { text-align: center; color: var(--text); }
+.letters button { height: 20px; background: none; border: 1px solid var(--line); cursor: pointer; }
+.letters button[data-on] { background: var(--text); border-color: var(--text); }

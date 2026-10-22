@@ -129,3 +129,14 @@ The module contract: a chapter exports `info`, plus `wordmark`, `symbol`, `locku
 which returns `{ ready, pause, resume, destroy, snapshot }`.
 
 Licensed fonts are kept out of git (`web/.gitignore`).
+
+## /identity-cm/: CM.SUPPLY's wordmark, with a capital A
+
+A page of its own (`web/src/identity-cm/`, 2026-10-22): CM.SUPPLY's round 4 wordmark drawn as code, measured off
+their tall PNG (it lays over it to within a pixel, Theirs over), with a capital A in their a's place and a bridge
+for the S and the H (Jonas: "we want the bridge for the s and the H"; their S's slot runs through and their H is
+two bars, both a switch away). `geometry.js` draws it from its measures (`CM`: the block 541, stems 139, slots 36,
+every cut at one slope, the outer corners long); `cm.js` is the page: its controls, then the wordmark tall, chopped
+to 420, 320 and 220 (the S's openings shrinking with the block, as their S M's), the S M and the S alone chopped
+with their lockups, and the bridges each way. Each mark downloads as an SVG; the settings live in the address.
+Tests: `test/cm.test.js`.

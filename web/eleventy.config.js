@@ -40,7 +40,7 @@ async function imageSrc(src, width = 640, format = 'jpeg') {
 }
 
 export default function (config) {
-  config.addPassthroughCopy({ 'src/css': 'css', 'src/fonts': 'fonts', 'src/js': 'js', 'src/CNAME': 'CNAME', 'src/brand': 'brand', 'src/reel': 'reel', 'src/clients': 'clients', 'src/typeface': 'typeface', 'src/identity': 'identity', 'src/typography': 'typography' });
+  config.addPassthroughCopy({ 'src/css': 'css', 'src/fonts': 'fonts', 'src/js': 'js', 'src/CNAME': 'CNAME', 'src/brand': 'brand', 'src/reel': 'reel', 'src/clients': 'clients', 'src/typeface': 'typeface', 'src/identity': 'identity', 'src/identity-cm': 'identity-cm', 'src/typography': 'typography' });
   // The videos of the projects on the site, and their poster frames.
   for (const { slug, data } of listed('projects')) {
     for (const b of (data.blocks ?? []).filter((b) => b.type === 'video')) {
