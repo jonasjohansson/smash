@@ -26,7 +26,6 @@ export const CM = {
   bridge: 36, rise: 13, sLevel: 0, // the S's diagonal band and the crossbars: how thick, how far above the middle; the S's level
   upper: 31, lower: 36, // the S's openings at the slot, tall: the upper (right) and the lower (left)
   keepUpper: 15, keepLower: 19, // chopped, how much of each opening stays at the slot (their short one's)
-  chop: 217, // the page's live chopped wordmark: how tall (their short one's)
   sBridge: 1, hBridge: 1, level: 0, // the S bridged, the H bridged, the A's and the H's band crossbars level (not slanted)
   hStyle: 'cut', hBase: 113, hGrow: 0.13, // the H's crossbar: theirs ('cut': level on top, a slot under it cut as the
   // M's), its top hBase above the base at 217 and hGrow more for each unit taller (their 217 and their 346, both
@@ -135,14 +134,6 @@ function cutOf(p, m, d) {
   const d2 = Math.min(d - d1, r2);
   d1 = Math.min(d - d2, r1);
   return { d1, d2 };
-}
-
-/** The two strips a chop to h takes out of the tall block, [y0, y1] each, top then bottom; none when h is the tall one's or more. */
-export function strips(p, h) {
-  const m = middle(p), d = m.H - Math.max(h, least(p));
-  if (d <= 0) return [];
-  const { d1, d2 } = cutOf(p, m, d);
-  return [[m.zTop - d1, m.zTop], [m.zBot, m.zBot + d2]].filter(([a, b]) => b - a > 0.01);
 }
 
 /** The least block height: the tall one chopped as far as it goes. */

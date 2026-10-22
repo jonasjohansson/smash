@@ -6,9 +6,9 @@
 // link shows what was set; Theirs over lays their tall PNG on the tall wordmark and their short one on the 217, to
 // check them against. A lower block is the tall one chopped (geometry.js), as theirs.
 
-import { CM, LETTERS, wordmark, symbol, sAlone, svgOf, least, strips } from './geometry.js';
+import { CM, LETTERS, wordmark, symbol, sAlone, svgOf, least } from './geometry.js';
 
-const CHOPPED = [420, 320, 217]; // more chopped wordmarks, under the live one (p.chop) (217 their short one's)
+const CHOPPED = [420, 320, 217]; // the chopped wordmarks' blocks, under the tall one (217 their short one's)
 const EXAGGERATED = [1.25, 1.5]; // the tall block drawn out (Jonas, 2026-10-22: "exaggerate the height a bit"), above it
 const REF = new URL('./cm-supply-tall.png', import.meta.url).href; // their tall wordmark, 1880 × 550 (the a dips 9)
 const REF_SHORT = new URL('./cm-supply-short.png', import.meta.url).href; // their short one, bridged (a screenshot of their Figma), 217 tall
@@ -33,9 +33,6 @@ const SLIDERS = [
   ['lower', 'Lower opening', 0, 140, 1, 'Middle'],
   ['hBase', 'H bar from base', 20, 300, 0.5, 'Middle'],
   ['hGrow', 'H bar, with height', 0, 1, 0.01, 'Middle'],
-  ['chop', 'Chop to', 150, 541, 1, 'Chop'],
-  ['keepUpper', 'Opening kept, upper', 0, 60, 1, 'Chop'],
-  ['keepLower', 'Opening kept, lower', 0, 60, 1, 'Chop'],
   ['aNotch', 'a notch', 0, 60, 1, 'Cuts'],
   ['aSwoop', 'a swoop', 0, 200, 1, 'Cuts'],
   ['aCounter', 'a counter base', 20, 90, 1, 'Cuts'],
@@ -54,7 +51,7 @@ const SWITCHES = [
   ['aTop', 'A counter top', [['As their a', 'round'], ['Cut', 'cut']], 'Cuts'],
   ['even', 'Spacing', [['Theirs', 0], ['Even', 1]], 'Block'],
 ];
-const GROUPS = [['Block', true], ['Middle', true], ['Chop', true], ['Cuts', false], ['Corners', false]];
+const GROUPS = [['Block', true], ['Middle', true], ['Cuts', false], ['Corners', false]];
 const CORNERS = [['tl', 'Top left'], ['tr', 'Top right'], ['br', 'Bottom right'], ['bl', 'Bottom left']];
 // Theirs: the tall one (their PNG, the S open, the H two bars) and the short one (their Figma, both bridged, the H's
 // bar theirs); Chopped's lowest, 217, is the short one's block.
@@ -75,7 +72,7 @@ const write = (p) => {
 };
 
 let p = { ...fresh(), ...read() };
-const view = { paper: false, ref: false, strips: true };
+const view = { paper: false, ref: false };
 
 // The marks
 
@@ -91,18 +88,14 @@ const lockup = (mark, cls = '') => `<div class="lockup ${cls}"><span class="m">$
 function marks() {
   const tall = wordmark(p);
   const ref = view.ref ? `<img class="ref" src="${REF}" alt="" style="left:0;top:0;width:${(REF_W / tall.w) * 100}%">` : '';
-  const live = wordmark(p, p.chop), chopped = CHOPPED.filter((h) => h !== live.h).map((h) => wordmark(p, h));
-  // The strips the live chop takes out, over the tall one, in red across the block (the Chop lines button)
-  const cuts = view.strips ? strips(p, p.chop).map(([a, b]) => `<rect x="-40" y="${a}" width="${tall.w + 80}" height="${b - a}"/>`).join('') : '';
-  const lines = cuts ? `<svg class="strips" viewBox="0 0 ${tall.w} ${tall.h + tall.below}" preserveAspectRatio="none">${cuts}</svg>` : '';
+  const chopped = CHOPPED.map((h) => wordmark(p, h));
   const refShort = (m) => (view.ref && m.h === 217 ? `<img class="ref" src="${REF_SHORT}" alt="" style="left:0;top:0;width:${(REF_W / m.w) * 100}%">` : '');
   const drawn = EXAGGERATED.map((k) => wordmark(p, Math.round(p.height * k)));
   const sm = symbol(p), s = sAlone(p);
   const ways = [['Bridged', 1, 1], ['S bridged', 1, 0], ['H bridged', 0, 1], ["Open, as CM.SUPPLY's", 0, 0]];
   return `
-    <section class="sec"><h2>Tall</h2>${fig(tall, lines ? `Tall, in red what the chop to ${live.h} takes out` : 'Tall', 'smash-cm-tall', ref + lines)}</section>
-    <section class="sec"><h2>Chopped</h2><div class="chopped">${fig(live, `Chopped to ${live.h}${live.h === 217 ? ", their short one's" : ''}`, `smash-cm-${live.h}`, refShort(live))}
-      <div class="grid">${chopped.map((m) => fig(m, m.h === 217 ? "Chopped, their short one's" : 'Chopped', `smash-cm-${m.h}`, refShort(m))).join('')}</div></div></section>
+    <section class="sec"><h2>Tall</h2>${fig(tall, 'Tall', 'smash-cm-tall', ref)}</section>
+    <section class="sec"><h2>Chopped</h2><div class="chopped">${chopped.map((m) => fig(m, m.h === 217 ? "Chopped, their short one's" : 'Chopped', `smash-cm-${m.h}`, refShort(m))).join('')}</div></section>
     <section class="sec"><h2>Exaggerated</h2><div class="chopped">${drawn.map((m, i) => fig(m, `Exaggerated, ${EXAGGERATED[i]}×`, `smash-cm-${m.h}`)).join('')}</div></section>
     <section class="sec"><h2>S M and S</h2>
       <div class="pair">${fig(sm, 'S M', 'smash-cm-sm')}${fig(s, 'S', 'smash-cm-s')}</div>
@@ -124,7 +117,6 @@ function controls() {
   return `<div class="controls">
     <div class="actions">${PRESETS.map(([label], i) => `<button type="button" data-preset="${i}">${esc(label)}</button>`).join('')}
       <button type="button" data-view="paper"${view.paper ? ' data-on' : ''} title="Black on white, the whole page">Invert</button>
-      <button type="button" data-view="strips"${view.strips ? ' data-on' : ''} title="The strips the chop takes out, in red over the tall one">Chop lines</button>
       <button type="button" data-view="ref"${view.ref ? ' data-on' : ''} title="Their tall wordmark over the tall one, and their short one over the 217, to check them against">Theirs over</button>
       <span class="note">Lowest block now ${least(p)}</span></div>
     ${GROUPS.map(([name, start]) => `<details data-group="${name}"${(open[name] ?? start) ? ' open' : ''}><summary>${name}</summary><div>
