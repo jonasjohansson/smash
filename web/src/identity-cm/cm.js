@@ -122,7 +122,7 @@ function controls() {
   const open = folds();
   return `<div class="controls">
     <div class="actions">${PRESETS.map(([label], i) => `<button type="button" data-preset="${i}">${esc(label)}</button>`).join('')}
-      <button type="button" data-view="paper"${view.paper ? ' data-on' : ''}>Paper</button>
+      <button type="button" data-view="paper"${view.paper ? ' data-on' : ''} title="Black on white, the whole page">Invert</button>
       <button type="button" data-view="strips"${view.strips ? ' data-on' : ''} title="The strips the chop takes out, in red over the tall one">Chop lines</button>
       <button type="button" data-view="ref"${view.ref ? ' data-on' : ''} title="Their tall wordmark over the tall one, and their short one over the 217, to check them against">Theirs over</button>
       <span class="note">Lowest block now ${least(p)}</span></div>
@@ -142,8 +142,10 @@ page.innerHTML = `
 const $controls = page.querySelector('#controls'), $marks = page.querySelector('#marks');
 
 function paint() {
-  document.documentElement.style.setProperty('--mark', view.paper ? '#000' : '#fff');
-  document.documentElement.style.setProperty('--ground', view.paper ? '#fff' : '#000');
+  // Invert: the whole page black on white, the marks with it
+  const root = document.documentElement.style, inv = view.paper;
+  for (const [k, ink, paper] of [['--mark', '#fff', '#000'], ['--ground', '#000', '#fff'], ['--page', '#000', '#fff'], ['--text', '#fff', '#000'], ['--line', '#262626', '#d9d9d9'], ['--dim', '#8c8c8c', '#6b6b6b']]) root.setProperty(k, inv ? paper : ink);
+  root.colorScheme = inv ? 'light' : 'dark';
   $marks.innerHTML = marks();
   const note = $controls.querySelector('.note');
   if (note) note.textContent = `Lowest block now ${least(p)}`;

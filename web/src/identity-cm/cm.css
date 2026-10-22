@@ -67,7 +67,7 @@ figcaption a:hover { color: var(--text); }
 .controls details > div { display: grid; gap: 8px; padding-top: 10px; }
 .knob { display: grid; grid-template-columns: 9.5em 1fr 4.5em; gap: 10px; align-items: center; }
 .knob > span:first-child { color: var(--dim); }
-.knob input[type=range] { width: 100%; accent-color: #fff; }
+.knob input[type=range] { width: 100%; accent-color: var(--text); }
 .knob output { text-align: right; font-variant-numeric: tabular-nums; }
 .switch { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .switch > span:first-child { color: var(--dim); width: 9.5em; }
