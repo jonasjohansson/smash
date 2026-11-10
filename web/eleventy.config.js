@@ -3,7 +3,8 @@ import path from 'node:path';
 import Image from '@11ty/eleventy-img';
 import sharp from 'sharp';
 import markdownIt from 'markdown-it';
-import { asset, listed, readProjects } from './scripts/projects.js';
+import { asset, listed } from './scripts/projects.js';
+import { fromCodex, loadProjects } from './scripts/codex.js';
 import { readCategories } from './scripts/categories.js';
 import { compose, indexLayout } from './scripts/compose.js';
 import { ogImage, summary } from './scripts/og.js';
@@ -41,8 +42,9 @@ async function imageSrc(src, width = 640, format = 'jpeg') {
 
 export default function (config) {
   config.addPassthroughCopy({ 'src/css': 'css', 'src/fonts': 'fonts', 'src/js': 'js', 'src/CNAME': 'CNAME', 'src/brand': 'brand', 'src/reel': 'reel', 'src/clients': 'clients', 'src/typeface': 'typeface', 'src/identity': 'identity', 'src/identity-cm': 'identity-cm', 'src/typography': 'typography' });
-  // The videos of the projects on the site, and their poster frames.
-  for (const { slug, data } of listed('projects')) {
+  // The videos of the projects on the site, and their poster frames (from
+  // Codex, films play from Mux instead: nothing to copy).
+  for (const { slug, data } of fromCodex() ? [] : listed('projects')) {
     for (const b of (data.blocks ?? []).filter((b) => b.type === 'video')) {
       config.addPassthroughCopy(asset(`projects/${slug}`, b.src));
       if (b.poster) config.addPassthroughCopy(asset(`projects/${slug}`, b.poster));
@@ -57,11 +59,13 @@ export default function (config) {
   config.addFilter('mdInline', (text) => external(md.renderInline(text || '')));
   config.addFilter('year', (date) => new Date(date).getFullYear());
   config.addFilter('pad', (n) => String(n).padStart(2, '0'));
+  // An address for a file named in data.md (a path here) or given by Codex (a full URL).
+  config.addFilter('href', (src) => (/^https?:/.test(src) ? src : `/${src}`));
   config.addAsyncShortcode('image', image);
   config.addAsyncShortcode('imageSrc', imageSrc);
 
   config.addGlobalData('projects', async () => {
-    const projects = (await readProjects('projects')).map((p) => ({ ...p, rows: compose(p) }));
+    const projects = (await loadProjects()).map((p) => ({ ...p, rows: compose(p) }));
     const index = indexLayout(projects);
     // A project's page runs on without end (feed.js): round the projects of
     // its offering from itself, newest first, then round each offering after
@@ -85,7 +89,7 @@ export default function (config) {
   // The landing's slideshow: every image of every project, at two sizes, and
   // a third for the one the dive lands on, full screen.
   config.addGlobalData('frames', async () => {
-    const projects = await readProjects('projects');
+    const projects = await loadProjects();
     const frames = [];
     for (const p of projects) {
       for (const b of p.blocks.filter((b) => b.type === 'image')) {
@@ -100,7 +104,7 @@ export default function (config) {
     return frames;
   });
   config.addGlobalData('poster', async () => {
-    const projects = await readProjects('projects');
+    const projects = await loadProjects();
     const first = projects.filter((p) => p.featured).sort((a, b) => a.featured - b.featured)[0]
       ?? projects.find((p) => p.cover?.ar > 1.2) ?? projects[0];
     // Shared, the landing (and any page without a picture of its own) shows
@@ -110,7 +114,7 @@ export default function (config) {
   // The studio's offerings (categories/): under its introduction on the
   // landing, a tall picture each, leading to its own page with its projects.
   config.addGlobalData('categories', async () => {
-    const projects = await readProjects('projects');
+    const projects = await loadProjects();
     const categories = readCategories('categories');
     for (const p of projects) {
       if (!categories.some((c) => c.slug === p.category)) console.warn(`[smash] ${p.slug} is in no category ('${p.category ?? ''}'), so on no category page`);
@@ -118,7 +122,14 @@ export default function (config) {
     return Promise.all(categories.map(async (c) => {
       // `project/file`, or its path on the site (/projects/project/file).
       const [from, src] = String(c.picture).replace(/^\/projects\//, '').split('/');
-      const block = projects.find((q) => q.slug === from)?.blocks.find((b) => b.type === 'image' && path.basename(b.src) === src);
+      let block = projects.find((q) => q.slug === from)?.blocks.find((b) => b.type === 'image' && path.basename(b.src) === src);
+      // From Codex, a picture named here may not be among the projects SMASH
+      // has published: then the cover of the newest of its own projects, or
+      // of the newest project at all, until one is chosen.
+      if (!block && fromCodex()) {
+        block = (projects.find((q) => q.category === c.slug && q.cover) ?? projects.find((q) => q.cover))?.cover;
+        if (block) console.warn(`[smash] ${c.name}'s picture, ${c.picture}, is not among the published projects; showing ${block.src}`);
+      }
       if (!block) throw new Error(`${c.name}'s picture, ${c.picture}, is not an image of a project on the site`);
       // A tall panel crops the picture to its height: nearly the screen's on
       // a desktop, 5:4 of the width on a phone.
@@ -161,7 +172,7 @@ export default function (config) {
   config.addGlobalData('build', build);
   config.addGlobalData('site', { url: 'https://smash.jonasjohansson.se', name: 'SMASH' });
   config.addGlobalData('featured', async () =>
-    (await readProjects('projects')).filter((p) => p.featured).sort((a, b) => a.featured - b.featured));
+    (await loadProjects()).filter((p) => p.featured).sort((a, b) => a.featured - b.featured));
 
   return {
     dir: { input: 'pages', includes: '../_includes', data: '../_data', output: 'dist' },

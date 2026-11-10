@@ -13,8 +13,15 @@ import { DEFAULTS, buildMark } from '../src/js/mark.js';
 export const OG = { width: 1200, height: 630 };
 const OUT = 'dist/og';
 
+async function download(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`[og] ${url} answered ${res.status}`);
+  return Buffer.from(await res.arrayBuffer());
+}
+
 export async function ogImage(src, { mark = false } = {}) {
-  const input = await fs.readFile(src);
+  // A file here, or a picture at its own address (from Codex).
+  const input = /^https?:/.test(src) ? await download(src) : await fs.readFile(src);
   const key = crypto.createHash('sha1').update(input).update(mark ? 'mark-yellow' : 'plain').digest('hex').slice(0, 12);
   const url = `/og/${key}.jpg`;
   const file = path.join(OUT, `${key}.jpg`);

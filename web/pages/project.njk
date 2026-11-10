@@ -25,7 +25,7 @@ eleventyComputed:
     {% if p.rows.hero %}
     <figure class="project-hero">
       {% if p.rows.hero.type == 'video' %}
-      <video src="{{ p.rows.hero.src }}"{% if p.rows.hero.poster %} poster="/{{ p.rows.hero.poster }}"{% endif %} autoplay muted loop playsinline aria-label="{{ p.rows.hero.alt }}"></video>
+      <video src="{{ p.rows.hero.src }}"{% if p.rows.hero.poster %} poster="{{ p.rows.hero.poster | href }}"{% endif %} autoplay muted loop playsinline aria-label="{{ p.rows.hero.alt }}"></video>
       {% else %}
       {% image p.rows.hero.src, p.rows.hero.alt, "100vw", "eager" %}
       {% endif %}
@@ -64,7 +64,7 @@ eleventyComputed:
       {% else %}
       {# Inline, not an include: async shortcodes render nothing inside includes. #}
       {% if c.block.type == 'video' %}
-      <video src="{{ c.block.src }}"{% if c.block.poster %} poster="/{{ c.block.poster }}"{% endif %} autoplay muted loop playsinline preload="metadata" aria-label="{{ c.block.alt }}" style="aspect-ratio: {{ c.block.ar }}"></video>
+      <video src="{{ c.block.src }}"{% if c.block.poster %} poster="{{ c.block.poster | href }}"{% endif %} autoplay muted loop playsinline preload="metadata" aria-label="{{ c.block.alt }}" style="aspect-ratio: {{ c.block.ar }}"></video>
       {% else %}
       {% image c.block.src, c.block.alt, "(max-width: 720px) 100vw, " + ((c.vw or (c.span / 12 * 100)) | round) + "vw", ("eager" if first else "lazy") %}
       {% endif %}
